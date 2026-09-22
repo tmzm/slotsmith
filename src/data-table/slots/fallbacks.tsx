@@ -291,7 +291,7 @@ const Pagination = (props: PaginationSlotProps) => {
  * Fallback components
  *
  * The built-in plain-HTML slots, used for every slot you don't replace.
- * Styled by the optional `@slotsmith/table/styles.css`.
+ * Styled by the optional `slotsmith/styles.css`.
  *
  * @example
  * ```tsx

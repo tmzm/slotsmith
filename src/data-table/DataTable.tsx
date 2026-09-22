@@ -240,8 +240,8 @@ function DataTableComponent<T extends RowData>(props: DataTableProps<T>) {
  *
  * @example
  * ```tsx
- * import { DataTable, type DataTableColumnDef } from "@slotsmith/table";
- * import "@slotsmith/table/styles.css";
+ * import { DataTable, type DataTableColumnDef } from "slotsmith";
+ * import "slotsmith/styles.css";
  *
  * const columns: DataTableColumnDef<User>[] = [
  *   { accessorKey: "name", header: "Name" },

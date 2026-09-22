@@ -1,7 +1,7 @@
 {
-  "name": "@slotsmith/table",
+  "name": "slotsmith",
   "version": "1.0.0",
-  "description": "A headless, fully type-safe React data table built on @tanstack/react-table v9, with swappable UI slots and plain-HTML fallbacks.",
+  "description": "A headless React component library: every part is a slot you can replace, with plain-HTML fallbacks. Starting with the data table.",
   "license": "ISC",
   "author": "Tareq Al-Mozayek",
   "type": "module",
@@ -30,11 +30,11 @@
     },
     "./virtual": {
       "import": {
-        "types": "./dist/virtual.d.ts",
+        "types": "./dist/data-table/virtual.d.ts",
         "default": "./dist/virtual.js"
       },
       "require": {
-        "types": "./dist/virtual.d.ts",
+        "types": "./dist/data-table/virtual.d.ts",
         "default": "./dist/virtual.cjs"
       }
     },

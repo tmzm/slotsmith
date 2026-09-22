@@ -1,23 +1,32 @@
-# @slotsmith/table
+# slotsmith
 
-A headless, fully type-safe React data table built on [TanStack Table v9](https://tanstack.com/table/latest).
+**A headless React component library.** Every part of every component is a slot you can replace, and anything you don't replace renders as plain, accessible HTML that is already finished — so a component fits whatever design system a project already has.
 
-[![npm](https://img.shields.io/npm/v/@slotsmith/table?color=e0a11b&label=npm)](https://www.npmjs.com/package/@slotsmith/table)
-[![bundle](https://img.shields.io/bundlephobia/minzip/@slotsmith/table?color=e0a11b)](https://bundlephobia.com/package/@slotsmith/table)
+The **data table** ships first, built on [TanStack Table v9](https://tanstack.com/table/latest). More components follow, built the same way.
+
+[![npm](https://img.shields.io/npm/v/slotsmith?color=e0a11b&label=npm)](https://www.npmjs.com/package/slotsmith)
+[![bundle](https://img.shields.io/bundlephobia/minzip/slotsmith?color=e0a11b)](https://bundlephobia.com/package/slotsmith)
 [![stars](https://img.shields.io/github/stars/tmzm/slotsmith?color=e0a11b)](https://github.com/tmzm/slotsmith)
 
 **[Docs and live examples → slotsmith-docs.netlify.app](https://slotsmith-docs.netlify.app)**
 
 If it saves you a day of work, a ⭐ on [the repo](https://github.com/tmzm/slotsmith) helps others find it.
 
-- **Works with any UI library.** Every part of the table is a slot you can replace: rows, cells, checkbox, pagination, empty/error/loading states, icons.
-- **Built-in fallbacks.** Any slot you don't replace renders as plain, accessible HTML. The package has no runtime dependencies besides TanStack Table.
-- **Features:** client- or server-side sorting and pagination, row selection that persists across pages, tree rows, loading/error/empty states, virtualization, i18n and RTL.
+## Components
+
+| Component | Status | What you get |
+| --- | --- | --- |
+| **Data table** | shipping | Client- or server-side sorting and pagination, row selection that survives paging, tree rows, loading / error / empty states, virtualization, i18n and RTL. |
+| More components | next | Same idea: headless logic, replaceable parts, fallbacks good enough to ship. |
+
+- **Works with any UI library.** shadcn, MUI, Chakra or your own: element slots take plain DOM props, widget slots take semantic props.
+- **Built-in fallbacks.** No runtime dependencies besides TanStack Table.
+- **Everything is replaceable:** rows, cells, checkbox, pagination, sort icons, and the empty / error / loading states.
 
 ## Installation
 
 ```bash
-pnpm add @slotsmith/table @tanstack/react-table
+pnpm add slotsmith @tanstack/react-table
 # optional, for the virtualized table
 pnpm add @tanstack/react-virtual
 ```
@@ -27,8 +36,8 @@ Peer dependencies: `react >= 18`, `react-dom`, `@tanstack/react-table ^9`, and o
 ## Quick start
 
 ```tsx
-import { DataTable, type DataTableColumnDef } from "@slotsmith/table";
-import "@slotsmith/table/styles.css"; // optional: styles for the fallbacks
+import { DataTable, type DataTableColumnDef } from "slotsmith";
+import "slotsmith/styles.css"; // optional: styles for the fallbacks
 
 interface User {
   id: string;
@@ -62,7 +71,7 @@ There are two kinds of slots:
 ```tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { CheckboxSlotProps, DataTableComponents } from "@slotsmith/table";
+import type { CheckboxSlotProps, DataTableComponents } from "slotsmith";
 
 const ShadcnCheckbox = ({ checked, indeterminate, onCheckedChange, ...props }: CheckboxSlotProps) => (
   <Checkbox
@@ -103,7 +112,7 @@ Integration suites render the table with real UI libraries and fail on any React
 Element slots only receive DOM props. Use `useDataTableRow()` to get the row, for example for drag-and-drop:
 
 ```tsx
-import { useDataTableRow, type RowSlotProps } from "@slotsmith/table";
+import { useDataTableRow, type RowSlotProps } from "slotsmith";
 
 function SortableRow(props: RowSlotProps) {
   const row = useDataTableRow<Item>();
@@ -117,7 +126,7 @@ function SortableRow(props: RowSlotProps) {
 Every fallback is exported, so you can wrap one instead of rewriting it:
 
 ```tsx
-import { fallbackComponents, type RowSlotProps } from "@slotsmith/table";
+import { fallbackComponents, type RowSlotProps } from "slotsmith";
 
 const TallRow = (props: RowSlotProps) => <fallbackComponents.Row {...props} className="h-14" />;
 ```
@@ -184,7 +193,7 @@ const [selected, setSelected] = useState<User[]>([]);
 ## Virtualization
 
 ```tsx
-import { VirtualDataTable } from "@slotsmith/table/virtual";
+import { VirtualDataTable } from "slotsmith/virtual";
 
 <VirtualDataTable data={tenThousandRows} columns={columns} virtual={{ estimateSize: 40, maxHeight: 600 }} />;
 ```
@@ -303,9 +312,9 @@ Dark mode applies under `.dark` or `[data-theme="dark"]`. Without the stylesheet
 
 ## Coming from `@tmzm/react-data-table`
 
-This package was published as `@tmzm/react-data-table@1.0.0` before it was renamed. `@slotsmith/table` is its successor, rewritten as a headless component. The old package stays on npm at 1.0.0 and is no longer updated.
+This package was published as `@tmzm/react-data-table@1.0.0` before it was renamed. `slotsmith` is its successor, rewritten as a headless component. The old package stays on npm at 1.0.0 and is no longer updated.
 
-- The import changes: `@slotsmith/table` instead of `@tmzm/react-data-table`.
+- The import changes: `slotsmith` instead of `@tmzm/react-data-table`.
 - The package targets **TanStack Table v9**. Type columns with `DataTableColumnDef<T>` or `createDataTableColumnHelper<T>()`.
 - `pagination` / `onPaginationChange` are now optional. Without them, pagination state is managed internally.
 - `selectable` + `enableRowSelection` are merged into a single `enableRowSelection` prop.
