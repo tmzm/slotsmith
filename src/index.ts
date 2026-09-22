@@ -1,13 +1,13 @@
 /**
- * @tmzm/react-data-table
+ * @slotsmith/table
  *
  * A headless, fully type-safe React data table built on TanStack Table v9,
  * with swappable UI slots and plain-HTML fallbacks.
  *
  * @example
  * ```tsx
- * import { DataTable } from "@tmzm/react-data-table";
- * import "@tmzm/react-data-table/styles.css";
+ * import { DataTable } from "@slotsmith/table";
+ * import "@slotsmith/table/styles.css";
  *
  * <DataTable data={users} columns={columns} />;
  * ```

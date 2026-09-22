@@ -1,6 +1,8 @@
-# @tmzm/react-data-table
+# @slotsmith/table
 
 A headless, fully type-safe React data table built on [TanStack Table v9](https://tanstack.com/table/latest).
+
+**[Docs and live examples → slotsmith-docs.netlify.app](https://slotsmith-docs.netlify.app)**
 
 - **Works with any UI library.** Every part of the table is a slot you can replace: rows, cells, checkbox, pagination, empty/error/loading states, icons.
 - **Built-in fallbacks.** Any slot you don't replace renders as plain, accessible HTML. The package has no runtime dependencies besides TanStack Table.
@@ -9,7 +11,7 @@ A headless, fully type-safe React data table built on [TanStack Table v9](https:
 ## Installation
 
 ```bash
-pnpm add @tmzm/react-data-table @tanstack/react-table
+pnpm add @slotsmith/table @tanstack/react-table
 # optional, for the virtualized table
 pnpm add @tanstack/react-virtual
 ```
@@ -19,8 +21,8 @@ Peer dependencies: `react >= 18`, `react-dom`, `@tanstack/react-table ^9`, and o
 ## Quick start
 
 ```tsx
-import { DataTable, type DataTableColumnDef } from "@tmzm/react-data-table";
-import "@tmzm/react-data-table/styles.css"; // optional: styles for the fallbacks
+import { DataTable, type DataTableColumnDef } from "@slotsmith/table";
+import "@slotsmith/table/styles.css"; // optional: styles for the fallbacks
 
 interface User {
   id: string;
@@ -54,7 +56,7 @@ There are two kinds of slots:
 ```tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { CheckboxSlotProps, DataTableComponents } from "@tmzm/react-data-table";
+import type { CheckboxSlotProps, DataTableComponents } from "@slotsmith/table";
 
 const ShadcnCheckbox = ({ checked, indeterminate, onCheckedChange, ...props }: CheckboxSlotProps) => (
   <Checkbox
@@ -95,7 +97,7 @@ Integration suites render the table with real UI libraries and fail on any React
 Element slots only receive DOM props. Use `useDataTableRow()` to get the row, for example for drag-and-drop:
 
 ```tsx
-import { useDataTableRow, type RowSlotProps } from "@tmzm/react-data-table";
+import { useDataTableRow, type RowSlotProps } from "@slotsmith/table";
 
 function SortableRow(props: RowSlotProps) {
   const row = useDataTableRow<Item>();
@@ -109,7 +111,7 @@ function SortableRow(props: RowSlotProps) {
 Every fallback is exported, so you can wrap one instead of rewriting it:
 
 ```tsx
-import { fallbackComponents, type RowSlotProps } from "@tmzm/react-data-table";
+import { fallbackComponents, type RowSlotProps } from "@slotsmith/table";
 
 const TallRow = (props: RowSlotProps) => <fallbackComponents.Row {...props} className="h-14" />;
 ```
@@ -176,7 +178,7 @@ const [selected, setSelected] = useState<User[]>([]);
 ## Virtualization
 
 ```tsx
-import { VirtualDataTable } from "@tmzm/react-data-table/virtual";
+import { VirtualDataTable } from "@slotsmith/table/virtual";
 
 <VirtualDataTable data={tenThousandRows} columns={columns} virtual={{ estimateSize: 40, maxHeight: 600 }} />;
 ```
@@ -293,8 +295,11 @@ Dark mode applies under `.dark` or `[data-theme="dark"]`. Without the stylesheet
 { align?: "start" | "center" | "end"; headerClassName?: string; cellClassName?: string }
 ```
 
-## Migrating from v1
+## Coming from `@tmzm/react-data-table`
 
+This package was published as `@tmzm/react-data-table@1.0.0` before it was renamed. `@slotsmith/table` is its successor, rewritten as a headless component. The old package stays on npm at 1.0.0 and is no longer updated.
+
+- The import changes: `@slotsmith/table` instead of `@tmzm/react-data-table`.
 - The package targets **TanStack Table v9**. Type columns with `DataTableColumnDef<T>` or `createDataTableColumnHelper<T>()`.
 - `pagination` / `onPaginationChange` are now optional. Without them, pagination state is managed internally.
 - `selectable` + `enableRowSelection` are merged into a single `enableRowSelection` prop.
@@ -310,8 +315,6 @@ pnpm test        # vitest + testing-library
 pnpm typecheck
 pnpm build       # tsup (ESM + CJS) + tsc declarations
 ```
-
-To try changes live, use the playground in `../react-data-table-playground`. It imports this package's source directly, so edits hot-reload with no rebuild or reinstall.
 
 ## License
 

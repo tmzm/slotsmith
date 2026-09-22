@@ -1,6 +1,6 @@
 {
-  "name": "@tmzm/react-data-table",
-  "version": "2.0.0",
+  "name": "@slotsmith/table",
+  "version": "1.0.0",
   "description": "A headless, fully type-safe React data table built on @tanstack/react-table v9, with swappable UI slots and plain-HTML fallbacks.",
   "license": "ISC",
   "author": "Tareq Al-Mozayek",

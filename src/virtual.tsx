@@ -157,7 +157,7 @@ export interface VirtualDataTableProps<T extends RowData> extends DataTableProps
  *
  * @example
  * ```tsx
- * import { VirtualDataTable } from "@tmzm/react-data-table/virtual";
+ * import { VirtualDataTable } from "@slotsmith/table/virtual";
  *
  * <VirtualDataTable<LogLine>
  *   data={lines}
