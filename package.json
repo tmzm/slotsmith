@@ -21,7 +21,7 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/index.d.cts",
+        "types": "./dist/index.d.ts",
         "default": "./dist/index.cjs"
       }
     },
@@ -31,7 +31,7 @@
         "default": "./dist/virtual.js"
       },
       "require": {
-        "types": "./dist/virtual.d.cts",
+        "types": "./dist/virtual.d.ts",
         "default": "./dist/virtual.cjs"
       }
     },
@@ -39,7 +39,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.build.json",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

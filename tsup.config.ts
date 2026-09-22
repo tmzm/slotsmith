@@ -7,8 +7,9 @@ export default defineConfig({
     styles: "src/styles.css",
   },
   format: ["esm", "cjs"],
-  dts: { entry: { index: "src/index.ts", virtual: "src/virtual.tsx" } },
   external: ["react", "react-dom", "@tanstack/react-table", "@tanstack/react-virtual"],
   clean: true,
-  treeshake: true,
+  splitting: true,
+  // Every entry renders client components (hooks, context).
+  banner: { js: '"use client";' },
 });
