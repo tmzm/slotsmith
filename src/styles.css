@@ -7,8 +7,10 @@
  */
 
 :root {
-  --rdt-bg: transparent;
-  --rdt-header-bg: transparent;
+  --rdt-surface: #ffffff;
+  --rdt-bg: var(--rdt-surface);
+  /** Must stay opaque: the header is sticky and rows scroll underneath it. */
+  --rdt-header-bg: var(--rdt-surface);
   --rdt-border: #e5e7eb;
   --rdt-text: #111827;
   --rdt-muted: #6b7280;
@@ -30,6 +32,7 @@
 
 .dark,
 [data-theme="dark"] {
+  --rdt-surface: #141416;
   --rdt-border: #2a2a2a;
   --rdt-text: #f5f5f5;
   --rdt-muted: #a3a3a3;
