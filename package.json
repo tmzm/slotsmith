@@ -11,6 +11,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": [
     "*.css"
   ],
@@ -77,5 +80,24 @@
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmzm/slotsmith.git"
+  },
+  "homepage": "https://slotsmith-docs.netlify.app",
+  "keywords": [
+    "react",
+    "table",
+    "data-table",
+    "headless",
+    "tanstack",
+    "slots",
+    "unstyled",
+    "accessible",
+    "rtl"
+  ],
+  "bugs": {
+    "url": "https://github.com/tmzm/slotsmith/issues"
   }
 }

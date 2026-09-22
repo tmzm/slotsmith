@@ -2,7 +2,13 @@
 
 A headless, fully type-safe React data table built on [TanStack Table v9](https://tanstack.com/table/latest).
 
+[![npm](https://img.shields.io/npm/v/@slotsmith/table?color=e0a11b&label=npm)](https://www.npmjs.com/package/@slotsmith/table)
+[![bundle](https://img.shields.io/bundlephobia/minzip/@slotsmith/table?color=e0a11b)](https://bundlephobia.com/package/@slotsmith/table)
+[![stars](https://img.shields.io/github/stars/tmzm/slotsmith?color=e0a11b)](https://github.com/tmzm/slotsmith)
+
 **[Docs and live examples → slotsmith-docs.netlify.app](https://slotsmith-docs.netlify.app)**
+
+If it saves you a day of work, a ⭐ on [the repo](https://github.com/tmzm/slotsmith) helps others find it.
 
 - **Works with any UI library.** Every part of the table is a slot you can replace: rows, cells, checkbox, pagination, empty/error/loading states, icons.
 - **Built-in fallbacks.** Any slot you don't replace renders as plain, accessible HTML. The package has no runtime dependencies besides TanStack Table.
