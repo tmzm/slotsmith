@@ -76,6 +76,25 @@ describe("pagination", () => {
     expect(onPaginationChange).toHaveBeenCalledWith({ pageIndex: 1, pageSize: 10 });
   });
 
+  it("waits for the new page's data before stepping back again", () => {
+    const onPaginationChange = vi.fn();
+    const props = { columns, manualPagination: true, onPaginationChange };
+    const { rerender } = renderTable({
+      ...props,
+      data: [],
+      rowCount: 130,
+      pagination: { pageIndex: 13, pageSize: 10 },
+    });
+    expect(onPaginationChange).toHaveBeenLastCalledWith({ pageIndex: 12, pageSize: 10 });
+
+    /** The parent moved to page 13 but hasn't started fetching it: `data` is still the old, empty page. */
+    onPaginationChange.mockClear();
+    rerender(
+      <DataTable<User> {...props} data={[]} rowCount={130} pagination={{ pageIndex: 12, pageSize: 10 }} />,
+    );
+    expect(onPaginationChange).not.toHaveBeenCalled();
+  });
+
   it("does not step back while loading", () => {
     const onPaginationChange = vi.fn();
     renderTable({

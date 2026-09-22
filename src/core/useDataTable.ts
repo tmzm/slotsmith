@@ -349,14 +349,39 @@ export function useDataTable<T extends RowData>(options: UseDataTableOptions<T>)
   const hasError = isPresent(error);
   const pageCount = table.getPageCount();
 
+  /**
+   * With manual pagination, `data` still holds the previous page right after
+   * the page index changes (until the parent starts loading the new one), so
+   * that data must not be judged as the new page coming back empty.
+   */
+  const lastPageIndex = useRef(pagination.pageIndex);
+  const previousPageData = useRef<T[] | null>(null);
+
   /** A page that comes back empty (e.g. its last row was deleted) steps back. */
   useEffect(() => {
+    if (lastPageIndex.current !== pagination.pageIndex) {
+      lastPageIndex.current = pagination.pageIndex;
+      previousPageData.current = manualPagination ? data : null;
+    }
+    if (previousPageData.current === data) return;
+    previousPageData.current = null;
+
     if (!enablePagination || loading || hasError || visibleRowCount > 0) return;
     const target = stepBackPageIndex(pagination.pageIndex, pageCount);
     if (target !== null && target !== pagination.pageIndex) {
       setPagination((prev) => ({ ...prev, pageIndex: target }));
     }
-  }, [enablePagination, loading, hasError, visibleRowCount, pagination.pageIndex, pageCount, setPagination]);
+  }, [
+    data,
+    manualPagination,
+    enablePagination,
+    loading,
+    hasError,
+    visibleRowCount,
+    pagination.pageIndex,
+    pageCount,
+    setPagination,
+  ]);
 
   const status: DataTableStatus = loading
     ? "loading"
