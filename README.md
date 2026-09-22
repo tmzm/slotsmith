@@ -1,34 +1,26 @@
 # @tmzm/react-data-table
 
-A modern, fully type-safe React data table built on [@tanstack/react-table](https://tanstack.com/table/latest), with sorting, pagination, row selection, and Radix UI primitives.
+A headless, fully type-safe React data table built on [TanStack Table v9](https://tanstack.com/table/latest).
+
+- **Works with any UI library.** Every part of the table is a slot you can replace: rows, cells, checkbox, pagination, empty/error/loading states, icons.
+- **Built-in fallbacks.** Any slot you don't replace renders as plain, accessible HTML. The package has no runtime dependencies besides TanStack Table.
+- **Features:** client- or server-side sorting and pagination, row selection that persists across pages, tree rows, loading/error/empty states, virtualization, i18n and RTL.
 
 ## Installation
 
 ```bash
-pnpm add @tmzm/react-data-table @tanstack/react-table react react-dom
+pnpm add @tmzm/react-data-table @tanstack/react-table
+# optional, for the virtualized table
+pnpm add @tanstack/react-virtual
 ```
 
-Or with npm / yarn:
-
-```bash
-npm install @tmzm/react-data-table @tanstack/react-table react react-dom
-```
-
-**Peer dependencies:** React 19+, `@tanstack/react-table`, `@radix-ui/react-checkbox`, `@radix-ui/react-select`, `lucide-react` (included as dependencies of this package).
+Peer dependencies: `react >= 18`, `react-dom`, `@tanstack/react-table ^9`, and optionally `@tanstack/react-virtual ^3`.
 
 ## Quick start
 
-1. **Import the component and styles**
-
 ```tsx
-import { DataTable } from "@tmzm/react-data-table";
-import "@tmzm/react-data-table/styles.css";
-```
-
-2. **Define columns** using [TanStack Table’s `ColumnDef`](https://tanstack.com/table/latest/docs/api/core/column-def):
-
-```tsx
-import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable, type DataTableColumnDef } from "@tmzm/react-data-table";
+import "@tmzm/react-data-table/styles.css"; // optional: styles for the fallbacks
 
 interface User {
   id: string;
@@ -36,110 +28,111 @@ interface User {
   email: string;
 }
 
-const columns: ColumnDef<User>[] = [
-  {
-    accessorKey: "name",
-    header: "Name",
-    enableSorting: true,
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-    enableSorting: true,
-  },
+const columns: DataTableColumnDef<User>[] = [
+  { accessorKey: "name", header: "Name" },
+  { accessorKey: "email", header: "Email" },
 ];
+
+export function Users({ users }: { users: User[] }) {
+  return <DataTable<User> data={users} columns={columns} />;
+}
 ```
 
-3. **Control pagination** with `pagination` and `onPaginationChange` (required):
+With no other props, the table sorts and paginates on the client. Each piece of state is **uncontrolled** by default; pass the value and its `on…Change` handler to control it.
+
+## Using your own UI library
+
+There are two kinds of slots:
+
+| Kind | Slots | Props they receive |
+| --- | --- | --- |
+| **Element** | `Root`, `Table`, `Head`, `Body`, `HeaderRow`, `HeaderCell`, `Row`, `Cell` | Plain DOM props only, so library primitives drop straight in. State comes through `data-*` attributes (`data-state="selected"`, `data-sorted`, `data-align`, …). |
+| **Widget** | `Checkbox`, `SortTrigger`, `SortIcon`, `ExpandToggle`, `Skeleton`, `Empty`, `Error`, `Pagination`, `PaginationButton`, `PageSizeSelect` | Semantic props (`checked`, `onCheckedChange`, `pageIndex`, `setPageSize`, …). Write a small adapter for your library. |
+
+### shadcn/ui
 
 ```tsx
-const [pagination, setPagination] = useState({
-  pageIndex: 0,
-  pageSize: 10,
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { CheckboxSlotProps, DataTableComponents } from "@tmzm/react-data-table";
+
+const ShadcnCheckbox = ({ checked, indeterminate, onCheckedChange, ...props }: CheckboxSlotProps) => (
+  <Checkbox
+    checked={indeterminate ? "indeterminate" : checked}
+    onCheckedChange={(value) => onCheckedChange(value === true)}
+    onClick={(event) => event.stopPropagation()}
+    {...props}
+  />
+);
+
+// Define the slot map once, outside render.
+export const shadcnComponents: Partial<DataTableComponents> = {
+  Table,
+  Head: TableHeader,
+  Body: TableBody,
+  HeaderRow: TableRow,
+  Row: TableRow, // styles data-[state=selected] out of the box
+  HeaderCell: TableHead,
+  Cell: TableCell,
+  Checkbox: ShadcnCheckbox,
+};
+
+<DataTable data={data} columns={columns} components={shadcnComponents} />;
+```
+
+### Reading the row in a custom `Row`
+
+Element slots only receive DOM props. Use `useDataTableRow()` to get the row, for example for drag-and-drop:
+
+```tsx
+import { useDataTableRow, type RowSlotProps } from "@tmzm/react-data-table";
+
+function SortableRow(props: RowSlotProps) {
+  const row = useDataTableRow<Item>();
+  const { setNodeRef, transform, transition } = useSortable({ id: row!.id });
+  return <tr ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} {...props} />;
+}
+```
+
+### Extending a fallback
+
+Every fallback is exported, so you can wrap one instead of rewriting it:
+
+```tsx
+import { fallbackComponents, type RowSlotProps } from "@tmzm/react-data-table";
+
+const TallRow = (props: RowSlotProps) => <fallbackComponents.Row {...props} className="h-14" />;
+```
+
+## Server-side data
+
+```tsx
+const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+const [sorting, setSorting] = useState<DataTableSortingState>([]);
+const { data, isFetching, error, refetch } = useQuery({
+  queryKey: ["users", pagination, sorting],
+  queryFn: () => api.users({ pagination, sorting }),
 });
 
 <DataTable<User>
-  data={users}
+  data={data?.rows ?? []}
   columns={columns}
-  pagination={pagination}
-  onPaginationChange={setPagination}
-/>
-```
-
-## Basic example
-
-```tsx
-import { useState } from "react";
-import { DataTable } from "@tmzm/react-data-table";
-import type { ColumnDef } from "@tanstack/react-table";
-import "@tmzm/react-data-table/styles.css";
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-}
-
-const columns: ColumnDef<Product>[] = [
-  { accessorKey: "name", header: "Product", enableSorting: true },
-  {
-    accessorKey: "price",
-    header: "Price",
-    enableSorting: true,
-    cell: ({ getValue }) => `$${getValue<number>().toFixed(2)}`,
-  },
-];
-
-const products: Product[] = [
-  { id: "1", name: "Widget", price: 9.99 },
-  { id: "2", name: "Gadget", price: 24.99 },
-];
-
-export function ProductTable() {
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-
-  return (
-    <DataTable<Product>
-      data={products}
-      columns={columns}
-      pagination={pagination}
-      onPaginationChange={setPagination}
-    />
-  );
-}
-```
-
-## Features
-
-### Sorting
-
-- Set `enableSorting: true` on columns that should be sortable.
-- Use **client-side sorting** (default): no extra props needed.
-- Use **server-side sorting**: pass `sorting`, `onSortingChange`, and `paginationOptions={{ manualSorting: true }}`. Send `sorting` to your API and pass back sorted `data`.
-
-```tsx
-const [sorting, setSorting] = useState<SortingState>([]);
-
-<DataTable<User>
-  data={users}
-  columns={columns}
+  manualPagination
+  manualSorting
+  rowCount={data?.total}
   pagination={pagination}
   onPaginationChange={setPagination}
   sorting={sorting}
   onSortingChange={setSorting}
-  paginationOptions={{ manualSorting: true }}
-/>
+  loading={isFetching}
+  error={error}
+  onRetry={refetch}
+/>;
 ```
 
-### Row selection
+If a page comes back empty (for example after its last row is deleted), the table moves back a page on its own.
 
-- `selectable={true}` enables checkboxes and a header “select all”.
-- Control selected rows with `selection` and `onSelectionChange`.
-- Use `getSelectionKey` to identify rows (default: `row => row?.id ?? ""`).
-- Use `enableRowSelection: true | false | (row) => boolean` to allow or disable selection per row.
+## Row selection
 
 ```tsx
 const [selected, setSelected] = useState<User[]>([]);
@@ -147,70 +140,168 @@ const [selected, setSelected] = useState<User[]>([]);
 <DataTable<User>
   data={users}
   columns={columns}
-  pagination={pagination}
-  onPaginationChange={setPagination}
-  selectable
+  enableRowSelection={(row) => row.original.active} // or `true`
   selection={selected}
   onSelectionChange={setSelected}
-  getSelectionKey={(row) => row.id}
-/>
+/>;
 ```
 
-With **manual pagination**, selection can span pages; use `paginationOptions.resetSelection` to clear selection when the page changes.
+- Selection is exposed as **row objects**. Rows are matched by `getRowId`, which defaults to `row.id`.
+- The header checkbox selects **the current page** and shows an indeterminate state for partial selections.
+- With `manualPagination`, rows selected on other pages stay selected. Pass `resetSelectionOnPageChange` to clear the selection instead.
 
-### Pagination options
-
-| Option               | Type      | Description                                                                 |
-|----------------------|-----------|-----------------------------------------------------------------------------|
-| `manualPagination`   | `boolean` | You control total row count and pages; pass `rowCount` and fetch by page.  |
-| `manualSorting`      | `boolean` | You handle sorting (e.g. server-side); use with `sorting` / `onSortingChange`. |
-| `resetSelection`     | `boolean` | Clear selection when pagination changes.                                    |
-| `selectLabel`        | `string`  | Label for the “rows per page” select (default: `"Rows per page"`).         |
-
-**Manual pagination example:**
+## Tree rows
 
 ```tsx
-const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
-const { data, totalCount } = useFetchUsers(pagination);
-
-<DataTable<User>
-  data={data}
+<DataTable<Employee>
+  data={org}
   columns={columns}
-  pagination={pagination}
-  onPaginationChange={setPagination}
-  rowCount={totalCount}
-  paginationOptions={{ manualPagination: true }}
+  getSubRows={(row) => row.reports}
+  defaultExpanded={true} // or control it: expanded / onExpandedChange
+  enableRowSelection // selecting a parent selects its children
+  onRowClick={(row) => row.toggleExpanded()}
 />
 ```
 
-### Other props
-
-| Prop               | Type                    | Description                                              |
-|--------------------|-------------------------|----------------------------------------------------------|
-| `hidePagination`   | `boolean`               | Hide pagination controls.                                |
-| `loading`          | `boolean`               | Show skeleton rows.                                      |
-| `striped`          | `boolean`               | Alternate row background.                                |
-| `placeholder`      | `ReactNode`             | Custom content when there are no rows.                   |
-| `placeholderText`  | `string`                | Default empty state text (default: `"No data found"`).   |
-| `size`             | `"default" \| "sm"`     | Row/cell size.                                           |
-
-You can also pass any valid `div` props (e.g. `className`, `style`) and they are forwarded to the table wrapper.
-
-## Type exports
-
-Re-exported from `@tanstack/react-table` for convenience:
-
-- `DataTableColumnDef` — same as `ColumnDef`
-- `DataTableSortingState` — same as `SortingState`
-- `DataTablePaginationState` — same as `PaginationState`
+## Virtualization
 
 ```tsx
-import type {
-  DataTableColumnDef,
-  DataTableSortingState,
-  DataTablePaginationState,
-} from "@tmzm/react-data-table";
+import { VirtualDataTable } from "@tmzm/react-data-table/virtual";
+
+<VirtualDataTable data={tenThousandRows} columns={columns} virtual={{ estimateSize: 40, maxHeight: 600 }} />;
 ```
+
+Only the rows in view are rendered, and the header stays sticky. Pagination is off by default.
+
+## i18n and RTL
+
+Override any text with `labels`:
+
+```tsx
+<DataTable
+  labels={{
+    empty: "لا توجد بيانات",
+    rowsPerPage: "عدد الصفوف",
+    pageInfo: (page, count) => `صفحة ${page} من ${count}`,
+    previousPage: "الصفحة السابقة",
+    nextPage: "الصفحة التالية",
+  }}
+/>
+```
+
+Inside `dir="rtl"`, the fallbacks flip automatically: chevrons, tree indentation and alignment.
+
+## Custom layouts
+
+`DataTable` also exposes compound parts. Use `useDataTableContext()` to build toolbars or bulk-action bars without passing props down:
+
+```tsx
+function BulkBar() {
+  const { selection, table } = useDataTableContext<User>();
+  if (!selection.length) return null;
+  return <button onClick={() => table.resetRowSelection()}>Clear {selection.length}</button>;
+}
+
+<DataTable.Provider data={users} columns={columns} enableRowSelection>
+  <BulkBar />
+  <DataTable.Root>
+    <DataTable.Pagination />
+    <DataTable.Table maxHeight={480} />
+  </DataTable.Root>
+</DataTable.Provider>;
+```
+
+Parts: `Provider`, `Root`, `Table`, `Head`, `Body`, `Row`, `StatusRows`, `Pagination`.
+
+## Fully headless
+
+`useDataTable` gives you the state and the TanStack instance with no UI at all:
+
+```tsx
+const { table, status, selection } = useDataTable({ data, columns, enableRowSelection: true });
+```
+
+## Styling the fallbacks
+
+`styles.css` is optional, and every value in it is a `--rdt-*` custom property:
+
+```css
+:root {
+  --rdt-border: #e4e4e7;
+  --rdt-accent: #7c3aed;
+  --rdt-radius: 12px;
+}
+```
+
+Dark mode applies under `.dark` or `[data-theme="dark"]`. Without the stylesheet, you can style the fallbacks from their `data-*` attributes, for example with Tailwind: `[&_tr[data-state=selected]]:bg-muted`.
+
+## API
+
+### Options
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `data` | `T[]` | — |
+| `columns` | `DataTableColumnDef<T>[]` | — |
+| `getRowId` | `(row, index, parent?) => string` | `row.id`, else the index path |
+| `sorting` / `onSortingChange` / `defaultSorting` | `SortingState` | `[]` |
+| `manualSorting` | `boolean` | `false` |
+| `enableMultiSort` | `boolean` | `false` |
+| `pagination` / `onPaginationChange` / `defaultPagination` | `PaginationState` | `{ pageIndex: 0, pageSize: 10 }` |
+| `manualPagination` | `boolean` | `false` |
+| `rowCount` | `number` | — |
+| `pageSizeOptions` | `number[]` | `[10, 25, 50, 100]` |
+| `enablePagination` | `boolean` | `true` |
+| `enableRowSelection` | `boolean \| (row) => boolean` | — (no checkbox column) |
+| `selection` / `onSelectionChange` / `defaultSelection` | `T[]` | `[]` |
+| `resetSelectionOnPageChange` | `boolean` | `false` |
+| `getSubRows` | `(row, index) => T[] \| undefined` | — |
+| `getRowCanExpand` | `(row) => boolean` | — |
+| `expanded` / `onExpandedChange` / `defaultExpanded` | `ExpandedState` | `{}` |
+| `paginateExpandedRows` | `boolean` | `false` |
+| `loading` | `boolean` | `false` |
+| `error` / `onRetry` | `unknown` / `() => void` | — |
+| `tableOptions` | `Partial<TableOptions>` | escape hatch passed to `useTable` |
+
+### Rendering
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `components` | `Partial<DataTableComponents>` | Replace any slot. |
+| `labels` | `Partial<DataTableLabels>` | Override any text. |
+| `slotProps` | `DataTableSlotProps<T>` | Extra props for element slots: `row`, `cell` and `headerCell` take functions. |
+| `onRowClick` | `(row, event) => void` | Not triggered by the checkbox or the expand toggle. |
+| `size` | `"sm" \| "default"` | Density (default `"sm"`). |
+| `striped` | `boolean` | Alternate row backgrounds. |
+| `footer` | `ReactNode` | Rendered between the table and the pagination. |
+| `hidePagination` | `boolean` | Hide the pagination UI while still paginating. |
+| `...div props` | | Forwarded to `Root`. |
+
+### Column meta
+
+```ts
+{ align?: "start" | "center" | "end"; headerClassName?: string; cellClassName?: string }
+```
+
+## Migrating from v1
+
+- The package targets **TanStack Table v9**. Type columns with `DataTableColumnDef<T>` or `createDataTableColumnHelper<T>()`.
+- `pagination` / `onPaginationChange` are now optional. Without them, pagination state is managed internally.
+- `selectable` + `enableRowSelection` are merged into a single `enableRowSelection` prop.
+- `paginationOptions.{manualPagination, manualSorting, resetSelection}` became the top-level props `manualPagination`, `manualSorting` and `resetSelectionOnPageChange`.
+- `paginationOptions.selectLabel` and `placeholderText` moved to `labels.rowsPerPage` and `labels.empty`, and `placeholder` became the `Empty` slot.
+- Columns are sortable unless they set `enableSorting: false`, which is TanStack's default.
+- Radix UI and lucide are no longer dependencies. The fallbacks are native HTML.
+
+## Development
+
+```bash
+pnpm test        # vitest + testing-library
+pnpm typecheck
+pnpm build       # tsup (ESM + CJS) + tsc declarations
+```
+
+To try changes live, use the playground in `../react-data-table-playground`. It imports this package's source directly, so edits hot-reload with no rebuild or reinstall.
 
 ## License
 

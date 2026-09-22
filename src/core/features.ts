@@ -30,7 +30,6 @@ import {
  * @property align - Text alignment of the header and cells. Logical, so it flips in RTL.
  * @property headerClassName - Class added to this column's header cell.
  * @property cellClassName - Class added to each of this column's body cells.
- * @property grow - In fixed layouts, let this column take the spare width.
  *
  * @example
  * ```tsx
@@ -43,7 +42,6 @@ export interface DataTableColumnMeta {
   align?: "start" | "center" | "end";
   headerClassName?: string;
   cellClassName?: string;
-  grow?: boolean;
 }
 
 /**
