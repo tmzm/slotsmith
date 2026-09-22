@@ -80,6 +80,16 @@ export const shadcnComponents: Partial<DataTableComponents> = {
 <DataTable data={data} columns={columns} components={shadcnComponents} />;
 ```
 
+### Tested with
+
+Integration suites render the table with real UI libraries and fail on any React warning. The adapters are ready to copy:
+
+| Library | Adapter |
+| --- | --- |
+| shadcn/ui (radix-ui, Tailwind) | [`src/__tests__/integrations/shadcn/components.tsx`](src/__tests__/integrations/shadcn/components.tsx) |
+| Chakra UI v3 | [`src/__tests__/integrations/chakra/components.tsx`](src/__tests__/integrations/chakra/components.tsx) |
+| MUI v7 | [`src/__tests__/integrations/mui/components.tsx`](src/__tests__/integrations/mui/components.tsx) |
+
 ### Reading the row in a custom `Row`
 
 Element slots only receive DOM props. Use `useDataTableRow()` to get the row, for example for drag-and-drop:
