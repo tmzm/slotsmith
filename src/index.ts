@@ -1,7 +1,38 @@
-export * from "./DataTable";
+export { DataTable, DataTableProvider, DataTableRoot } from "./DataTable";
+export type { DataTableProps, DataTableProviderProps, DataTableRootProps } from "./DataTable";
+
+export {
+  DataTableBody,
+  DataTableHead,
+  DataTablePagination,
+  DataTableRowView,
+  DataTableStatusRows,
+  DataTableTable,
+  mergeProps,
+  useColumnSpan,
+} from "./parts";
+
+export { useDataTable, defaultGetRowId, DEFAULT_PAGE_SIZE_OPTIONS } from "./core/useDataTable";
+export type { UseDataTableOptions, DataTableModel, DataTableStatus } from "./core/useDataTable";
+
+export { dataTableFeatures, createDataTableColumnHelper } from "./core/features";
 export type {
-  ColumnDef as DataTableColumnDef,
-  SortingState as DataTableSortingState,
+  DataTableCell,
+  DataTableColumnDef,
+  DataTableColumnMeta,
+  DataTableFeatures,
+  DataTableHeader,
+  DataTableInstance,
+  DataTableRow,
+} from "./core/features";
+
+export { useDataTableContext, useDataTableRow } from "./slots/context";
+export type { DataTableContextValue } from "./slots/context";
+export { fallbackComponents, defaultLabels, cx } from "./slots/fallbacks";
+export * from "./slots/types";
+
+export type {
+  ExpandedState as DataTableExpandedState,
   PaginationState as DataTablePaginationState,
+  SortingState as DataTableSortingState,
 } from "@tanstack/react-table";
-import "./styles.css";

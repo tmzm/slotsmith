@@ -1,300 +1,347 @@
-/* Design Tokens (Customizable) */
+/*
+ * Optional styles for the built-in fallback slots.
+ * Every value is a --rdt-* token; override them on :root or on any .rdt root.
+ * Custom slots are unaffected — style them however your UI library does.
+ */
+
 :root {
-    --rdt-bg: transparent;
-    --rdt-header-bg: transparent;
-    --rdt-border: #6b7280;
-    --rdt-text: #111827;
-    --rdt-muted: #6b7280;
-    --rdt-hover: rgba(0, 0, 0, 0.05);
-    --rdt-stripe: rgba(0, 0, 0, 0.05);
-    --rdt-skeleton-bg: #e5e7eb;
-    --rdt-skeleton-bg-2: #f3f4f6;
-    --rdt-popover-bg: #ffffff;
+  --rdt-bg: transparent;
+  --rdt-header-bg: transparent;
+  --rdt-border: #e5e7eb;
+  --rdt-text: #111827;
+  --rdt-muted: #6b7280;
+  --rdt-hover: rgba(0, 0, 0, 0.04);
+  --rdt-stripe: rgba(0, 0, 0, 0.025);
+  --rdt-selected: rgba(37, 99, 235, 0.08);
+  --rdt-accent: #2563eb;
+  --rdt-danger: #dc2626;
+  --rdt-skeleton-bg: #e5e7eb;
+  --rdt-skeleton-bg-2: #f3f4f6;
 
-    --rdt-radius: 8px;
-    --rdt-font-size: 14px;
-    --rdt-padding-x: 12px;
-    --rdt-padding-y: 10px;
-
-    --rdt-checkbox-size: 16px;
+  --rdt-radius: 8px;
+  --rdt-font-size: 14px;
+  --rdt-padding-x: 12px;
+  --rdt-padding-y: 10px;
+  --rdt-checkbox-size: 16px;
+  --rdt-max-height: none;
 }
 
-.dark {
-    --rdt-border: #212121;
-    --rdt-text: #ffffff;
-    --rdt-muted: #999999;
-    --rdt-hover: rgba(255, 255, 255, 0.05);
-    --rdt-stripe: rgba(255, 255, 255, 0.05);
-
-    --rdt-skeleton-bg: #212121;
-    --rdt-skeleton-bg-2: #333333;
-
-    --rdt-popover-bg: #212121;
+.dark,
+[data-theme="dark"] {
+  --rdt-border: #2a2a2a;
+  --rdt-text: #f5f5f5;
+  --rdt-muted: #a3a3a3;
+  --rdt-hover: rgba(255, 255, 255, 0.04);
+  --rdt-stripe: rgba(255, 255, 255, 0.025);
+  --rdt-selected: rgba(96, 165, 250, 0.12);
+  --rdt-accent: #60a5fa;
+  --rdt-danger: #f87171;
+  --rdt-skeleton-bg: #262626;
+  --rdt-skeleton-bg-2: #333333;
 }
 
-/* Wrapper */
-.rdt__wrapper {
-    width: 100%;
-    font-family: inherit;
-    font-size: var(--rdt-font-size);
-    color: var(--rdt-text);
-    border: 1px solid var(--rdt-border);
-    border-radius: var(--rdt-radius);
+/* ------------------------------------------------------------------ root */
+
+.rdt {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--rdt-font-size);
+  color: var(--rdt-text);
+  background: var(--rdt-bg);
+  border: 1px solid var(--rdt-border);
+  border-radius: var(--rdt-radius);
+  overflow: hidden;
 }
 
-/* Table */
+.rdt[data-size="default"] {
+  --rdt-font-size: 14px;
+  --rdt-padding-x: 14px;
+  --rdt-padding-y: 12px;
+}
+
+.rdt[data-size="sm"] {
+  --rdt-font-size: 13px;
+  --rdt-padding-x: 10px;
+  --rdt-padding-y: 8px;
+  --rdt-checkbox-size: 14px;
+}
+
+.rdt__scroll {
+  width: 100%;
+  max-height: var(--rdt-max-height);
+  overflow: auto;
+}
+
+/* ----------------------------------------------------------------- table */
+
 .rdt__table {
-    width: 100%;
-    overflow: auto;
-    background: var(--rdt-bg);
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: start;
 }
 
-/* Header */
-.rdt__header {
-    background: var(--rdt-header-bg);
-    border-bottom: 1px solid var(--rdt-border);
+.rdt__head .rdt__cell {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--rdt-header-bg);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-/* Row */
-.rdt__row {
-    display: flex;
-    align-items: stretch;
-    border-bottom: 1px solid var(--rdt-border);
-    transition: background 0.15s ease;
-}
-
-.rdt__row:last-child {
-    border-bottom: none;
-}
-
-/* Hover */
-.rdt__body .rdt__row:hover {
-    background: var(--rdt-hover);
-}
-
-/* Striped */
-.rdt__row--striped:nth-child(even) {
-    background: var(--rdt-stripe);
-}
-
-/* Cell */
 .rdt__cell {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    padding: var(--rdt-padding-y) var(--rdt-padding-x);
-    min-height: 40px;
-    overflow: hidden;
+  padding: var(--rdt-padding-y) var(--rdt-padding-x);
+  text-align: start;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--rdt-border);
 }
 
-.rdt__header .rdt__cell {
-    font-weight: 600;
-    color: var(--rdt-text);
+.rdt__body .rdt__row:last-child .rdt__cell {
+  border-bottom: none;
 }
 
-.rdt__cell__content {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    user-select: none;
+.rdt__cell--select {
+  width: 1%;
+  padding-inline-end: 0;
 }
 
-.rdt__cell__content svg {
-    width: 14px;
-    height: 14px;
-    opacity: 0.6;
+.rdt__body .rdt__row {
+  transition: background-color 0.15s ease;
 }
 
-/* Checkbox */
+.rdt__body .rdt__row:hover {
+  background: var(--rdt-hover);
+}
+
+.rdt[data-striped] .rdt__body .rdt__row:nth-child(even) {
+  background: var(--rdt-stripe);
+}
+
+.rdt__body .rdt__row[data-state="selected"] {
+  background: var(--rdt-selected);
+}
+
+.rdt__row[data-clickable] {
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------- sorting */
+
+.rdt__sort {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+}
+
+.rdt__cell[data-align="end"] .rdt__sort {
+  flex-direction: row-reverse;
+}
+
+.rdt__sort-icon {
+  display: inline-flex;
+  opacity: 0.35;
+}
+
+.rdt__sort[data-sorted] .rdt__sort-icon {
+  opacity: 1;
+}
+
+.rdt__sort-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ------------------------------------------------------------- tree rows */
+
+.rdt__tree {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rdt__expand,
+.rdt__tree-spacer {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.rdt__expand {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--rdt-muted);
+}
+
+.rdt__expand:hover {
+  background: var(--rdt-hover);
+}
+
+.rdt__expand svg {
+  transition: transform 0.15s ease;
+}
+
+.rdt__expand[data-expanded] svg {
+  transform: rotate(90deg);
+}
+
+/* ---------------------------------------------------------------- inputs */
+
 .rdt__checkbox {
-    width: var(--rdt-checkbox-size);
-    height: var(--rdt-checkbox-size);
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--rdt-border);
-    cursor: pointer;
+  width: var(--rdt-checkbox-size);
+  height: var(--rdt-checkbox-size);
+  margin: 0;
+  accent-color: var(--rdt-accent);
+  cursor: pointer;
+  vertical-align: middle;
 }
 
-/* Loading Skeleton */
+.rdt__checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.rdt__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  font: inherit;
+  color: var(--rdt-text);
+  background: transparent;
+  border: 1px solid var(--rdt-border);
+  border-radius: var(--rdt-radius);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.rdt__button:hover:not(:disabled) {
+  background: var(--rdt-hover);
+}
+
+.rdt__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rdt__button--icon {
+  width: 32px;
+  padding: 0;
+}
+
+.rdt__select {
+  height: 32px;
+  padding: 0 8px;
+  font: inherit;
+  color: var(--rdt-text);
+  background: transparent;
+  border: 1px solid var(--rdt-border);
+  border-radius: var(--rdt-radius);
+  cursor: pointer;
+}
+
+.rdt__select option {
+  color: initial;
+}
+
+.rdt :is(button, select, input):focus-visible {
+  outline: 2px solid var(--rdt-accent);
+  outline-offset: 2px;
+}
+
+/* In RTL, "previous"/"next" chevrons and the expand arrow point the other way. */
+.rdt:dir(rtl) svg[data-direction="previous"],
+.rdt:dir(rtl) svg[data-direction="next"] {
+  transform: scaleX(-1);
+}
+
+.rdt:dir(rtl) .rdt__expand[data-expanded] svg {
+  transform: scaleX(-1) rotate(90deg);
+}
+
+/* ---------------------------------------------------------------- states */
+
 .rdt__skeleton {
-    width: 100%;
-    height: 14px;
-    border-radius: 4px;
-    background: linear-gradient(90deg,
-            var(--rdt-skeleton-bg) 25%,
-            var(--rdt-skeleton-bg-2) 37%,
-            var(--rdt-skeleton-bg) 63%);
-    background-size: 400% 100%;
-    animation: rdt-loading 1.4s ease infinite;
+  width: 100%;
+  min-width: 24px;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--rdt-skeleton-bg) 25%,
+    var(--rdt-skeleton-bg-2) 37%,
+    var(--rdt-skeleton-bg) 63%
+  );
+  background-size: 400% 100%;
+  animation: rdt-loading 1.4s ease infinite;
 }
 
 @keyframes rdt-loading {
-    0% {
-        background-position: 100% 0;
-    }
-
-    100% {
-        background-position: 0 0;
-    }
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
 }
 
-/* Placeholder */
 .rdt__placeholder {
-    width: 100%;
-    text-align: center;
-    padding: 24px 0;
-    color: var(--rdt-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  text-align: center;
+  color: var(--rdt-muted);
 }
 
-/* Sizes */
-/* Default Size */
-.rdt__wrapper[data-size="default"] {
-    --rdt-font-size: 14px;
-    --rdt-padding-x: 14px;
-    --rdt-padding-y: 12px;
+.rdt__placeholder--error {
+  color: var(--rdt-danger);
 }
 
-/* Small Size */
-.rdt__wrapper[data-size="sm"] {
-    --rdt-font-size: 13px;
-    --rdt-padding-x: 10px;
-    --rdt-padding-y: 8px;
-    --rdt-checkbox-size: 14px;
-}
+/* ------------------------------------------------------------ pagination */
 
-/* Pagination */
 .rdt__pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px var(--rdt-padding-x);
+  border-top: 1px solid var(--rdt-border);
 }
 
-.rdt__pagination__buttons {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.rdt__pagination-buttons {
+  display: flex;
+  gap: 4px;
 }
 
-.rdt__pagination__button {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--rdt-radius);
-    border: 1px solid var(--rdt-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--rdt-text);
-    transition: color 0.15s ease;
+.rdt__pagination-info,
+.rdt__page-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rdt-muted);
 }
 
-.rdt__pagination__button svg {
-    width: 16px;
-    height: 16px;
-}
-
-.rdt__pagination__button:hover {
-    background: var(--rdt-hover);
-}
-
-.rdt__pagination__button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.rdt__pagination__info {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: var(--rdt-font-size);
-    color: var(--rdt-muted);
-}
-
-.rdt__pagination__select {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.rdt__pagination__select__button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    width: 64px;
-    height: 32px;
-    background: transparent;
-    border: 1px solid var(--rdt-border);
-    border-radius: var(--rdt-radius);
-    cursor: pointer;
-    font-size: var(--rdt-font-size);
-    color: var(--rdt-muted);
-}
-
-.rdt__pagination__select__button svg {
-    width: 16px;
-    height: 16px;
-}
-
-.rdt__pagination__select__label {
-    font-size: var(--rdt-font-size);
-    color: var(--rdt-muted);
-}
-
-.rdt__pagination__select__trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    width: 64px;
-    height: 32px;
-    background: transparent;
-    border: 1px solid var(--rdt-border);
-    border-radius: var(--rdt-radius);
-    cursor: pointer;
-    font-size: var(--rdt-font-size);
-}
-
-.rdt__pagination__select__content {
-    overflow: hidden;
-    background-color: var(--rdt-popover-bg);
-    border-radius: var(--rdt-radius);
-    box-shadow:
-        0px 10px 38px -10px rgba(22, 23, 24, 0.35),
-        0px 10px 20px -15px rgba(22, 23, 24, 0.2);
-}
-
-.rdt__pagination__select__icon,
-.rdt__pagination__select__icon svg,
-.rdt__pagination__select__scroll__up__button,
-.rdt__pagination__select__scroll__down__button,
-.rdt__pagination__select__scroll__up__button svg,
-.rdt__pagination__select__scroll__down__button svg {
-    width: 16px;
-    height: 16px;
-}
-
-.rdt__pagination__select__item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    width: 100%;
-    border-radius: var(--rdt-radius);
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: var(--rdt-font-size);
-    color: var(--rdt-muted);
-}
-
-.rdt__pagination__select__item__indicator,
-.rdt__pagination__select__item__indicator svg {
-    width: 16px;
-    height: 16px;
+@media (prefers-reduced-motion: reduce) {
+  .rdt__skeleton {
+    animation: none;
+  }
+  .rdt__body .rdt__row,
+  .rdt__expand svg {
+    transition: none;
+  }
 }

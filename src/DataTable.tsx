@@ -1,469 +1,144 @@
-"use client";
-
-import { Checkbox, CheckboxIndicator } from "@radix-ui/react-checkbox";
+import type { RowData } from "@tanstack/react-table";
+import type { HTMLAttributes, ReactNode } from "react";
+import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectIcon,
-  SelectItem,
-  SelectItemIndicator,
-  SelectItemText,
-  SelectPortal,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectTrigger,
-  SelectValue,
-  SelectViewport,
-} from "@radix-ui/react-select";
-import {
-  Column,
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  OnChangeFn,
-  PaginationState,
-  Row,
-  RowSelectionState,
-  SortingState,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUpIcon,
-  MinusIcon,
-} from "lucide-react";
-import { ReactNode, useCallback, useMemo } from "react";
+  DataTableBody,
+  DataTableHead,
+  DataTablePagination,
+  DataTableRowView,
+  DataTableStatusRows,
+  DataTableTable,
+} from "./parts";
+import { DataTableContext, useDataTableContext, type DataTableContextValue } from "./slots/context";
+import { defaultLabels, fallbackComponents } from "./slots/fallbacks";
+import type { DataTableComponents, DataTableLabels, DataTableSlotProps } from "./slots/types";
 
-export interface DataTableProps<T extends object> extends Omit<
-  React.HTMLAttributes<HTMLDivElement>,
-  "size"
-> {
-  data: T[];
-  columns: ColumnDef<T>[];
+export interface DataTableProviderProps<T extends RowData> extends UseDataTableOptions<T> {
+  /** Replace any UI slot; the rest fall back to the built-in plain-HTML ones. */
+  components?: Partial<DataTableComponents>;
+  /** Override any text (i18n). */
+  labels?: Partial<DataTableLabels>;
+  /** Extra DOM props for element slots, e.g. per-row classNames. */
+  slotProps?: DataTableSlotProps<T>;
+  onRowClick?: DataTableContextValue<T>["onRowClick"];
+  children?: ReactNode;
+}
 
-  /* Pagination */
-  paginationOptions?: {
-    manualPagination?: boolean;
-    manualSorting?: boolean;
-    resetSelection?: boolean;
-    selectLabel?: string;
+const withoutUndefined = <O extends object>(object: O | undefined): Partial<O> =>
+  Object.fromEntries(Object.entries(object ?? {}).filter(([, value]) => value !== undefined)) as Partial<O>;
+
+/** Runs the table and shares it with the compound parts. Renders no markup itself. */
+export function DataTableProvider<T extends RowData>({
+  components,
+  labels,
+  slotProps,
+  onRowClick,
+  children,
+  ...options
+}: DataTableProviderProps<T>) {
+  const model = useDataTable(options);
+
+  const value: DataTableContextValue<T> = {
+    ...model,
+    components: { ...fallbackComponents, ...withoutUndefined(components) },
+    labels: { ...defaultLabels, ...withoutUndefined(labels) },
+    slotProps: slotProps ?? {},
+    onRowClick,
   };
 
-  hidePagination?: boolean;
+  return <DataTableContext.Provider value={value}>{children}</DataTableContext.Provider>;
+}
 
-  /* Sorting: required for manual sorting */
-  sorting?: SortingState;
-  onSortingChange?: OnChangeFn<SortingState>;
-
-  pagination: PaginationState;
-  onPaginationChange: OnChangeFn<PaginationState>;
-  rowCount?: number;
-
-  /* Selection */
-  selectable?: boolean;
-  getSelectionKey?: (row: T & { id?: string }) => string;
-  enableRowSelection?: boolean | ((row: Row<T>) => boolean);
-  selection?: T[];
-  onSelectionChange?: (selected: T[]) => void;
-
-  size?: "default" | "sm";
-
-  /* UI */
-  placeholder?: ReactNode;
-  placeholderText?: string;
-  loading?: boolean;
+export interface DataTableRootProps extends HTMLAttributes<HTMLDivElement> {
+  size?: "sm" | "default";
   striped?: boolean;
 }
 
-/**
- *
- * @param data - The data to display in the table.
- * @param columns - The columns to display in the table.
- * @param hidePagination - Whether to hide the pagination.
- * @param paginationOptions - The pagination options.
- * @param sorting - The sorting state.
- * @param onSortingChange - The function to call when the sorting state changes.
- * @param pagination - The pagination state.
- * @param onPaginationChange - The function to call when the pagination state changes.
- * @param rowCount - The number of rows in the table.
- * @param selectable - Whether to enable row selection.
- * @param getSelectionKey - The function to get the selection key.
- * @param selection - The selection state.
- * @param onSelectionChange - The function to call when the selection state changes.
- * @param size - The size of the table.
- * @param loading - Whether to show the loading state.
- * @param striped - Whether to stripe the table.
- * @param placeholder - The placeholder to display when the table is empty.
- * @param placeholderText - The text to display when the table is empty.
- * @returns
- */
-export function DataTable<T extends object>({
-  data,
-  columns,
-  hidePagination = false,
-
-  paginationOptions = {
-    manualPagination: false,
-    manualSorting: false,
-    resetSelection: false,
-    selectLabel: "Rows per page",
-  },
-
-  sorting = [],
-  onSortingChange,
-
-  pagination,
-  onPaginationChange,
-  rowCount,
-
-  selectable = false,
-  getSelectionKey = (row) => row?.id || "",
-  selection = [],
-  onSelectionChange,
-  enableRowSelection,
-
-  placeholder,
-  placeholderText = "No data found",
-
-  size = "sm",
-
-  loading = false,
-
-  striped = false,
-
-  ...props
-}: DataTableProps<T>) {
-  const handlePaginationChange: OnChangeFn<PaginationState> = (page) => {
-    const newPagination = typeof page == "function" ? page(pagination) : page;
-
-    onPaginationChange?.(newPagination);
-
-    if (paginationOptions.resetSelection) {
-      return onSelectionChange?.([]);
-    }
-  };
-
-  const handleSortingChange: OnChangeFn<SortingState> = (sort) => {
-    const newSorting = typeof sort == "function" ? sort(sorting) : sort;
-
-    onSortingChange?.(newSorting);
-  };
-
-  // Optimized: Create lookup map for O(1) access instead of O(n) find operations
-  const dataByKey = useMemo(
-    () => new Map(data.map((r) => [getSelectionKey(r), r])),
-    [data, getSelectionKey],
-  );
-
-  // Optimized: Memoize current page keys to avoid recalculating
-  const thisPageKeys = useMemo(
-    () => new Set(data.map((r: T) => getSelectionKey(r))),
-    [data, getSelectionKey],
-  );
-
-  // Optimized: Memoize row selection state to prevent unnecessary recalculations
-  const rowSelectionState = useMemo(
-    () =>
-      selection
-        ? selection.reduce<Record<string, boolean>>((acc, row) => {
-            acc[getSelectionKey(row)] = true;
-            return acc;
-          }, {})
-        : {},
-    [selection, getSelectionKey],
-  );
-
-  const handleRowSelectionChange = useCallback<OnChangeFn<RowSelectionState>>(
-    (selectionState) => {
-      const newSelectionState =
-        typeof selectionState === "function"
-          ? selectionState(rowSelectionState)
-          : selectionState;
-
-      const currentPageSelected = newSelectionState
-        ? Object.keys(newSelectionState)
-            .map((key) => dataByKey.get(key))
-            .filter((row): row is T => row !== undefined)
-        : [];
-
-      if (
-        paginationOptions.manualPagination &&
-        Array.isArray(selection) &&
-        selection.length
-      ) {
-        const oldSelectionFromOtherPages = selection.filter(
-          (r) => !thisPageKeys.has(getSelectionKey(r)),
-        );
-
-        onSelectionChange?.([
-          ...oldSelectionFromOtherPages,
-          ...currentPageSelected,
-        ]);
-      } else {
-        onSelectionChange?.(currentPageSelected);
-      }
-    },
-    [
-      rowSelectionState,
-      dataByKey,
-      thisPageKeys,
-      paginationOptions.manualPagination,
-      selection,
-      getSelectionKey,
-      onSelectionChange,
-    ],
-  );
-
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: handleSortingChange,
-
-    state: {
-      rowSelection: rowSelectionState,
-      sorting,
-      pagination: {
-        pageIndex: pagination?.pageIndex || 0,
-        pageSize: pagination?.pageSize || 10,
-      },
-    },
-
-    ...paginationOptions,
-
-    onRowSelectionChange: handleRowSelectionChange,
-
-    enableRowSelection,
-    enableMultiRowSelection: enableRowSelection,
-
-    onPaginationChange: handlePaginationChange,
-
-    rowCount,
-
-    getRowId: getSelectionKey,
-
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-  });
-
-  const toggleSort = (column: Column<T>) => {
-    if (column.getCanSort() && column.columnDef.enableSorting)
-      if (column.getIsSorted() == "desc") column.clearSorting();
-      else column.toggleSorting();
-  };
-
-  const SortIcon = useMemo(() => {
-    const Icon = ({ column }: { column: Column<T> }) => {
-      if (!column.columnDef.enableSorting || !column.getCanSort()) return null;
-
-      return column.getIsSorted() === "asc" ? (
-        <ArrowUp />
-      ) : column.getIsSorted() === "desc" ? (
-        <ArrowDown />
-      ) : (
-        <ArrowUpDown />
-      );
-    };
-    Icon.displayName = "SortIcon";
-    return Icon;
-  }, []);
-
+/** The `Root` slot, carrying status / size / striped as data attributes. */
+export function DataTableRoot({ size, striped, ...props }: DataTableRootProps) {
+  const { components: C, status } = useDataTableContext();
   return (
-    <div className="rdt__wrapper" {...props}>
-      <table className="rdt__table">
-        <thead className="rdt__header">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr className="rdt__row" key={headerGroup.id}>
-              {selectable && (
-                <th className="rdt__cell">
-                  <Checkbox
-                    checked={
-                      table.getIsSomeRowsSelected()
-                        ? "indeterminate"
-                        : table.getIsAllRowsSelected()
-                    }
-                    disabled={
-                      enableRowSelection == false ||
-                      table
-                        .getRowModel()
-                        .rows.every((row) => !row.getCanSelect())
-                    }
-                    onCheckedChange={(checked) =>
-                      table.toggleAllRowsSelected(
-                        checked === "indeterminate" ? false : checked,
-                      )
-                    }
-                    className="rdt__checkbox"
-                  >
-                    <CheckboxIndicator>
-                      {table.getIsSomeRowsSelected() && <MinusIcon />}
-                      {table.getIsAllRowsSelected() === true && <CheckIcon />}
-                    </CheckboxIndicator>
-                  </Checkbox>
-                </th>
-              )}
-
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th className="rdt__cell" key={header.id}>
-                    <div
-                      className="rdt__cell__content"
-                      onClick={() => toggleSort(header.column)}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-
-                      <SortIcon column={header.column} />
-                    </div>
-                  </th>
-                );
-              })}
-            </tr>
-          ))}
-        </thead>
-
-        <tbody className="rdt__body">
-          {loading ? (
-            Array.from({ length: table.getState().pagination.pageSize }).map(
-              (_, index) => (
-                <tr className="rdt__row" key={index}>
-                  {Array.from({ length: columns.length }).map((_, index) => (
-                    <td className="rdt__cell" key={index}>
-                      <div className="rdt__skeleton" />
-                    </td>
-                  ))}
-                </tr>
-              ),
-            )
-          ) : !!table.getRowModel().rows.length ? (
-            table.getRowModel().rows.map((row) => (
-              <tr
-                className={`rdt__row ${striped ? "rdt__row--striped" : ""}`}
-                key={row.id}
-              >
-                {selectable && (
-                  <td className="rdt__cell">
-                    <Checkbox
-                      checked={row.getIsSelected()}
-                      disabled={
-                        enableRowSelection == false || !row.getCanSelect()
-                      }
-                      onCheckedChange={(checked) =>
-                        row.toggleSelected(
-                          checked === "indeterminate" ? false : checked,
-                        )
-                      }
-                      className="rdt__checkbox"
-                    >
-                      <CheckboxIndicator>
-                        <CheckIcon />
-                      </CheckboxIndicator>
-                    </Checkbox>
-                  </td>
-                )}
-
-                {row.getVisibleCells().map((cell) => (
-                  <td className="rdt__cell" key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr className="rdt__row">
-              <td className="rdt__cell">
-                {placeholder || (
-                  <div className="rdt__placeholder">{placeholderText}</div>
-                )}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {!hidePagination && (
-        <div className="rdt__pagination">
-          <div className="rdt__pagination__buttons">
-            <button
-              className="rdt__pagination__button"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <ChevronLeft />
-            </button>
-            <button
-              className="rdt__pagination__button"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <ChevronRight />
-            </button>
-          </div>
-          <div className="rdt__pagination__info">
-            <span>
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </span>
-          </div>
-
-          <div className="rdt__pagination__select">
-            <Select
-              value={pagination?.pageSize?.toString() || "10"}
-              onValueChange={(value) => table.setPageSize(Number(value))}
-            >
-              <SelectTrigger className="rdt__pagination__select__trigger">
-                <SelectValue />
-                <SelectIcon className="rdt__pagination__select__icon">
-                  <ChevronDownIcon />
-                </SelectIcon>
-              </SelectTrigger>
-              <SelectPortal>
-                <SelectContent className="rdt__pagination__select__content">
-                  <SelectScrollUpButton className="rdt__pagination__select__scroll__up__button">
-                    <ChevronUpIcon />
-                  </SelectScrollUpButton>
-                  <SelectViewport className="rdt__pagination__select__viewport">
-                    <SelectGroup>
-                      {[10, 25, 50, 100].map((size, index) => (
-                        <SelectItem
-                          key={index}
-                          className="rdt__pagination__select__item"
-                          value={size.toString()}
-                        >
-                          <SelectItemText>{size}</SelectItemText>
-                          <SelectItemIndicator className="rdt__pagination__select__item__indicator">
-                            <CheckIcon />
-                          </SelectItemIndicator>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectViewport>
-                  <SelectScrollDownButton className="rdt__pagination__select__scroll__down__button">
-                    <ChevronDownIcon />
-                  </SelectScrollDownButton>
-                </SelectContent>
-              </SelectPortal>
-            </Select>
-
-            <span className="rdt__pagination__select__label">
-              {paginationOptions.selectLabel}
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
+    <C.Root
+      data-status={status}
+      data-size={size}
+      data-striped={striped || undefined}
+      aria-busy={status === "loading" || undefined}
+      {...props}
+    />
   );
 }
+
+export interface DataTableProps<T extends RowData>
+  extends Omit<DataTableProviderProps<T>, "children">,
+    Omit<DataTableRootProps, "children" | "onError"> {
+  /** Rendered below the table, above the pagination (e.g. a totals bar). */
+  footer?: ReactNode;
+  /** Hide the pagination UI while still paginating. */
+  hidePagination?: boolean;
+}
+
+const PROVIDER_KEYS = [
+  "data", "columns", "getRowId",
+  "sorting", "onSortingChange", "defaultSorting", "manualSorting", "enableMultiSort",
+  "pagination", "onPaginationChange", "defaultPagination", "manualPagination", "rowCount",
+  "pageSizeOptions", "enablePagination",
+  "enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange",
+  "getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows",
+  "loading", "error", "onRetry", "tableOptions",
+  "components", "labels", "slotProps", "onRowClick",
+] as const;
+
+// Compile-time guard: every provider option must be routed to the provider.
+type MissingProviderKeys = Exclude<
+  keyof DataTableProviderProps<RowData>,
+  (typeof PROVIDER_KEYS)[number] | "children"
+>;
+const _allProviderKeysListed: [MissingProviderKeys] extends [never] ? true : MissingProviderKeys = true;
+void _allProviderKeysListed;
+
+const providerKeys = new Set<string>(PROVIDER_KEYS);
+
+/** Splits `<DataTable>` props into provider options and root / layout props. */
+export function splitDataTableProps<T extends RowData, P extends DataTableProps<T>>(props: P) {
+  const providerProps: Record<string, unknown> = {};
+  const rest: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    (providerKeys.has(key) ? providerProps : rest)[key] = value;
+  }
+  return {
+    providerProps: providerProps as unknown as DataTableProviderProps<T>,
+    rest: rest as Omit<P, keyof DataTableProviderProps<T>>,
+  };
+}
+
+/**
+ * A headless-first data table. Every piece of UI is a replaceable slot
+ * (`components`), every string is a label (`labels`), and the built-in
+ * fallbacks are plain HTML styled by the optional `styles.css`.
+ */
+function DataTableComponent<T extends RowData>(props: DataTableProps<T>) {
+  const { providerProps, rest } = splitDataTableProps<T, DataTableProps<T>>(props);
+  const { size = "sm", footer, hidePagination, ...htmlProps } = rest;
+
+  return (
+    <DataTableProvider {...providerProps}>
+      <DataTableRoot size={size} {...htmlProps}>
+        <DataTableTable />
+        {footer}
+        {!hidePagination && <DataTablePagination />}
+      </DataTableRoot>
+    </DataTableProvider>
+  );
+}
+
+/** `<DataTable>` plus its compound parts for custom layouts. */
+export const DataTable = Object.assign(DataTableComponent, {
+  Provider: DataTableProvider,
+  Root: DataTableRoot,
+  Table: DataTableTable,
+  Head: DataTableHead,
+  Body: DataTableBody,
+  Row: DataTableRowView,
+  StatusRows: DataTableStatusRows,
+  Pagination: DataTablePagination,
+});
