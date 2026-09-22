@@ -100,6 +100,12 @@ describe("slots", () => {
     expect(bodyRows().map((row) => row.getAttribute("data-row-id"))).toEqual(["u1", "u2"]);
   });
 
+  it("never passes undefined props that would override a slot's own defaults", () => {
+    const Cell = (props: HTMLAttributes<HTMLTableCellElement>) => <td className="library-cell" {...props} />;
+    render(<DataTable<User> data={users(1)} columns={[{ accessorKey: "name", header: "Name" }]} components={{ Cell }} />);
+    expect(within(bodyRows()[0]!).getByRole("cell")).toHaveClass("library-cell");
+  });
+
   it("lets a slot wrap its fallback", () => {
     const Wrapped = (props: HTMLAttributes<HTMLTableRowElement>) => (
       <fallbackComponents.Row {...props} className="mine" />

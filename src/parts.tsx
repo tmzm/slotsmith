@@ -24,10 +24,9 @@ type AnyProps = HTMLAttributes<HTMLElement> & Record<string, unknown>;
  * ```
  */
 export function mergeProps<P extends object>(base: P, extra?: Partial<P>): P {
-  if (!extra) return base;
   const a = base as AnyProps;
-  const b = extra as AnyProps;
-  return {
+  const b = (extra ?? {}) as AnyProps;
+  const merged: AnyProps = {
     ...a,
     ...b,
     className: cx(a.className, b.className),
@@ -39,7 +38,10 @@ export function mergeProps<P extends object>(base: P, extra?: Partial<P>): P {
             (b.onClick as (e: never) => void)(event);
           }
         : (b.onClick ?? a.onClick),
-  } as P;
+  };
+  /** An explicit `undefined` would override a slot's own default (e.g. `className`). */
+  for (const key of Object.keys(merged)) if (merged[key] === undefined) delete merged[key];
+  return merged as P;
 }
 
 /**
