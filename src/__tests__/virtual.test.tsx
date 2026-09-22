@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { VirtualDataTable } from "../virtual";
 import { bodyRows, columns, users, type User } from "./builders";
@@ -39,6 +39,20 @@ describe("VirtualDataTable", () => {
     const rendered = dataRows().length;
     expect(rendered).toBeGreaterThan(0);
     expect(rendered).toBeLessThan(30);
+  });
+
+  it("follows scrolling from the first mount", async () => {
+    const { container } = render(
+      <VirtualDataTable<User> data={users(1000)} columns={columns} virtual={{ estimateSize: 40, overscan: 0 }} />,
+    );
+    const scroller = container.querySelector<HTMLDivElement>(".rdt__scroll")!;
+    expect(dataRows()[0]).toHaveTextContent("User 01");
+
+    await act(async () => {
+      scroller.scrollTop = 4000;
+      scroller.dispatchEvent(new Event("scroll"));
+    });
+    expect(dataRows()[0]).toHaveTextContent("User 101");
   });
 
   it("pads the rest of the list with a spacer row", () => {

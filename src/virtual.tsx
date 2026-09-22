@@ -1,6 +1,6 @@
 import type { RowData } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef, type RefObject } from "react";
+import { useState } from "react";
 import {
   DataTableProvider,
   DataTableRoot,
@@ -60,8 +60,12 @@ function Spacer({ height, colSpan }: { height: number; colSpan: number }) {
  * Virtual body props
  */
 export interface DataTableVirtualBodyProps extends VirtualOptions {
-  /** The scroll area the rows scroll in. */
-  scrollRef: RefObject<HTMLDivElement | null>;
+  /**
+   * The scroll area the rows scroll in. Pass the element itself (kept in
+   * state via a callback ref), not a ref object: the body renders inside the
+   * scroll area, so a ref object is still empty when the body first mounts.
+   */
+  scrollElement: HTMLElement | null;
 }
 
 /**
@@ -75,13 +79,13 @@ export interface DataTableVirtualBodyProps extends VirtualOptions {
  * @example
  * ```tsx
  * function MyVirtualTable() {
- *   const scrollRef = useRef<HTMLDivElement>(null);
+ *   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
  *   return (
  *     <DataTable.Provider data={rows} columns={columns} enablePagination={false}>
  *       <DataTable.Table
- *         scrollRef={scrollRef}
+ *         scrollRef={setScrollElement}
  *         maxHeight={600}
- *         body={<DataTableVirtualBody scrollRef={scrollRef} maxHeight={600} />}
+ *         body={<DataTableVirtualBody scrollElement={scrollElement} maxHeight={600} />}
  *       />
  *     </DataTable.Provider>
  *   );
@@ -89,7 +93,7 @@ export interface DataTableVirtualBodyProps extends VirtualOptions {
  * ```
  */
 export function DataTableVirtualBody({
-  scrollRef,
+  scrollElement,
   estimateSize = 40,
   overscan = 10,
   maxHeight = DEFAULT_MAX_HEIGHT,
@@ -100,7 +104,7 @@ export function DataTableVirtualBody({
 
   const virtualizer = useVirtualizer({
     count: status === "ready" ? rows.length : 0,
-    getScrollElement: () => scrollRef.current,
+    getScrollElement: () => scrollElement,
     estimateSize: () => estimateSize,
     overscan,
     /** Render the first screen before the scroll area has been measured (also SSR). */
@@ -165,17 +169,17 @@ export interface VirtualDataTableProps<T extends RowData> extends DataTableProps
 export function VirtualDataTable<T extends RowData>(props: VirtualDataTableProps<T>) {
   const { providerProps, rest } = splitDataTableProps<T, VirtualDataTableProps<T>>(props);
   const { virtual = {}, size = "sm", footer, hidePagination, ...htmlProps } = rest;
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
 
   return (
     <DataTableProvider enablePagination={false} {...providerProps}>
       <DataTableRoot size={size} data-virtual="" {...htmlProps}>
         <DataTableTable
-          scrollRef={scrollRef}
+          scrollRef={setScrollElement}
           maxHeight={virtual.maxHeight ?? DEFAULT_MAX_HEIGHT}
           body={
             <DataTableVirtualBody
-              scrollRef={scrollRef}
+              scrollElement={scrollElement}
               estimateSize={virtual.estimateSize}
               overscan={virtual.overscan}
               maxHeight={virtual.maxHeight}
