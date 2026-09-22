@@ -59,16 +59,19 @@ export type RowSlotProps = HTMLAttributes<HTMLTableRowElement>;
  * Header cell slot props
  *
  * Element slot: plain `<th>` props. Sortable headers carry `aria-sort` and
- * `data-sorted`; aligned columns carry `data-align`.
+ * `data-sorted`; aligned columns carry `data-align`. The obsolete HTML `align`
+ * attribute is left out (alignment is set through `style`), so components
+ * with their own `align` prop, like MUI's `TableCell`, fit directly.
  */
-export type HeaderCellSlotProps = ThHTMLAttributes<HTMLTableCellElement>;
+export type HeaderCellSlotProps = Omit<ThHTMLAttributes<HTMLTableCellElement>, "align">;
 
 /**
  * Cell slot props
  *
- * Element slot: plain `<td>` props. Aligned columns carry `data-align`.
+ * Element slot: plain `<td>` props. Aligned columns carry `data-align`. The
+ * obsolete HTML `align` attribute is left out, as for {@link HeaderCellSlotProps}.
  */
-export type CellSlotProps = TdHTMLAttributes<HTMLTableCellElement>;
+export type CellSlotProps = Omit<TdHTMLAttributes<HTMLTableCellElement>, "align">;
 
 /**
  * Checkbox slot props
