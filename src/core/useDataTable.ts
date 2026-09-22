@@ -19,85 +19,173 @@ import {
 } from "./features";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
 
+/**
+ * Default page size options
+ *
+ * The page sizes offered by the page-size select unless `pageSizeOptions` is passed.
+ */
 export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
+/**
+ * Data table options
+ *
+ * Everything that drives the table's data and state. Each piece of state
+ * (sorting, pagination, selection, expansion) is controlled when its value is
+ * passed and managed internally otherwise; `default*` sets the internal start value.
+ *
+ * @typeParam T - The row data type.
+ *
+ * @example
+ * ```tsx
+ * const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+ *
+ * useDataTable<User>({
+ *   data: page.rows,
+ *   columns,
+ *   manualPagination: true,
+ *   rowCount: page.total,
+ *   pagination,
+ *   onPaginationChange: setPagination,
+ * });
+ * ```
+ */
 export interface UseDataTableOptions<T extends RowData> {
+  /** The rows to display. For manual pagination, just the current page. */
   data: T[];
+  /** The column definitions. */
   columns: DataTableColumnDef<T>[];
-  /** Stable row identity. Defaults to `row.id`, falling back to the row index. */
+  /** Stable row identity. Defaults to `row.id`, falling back to the row's index path. */
   getRowId?: (row: T, index: number, parent?: DataTableRow<T>) => string;
 
-  /* Sorting — controlled when `sorting` is passed, otherwise internal. */
+  /** Controlled sorting state. */
   sorting?: SortingState;
+  /** Called with the new sorting state. */
   onSortingChange?: (sorting: SortingState) => void;
+  /** Initial sorting when uncontrolled. Defaults to `[]`. */
   defaultSorting?: SortingState;
-  /** Data arrives already sorted (server-side sorting). */
+  /** The data arrives already sorted (server-side sorting). Defaults to `false`. */
   manualSorting?: boolean;
+  /** Allow sorting by several columns with shift-click. Defaults to `false`. */
   enableMultiSort?: boolean;
 
-  /* Pagination — controlled when `pagination` is passed, otherwise internal. */
+  /** Controlled pagination state. */
   pagination?: PaginationState;
+  /** Called with the new pagination state. */
   onPaginationChange?: (pagination: PaginationState) => void;
+  /** Initial pagination when uncontrolled. Defaults to `{ pageIndex: 0, pageSize: 10 }`. */
   defaultPagination?: PaginationState;
-  /** Data is already one page (server-side pagination); pass `rowCount`. */
+  /** The data is already one page (server-side pagination); pass `rowCount` too. Defaults to `false`. */
   manualPagination?: boolean;
   /** Total rows across all pages, for manual pagination. */
   rowCount?: number;
+  /** The page sizes offered. Defaults to {@link DEFAULT_PAGE_SIZE_OPTIONS}. */
   pageSizeOptions?: number[];
   /** `false` renders every row and hides the pagination. Defaults to `true`. */
   enablePagination?: boolean;
 
-  /* Selection — shows a checkbox column when set. */
+  /** Shows a checkbox column. A function decides per row whether it can be selected. */
   enableRowSelection?: boolean | ((row: DataTableRow<T>) => boolean);
+  /** Controlled selection, as row objects. Matched to rows by `getRowId`. */
   selection?: T[];
+  /** Called with the selected rows, including rows on other server pages. */
   onSelectionChange?: (selection: T[]) => void;
+  /** Initial selection when uncontrolled. Defaults to `[]`. */
   defaultSelection?: T[];
-  /** Clear the selection whenever the page or page size changes. */
+  /** Clear the selection whenever the page or page size changes. Defaults to `false`. */
   resetSelectionOnPageChange?: boolean;
 
-  /* Expanding / tree data */
+  /** Returns a row's children, turning the table into a tree. */
   getSubRows?: (row: T, index: number) => readonly T[] | undefined;
+  /** Decides whether a row can expand, e.g. to lazy-load children. */
   getRowCanExpand?: (row: DataTableRow<T>) => boolean;
+  /** Controlled expansion: `true` for all rows, or `{ [rowId]: true }`. */
   expanded?: ExpandedState;
+  /** Called with the new expansion state. */
   onExpandedChange?: (expanded: ExpandedState) => void;
+  /** Initial expansion when uncontrolled. Defaults to `{}`. */
   defaultExpanded?: ExpandedState;
   /** Count sub-rows towards the page size. Defaults to `false`. */
   paginateExpandedRows?: boolean;
 
-  /* Status */
+  /** Shows skeleton rows. Defaults to `false`. */
   loading?: boolean;
+  /** Any non-nullish value shows the error state. */
   error?: unknown;
+  /** Shows a retry button in the error state. */
   onRetry?: () => void;
 
   /** Escape hatch: extra options passed straight to TanStack's `useTable`. */
   tableOptions?: Partial<TableOptions<DataTableFeatures, T>>;
 }
 
+/**
+ * Data table status
+ *
+ * What the body shows: skeleton rows, the error, the empty message, or rows.
+ */
 export type DataTableStatus = "loading" | "error" | "empty" | "ready";
 
+/**
+ * Data table model
+ *
+ * The result of {@link useDataTable}: the TanStack instance plus the derived
+ * state every renderer needs.
+ *
+ * @typeParam T - The row data type.
+ */
 export interface DataTableModel<T extends RowData> {
+  /** The TanStack v9 table instance. */
   table: DataTableInstance<T>;
+  /** What the body should show. */
   status: DataTableStatus;
+  /** The `error` option, as passed. */
   error: unknown;
+  /** The `onRetry` option, as passed. */
   onRetry?: () => void;
+  /** Whether the checkbox column is shown. */
   selectable: boolean;
+  /** Whether rows can expand (`getSubRows` or `getRowCanExpand` was passed). */
   expandable: boolean;
+  /** Whether rows are paginated. */
   paginationEnabled: boolean;
+  /** The page sizes offered. */
   pageSizeOptions: number[];
+  /** The selected rows, including rows on other server pages. */
   selection: T[];
-  /** The identity key of any row, including ones on other pages. */
+  /** Returns the identity key of any row, including rows on other pages. */
   getRowKey: (row: T) => string;
 }
 
 const DEFAULT_PAGINATION: PaginationState = { pageIndex: 0, pageSize: 10 };
 
+/**
+ * Default row id
+ *
+ * Uses `row.id` when it is a string or number, otherwise the row's index path
+ * (`"3"`, `"3.0"` for its first child).
+ *
+ * @param row - The row data.
+ * @param index - The row's index among its siblings.
+ * @param parent - The parent row, for sub-rows.
+ * @returns The row id.
+ */
 export function defaultGetRowId<T>(row: T, index: number, parent?: { id: string }): string {
   const id = (row as { id?: unknown } | null)?.id;
   if (typeof id === "string" || typeof id === "number") return String(id);
   return parent ? `${parent.id}.${index}` : String(index);
 }
 
-/** Internal state that yields to a controlled value when one is passed. */
+/**
+ * Controllable state
+ *
+ * Internal state that yields to a controlled value when one is passed, and
+ * always reports changes through `onChange`.
+ *
+ * @param value - The controlled value, or `undefined` to use internal state.
+ * @param defaultValue - The internal start value.
+ * @param onChange - Called with every new value.
+ * @returns The current value and a setter that accepts a value or an updater.
+ */
 function useControllableState<S>(
   value: S | undefined,
   defaultValue: S,
@@ -127,7 +215,32 @@ function useControllableState<S>(
 
 const isPresent = (error: unknown) => error !== undefined && error !== null && error !== false;
 
-/** The headless data table: state, TanStack instance and derived status. No UI. */
+/**
+ * useDataTable
+ *
+ * The headless data table: state, the TanStack v9 instance and the derived
+ * status, with no UI. Use it to render a table entirely your own way, or use
+ * `<DataTable>` which calls it for you.
+ *
+ * @typeParam T - The row data type.
+ * @param options - See {@link UseDataTableOptions}.
+ * @returns See {@link DataTableModel}.
+ *
+ * @example
+ * ```tsx
+ * function Users({ users }: { users: User[] }) {
+ *   const { table, status } = useDataTable({ data: users, columns });
+ *   if (status === "empty") return <p>No users</p>;
+ *   return (
+ *     <ul>
+ *       {table.getRowModel().rows.map((row) => (
+ *         <li key={row.id}>{row.original.name}</li>
+ *       ))}
+ *     </ul>
+ *   );
+ * }
+ * ```
+ */
 export function useDataTable<T extends RowData>(options: UseDataTableOptions<T>): DataTableModel<T> {
   const {
     data,
@@ -174,8 +287,10 @@ export function useDataTable<T extends RowData>(options: UseDataTableOptions<T>)
   const selectable = enableRowSelection !== undefined && enableRowSelection !== false;
   const expandable = getSubRows !== undefined || getRowCanExpand !== undefined;
 
-  // Selection is exposed as rows (T[]) but TanStack works with ids. Rows seen in
-  // `data` resolve to their table id by identity; anything else by `getRowId`.
+  /**
+   * Selection is exposed as rows (T[]) but TanStack works with ids. Rows seen
+   * in `data` resolve to their table id by identity; anything else by `getRowId`.
+   */
   const idByOriginal = useRef(new WeakMap<object, string>());
   const getRowKey = useCallback(
     (row: T) =>
@@ -234,7 +349,7 @@ export function useDataTable<T extends RowData>(options: UseDataTableOptions<T>)
   const hasError = isPresent(error);
   const pageCount = table.getPageCount();
 
-  // A page that comes back empty (e.g. its last row was deleted) steps back.
+  /** A page that comes back empty (e.g. its last row was deleted) steps back. */
   useEffect(() => {
     if (!enablePagination || loading || hasError || visibleRowCount > 0) return;
     const target = stepBackPageIndex(pagination.pageIndex, pageCount);

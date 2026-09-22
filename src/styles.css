@@ -1,4 +1,6 @@
-/*
+/**
+ * Data table styles
+ *
  * Optional styles for the built-in fallback slots.
  * Every value is a --rdt-* token; override them on :root or on any .rdt root.
  * Custom slots are unaffected — style them however your UI library does.
@@ -40,7 +42,7 @@
   --rdt-skeleton-bg-2: #333333;
 }
 
-/* ------------------------------------------------------------------ root */
+/** Root */
 
 .rdt {
   width: 100%;
@@ -72,7 +74,7 @@
   overflow: auto;
 }
 
-/* ----------------------------------------------------------------- table */
+/** Table */
 
 .rdt__table {
   width: 100%;
@@ -126,7 +128,7 @@
   cursor: pointer;
 }
 
-/* --------------------------------------------------------------- sorting */
+/** Sorting */
 
 .rdt__sort {
   all: unset;
@@ -156,7 +158,7 @@
   height: 14px;
 }
 
-/* ------------------------------------------------------------- tree rows */
+/** Tree rows */
 
 .rdt__tree {
   display: flex;
@@ -195,7 +197,7 @@
   transform: rotate(90deg);
 }
 
-/* ---------------------------------------------------------------- inputs */
+/** Inputs */
 
 .rdt__checkbox {
   width: var(--rdt-checkbox-size);
@@ -261,7 +263,7 @@
   outline-offset: 2px;
 }
 
-/* In RTL, "previous"/"next" chevrons and the expand arrow point the other way. */
+/** In RTL, "previous"/"next" chevrons and the expand arrow point the other way. */
 .rdt:dir(rtl) svg[data-direction="previous"],
 .rdt:dir(rtl) svg[data-direction="next"] {
   transform: scaleX(-1);
@@ -271,7 +273,7 @@
   transform: scaleX(-1) rotate(90deg);
 }
 
-/* ---------------------------------------------------------------- states */
+/** States */
 
 .rdt__skeleton {
   width: 100%;
@@ -311,7 +313,7 @@
   color: var(--rdt-danger);
 }
 
-/* ------------------------------------------------------------ pagination */
+/** Pagination */
 
 .rdt__pagination {
   display: flex;

@@ -1,5 +1,10 @@
 import type { SVGProps } from "react";
 
+/**
+ * Svg
+ *
+ * A 16px, stroke-based, decorative SVG shared by the fallback icons.
+ */
 const Svg = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -17,6 +22,11 @@ const Svg = (props: SVGProps<SVGSVGElement>) => (
   />
 );
 
+/**
+ * Arrow up icon
+ *
+ * Sorted ascending.
+ */
 export const ArrowUpIcon = () => (
   <Svg>
     <path d="m5 12 7-7 7 7" />
@@ -24,6 +34,11 @@ export const ArrowUpIcon = () => (
   </Svg>
 );
 
+/**
+ * Arrow down icon
+ *
+ * Sorted descending.
+ */
 export const ArrowDownIcon = () => (
   <Svg>
     <path d="M12 5v14" />
@@ -31,6 +46,11 @@ export const ArrowDownIcon = () => (
   </Svg>
 );
 
+/**
+ * Arrow up-down icon
+ *
+ * Sortable, not sorted.
+ */
 export const ArrowUpDownIcon = () => (
   <Svg>
     <path d="m21 16-4 4-4-4" />
@@ -40,7 +60,12 @@ export const ArrowUpDownIcon = () => (
   </Svg>
 );
 
-/** Points to the inline end; flipped in RTL by CSS. */
+/**
+ * Chevron icon
+ *
+ * Points to the previous page, the next page, or down. The stylesheet flips
+ * `previous` / `next` in RTL.
+ */
 export const ChevronIcon = ({ direction }: { direction: "previous" | "next" | "down" }) => (
   <Svg data-direction={direction}>
     <path d={direction === "previous" ? "m15 18-6-6 6-6" : direction === "next" ? "m9 18 6-6-6-6" : "m6 9 6 6 6-6"} />

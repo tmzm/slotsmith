@@ -8,13 +8,21 @@ import { fallbackComponents } from "../slots/fallbacks";
 import type { CheckboxSlotProps, PaginationSlotProps } from "../slots/types";
 import { bodyRows, columns, renderTable, users, type User } from "./builders";
 
-/* ------------------------------------------- stand-ins for a UI library */
-
-// Like shadcn's TableRow: spreads everything onto the DOM, so it must only get DOM props.
+/**
+ * Library row
+ *
+ * Stands in for a UI library's row (like shadcn's TableRow): spreads
+ * everything onto the DOM, so it must only get DOM props.
+ */
 const LibraryRow = (props: HTMLAttributes<HTMLTableRowElement>) => (
   <tr data-library="row" {...props} />
 );
 
+/**
+ * Library checkbox
+ *
+ * Stands in for a UI library's checkbox with its own API.
+ */
 const LibraryCheckbox = ({ checked, onCheckedChange, ...props }: CheckboxSlotProps) => (
   <button
     type="button"
@@ -25,6 +33,11 @@ const LibraryCheckbox = ({ checked, onCheckedChange, ...props }: CheckboxSlotPro
   />
 );
 
+/**
+ * Library pagination
+ *
+ * Stands in for a UI library's pagination.
+ */
 const LibraryPagination = ({ pageIndex, pageCount, nextPage }: PaginationSlotProps) => (
   <div data-testid="library-pagination">
     {pageIndex + 1}/{pageCount}
@@ -33,8 +46,6 @@ const LibraryPagination = ({ pageIndex, pageCount, nextPage }: PaginationSlotPro
     </button>
   </div>
 );
-
-/* --------------------------------------------------------------------- tests */
 
 describe("slots", () => {
   it("renders the plain-HTML fallbacks by default", () => {
@@ -62,7 +73,7 @@ describe("slots", () => {
     await events.click(screen.getByRole("button", { name: "more" }));
     expect(screen.getByTestId("library-pagination")).toHaveTextContent("2/2");
 
-    // Unreplaced slots still use the fallbacks.
+    /** Unreplaced slots still use the fallbacks. */
     expect(document.querySelector("table.rdt__table")).toBeInTheDocument();
   });
 

@@ -22,38 +22,100 @@ import type {
   TableSlotProps,
 } from "./types";
 
+/**
+ * Class names
+ *
+ * Joins the truthy class names with spaces.
+ *
+ * @param classes - Class names; falsy values are skipped.
+ * @returns The joined class names, or `undefined` when there are none.
+ *
+ * @example
+ * ```ts
+ * cx("rdt__row", selected && "is-selected"); // "rdt__row is-selected"
+ * ```
+ */
 export const cx = (...classes: (string | false | null | undefined)[]) =>
   classes.filter(Boolean).join(" ") || undefined;
 
-/* ----------------------------------------------------------- element slots */
-
+/**
+ * Root fallback
+ *
+ * `<div class="rdt">`.
+ */
 const Root = ({ className, ...props }: RootSlotProps) => (
   <div className={cx("rdt", className)} {...props} />
 );
+
+/**
+ * Table fallback
+ *
+ * `<table class="rdt__table">`.
+ */
 const Table = ({ className, ...props }: TableSlotProps) => (
   <table className={cx("rdt__table", className)} {...props} />
 );
+
+/**
+ * Head fallback
+ *
+ * `<thead class="rdt__head">`.
+ */
 const Head = ({ className, ...props }: SectionSlotProps) => (
   <thead className={cx("rdt__head", className)} {...props} />
 );
+
+/**
+ * Body fallback
+ *
+ * `<tbody class="rdt__body">`.
+ */
 const Body = ({ className, ...props }: SectionSlotProps) => (
   <tbody className={cx("rdt__body", className)} {...props} />
 );
+
+/**
+ * Header row fallback
+ *
+ * `<tr class="rdt__row">` in the head.
+ */
 const HeaderRow = ({ className, ...props }: RowSlotProps) => (
   <tr className={cx("rdt__row", className)} {...props} />
 );
+
+/**
+ * Header cell fallback
+ *
+ * `<th class="rdt__cell">`.
+ */
 const HeaderCell = ({ className, ...props }: HeaderCellSlotProps) => (
   <th className={cx("rdt__cell", className)} {...props} />
 );
+
+/**
+ * Row fallback
+ *
+ * `<tr class="rdt__row">` in the body.
+ */
 const Row = ({ className, ...props }: RowSlotProps) => (
   <tr className={cx("rdt__row", className)} {...props} />
 );
+
+/**
+ * Cell fallback
+ *
+ * `<td class="rdt__cell">`.
+ */
 const Cell = ({ className, ...props }: CellSlotProps) => (
   <td className={cx("rdt__cell", className)} {...props} />
 );
 
-/* ------------------------------------------------------------ widget slots */
-
+/**
+ * Checkbox fallback
+ *
+ * A native checkbox that supports the indeterminate state and doesn't trigger
+ * `onRowClick`.
+ */
 const Checkbox = ({ checked, indeterminate, disabled, onCheckedChange, ...aria }: CheckboxSlotProps) => {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -74,9 +136,19 @@ const Checkbox = ({ checked, indeterminate, disabled, onCheckedChange, ...aria }
   );
 };
 
+/**
+ * Sort icon fallback
+ *
+ * Up, down, or up-down arrows.
+ */
 const SortIcon = ({ direction }: SortIconSlotProps) =>
   direction === "asc" ? <ArrowUpIcon /> : direction === "desc" ? <ArrowDownIcon /> : <ArrowUpDownIcon />;
 
+/**
+ * Sort trigger fallback
+ *
+ * A `<button>` holding the header and the `SortIcon` slot.
+ */
 const SortTrigger = ({ direction, onClick, children }: SortTriggerSlotProps) => {
   const { components } = useDataTableContext();
   return (
@@ -89,6 +161,11 @@ const SortTrigger = ({ direction, onClick, children }: SortTriggerSlotProps) => 
   );
 };
 
+/**
+ * Expand toggle fallback
+ *
+ * A chevron `<button>` that rotates when expanded and doesn't trigger `onRowClick`.
+ */
 const ExpandToggle = ({ expanded, onToggle, depth: _depth, ...aria }: ExpandToggleSlotProps) => (
   <button
     type="button"
@@ -105,10 +182,25 @@ const ExpandToggle = ({ expanded, onToggle, depth: _depth, ...aria }: ExpandTogg
   </button>
 );
 
+/**
+ * Skeleton fallback
+ *
+ * A shimmering bar.
+ */
 const Skeleton = (_: SkeletonSlotProps) => <div className="rdt__skeleton" />;
 
+/**
+ * Empty fallback
+ *
+ * A centered, muted message.
+ */
 const Empty = ({ message }: EmptySlotProps) => <div className="rdt__placeholder">{message}</div>;
 
+/**
+ * Error fallback
+ *
+ * The message with a retry button, announced with `role="alert"`.
+ */
 const ErrorState = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
   <div className="rdt__placeholder rdt__placeholder--error" role="alert">
     <span>{message}</span>
@@ -120,12 +212,22 @@ const ErrorState = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
   </div>
 );
 
+/**
+ * Pagination button fallback
+ *
+ * A chevron `<button>`; the chevron flips in RTL.
+ */
 const PaginationButton = ({ direction, ...props }: PaginationButtonSlotProps) => (
   <button type="button" className="rdt__button rdt__button--icon" {...props}>
     <ChevronIcon direction={direction} />
   </button>
 );
 
+/**
+ * Page size select fallback
+ *
+ * A labelled native `<select>`.
+ */
 const PageSizeSelect = ({ value, options, onValueChange, label }: PageSizeSelectSlotProps) => {
   const id = useId();
   return (
@@ -147,6 +249,12 @@ const PageSizeSelect = ({ value, options, onValueChange, label }: PageSizeSelect
   );
 };
 
+/**
+ * Pagination fallback
+ *
+ * A `<nav>` with the `PaginationButton` slots, the page info and the
+ * `PageSizeSelect` slot.
+ */
 const Pagination = (props: PaginationSlotProps) => {
   const { components } = useDataTableContext();
   const { labels } = props;
@@ -179,7 +287,19 @@ const Pagination = (props: PaginationSlotProps) => {
   );
 };
 
-/** The built-in plain-HTML slots. Wrap or reuse them in your own slots. */
+/**
+ * Fallback components
+ *
+ * The built-in plain-HTML slots, used for every slot you don't replace.
+ * Styled by the optional `@tmzm/react-data-table/styles.css`.
+ *
+ * @example
+ * ```tsx
+ * // Extend a fallback instead of rewriting it.
+ * const Row = (props: RowSlotProps) => <fallbackComponents.Row {...props} className="h-12" />;
+ * <DataTable components={{ Row }} />;
+ * ```
+ */
 export const fallbackComponents: DataTableComponents = {
   Root,
   Table,
@@ -201,6 +321,16 @@ export const fallbackComponents: DataTableComponents = {
   PageSizeSelect,
 };
 
+/**
+ * Default labels
+ *
+ * The English text used for every label you don't override.
+ *
+ * @example
+ * ```tsx
+ * <DataTable labels={{ ...defaultLabels, empty: "Nothing here yet" }} />
+ * ```
+ */
 export const defaultLabels: DataTableLabels = {
   empty: "No data found",
   error: "Something went wrong while loading the data.",

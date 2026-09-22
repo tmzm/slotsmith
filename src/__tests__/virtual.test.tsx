@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { VirtualDataTable } from "../virtual";
 import { bodyRows, columns, users, type User } from "./builders";
 
-// jsdom has no layout: give every element a 400px-tall box and a no-op ResizeObserver.
+/** jsdom has no layout: give every element a 400px-tall box and a no-op ResizeObserver. */
 beforeAll(() => {
   vi.stubGlobal(
     "ResizeObserver",

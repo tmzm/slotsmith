@@ -71,7 +71,7 @@ describe("pagination", () => {
     const { rerender } = renderTable({ ...props, data: users(10, 21), rowCount: 30 });
     expect(onPaginationChange).not.toHaveBeenCalled();
 
-    // The last row of page 3 was deleted: the server now reports 20 rows.
+    /** The last row of page 3 was deleted: the server now reports 20 rows. */
     rerender(<DataTable<User> {...props} data={[]} rowCount={20} />);
     expect(onPaginationChange).toHaveBeenCalledWith({ pageIndex: 1, pageSize: 10 });
   });

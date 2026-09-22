@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "../selection";
 
-/* ------------------------------------------------------------------ builders */
-
+/**
+ * User
+ *
+ * The row shape used by these tests.
+ */
 type User = { id: string; name: string };
 const user = (id: string): User => ({ id, name: `User ${id}` });
 const key = (row: User) => row.id;
 const byId = (rows: User[]) => new Map(rows.map((row) => [row.id, row]));
-
-/* --------------------------------------------------------------------- tests */
 
 describe("toRowSelection", () => {
   it("maps each selected row to a true entry", () => {

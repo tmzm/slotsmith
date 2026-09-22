@@ -6,7 +6,23 @@ import { cx } from "./slots/fallbacks";
 
 type AnyProps = HTMLAttributes<HTMLElement> & Record<string, unknown>;
 
-/** Joins classNames, merges styles and chains onClick; everything else in `extra` wins. */
+/**
+ * Merge props
+ *
+ * Merges two prop objects the way slot props are merged: classNames are
+ * joined, styles merged, `onClick` handlers chained, and anything else in
+ * `extra` wins.
+ *
+ * @param base - The props the table computes.
+ * @param extra - The props to layer on top.
+ * @returns The merged props.
+ *
+ * @example
+ * ```ts
+ * mergeProps({ className: "a", style: { color: "red" } }, { className: "b" });
+ * // { className: "a b", style: { color: "red" } }
+ * ```
+ */
 export function mergeProps<P extends object>(base: P, extra?: Partial<P>): P {
   if (!extra) return base;
   const a = base as AnyProps;
@@ -26,17 +42,48 @@ export function mergeProps<P extends object>(base: P, extra?: Partial<P>): P {
   } as P;
 }
 
+/**
+ * Align style
+ *
+ * The inline `text-align` for a column's `meta.align`.
+ */
 const alignStyle = (meta?: DataTableColumnMeta): CSSProperties | undefined =>
   meta?.align ? { textAlign: meta.align } : undefined;
 
-/** Number of `<td>`s a full-width row must span. */
+/**
+ * useColumnSpan
+ *
+ * The number of cells a full-width row must span, counting the checkbox column.
+ *
+ * @returns The column span.
+ *
+ * @example
+ * ```tsx
+ * function TotalsRow() {
+ *   const colSpan = useColumnSpan();
+ *   return <tr><td colSpan={colSpan}>Total: 42</td></tr>;
+ * }
+ * ```
+ */
 export function useColumnSpan() {
   const { table, selectable } = useDataTableContext();
   return table.getAllLeafColumns().length + (selectable ? 1 : 0);
 }
 
-/* -------------------------------------------------------------------- head */
-
+/**
+ * DataTable.Head
+ *
+ * The `Head` slot with a `HeaderRow` per header group: the select-all
+ * checkbox, then a `HeaderCell` per column with its `SortTrigger` when sortable.
+ *
+ * @example
+ * ```tsx
+ * <table>
+ *   <DataTable.Head />
+ *   <MyOwnBody />
+ * </table>
+ * ```
+ */
 export function DataTableHead() {
   const { table, components: C, labels, slotProps, selectable } = useDataTableContext();
   const pageRows = table.getRowModel().rows;
@@ -111,18 +158,47 @@ export function DataTableHead() {
   );
 }
 
-/* --------------------------------------------------------------------- row */
-
+/**
+ * Tree indentation
+ *
+ * Inline-start padding per nesting level, in rem.
+ */
 const INDENT_REM = 1.25;
 
-export function DataTableRowView<T extends RowData>({
-  row,
-  style,
-}: {
+/**
+ * Row view props
+ *
+ * @typeParam T - The row data type.
+ */
+export interface DataTableRowViewProps<T extends RowData> {
+  /** The row to render. */
   row: DataTableRow<T>;
-  /** Extra style, e.g. from a virtualizer. */
+  /** Extra style for the `Row` slot, e.g. from a virtualizer. */
   style?: CSSProperties;
-}) {
+}
+
+/**
+ * DataTable.Row
+ *
+ * One body row: the `Row` slot with its checkbox cell and a `Cell` per
+ * column, the first one indented and holding the `ExpandToggle` in tree
+ * tables. Provides the row to `useDataTableRow()`.
+ *
+ * @typeParam T - The row data type.
+ * @param props - See {@link DataTableRowViewProps}.
+ *
+ * @example
+ * ```tsx
+ * // A body that pins starred rows to the top.
+ * function PinnedBody() {
+ *   const { table } = useDataTableContext<Item>();
+ *   const rows = table.getRowModel().rows;
+ *   const sorted = [...rows.filter((r) => r.original.starred), ...rows.filter((r) => !r.original.starred)];
+ *   return <tbody>{sorted.map((row) => <DataTable.Row key={row.id} row={row} />)}</tbody>;
+ * }
+ * ```
+ */
+export function DataTableRowView<T extends RowData>({ row, style }: DataTableRowViewProps<T>) {
   const { components: C, labels, slotProps, selectable, expandable, onRowClick } =
     useDataTableContext<T>();
   const selected = row.getIsSelected();
@@ -201,9 +277,19 @@ export function DataTableRowView<T extends RowData>({
   );
 }
 
-/* ------------------------------------------------------------ status rows */
-
-/** Loading skeleton, error or empty rows; `null` when there are rows to show. */
+/**
+ * DataTable.StatusRows
+ *
+ * The body content for every status but `"ready"`: one skeleton row per
+ * page-size row while loading, or a full-width `Error` / `Empty` row.
+ *
+ * @returns The status rows, or `null` when there are rows to show.
+ *
+ * @example
+ * ```tsx
+ * <tbody>{status === "ready" ? <MyRows /> : <DataTable.StatusRows />}</tbody>
+ * ```
+ */
 export function DataTableStatusRows() {
   const { table, status, error, onRetry, components: C, labels, paginationEnabled } =
     useDataTableContext();
@@ -243,8 +329,20 @@ export function DataTableStatusRows() {
   return null;
 }
 
-/* -------------------------------------------------------------------- body */
-
+/**
+ * DataTable.Body
+ *
+ * The `Body` slot with a {@link DataTableRowView} per row, or the
+ * {@link DataTableStatusRows} while loading, failed or empty.
+ *
+ * @example
+ * ```tsx
+ * <table>
+ *   <MyOwnHead />
+ *   <DataTable.Body />
+ * </table>
+ * ```
+ */
 export function DataTableBody() {
   const { table, status, components: C, slotProps } = useDataTableContext();
   return (
@@ -258,19 +356,38 @@ export function DataTableBody() {
   );
 }
 
-/* ------------------------------------------------------------------- table */
-
+/**
+ * Table part props
+ */
 export interface DataTableTableProps {
   /** Extra content inside the table, after the body (e.g. a `<tfoot>`). */
   children?: ReactNode;
-  /** Replaces the default body (used by the virtual entry). */
+  /** Replaces the default body; used by the virtual entry. */
   body?: ReactNode;
   /** Caps the scroll area's height; the header stays sticky. */
   maxHeight?: number | string;
+  /** Ref to the scroll area, e.g. for a virtualizer. */
   scrollRef?: Ref<HTMLDivElement>;
 }
 
-/** The scroll area plus the `Table` slot with header and body. */
+/**
+ * DataTable.Table
+ *
+ * The scroll area plus the `Table` slot with header and body.
+ *
+ * @param props - See {@link DataTableTableProps}.
+ *
+ * @example
+ * ```tsx
+ * <DataTable.Provider data={data} columns={columns}>
+ *   <DataTable.Root>
+ *     <DataTable.Table maxHeight={400}>
+ *       <tfoot><tr><td>Totals</td></tr></tfoot>
+ *     </DataTable.Table>
+ *   </DataTable.Root>
+ * </DataTable.Provider>
+ * ```
+ */
 export function DataTableTable({ children, body, maxHeight, scrollRef }: DataTableTableProps) {
   const { components: C, slotProps } = useDataTableContext();
   return (
@@ -288,8 +405,21 @@ export function DataTableTable({ children, body, maxHeight, scrollRef }: DataTab
   );
 }
 
-/* -------------------------------------------------------------- pagination */
-
+/**
+ * DataTable.Pagination
+ *
+ * The `Pagination` slot, fed from the table. Renders nothing when
+ * `enablePagination` is `false`. The page-size options always include the
+ * current page size.
+ *
+ * @example
+ * ```tsx
+ * <DataTable.Provider data={data} columns={columns}>
+ *   <DataTable.Pagination />
+ *   <DataTable.Table />
+ * </DataTable.Provider>
+ * ```
+ */
 export function DataTablePagination() {
   const { table, components: C, labels, paginationEnabled, pageSizeOptions } = useDataTableContext();
   if (!paginationEnabled) return null;

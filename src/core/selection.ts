@@ -1,6 +1,19 @@
 import type { RowSelectionState } from "@tanstack/react-table";
 
-/** Builds TanStack's `{ [rowId]: true }` map from the selected rows. */
+/**
+ * To row selection
+ *
+ * Builds TanStack's `{ [rowId]: true }` map from the selected rows.
+ *
+ * @param selection - The selected rows.
+ * @param getKey - Returns a row's id.
+ * @returns The row selection map.
+ *
+ * @example
+ * ```ts
+ * toRowSelection([{ id: "a" }, { id: "c" }], (row) => row.id); // { a: true, c: true }
+ * ```
+ */
 export function toRowSelection<T>(
   selection: readonly T[],
   getKey: (row: T) => string,
@@ -11,11 +24,24 @@ export function toRowSelection<T>(
 }
 
 /**
- * Turns a new `{ [rowId]: true }` map back into rows.
+ * From row selection
  *
- * Rows the table doesn't currently hold (other server pages) are kept from the
- * previous selection, so selection survives manual pagination. Rows the table
- * does hold are taken from `rowsById`, keeping the order they were selected in.
+ * Turns a new `{ [rowId]: true }` map back into rows. Rows the table doesn't
+ * currently hold (other server pages) are kept from the previous selection, so
+ * selection survives manual pagination. Rows the table does hold are taken
+ * from `rowsById`, keeping the order they were selected in.
+ *
+ * @param next - The new row selection map.
+ * @param rowsById - Every row the table currently holds, by id.
+ * @param previous - The previous selection.
+ * @param getKey - Returns a row's id.
+ * @returns The new selection.
+ *
+ * @example
+ * ```ts
+ * const page = new Map([["a", a], ["b", b]]);
+ * fromRowSelection({ z: true, b: true }, page, [z], getId); // [z, b]
+ * ```
  */
 export function fromRowSelection<T>(
   next: RowSelectionState,
@@ -39,8 +65,20 @@ export function fromRowSelection<T>(
 }
 
 /**
- * Page to move to when the current page came back empty (e.g. its last row was
- * deleted), or `null` to stay. A negative `pageCount` means "unknown".
+ * Step back page index
+ *
+ * The page to move to when the current page came back empty (e.g. its last
+ * row was deleted).
+ *
+ * @param pageIndex - The current page index.
+ * @param pageCount - The page count, or a negative number when unknown.
+ * @returns The page index to move to, or `null` to stay.
+ *
+ * @example
+ * ```ts
+ * stepBackPageIndex(2, 2); // 1
+ * stepBackPageIndex(0, 3); // null
+ * ```
  */
 export function stepBackPageIndex(pageIndex: number, pageCount: number): number | null {
   if (pageIndex <= 0) return null;

@@ -1,3 +1,20 @@
+/**
+ * @tmzm/react-data-table
+ *
+ * A headless, fully type-safe React data table built on TanStack Table v9,
+ * with swappable UI slots and plain-HTML fallbacks.
+ *
+ * @example
+ * ```tsx
+ * import { DataTable } from "@tmzm/react-data-table";
+ * import "@tmzm/react-data-table/styles.css";
+ *
+ * <DataTable data={users} columns={columns} />;
+ * ```
+ *
+ * @packageDocumentation
+ */
+
 export { DataTable, DataTableProvider, DataTableRoot } from "./DataTable";
 export type { DataTableProps, DataTableProviderProps, DataTableRootProps } from "./DataTable";
 
