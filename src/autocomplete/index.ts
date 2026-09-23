@@ -31,6 +31,7 @@ export {
   AutocompleteList,
   AutocompleteLiveRegion,
   AutocompleteOptions,
+  AutocompleteOptionView,
   AutocompletePopup,
   AutocompleteSearch,
   AutocompleteStatusRows,

@@ -30,11 +30,11 @@
     },
     "./virtual": {
       "import": {
-        "types": "./dist/data-table/virtual.d.ts",
+        "types": "./dist/virtual.d.ts",
         "default": "./dist/virtual.js"
       },
       "require": {
-        "types": "./dist/data-table/virtual.d.ts",
+        "types": "./dist/virtual.d.ts",
         "default": "./dist/virtual.cjs"
       }
     },

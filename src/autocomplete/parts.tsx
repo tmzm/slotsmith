@@ -182,16 +182,24 @@ export function AutocompleteSearch(props: Record<string, unknown> = {}) {
 }
 
 /**
- * Autocomplete.Options
+ * Autocomplete.Option
  *
- * Just the option rows, without the listbox around them. Use it when building
- * a list that needs its own wrapper, such as a virtualized one.
+ * One option row, by its position in the rendered list. Windowing renderers
+ * use it to draw only the rows in view.
+ *
+ * @param props - The option and the index it is being rendered at.
+ *
+ * @example
+ * ```tsx
+ * {virtualItems.map((item) => (
+ *   <AutocompleteOptionView key={item.key} option={options[item.index]!} index={item.index} />
+ * ))}
+ * ```
  */
-export function AutocompleteOptions() {
+export function AutocompleteOptionView({ option, index }: { option: unknown; index: number }) {
   const {
     components: C,
     slotProps,
-    options,
     values,
     highlightedIndex,
     getOptionValue,
@@ -200,28 +208,38 @@ export function AutocompleteOptions() {
     getOptionProps,
   } = useAutocompleteContext();
 
+  const value = getOptionValue(option);
+  const selected = values.includes(value);
+  const disabled = isOptionDisabled(option);
+
+  return (
+    <C.Option {...mergeProps(getOptionProps(option, index), slotProps.option?.(option, index))}>
+      <C.OptionLabel
+        option={option}
+        label={getOptionLabel(option)}
+        selected={selected}
+        highlighted={index === highlightedIndex}
+        disabled={disabled}
+      />
+      <C.Check selected={selected} />
+    </C.Option>
+  );
+}
+
+/**
+ * Autocomplete.Options
+ *
+ * Every option row, without the listbox around them. Use it when the list
+ * needs a wrapper of its own.
+ */
+export function AutocompleteOptions() {
+  const { options, getOptionValue } = useAutocompleteContext();
+
   return (
     <>
-      {options.map((option, index) => {
-        const value = getOptionValue(option);
-        const selected = values.includes(value);
-        const disabled = isOptionDisabled(option);
-        return (
-          <C.Option
-            key={String(value)}
-            {...mergeProps(getOptionProps(option, index), slotProps.option?.(option, index))}
-          >
-            <C.OptionLabel
-              option={option}
-              label={getOptionLabel(option)}
-              selected={selected}
-              highlighted={index === highlightedIndex}
-              disabled={disabled}
-            />
-            <C.Check selected={selected} />
-          </C.Option>
-        );
-      })}
+      {options.map((option, index) => (
+        <AutocompleteOptionView key={String(getOptionValue(option))} option={option} index={index} />
+      ))}
     </>
   );
 }
