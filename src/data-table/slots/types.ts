@@ -289,6 +289,12 @@ export interface DataTableComponents {
   HeaderRow: ComponentType<RowSlotProps>;
   /** Fallback: `<th>`. */
   HeaderCell: ComponentType<HeaderCellSlotProps>;
+  /** Fallback: `<tfoot>`. Rendered only when a column defines `footer`. */
+  Foot: ComponentType<SectionSlotProps>;
+  /** Fallback: `<tr>` in the foot. */
+  FooterRow: ComponentType<RowSlotProps>;
+  /** Fallback: `<td>` in the foot. */
+  FooterCell: ComponentType<CellSlotProps>;
   /** Fallback: `<tr>` in the body. */
   Row: ComponentType<RowSlotProps>;
   /** Fallback: `<td>`. */
@@ -388,6 +394,12 @@ export interface DataTableSlotProps<T extends RowData> {
   headerRow?: RowSlotProps;
   /** Props for each column's `HeaderCell`. */
   headerCell?: (header: DataTableHeader<T>) => HeaderCellSlotProps | undefined;
+  /** Props for the `Foot` slot. */
+  foot?: SectionSlotProps;
+  /** Props for every `FooterRow`. */
+  footerRow?: RowSlotProps;
+  /** Props for each column's `FooterCell`. */
+  footerCell?: (header: DataTableHeader<T>) => CellSlotProps | undefined;
   /** Props for each body `Row`. */
   row?: (row: DataTableRow<T>) => RowSlotProps | undefined;
   /** Props for each body `Cell`. */

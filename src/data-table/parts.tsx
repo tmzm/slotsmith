@@ -161,6 +161,70 @@ export function DataTableHead() {
 }
 
 /**
+ * DataTable.Foot
+ *
+ * The `Foot` slot: a `<tfoot>` built from each column's `footer`, the same way
+ * the head is built from `header`. Renders nothing when no column defines one,
+ * so tables without totals stay exactly as they were.
+ *
+ * @example
+ * ```tsx
+ * const columns: DataTableColumnDef<Order>[] = [
+ *   { accessorKey: "item", header: "Item", footer: "Total" },
+ *   {
+ *     accessorKey: "amount",
+ *     header: "Amount",
+ *     footer: ({ table }) =>
+ *       table.getRowModel().rows.reduce((sum, row) => sum + row.original.amount, 0),
+ *   },
+ * ];
+ * ```
+ */
+export function DataTableFoot() {
+  const { table, components: C, slotProps, selectable } = useDataTableContext();
+  const hasFooter = table.getAllLeafColumns().some((column) => column.columnDef.footer != null);
+  if (!hasFooter) return null;
+
+  return (
+    <C.Foot {...slotProps.foot}>
+      {table.getFooterGroups().map((footerGroup, groupIndex) => (
+        <C.FooterRow key={footerGroup.id} {...slotProps.footerRow}>
+          {selectable && groupIndex === 0 && (
+            <C.FooterCell
+              className="rdt__cell--select"
+              rowSpan={table.getFooterGroups().length}
+              data-slot="select"
+            />
+          )}
+
+          {footerGroup.headers.map((header) => {
+            const meta = header.column.columnDef.meta;
+            return (
+              <C.FooterCell
+                key={header.id}
+                {...mergeProps(
+                  {
+                    colSpan: header.colSpan > 1 ? header.colSpan : undefined,
+                    className: meta?.cellClassName,
+                    style: alignStyle(meta),
+                    "data-align": meta?.align,
+                  } as HTMLAttributes<HTMLTableCellElement>,
+                  slotProps.footerCell?.(header),
+                )}
+              >
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.footer, header.getContext())}
+              </C.FooterCell>
+            );
+          })}
+        </C.FooterRow>
+      ))}
+    </C.Foot>
+  );
+}
+
+/**
  * Tree indentation
  *
  * Inline-start padding per nesting level, in rem.
@@ -401,6 +465,7 @@ export function DataTableTable({ children, body, maxHeight, scrollRef }: DataTab
       <C.Table {...slotProps.table}>
         <DataTableHead />
         {body ?? <DataTableBody />}
+        <DataTableFoot />
         {children}
       </C.Table>
     </div>

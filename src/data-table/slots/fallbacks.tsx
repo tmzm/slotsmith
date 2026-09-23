@@ -75,6 +75,33 @@ const Body = ({ className, ...props }: SectionSlotProps) => (
 );
 
 /**
+ * Foot fallback
+ *
+ * `<tfoot class="rdt__foot">`.
+ */
+const Foot = ({ className, ...props }: SectionSlotProps) => (
+  <tfoot className={cx("rdt__foot", className)} {...props} />
+);
+
+/**
+ * Footer row fallback
+ *
+ * `<tr class="rdt__row">` in the foot.
+ */
+const FooterRow = ({ className, ...props }: RowSlotProps) => (
+  <tr className={cx("rdt__row", className)} {...props} />
+);
+
+/**
+ * Footer cell fallback
+ *
+ * `<td class="rdt__cell">` in the foot.
+ */
+const FooterCell = ({ className, ...props }: CellSlotProps) => (
+  <td className={cx("rdt__cell", className)} {...props} />
+);
+
+/**
  * Header row fallback
  *
  * `<tr class="rdt__row">` in the head.
@@ -307,6 +334,9 @@ export const fallbackComponents: DataTableComponents = {
   Body,
   HeaderRow,
   HeaderCell,
+  Foot,
+  FooterRow,
+  FooterCell,
   Row,
   Cell,
   Checkbox,

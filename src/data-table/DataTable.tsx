@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
 import {
   DataTableBody,
+  DataTableFoot,
   DataTableHead,
   DataTablePagination,
   DataTableRowView,
@@ -132,8 +133,6 @@ export function DataTableRoot({ size, striped, ...props }: DataTableRootProps) {
 export interface DataTableProps<T extends RowData>
   extends Omit<DataTableProviderProps<T>, "children">,
     Omit<DataTableRootProps, "children" | "onError"> {
-  /** Rendered below the table, above the pagination (e.g. a totals bar). */
-  footer?: ReactNode;
   /** Hide the pagination UI while still paginating. */
   hidePagination?: boolean;
 }
@@ -209,17 +208,16 @@ export function splitDataTableProps<T extends RowData, P extends DataTableProps<
 /**
  * DataTable component
  *
- * The default layout: root, table, footer and pagination. Exported as `DataTable`.
+ * The default layout: root, table and pagination. Exported as `DataTable`.
  */
 function DataTableComponent<T extends RowData>(props: DataTableProps<T>) {
   const { providerProps, rest } = splitDataTableProps<T, DataTableProps<T>>(props);
-  const { size = "sm", footer, hidePagination, ...htmlProps } = rest;
+  const { size = "sm", hidePagination, ...htmlProps } = rest;
 
   return (
     <DataTableProvider {...providerProps}>
       <DataTableRoot size={size} {...htmlProps}>
         <DataTableTable />
-        {footer}
         {!hidePagination && <DataTablePagination />}
       </DataTableRoot>
     </DataTableProvider>
@@ -256,6 +254,7 @@ export const DataTable = Object.assign(DataTableComponent, {
   Root: DataTableRoot,
   Table: DataTableTable,
   Head: DataTableHead,
+  Foot: DataTableFoot,
   Body: DataTableBody,
   Row: DataTableRowView,
   StatusRows: DataTableStatusRows,

@@ -141,11 +141,51 @@ describe("slots", () => {
     expect(root).toHaveAttribute("data-size", "sm");
   });
 
-  it("renders the footer between the table and the pagination", () => {
-    renderTable({ footer: <div data-testid="totals">Total</div> });
-    const totals = screen.getByTestId("totals");
-    expect(totals.previousElementSibling).toHaveClass("rdt__scroll");
-    expect(totals.nextElementSibling?.tagName).toBe("NAV");
+  it("renders no tfoot when no column defines a footer", () => {
+    const { container } = renderTable();
+    expect(container.querySelector("tfoot")).toBeNull();
+  });
+
+  it("builds the tfoot from the columns' footer, like the head from header", () => {
+    renderTable({
+      data: users(3),
+      columns: [
+        { accessorKey: "name", header: "Name", footer: "Total" },
+        {
+          accessorKey: "age",
+          header: "Age",
+          footer: ({ table }) =>
+            table.getRowModel().rows.reduce((sum, row) => sum + row.original.age, 0),
+          meta: { align: "end" },
+        },
+      ],
+    });
+
+    const [, , foot] = screen.getAllByRole("rowgroup");
+    const cells = within(foot!).getAllByRole("cell");
+    expect(cells.map((cell) => cell.textContent)).toEqual(["Total", "102"]);
+    expect(cells[1]).toHaveAttribute("data-align", "end");
+  });
+
+  it("keeps the footer aligned with the checkbox column", () => {
+    renderTable({
+      enableRowSelection: true,
+      columns: [
+        { accessorKey: "name", header: "Name", footer: "Total" },
+        { accessorKey: "age", header: "Age" },
+      ],
+    });
+    const [, , foot] = screen.getAllByRole("rowgroup");
+    expect(within(foot!).getAllByRole("cell")).toHaveLength(3);
+  });
+
+  it("lets the footer cells be replaced like any other slot", () => {
+    renderTable({
+      columns: [{ accessorKey: "name", header: "Name", footer: "Total" }],
+      components: { FooterCell: (props) => <td data-library="foot" {...props} /> },
+    });
+    const [, , foot] = screen.getAllByRole("rowgroup");
+    expect(within(foot!).getAllByRole("cell")[0]).toHaveAttribute("data-library", "foot");
   });
 });
 

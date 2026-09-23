@@ -106,6 +106,14 @@
   border-bottom: none;
 }
 
+/** The foot is a totals band: a firm rule above it, no rule below. */
+.rdt__foot .rdt__cell {
+  background: var(--rdt-header-bg);
+  border-top: 1px solid var(--rdt-border);
+  border-bottom: none;
+  font-weight: 600;
+}
+
 .rdt__cell--select {
   width: 1%;
   padding-inline-end: 0;

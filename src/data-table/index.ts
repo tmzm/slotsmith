@@ -20,6 +20,7 @@ export type { DataTableProps, DataTableProviderProps, DataTableRootProps } from 
 
 export {
   DataTableBody,
+  DataTableFoot,
   DataTableHead,
   DataTablePagination,
   DataTableRowView,

@@ -168,7 +168,7 @@ export interface VirtualDataTableProps<T extends RowData> extends DataTableProps
  */
 export function VirtualDataTable<T extends RowData>(props: VirtualDataTableProps<T>) {
   const { providerProps, rest } = splitDataTableProps<T, VirtualDataTableProps<T>>(props);
-  const { virtual = {}, size = "sm", footer, hidePagination, ...htmlProps } = rest;
+  const { virtual = {}, size = "sm", hidePagination, ...htmlProps } = rest;
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
 
   return (
@@ -186,7 +186,6 @@ export function VirtualDataTable<T extends RowData>(props: VirtualDataTableProps
             />
           }
         />
-        {footer}
         {!hidePagination && <DataTablePagination />}
       </DataTableRoot>
     </DataTableProvider>
