@@ -1,8 +1,8 @@
-import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
-
-afterEach(() => cleanup());
+import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach } from "vitest";
+
+afterEach(() => cleanup());
 
 /**
  * Object URLs
@@ -19,8 +19,12 @@ urls.revokeObjectURL = () => {};
  * Scroll into view
  *
  * jsdom has no layout, so the highlight's scroll-into-view call would throw.
+ * Guarded because the bundle tests run in the node environment, which has no
+ * DOM at all.
  */
-Element.prototype.scrollIntoView = () => {};
+if (typeof Element !== "undefined") {
+  Element.prototype.scrollIntoView = () => {};
+}
 
 /**
  * Intersection observer
