@@ -56,6 +56,7 @@ Peer dependencies are per component, so you only install what you use:
 | Component | Also install |
 | --- | --- |
 | Data table | `@tanstack/react-table@^9`, and `@tanstack/react-virtual@^3` for virtual rows |
+| File uploader | nothing |
 
 React 18 or 19. The stylesheet is optional: `import "slotsmith/styles.css"`.
 
@@ -82,7 +83,7 @@ Sorting, pagination and selection work immediately, and each piece of state stay
 | Component | Status | Docs |
 | --- | --- | --- |
 | **Data table** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/data-table) · sorting, pagination, selection that survives server pages, tree rows, virtual rows, loading / error / empty states, i18n and RTL |
-| **File uploader** | 🚧 in progress | Drop zone, image previews, upload queue with progress and retry, or picker-only |
+| **File uploader** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/file-uploader) · drop zone, image tile or picker-only; queued uploads with progress, retry and real cancellation; validation by type, size and count |
 | More | 🔜 next | Same rules: headless logic, replaceable parts, fallbacks good enough to ship |
 
 ## How it compares

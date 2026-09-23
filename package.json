@@ -1,6 +1,6 @@
 {
   "name": "slotsmith",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A headless React component library: every part is a slot you can replace, with plain-HTML fallbacks. Starting with the data table.",
   "license": "ISC",
   "author": "Tareq Al-Mozayek",
@@ -95,7 +95,10 @@
     "slots",
     "unstyled",
     "accessible",
-    "rtl"
+    "rtl",
+    "file-upload",
+    "dropzone",
+    "uploader"
   ],
   "bugs": {
     "url": "https://github.com/tmzm/slotsmith/issues"
