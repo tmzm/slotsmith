@@ -29,3 +29,9 @@ export type {
   AutocompleteVirtualOptions,
   VirtualAutocompleteProps,
 } from "./autocomplete/virtual";
+
+export { FileUploaderVirtualList, VirtualFileUploader } from "./file-uploader/virtual";
+export type {
+  FileUploaderVirtualOptions,
+  VirtualFileUploaderProps,
+} from "./file-uploader/virtual";

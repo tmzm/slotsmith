@@ -1,4 +1,11 @@
-import type { ComponentType, HTMLAttributes, InputHTMLAttributes, LiHTMLAttributes, ReactNode } from "react";
+import type {
+  ComponentType,
+  HTMLAttributes,
+  InputHTMLAttributes,
+  LiHTMLAttributes,
+  ReactNode,
+  Ref,
+} from "react";
 import type { Rejection, UploadItem } from "../core/types";
 
 /**
@@ -29,9 +36,12 @@ export type UploaderInputSlotProps = InputHTMLAttributes<HTMLInputElement>;
 /**
  * List slot props
  *
- * Element slot: the `<ul>` holding the items.
+ * Element slot: the `<ul>` holding the items. It takes a `ref` because a
+ * windowed list makes this element its scroll container.
  */
-export type UploaderListSlotProps = HTMLAttributes<HTMLUListElement>;
+export type UploaderListSlotProps = HTMLAttributes<HTMLUListElement> & {
+  ref?: Ref<HTMLUListElement>;
+};
 
 /**
  * Item slot props
