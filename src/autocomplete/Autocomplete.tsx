@@ -446,7 +446,7 @@ function AutocompleteComponent<TOption>(props: AutocompleteProps<TOption>) {
  * <Autocomplete multiple options={tags} value={tagIds} onChange={setTagIds} />
  * ```
  */
-export const Autocomplete = Object.assign(AutocompleteComponent, {
+export const Autocomplete = /* @__PURE__ */ Object.assign(AutocompleteComponent, {
   Provider: AutocompleteProvider,
   Root: AutocompleteRoot,
   Trigger: AutocompleteTrigger,

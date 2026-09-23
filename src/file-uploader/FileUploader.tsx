@@ -342,7 +342,7 @@ function mergeSlot(slot: UploaderRootSlotProps | undefined, html: HTMLAttributes
  * <FileUploader variant="tile" accept="image/*" upload={uploadToApi} />
  * ```
  */
-export const FileUploader = Object.assign(FileUploaderComponent, {
+export const FileUploader = /* @__PURE__ */ Object.assign(FileUploaderComponent, {
   Provider: FileUploaderProvider,
   Root: FileUploaderRoot,
   Dropzone: FileUploaderDropzone,

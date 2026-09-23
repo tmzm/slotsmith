@@ -249,7 +249,7 @@ function DataTableComponent<T extends RowData>(props: DataTableProps<T>) {
  * <DataTable<User> data={users} columns={columns} enableRowSelection onSelectionChange={setSelected} />;
  * ```
  */
-export const DataTable = Object.assign(DataTableComponent, {
+export const DataTable = /* @__PURE__ */ Object.assign(DataTableComponent, {
   Provider: DataTableProvider,
   Root: DataTableRoot,
   Table: DataTableTable,
