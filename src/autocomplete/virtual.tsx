@@ -6,6 +6,7 @@ import {
   AutocompleteProvider,
   AutocompleteRoot,
   splitAutocompleteProps,
+  splitRootProps,
   type AutocompleteProps,
   type AutocompleteRootProps,
 } from "./Autocomplete";
@@ -227,12 +228,14 @@ function VirtualPopup(props: AutocompleteVirtualOptions) {
  */
 export function VirtualAutocomplete<TOption>(props: VirtualAutocompleteProps<TOption>) {
   const { providerProps, rest } = splitAutocompleteProps<TOption, VirtualAutocompleteProps<TOption>>(props);
-  const { virtual = {}, ...rootProps } = rest;
+  const { virtual = {}, ...domProps } = rest;
+  /** The same routing the default layout uses, so `aria-label` names the combobox. */
+  const { triggerProps, rootProps } = splitRootProps(domProps as Record<string, unknown>);
 
   return (
     <AutocompleteProvider<TOption> {...providerProps}>
       <AutocompleteRoot {...(rootProps as AutocompleteRootProps)}>
-        <AutocompleteTrigger />
+        <AutocompleteTrigger {...triggerProps} />
         <VirtualPopup {...virtual} />
         <AutocompleteLiveRegion />
       </AutocompleteRoot>

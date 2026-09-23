@@ -119,3 +119,11 @@ describe("the virtual option list", () => {
     spacers.forEach((spacer) => expect(spacer).toHaveAttribute("aria-hidden", "true"));
   });
 });
+
+describe("the virtual layout's props", () => {
+  it("names the combobox rather than the wrapper", () => {
+    renderVirtual({ "aria-label": "City" } as never);
+
+    expect(screen.getByRole("combobox", { name: "City" })).toBeInTheDocument();
+  });
+});

@@ -384,10 +384,13 @@ const TRIGGER_PROP_KEYS = new Set([
  * Routes the naming and validation attributes to the trigger and leaves
  * everything else — `className`, `style`, data attributes — on the root.
  *
+ * Exported so alternative layouts, such as the virtualized one, name the
+ * combobox the same way the default layout does.
+ *
  * @param rest - The DOM props passed to `<Autocomplete>`.
  * @returns Props for the trigger and props for the root.
  */
-function splitRootProps(rest: Record<string, unknown>) {
+export function splitRootProps(rest: Record<string, unknown>) {
   const triggerProps: Record<string, unknown> = {};
   const rootProps: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(rest)) {
