@@ -10,5 +10,6 @@
  * Each component reads --rdt-* / --sfu-* tokens, so one theme covers them all.
  */
 
+@import "./autocomplete/styles.css";
 @import "./data-table/styles.css";
 @import "./file-uploader/styles.css";

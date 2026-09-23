@@ -19,5 +19,6 @@
  * @packageDocumentation
  */
 
+export * from "./autocomplete";
 export * from "./data-table";
 export * from "./file-uploader";

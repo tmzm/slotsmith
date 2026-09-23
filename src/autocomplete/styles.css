@@ -1,0 +1,347 @@
+/**
+ * Autocomplete fallback styles
+ *
+ * Optional. The component works without this file; importing it is what makes
+ * the built-in parts look finished. Every colour is a custom property, so a
+ * theme is a few overrides rather than a fork.
+ */
+
+.sac {
+  --sac-surface: #ffffff;
+  --sac-text: #111827;
+  --sac-muted: #6b7280;
+  --sac-border: #e5e7eb;
+  --sac-accent: #2563eb;
+  --sac-hover: rgb(0 0 0 / 5%);
+  --sac-danger: #dc2626;
+  --sac-radius: 0.5rem;
+
+  position: relative;
+  width: 100%;
+  color: var(--sac-text);
+  font-size: 0.875rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sac {
+    --sac-surface: #141416;
+    --sac-text: #f5f5f5;
+    --sac-muted: #a3a3a3;
+    --sac-border: #2a2a2a;
+    --sac-accent: #60a5fa;
+    --sac-hover: rgb(255 255 255 / 8%);
+    --sac-danger: #f87171;
+  }
+}
+
+/* ------------------------------------------------------------------ trigger */
+
+.sac__trigger {
+  display: flex;
+  width: 100%;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--sac-border);
+  border-radius: var(--sac-radius);
+  background: var(--sac-surface);
+  cursor: pointer;
+}
+
+.sac__trigger:hover {
+  border-color: color-mix(in oklab, var(--sac-border), var(--sac-text) 25%);
+}
+
+.sac__trigger:focus-visible,
+.sac__trigger[data-open] {
+  outline: none;
+  border-color: var(--sac-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--sac-accent), transparent 80%);
+}
+
+.sac__trigger[data-disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sac__body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sac__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sac__value--empty {
+  color: var(--sac-muted);
+}
+
+.sac__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  padding: 0.0625rem 0.25rem 0.0625rem 0.4rem;
+  border-radius: 0.3rem;
+  background: color-mix(in oklab, var(--sac-accent), transparent 88%);
+  font-size: 0.75rem;
+}
+
+.sac__tag-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sac__overflow {
+  color: var(--sac-muted);
+  font-size: 0.75rem;
+}
+
+.sac__tag-remove,
+.sac__clear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: var(--sac-muted);
+  cursor: pointer;
+}
+
+.sac__tag-remove {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sac__clear {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.sac__tag-remove:hover,
+.sac__clear:hover,
+.sac__tag-remove:focus-visible,
+.sac__clear:focus-visible {
+  background: var(--sac-hover);
+  color: var(--sac-text);
+  outline: none;
+}
+
+/* -------------------------------------------------------------------- icons */
+
+.sac__chevron,
+.sac__tick,
+.sac__cross,
+.sac__plus {
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sac__chevron {
+  width: 1rem;
+  height: 1rem;
+  stroke: var(--sac-muted);
+  stroke-width: 2;
+  transition: transform 0.15s;
+}
+
+.sac__trigger[data-open] .sac__chevron {
+  transform: rotate(180deg);
+}
+
+.sac__tick {
+  width: 1rem;
+  height: 1rem;
+  stroke: var(--sac-accent);
+  stroke-width: 2.5;
+}
+
+.sac__cross {
+  width: 0.75rem;
+  height: 0.75rem;
+  stroke-width: 2.5;
+}
+
+.sac__plus {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
+}
+
+.sac__spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: none;
+  border: 2px solid color-mix(in oklab, var(--sac-muted), transparent 60%);
+  border-top-color: var(--sac-accent);
+  border-radius: 50%;
+  animation: sac-spin 0.7s linear infinite;
+}
+
+@keyframes sac-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sac__spinner {
+    animation-duration: 2s;
+  }
+
+  .sac__chevron {
+    transition: none;
+  }
+}
+
+/* -------------------------------------------------------------------- popup */
+
+.sac__popup {
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--sac-border);
+  border-radius: var(--sac-radius);
+  background: var(--sac-surface);
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 45%);
+}
+
+.sac__search {
+  width: 100%;
+  flex: none;
+  padding: 0.5rem 0.625rem;
+  border: 0;
+  border-bottom: 1px solid var(--sac-border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.sac__search:focus {
+  outline: none;
+}
+
+.sac__list {
+  flex: 1;
+  margin: 0;
+  padding: 0.25rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.sac__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.sac__option[data-highlighted] {
+  background: var(--sac-hover);
+}
+
+.sac__option[data-disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sac__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- status rows */
+
+.sac__message,
+.sac__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  color: var(--sac-muted);
+  text-align: center;
+}
+
+.sac__error {
+  flex-direction: column;
+  color: var(--sac-danger);
+}
+
+.sac__button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--sac-border);
+  border-radius: 0.375rem;
+  background: var(--sac-surface);
+  color: var(--sac-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.sac__create-button,
+.sac__more-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: none;
+  color: var(--sac-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sac__more-button {
+  justify-content: center;
+  color: var(--sac-muted);
+  font-size: 0.75rem;
+}
+
+.sac__create-button:hover:not(:disabled),
+.sac__more-button:hover:not(:disabled) {
+  background: var(--sac-hover);
+}
+
+.sac__create-button:disabled,
+.sac__more-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------- a11y */
+
+.sac__sr-only {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[dir="rtl"] .sac__tag {
+  padding: 0.0625rem 0.4rem 0.0625rem 0.25rem;
+}
