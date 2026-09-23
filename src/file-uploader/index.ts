@@ -13,8 +13,33 @@
  * ```
  */
 
-export { FileUploader } from "./FileUploader";
-export type { FileUploaderProps, FileUploaderVariant } from "./FileUploader";
+export {
+  FileUploader,
+  FileUploaderProvider,
+  FileUploaderRoot,
+  splitFileUploaderProps,
+} from "./FileUploader";
+export type {
+  FileUploaderProps,
+  FileUploaderProviderProps,
+  FileUploaderRootProps,
+  FileUploaderVariant,
+} from "./FileUploader";
+
+export {
+  FileUploaderActions,
+  FileUploaderCompact,
+  FileUploaderDropzone,
+  FileUploaderItemView,
+  FileUploaderList,
+  FileUploaderRejections,
+  mergeProps as mergeFileUploaderProps,
+} from "./parts";
+export type {
+  FileUploaderActionsProps,
+  FileUploaderDropzoneProps,
+  FileUploaderItemViewProps,
+} from "./parts";
 
 export {
   useFileUploader,
@@ -42,6 +67,9 @@ export type {
   UploadResult,
   UploadStatus,
 } from "./core/types";
+
+export { useFileUploaderContext, useUploadItem } from "./slots/context";
+export type { FileUploaderContextValue } from "./slots/context";
 
 export { fileUploaderFallbacks, defaultFileUploaderLabels } from "./slots/fallbacks";
 export type * from "./slots/types";

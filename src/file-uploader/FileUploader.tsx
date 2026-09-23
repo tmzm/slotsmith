@@ -7,16 +7,29 @@ import {
   type FileUploaderModel,
   type UseFileUploaderOptions,
 } from "./core/useFileUploader";
-import { formatBytes, isImage } from "./core/validate";
+import { formatBytes } from "./core/validate";
+import {
+  FileUploaderActions,
+  FileUploaderCompact,
+  FileUploaderDropzone,
+  FileUploaderItemView,
+  FileUploaderList,
+  FileUploaderRejections,
+} from "./parts";
+import {
+  FileUploaderContext,
+  useFileUploaderContext,
+  type FileUploaderContextValue,
+} from "./slots/context";
 import {
   defaultFileUploaderLabels,
   fileUploaderFallbacks,
-  formatItemSize,
 } from "./slots/fallbacks";
 import type {
   FileUploaderComponents,
   FileUploaderLabels,
   FileUploaderSlotProps,
+  UploaderRootSlotProps,
 } from "./slots/types";
 
 /**
@@ -32,15 +45,15 @@ import type {
 export type FileUploaderVariant = "dropzone" | "tile" | "compact";
 
 /**
- * File uploader props
+ * Provider props
  *
- * The hook's options, plus how it renders.
+ * The hook's options, plus how the parts render: the variant, the slots, the
+ * labels and the slot props.
  *
  * @typeParam TData - Whatever `upload` resolves with per file.
  */
-export interface FileUploaderProps<TData = unknown>
-  extends UseFileUploaderOptions<TData>,
-    Omit<HTMLAttributes<HTMLDivElement>, "onChange" | "onError" | "defaultValue"> {
+export interface FileUploaderProviderProps<TData = unknown> extends UseFileUploaderOptions<TData> {
+  /** How the component is laid out. Defaults to `dropzone`. */
   variant?: FileUploaderVariant;
   /** Replace any part; the rest stay as fallbacks. */
   components?: Partial<FileUploaderComponents>;
@@ -48,41 +61,256 @@ export interface FileUploaderProps<TData = unknown>
   labels?: Partial<FileUploaderLabels>;
   /** Extra DOM props for the element parts. */
   slotProps?: FileUploaderSlotProps;
+  /** Your layout, built from the compound parts and your own components. */
+  children?: ReactNode;
+}
+
+/**
+ * Without undefined
+ *
+ * Drops `undefined` entries, so `{ Icon: undefined }` keeps the fallback.
+ */
+function withoutUndefined<O extends object>(object: O | undefined): Partial<O> {
+  return Object.fromEntries(
+    Object.entries(object ?? {}).filter(([, value]) => value !== undefined),
+  ) as Partial<O>;
+}
+
+/**
+ * FileUploader.Provider
+ *
+ * Runs the uploader and shares it with the compound parts and
+ * `useFileUploaderContext()`. Renders no markup itself, so you choose the
+ * layout.
+ *
+ * @typeParam TData - Whatever `upload` resolves with per file.
+ * @param props - See {@link FileUploaderProviderProps}.
+ *
+ * @example
+ * ```tsx
+ * <FileUploader.Provider multiple accept="image/*" upload={uploadToApi}>
+ *   <MyHeader />
+ *   <FileUploader.Root>
+ *     <FileUploader.Dropzone />
+ *     <FileUploader.List />
+ *     <FileUploader.Rejections />
+ *   </FileUploader.Root>
+ * </FileUploader.Provider>
+ * ```
+ */
+export function FileUploaderProvider<TData = unknown>({
+  variant = "dropzone",
+  components,
+  labels: labelOverrides,
+  slotProps,
+  children,
+  ...options
+}: FileUploaderProviderProps<TData>) {
+  const model = useFileUploader<TData>(options);
+
+  const parts = useMemo(
+    () => ({ ...fileUploaderFallbacks, ...withoutUndefined(components) }),
+    [components],
+  );
+  const labels = useMemo(
+    () => ({ ...defaultFileUploaderLabels, ...withoutUndefined(labelOverrides) }),
+    [labelOverrides],
+  );
+
+  const hint = labels.hint({
+    accept: model.accept,
+    maxSize: options.maxSize ? formatBytes(options.maxSize) : undefined,
+    maxFiles: options.maxFiles ?? (options.multiple ? undefined : 1),
+  });
+
+  const statusLabel = (item: UploadItem<TData>) =>
+    item.status === "uploading"
+      ? labels.uploading
+      : item.status === "done"
+        ? labels.done
+        : item.status === "error"
+          ? labels.failed
+          : model.uploadable
+            ? labels.ready
+            : "";
+
+  const value: FileUploaderContextValue<TData> = {
+    ...model,
+    components: parts,
+    labels,
+    slotProps: slotProps ?? {},
+    variant,
+    hint,
+    /** In tile mode the newest item *is* the zone's content. */
+    tileItem: variant === "tile" ? model.items[model.items.length - 1] : undefined,
+    statusLabel,
+  };
+
+  return <FileUploaderContext.Provider value={value}>{children}</FileUploaderContext.Provider>;
+}
+
+/**
+ * Root props
+ *
+ * Plain `<div>` props for the outer element.
+ */
+export interface FileUploaderRootProps extends HTMLAttributes<HTMLDivElement> {}
+
+/**
+ * FileUploader.Root
+ *
+ * The `Root` slot, carrying `data-variant`, `data-dragging`, `data-disabled`
+ * and `data-empty`, so the whole component can be styled from its state.
+ *
+ * @param props - See {@link FileUploaderRootProps}.
+ *
+ * @example
+ * ```tsx
+ * <FileUploader.Root className="shadow-sm">
+ *   <FileUploader.Dropzone />
+ *   <FileUploader.List />
+ * </FileUploader.Root>
+ * ```
+ */
+export function FileUploaderRoot({ className, children, ...htmlProps }: FileUploaderRootProps) {
+  const { components: C, slotProps, variant, items, isDragging, disabled } = useFileUploaderContext();
+
+  return (
+    <C.Root
+      className={className}
+      data-variant={variant}
+      data-dragging={isDragging ? "" : undefined}
+      data-disabled={disabled ? "" : undefined}
+      data-empty={items.length ? undefined : ""}
+      {...mergeSlot(slotProps.root, htmlProps)}
+    >
+      {children}
+    </C.Root>
+  );
+}
+
+/**
+ * File uploader props
+ *
+ * The provider props, the root's `<div>` props, and layout options.
+ *
+ * @typeParam TData - Whatever `upload` resolves with per file.
+ */
+export interface FileUploaderProps<TData = unknown>
+  extends FileUploaderProviderProps<TData>,
+    Omit<FileUploaderRootProps, "children" | "onChange" | "onError" | "defaultValue"> {
   /** Hide the item list, e.g. when you render the files yourself. */
   hideList?: boolean;
   /** Rendered inside the drop zone, under the title. */
   children?: ReactNode;
 }
 
-const OPTION_KEYS = [
+/**
+ * Provider keys
+ *
+ * The `<FileUploader>` props that go to the provider — every hook option, plus
+ * the variant and the slot overrides; the rest go to the root.
+ */
+const PROVIDER_KEYS = [
   "accept", "maxSize", "minSize", "maxFiles", "validate", "multiple", "disabled",
   "value", "onValueChange", "defaultValue", "onFilesChange", "onUrlsChange",
   "upload", "autoUpload", "concurrency", "onUploaded", "onUploadError", "onReject",
   "preview", "validationLabels", "captureWindowDrops",
+  "variant", "components", "labels", "slotProps",
 ] as const;
 
-/** Compile-time guard: every hook option must be routed to the hook. */
-type MissingOptionKeys = Exclude<keyof UseFileUploaderOptions, (typeof OPTION_KEYS)[number]>;
-const _allOptionsListed: [MissingOptionKeys] extends [never] ? true : MissingOptionKeys = true;
-void _allOptionsListed;
+/**
+ * Missing provider keys
+ *
+ * Compile-time guard: fails to type-check when a provider prop is missing from
+ * {@link PROVIDER_KEYS}. Since the provider props extend the hook's options,
+ * this also covers every option the hook must be handed.
+ */
+type MissingProviderKeys = Exclude<
+  keyof FileUploaderProviderProps,
+  (typeof PROVIDER_KEYS)[number] | "children"
+>;
+const _allProviderKeysListed: [MissingProviderKeys] extends [never] ? true : MissingProviderKeys = true;
+void _allProviderKeysListed;
 
-const optionKeys = new Set<string>(OPTION_KEYS);
+const providerKeys = new Set<string>(PROVIDER_KEYS);
 
 /**
- * Split props
+ * Split file uploader props
  *
- * Separates the hook's options from the DOM props, so anything else lands on
- * the root element.
+ * Splits `<FileUploader>` props into provider options and root / layout props.
+ * Useful when building your own uploader on the same props. `children` stays in
+ * `rest`, because the default layout renders it inside the drop zone rather
+ * than under the provider.
+ *
+ * @typeParam TData - Whatever `upload` resolves with per file.
+ * @typeParam P - The full props type.
+ * @returns `providerProps` for `FileUploader.Provider` and `rest` for your layout.
+ *
+ * @example
+ * ```tsx
+ * function AvatarField(props: FileUploaderProps & { label: string }) {
+ *   const { providerProps, rest } = splitFileUploaderProps<unknown, typeof props>(props);
+ *   const { label, children, ...rootProps } = rest;
+ *   return (
+ *     <FileUploader.Provider {...providerProps} variant="tile">
+ *       <span>{label}</span>
+ *       <FileUploader.Root {...rootProps}>
+ *         <FileUploader.Dropzone>{children}</FileUploader.Dropzone>
+ *       </FileUploader.Root>
+ *     </FileUploader.Provider>
+ *   );
+ * }
+ * ```
  */
-function splitProps<TData>(props: FileUploaderProps<TData>) {
-  const options: Record<string, unknown> = {};
+export function splitFileUploaderProps<TData, P extends FileUploaderProps<TData>>(props: P) {
+  const providerProps: Record<string, unknown> = {};
   const rest: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(props)) {
-    (optionKeys.has(key) ? options : rest)[key] = value;
+    (providerKeys.has(key) ? providerProps : rest)[key] = value;
   }
   return {
-    options: options as UseFileUploaderOptions<TData>,
-    rest: rest as Omit<FileUploaderProps<TData>, keyof UseFileUploaderOptions<TData>>,
+    providerProps: providerProps as unknown as FileUploaderProviderProps<TData>,
+    rest: rest as Omit<P, Exclude<keyof FileUploaderProviderProps<TData>, "children">>,
+  };
+}
+
+/**
+ * File uploader component
+ *
+ * The default layout: root, drop zone or compact row, item list and
+ * rejections. Exported as `FileUploader`.
+ *
+ * @typeParam TData - Whatever `upload` resolves with per file.
+ */
+function FileUploaderComponent<TData = unknown>(props: FileUploaderProps<TData>) {
+  const { providerProps, rest } = splitFileUploaderProps<TData, FileUploaderProps<TData>>(props);
+  const { hideList = false, children, ...htmlProps } = rest;
+
+  return (
+    <FileUploaderProvider<TData> {...providerProps}>
+      <FileUploaderRoot {...htmlProps}>
+        <FileUploaderDropzone>{children}</FileUploaderDropzone>
+        <FileUploaderCompact />
+        {!hideList && <FileUploaderList />}
+        <FileUploaderRejections />
+      </FileUploaderRoot>
+    </FileUploaderProvider>
+  );
+}
+
+/**
+ * Merge slot
+ *
+ * Joins the root's slot props with the DOM props passed to the component.
+ */
+function mergeSlot(slot: UploaderRootSlotProps | undefined, html: HTMLAttributes<HTMLDivElement>) {
+  if (!slot) return html;
+  return {
+    ...slot,
+    ...html,
+    className: [slot.className, html.className].filter(Boolean).join(" ") || undefined,
+    style: slot.style || html.style ? { ...slot.style, ...html.style } : undefined,
   };
 }
 
@@ -94,7 +322,10 @@ function splitProps<TData>(props: FileUploaderProps<TData>) {
  * handing you the files instead.
  *
  * Every part is replaceable through `components`, every string through
- * `labels`, and the fallbacks are plain accessible HTML.
+ * `labels`, and the fallbacks are plain accessible HTML. The compound parts
+ * (`FileUploader.Provider`, `.Root`, `.Dropzone`, `.Compact`, `.List`,
+ * `.Item`, `.Actions`, `.Rejections`) are there when the default layout is not
+ * enough.
  *
  * @typeParam TData - Whatever `upload` resolves with per file.
  * @param props - See {@link FileUploaderProps}.
@@ -111,192 +342,15 @@ function splitProps<TData>(props: FileUploaderProps<TData>) {
  * <FileUploader variant="tile" accept="image/*" upload={uploadToApi} />
  * ```
  */
-export function FileUploader<TData = unknown>(props: FileUploaderProps<TData>) {
-  const { options, rest } = splitProps(props);
-  const {
-    variant = "dropzone",
-    components,
-    labels: labelOverrides,
-    slotProps = {},
-    hideList = false,
-    children,
-    className,
-    ...htmlProps
-  } = rest;
-
-  const uploader = useFileUploader<TData>(options);
-  const C = useMemo(
-    () => ({ ...fileUploaderFallbacks, ...withoutUndefined(components) }),
-    [components],
-  );
-  const labels = useMemo(
-    () => ({ ...defaultFileUploaderLabels, ...withoutUndefined(labelOverrides) }),
-    [labelOverrides],
-  );
-
-  const { items, isDragging, disabled, dropzoneProps, inputProps } = uploader;
-  const tile = variant === "tile";
-  const showZone = variant !== "compact";
-  /** In tile mode the newest item *is* the zone's content. */
-  const tileItem = tile ? items[items.length - 1] : undefined;
-
-  const hint = labels.hint({
-    accept: uploader.accept,
-    maxSize: options.maxSize ? formatBytes(options.maxSize) : undefined,
-    maxFiles: options.maxFiles ?? (options.multiple ? undefined : 1),
-  });
-
-  const renderActions = (item: UploadItem<TData>) => (
-    <span className="sfu__actions">
-      {item.status === "uploading" && (
-        <C.Action action="cancel" onClick={() => uploader.cancel(item.id)} aria-label={labels.cancel} />
-      )}
-      {item.status === "error" && item.file && (
-        <C.Action action="retry" onClick={() => uploader.retry(item.id)} aria-label={labels.retry} />
-      )}
-      <C.Action
-        action="remove"
-        onClick={() => uploader.remove(item.id)}
-        disabled={disabled}
-        aria-label={labels.remove}
-      />
-    </span>
-  );
-
-  const statusLabel = (item: UploadItem<TData>) =>
-    item.status === "uploading"
-      ? labels.uploading
-      : item.status === "done"
-        ? labels.done
-        : item.status === "error"
-          ? labels.failed
-          : uploader.uploadable
-            ? labels.ready
-            : "";
-
-  return (
-    <C.Root
-      className={className}
-      data-variant={variant}
-      data-dragging={isDragging ? "" : undefined}
-      data-disabled={disabled ? "" : undefined}
-      data-empty={items.length ? undefined : ""}
-      {...mergeSlot(slotProps.root, htmlProps)}
-    >
-      {showZone && (
-        <C.Dropzone
-          aria-label={labels.dropzone}
-          {...dropzoneProps}
-          {...slotProps.dropzone}
-          className={slotProps.dropzone?.className}
-        >
-          <C.Input {...inputProps} aria-label={labels.dropzone} />
-
-          {tile && tileItem ? (
-            <>
-              <C.Thumbnail
-                item={tileItem}
-                src={tileItem.previewUrl ?? tileItem.url}
-                isImage={isImage(tileItem.type) || !!tileItem.previewUrl}
-                alt={labels.preview(tileItem.name)}
-              />
-              {tileItem.status === "uploading" && (
-                <C.Progress
-                  value={tileItem.progress}
-                  active
-                  aria-label={labels.progress(tileItem.name)}
-                />
-              )}
-              {tileItem.status === "error" && <span className="sfu__error">{tileItem.error}</span>}
-              {renderActions(tileItem)}
-            </>
-          ) : (
-            <>
-              <C.Icon dragging={isDragging} />
-              <C.Empty title={isDragging ? labels.dropHere : labels.title} hint={hint} dragging={isDragging} />
-              <C.Trigger onClick={uploader.open} disabled={disabled}>
-                {labels.browse}
-              </C.Trigger>
-            </>
-          )}
-          {children}
-        </C.Dropzone>
-      )}
-
-      {variant === "compact" && (
-        <span className="sfu__compact">
-          <C.Input {...inputProps} aria-label={labels.dropzone} />
-          <C.Trigger onClick={uploader.open} disabled={disabled}>
-            {labels.browse}
-          </C.Trigger>
-          <span className="sfu__hint">{hint}</span>
-        </span>
-      )}
-
-      {!hideList && !tile && !!items.length && (
-        <C.List {...slotProps.list}>
-          {items.map((item) => (
-            <C.Item
-              key={item.id}
-              data-status={item.status}
-              data-image={isImage(item.type) || undefined}
-              {...slotProps.item?.(item)}
-            >
-              <C.Thumbnail
-                item={item}
-                src={item.previewUrl ?? item.url}
-                isImage={isImage(item.type) || !!item.previewUrl}
-                alt={labels.preview(item.name)}
-              />
-              <C.ItemMeta item={item} size={formatItemSize(item.size)} status={statusLabel(item)} />
-              {item.status === "uploading" && (
-                <C.Progress
-                  value={item.progress}
-                  active={item.status === "uploading"}
-                  aria-label={labels.progress(item.name)}
-                />
-              )}
-              {renderActions(item)}
-            </C.Item>
-          ))}
-        </C.List>
-      )}
-
-      {!!uploader.rejections.length && (
-        <C.Rejections
-          rejections={uploader.rejections}
-          onDismiss={uploader.clearRejections}
-          dismissLabel={labels.dismiss}
-        />
-      )}
-    </C.Root>
-  );
-}
-
-/**
- * Without undefined
- *
- * Drops `undefined` entries, so `{ Icon: undefined }` keeps the fallback.
- */
-function withoutUndefined<O extends object>(object: O | undefined): Partial<O> {
-  return Object.fromEntries(
-    Object.entries(object ?? {}).filter(([, value]) => value !== undefined),
-  ) as Partial<O>;
-}
-
-/**
- * Merge slot
- *
- * Joins the root's slot props with the DOM props passed to the component.
- */
-function mergeSlot(slot: HTMLAttributes<HTMLDivElement> | undefined, html: HTMLAttributes<HTMLDivElement>) {
-  if (!slot) return html;
-  return {
-    ...slot,
-    ...html,
-    className: [slot.className, html.className].filter(Boolean).join(" ") || undefined,
-    style: slot.style || html.style ? { ...slot.style, ...html.style } : undefined,
-  };
-}
+export const FileUploader = Object.assign(FileUploaderComponent, {
+  Provider: FileUploaderProvider,
+  Root: FileUploaderRoot,
+  Dropzone: FileUploaderDropzone,
+  Compact: FileUploaderCompact,
+  List: FileUploaderList,
+  Item: FileUploaderItemView,
+  Actions: FileUploaderActions,
+  Rejections: FileUploaderRejections,
+});
 
 export type { FileUploaderModel };
