@@ -55,8 +55,10 @@ Peer dependencies are per component, so you only install what you use:
 
 | Component | Also install |
 | --- | --- |
-| Data table | `@tanstack/react-table@^9`, and `@tanstack/react-virtual@^3` for virtual rows |
+| Data table | `@tanstack/react-table@^9` |
+| Autocomplete | nothing |
 | File uploader | nothing |
+| Any virtualized list | `@tanstack/react-virtual@^3` |
 
 React 18 or 19. The stylesheet is optional: `import "slotsmith/styles.css"`.
 
@@ -83,6 +85,7 @@ Sorting, pagination and selection work immediately, and each piece of state stay
 | Component | Status | Docs |
 | --- | --- | --- |
 | **Data table** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/data-table) · sorting, pagination, selection that survives server pages, tree rows, virtual rows, loading / error / empty states, i18n and RTL |
+| **Autocomplete** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/autocomplete) · a combobox that is also a select; single or multiple, remote options with debounce and paging, create-as-you-type, full keyboard and typeahead |
 | **File uploader** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/file-uploader) · drop zone, image tile or picker-only; queued uploads with progress, retry and real cancellation; validation by type, size and count |
 | More | 🔜 next | Same rules: headless logic, replaceable parts, fallbacks good enough to ship |
 
@@ -93,7 +96,7 @@ Sorting, pagination and selection work immediately, and each piece of state stay
 | Works on day one | ✅ | ❌ you build the UI | ✅ fallbacks are finished |
 | Matches your design system | ⚠️ theme overrides | ✅ you wrote it | ✅ replace only the parts that differ |
 | Escape hatch | eject or fight the theme | n/a | every part is a prop |
-| Runtime dependencies | many | few | none beyond the component's own peer |
+| Runtime dependencies | many | few | one, and only for the components that need it |
 
 slotsmith isn't a replacement for TanStack Table or Radix — the table is *built on* TanStack v9. It's the layer those libraries leave to you, written once and made replaceable.
 
@@ -123,7 +126,7 @@ Not using a component library? Every fallback also exposes `data-*` state, so Ta
 2. **State is uncontrolled until you control it.** No required `useState` to render a component.
 3. **Every string is a label.** Translation and RTL are props, not a fork.
 4. **Accessible by default.** Keyboard paths, `aria-*` state and focus handling live in the fallbacks, so replacing a part can't silently remove them.
-5. **No runtime dependencies.** Only the peer the component is built on.
+5. **Pay only for what you import.** Components are independent and tree-shake cleanly, so a project that uses one of them ships one of them.
 
 ## Contributing
 
