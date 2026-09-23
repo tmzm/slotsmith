@@ -249,7 +249,7 @@ export function FileUploader<TData = unknown>(props: FileUploaderProps<TData>) {
                 alt={labels.preview(item.name)}
               />
               <C.ItemMeta item={item} size={formatItemSize(item.size)} status={statusLabel(item)} />
-              {(item.status === "uploading" || item.status === "done") && uploader.uploadable && (
+              {item.status === "uploading" && (
                 <C.Progress
                   value={item.progress}
                   active={item.status === "uploading"}

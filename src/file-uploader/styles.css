@@ -236,6 +236,8 @@
 .sfu__actions {
   display: inline-flex;
   gap: 2px;
+  grid-row: 1;
+  grid-column: 3;
 }
 
 .sfu__action {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cx } from "../../data-table/slots/fallbacks";
 import { formatBytes } from "../core/validate";
 import type {
@@ -137,10 +138,12 @@ const Item = ({ className, ...props }: UploaderItemSlotProps) => (
  *
  * The picture for images, a file glyph for everything else.
  */
-const Thumbnail = ({ src, isImage, alt }: ThumbnailSlotProps) => (
+const Thumbnail = ({ src, isImage, alt }: ThumbnailSlotProps) => {
+  const [broken, setBroken] = useState(false);
+  return (
   <span className="sfu__thumb">
-    {isImage && src ? (
-      <img className="sfu__thumb-img" src={src} alt={alt} />
+    {isImage && src && !broken ? (
+      <img className="sfu__thumb-img" src={src} alt={alt} onError={() => setBroken(true)} />
     ) : (
       <Glyph>
         <path d="M14 3v4a1 1 0 0 0 1 1h4" />
@@ -148,7 +151,8 @@ const Thumbnail = ({ src, isImage, alt }: ThumbnailSlotProps) => (
       </Glyph>
     )}
   </span>
-);
+  );
+};
 
 /**
  * Item meta fallback
