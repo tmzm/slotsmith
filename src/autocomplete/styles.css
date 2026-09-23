@@ -89,7 +89,8 @@
   align-items: center;
   gap: 0.25rem;
   max-width: 100%;
-  padding: 0.0625rem 0.25rem 0.0625rem 0.4rem;
+  padding-block: 0.0625rem;
+  padding-inline: 0.4rem 0.25rem;
   border-radius: 0.3rem;
   background: color-mix(in oklab, var(--sac-accent), transparent 88%);
   font-size: 0.75rem;
@@ -340,8 +341,4 @@
   height: 1px;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-[dir="rtl"] .sac__tag {
-  padding: 0.0625rem 0.4rem 0.0625rem 0.25rem;
 }
