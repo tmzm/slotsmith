@@ -60,7 +60,20 @@ Peer dependencies are per component, so you only install what you use:
 | File uploader | nothing |
 | Any virtualized list | `@tanstack/react-virtual@^3` |
 
-React 18 or 19. The stylesheet is optional: `import "slotsmith/styles.css"`.
+React 18 or 19. Every peer is optional — you are only asked for the one belonging to the
+component you actually import.
+
+The stylesheet is optional too. Import the whole set, or just the component you use:
+
+```tsx
+import "slotsmith/styles.css";            // all components — 17.3 KB
+import "slotsmith/autocomplete.css";      // just this one — 5.5 KB
+import "slotsmith/data-table.css";
+import "slotsmith/file-uploader.css";
+```
+
+Replacing every part with your own design system? Import no stylesheet at all — the
+components never reference it.
 
 ## Quick start
 
@@ -119,6 +132,37 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 Ready-made adapters for **shadcn/ui**, **MUI v7** and **Chakra UI v3** live in [`src/data-table/__tests__/integrations/`](src/data-table/__tests__/integrations/) — each one is exercised by an integration suite that fails on any React warning.
 
 Not using a component library? Every fallback also exposes `data-*` state, so Tailwind alone is enough: `[&_tr[data-state=selected]]:bg-muted`.
+
+## You ship only what you import
+
+Each component is independent, and the build is arranged so your bundler can prove it.
+Measured on the published output, bundling a single component:
+
+| What you import | JavaScript |
+| --- | --- |
+| `Autocomplete` alone | 16.5 KB |
+| `useAutocomplete` alone | 7.9 KB |
+| all three components | 46.9 KB |
+
+Nothing special is required — `import { Autocomplete } from "slotsmith"` already drops
+the other two. A test in the suite bundles the real output and fails if any of it leaks
+back in.
+
+Two cases a bundler cannot solve on its own, and what to do about them:
+
+```tsx
+// CommonJS cannot be tree-shaken, because require() resolves at run time.
+// Import the component's own entry and you get 23 KB instead of 63 KB.
+const { Autocomplete } = require("slotsmith/autocomplete");
+
+// CSS has no import graph to follow, so pick the stylesheet you need.
+import "slotsmith/autocomplete.css";
+```
+
+Per-component entries exist for every component — `slotsmith/autocomplete`,
+`slotsmith/data-table`, `slotsmith/file-uploader` — and they export exactly what the
+main entry does. On ES modules they make no difference at all; use them when you are on
+CommonJS, or when you want the guarantee written down rather than inferred.
 
 ## Principles
 
