@@ -8,16 +8,16 @@
  * Components live in their own folder and are re-exported here:
  *
  * - `data-table` — the data table, on TanStack Table v9.
+ * - `file-uploader` — drop zone, image previews, upload queue, or picker-only.
  *
  * @example
  * ```tsx
- * import { DataTable } from "slotsmith";
+ * import { DataTable, FileUploader } from "slotsmith";
  * import "slotsmith/styles.css";
- *
- * <DataTable data={users} columns={columns} />;
  * ```
  *
  * @packageDocumentation
  */
 
 export * from "./data-table";
+export * from "./file-uploader";

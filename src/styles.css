@@ -1,0 +1,14 @@
+/**
+ * slotsmith styles
+ *
+ * Optional styles for every component's built-in fallbacks. Import once:
+ *
+ * ```ts
+ * import "slotsmith/styles.css";
+ * ```
+ *
+ * Each component reads --rdt-* / --sfu-* tokens, so one theme covers them all.
+ */
+
+@import "./data-table/styles.css";
+@import "./file-uploader/styles.css";
