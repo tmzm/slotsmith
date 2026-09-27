@@ -136,7 +136,7 @@ export interface FileUploaderItemViewProps<TData = unknown> {
  * ```
  */
 export function FileUploaderItemView<TData = unknown>({ item }: FileUploaderItemViewProps<TData>) {
-  const { components: C, labels, slotProps, statusLabel } = useFileUploaderContext<TData>();
+  const { components: C, labels, slotProps, statusLabel, locale } = useFileUploaderContext<TData>();
 
   return (
     <UploadItemContext.Provider value={item as UploadItem<any>}>
@@ -152,7 +152,7 @@ export function FileUploaderItemView<TData = unknown>({ item }: FileUploaderItem
           isImage={isImage(item.type) || !!item.previewUrl}
           alt={labels.preview(item.name)}
         />
-        <C.ItemMeta item={item} size={formatItemSize(item.size)} status={statusLabel(item)} />
+        <C.ItemMeta item={item} size={formatItemSize(item.size, locale)} status={statusLabel(item)} />
         {item.status === "uploading" && (
           <C.Progress
             value={item.progress}

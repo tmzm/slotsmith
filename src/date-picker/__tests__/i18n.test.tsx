@@ -1,6 +1,8 @@
-import { screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { SlotsmithProvider, defineLocale } from "../../locale";
 import { DatePicker, type DatePickerProps } from "../DatePicker";
+import { defaultDatePickerLabels } from "../slots/fallbacks";
 import type { DatePickerComponents, DatePickerLabels, DpNavProps } from "../slots/types";
 import { day, focusedDate, freezeToday, grid, open, renderWithUser, shownMonth, trigger } from "./builders";
 
@@ -164,5 +166,63 @@ describe("right to left", () => {
     /** Up and down are not mirrored. */
     await user.keyboard("{ArrowDown}");
     expect(focusedDate()).toBe("2026-03-18");
+  });
+});
+
+describe("date picker locale", () => {
+  const nl = defineLocale({
+    code: "nl",
+    datePicker: { ...defaultDatePickerLabels, placeholder: "Kies een datum", dialog: "Datum kiezen" },
+  });
+
+  it("renders English with no locale", () => {
+    renderWithUser(<DatePicker />);
+    expect(trigger()).toHaveTextContent("Pick a date");
+  });
+  it("takes a locale object", () => {
+    renderWithUser(<DatePicker locale={nl} />);
+    expect(trigger()).toHaveTextContent("Kies een datum");
+  });
+  it("reads the provider's locale", () => {
+    renderWithUser(
+      <SlotsmithProvider locale="nl-BE" locales={[nl]}>
+        <DatePicker />
+      </SlotsmithProvider>,
+    );
+    expect(trigger()).toHaveTextContent("Kies een datum");
+  });
+  it("lets the labels prop win over the locale", () => {
+    renderWithUser(<DatePicker locale={nl} labels={{ placeholder: "Wanneer?" }} />);
+    expect(trigger()).toHaveTextContent("Wanneer?");
+  });
+  it("falls back to English for a key the locale lacks", async () => {
+    const { dialog: _dialog, ...rest } = nl.datePicker as typeof defaultDatePickerLabels;
+    const old = { ...nl, datePicker: rest } as unknown as typeof nl;
+    const { user } = renderWithUser(<DatePicker locale={old} />);
+    await open(user);
+    expect(screen.getByRole("dialog")).toHaveAccessibleName("Choose a date");
+  });
+  it("stays English and warns once when a tag has no pack", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderWithUser(<DatePicker locale="de" />);
+    expect(trigger()).toHaveTextContent("Pick a date");
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+  it("keeps formatting dates when the locale is a string", () => {
+    render(<DatePicker locale="ar-EG" defaultValue="2026-03-05" />);
+    expect(screen.getByRole("combobox")).toHaveTextContent("مارس");
+  });
+  it("formats with the tag of a locale object", () => {
+    render(<DatePicker locale={defineLocale({ code: "fr" })} defaultValue="2026-03-05" />);
+    expect(screen.getByRole("combobox")).toHaveTextContent("mars");
+  });
+  it.each([
+    ["ar-SA", "مارس"],
+    ["fa-IR", "مارس"],
+  ])("keeps %s on the Gregorian calendar", (locale, march) => {
+    render(<DatePicker locale={locale} defaultValue="2026-03-05" />);
+    // Hijri would read رمضان and Persian اسفند for the same day.
+    expect(screen.getByRole("combobox")).toHaveTextContent(march);
   });
 });

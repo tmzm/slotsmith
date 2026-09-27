@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
+import { useLocaleSection } from "../locale/context";
+import type { LocaleInput } from "../locale/types";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import type { OptionValue } from "./core/types";
 import { useAutocomplete, type UseAutocompleteOptions } from "./core/useAutocomplete";
@@ -42,8 +44,10 @@ type EngineOptions<TOption> = Omit<
 export interface AutocompleteSharedProps<TOption> extends EngineOptions<TOption> {
   /** Replace any part; the rest stay as fallbacks. */
   components?: Partial<AutocompleteComponents<TOption>>;
-  /** Override any string. */
+  /** Override any string. Wins over `locale`. */
   labels?: Partial<AutocompleteLabels>;
+  /** The language: a locale object, or the tag of one given to `SlotsmithProvider`. Defaults to the provider's. */
+  locale?: LocaleInput;
   /** Extra DOM props for the element parts. */
   slotProps?: AutocompleteSlotProps;
   /** Trigger text when nothing is selected. Defaults to `labels.placeholder`. */
@@ -187,6 +191,7 @@ export function AutocompleteProvider<TOption>(props: AutocompleteProviderProps<T
   const {
     components,
     labels: labelOverrides,
+    locale,
     slotProps,
     placeholder,
     maxTags = 2,
@@ -204,9 +209,15 @@ export function AutocompleteProvider<TOption>(props: AutocompleteProviderProps<T
     ...engineOptions
   } = props as LooseProps<TOption>;
 
+  const { labels: localeLabels } = useLocaleSection("autocomplete", locale);
+  /** English, then the locale, then the caller's own overrides. */
   const labels = useMemo(
-    () => ({ ...defaultAutocompleteLabels, ...withoutUndefined(labelOverrides) }),
-    [labelOverrides],
+    () => ({
+      ...defaultAutocompleteLabels,
+      ...withoutUndefined(localeLabels),
+      ...withoutUndefined(labelOverrides),
+    }),
+    [localeLabels, labelOverrides],
   );
   const parts = useMemo(
     () => ({ ...autocompleteFallbacks, ...withoutUndefined(components) }) as AutocompleteComponents<TOption>,
@@ -300,7 +311,7 @@ const PROVIDER_KEYS = [
   "loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore",
   "creatable", "onCreate", "createLoading",
   "clearable", "closeOnSelect", "loop", "disabled", "onBlur",
-  "components", "labels", "slotProps", "placeholder", "maxTags",
+  "components", "labels", "locale", "slotProps", "placeholder", "maxTags",
   "placement", "popupOffset", "matchTriggerWidth", "popupMaxHeight", "name",
 ] as const;
 

@@ -5,16 +5,26 @@ import type { Rejection, RejectionReason } from "./types";
  *
  * A short, human size: `900 B`, `512 KB`, `25 MB`.
  *
+ * With a tag, the number is written the way that language writes numbers
+ * (`١٫٥ KB` in Arabic, `1,5 KB` in German); without one it stays exactly as
+ * it always was. The unit is left as is: `KB` and `MB` read the same in
+ * most scripts that show sizes at all.
+ *
  * @param bytes - The size to format.
+ * @param locale - A BCP 47 tag to write the number in. Optional.
  * @returns The size with a unit.
  *
  * @example
  * ```ts
  * formatBytes(26214400); // "25 MB"
+ * formatBytes(1536, "de"); // "1,5 KB"
  * ```
  */
-export function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
+export function formatBytes(bytes: number, locale?: string): string {
+  /** No grouping, so `1023 B` does not turn into `1,023 B` once a tag is given. */
+  const write = (value: number) =>
+    locale ? new Intl.NumberFormat(locale, { useGrouping: false }).format(value) : String(value);
+  if (!Number.isFinite(bytes) || bytes < 0) return `${write(0)} B`;
   const units = ["B", "KB", "MB", "GB", "TB"];
   let value = bytes;
   let unit = 0;
@@ -23,7 +33,7 @@ export function formatBytes(bytes: number): string {
     unit += 1;
   }
   const rounded = value >= 10 || unit === 0 ? Math.round(value) : Math.round(value * 10) / 10;
-  return `${rounded} ${units[unit]}`;
+  return `${write(rounded)} ${units[unit]}`;
 }
 
 /**

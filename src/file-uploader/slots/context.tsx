@@ -31,6 +31,8 @@ export interface FileUploaderContextValue<TData = unknown> extends FileUploaderM
   tileItem?: UploadItem<TData>;
   /** One item's status wording, or `""` when the uploader is a picker. */
   statusLabel: (item: UploadItem<TData>) => ReactNode;
+  /** The tag sizes are written in, or `undefined` when no locale is set. */
+  locale: string | undefined;
 }
 
 /**

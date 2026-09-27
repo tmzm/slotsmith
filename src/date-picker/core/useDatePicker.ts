@@ -433,9 +433,14 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     return Array.from({ length: last - first + 1 }, (_, index) => first + index);
   }, [minDate, maxDate, year]);
 
-  const fullDateFormat = useMemo(() => new Intl.DateTimeFormat(locale, { dateStyle: "full" }), [locale]);
+  /** Gregorian like the grid, whatever the locale's own calendar is. */
+  // TODO(calendars): Hijri and Persian calendar grids.
+  const fullDateFormat = useMemo(
+    () => new Intl.DateTimeFormat(locale, { dateStyle: "full", calendar: "gregory" }),
+    [locale],
+  );
   const captionFormat = useMemo(
-    () => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }),
+    () => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", calendar: "gregory" }),
     [locale],
   );
   const formatFullDate = useCallback(

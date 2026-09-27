@@ -1,9 +1,11 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { SlotsmithProvider, defineLocale } from "../../locale";
 import { Autocomplete } from "../Autocomplete";
 import { defaultAutocompleteLabels } from "../slots/fallbacks";
 import type { AutocompleteLabels } from "../slots/types";
+import { BRANDS as ENGLISH_BRANDS, renderAutocomplete, type Brand as BuilderBrand } from "./builders";
 
 interface Brand {
   id: string;
@@ -187,5 +189,46 @@ describe("right to left", () => {
 
     await user.tab();
     expect(trigger).toHaveFocus();
+  });
+});
+
+describe("autocomplete locale", () => {
+  const nl = defineLocale({
+    code: "nl",
+    autocomplete: { ...defaultAutocompleteLabels, placeholder: "Kies…", clear: "Selectie wissen" },
+  });
+
+  it("renders English with no locale", () => {
+    renderAutocomplete();
+    expect(screen.getByRole("combobox")).toHaveTextContent("Select…");
+  });
+  it("takes a locale object", () => {
+    renderAutocomplete({ locale: nl });
+    expect(screen.getByRole("combobox")).toHaveTextContent("Kies…");
+  });
+  it("reads the provider's locale", () => {
+    render(
+      <SlotsmithProvider locale="nl-BE" locales={[nl]}>
+        <Autocomplete<BuilderBrand> options={ENGLISH_BRANDS} getOptionLabel={(brand) => brand.name} />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByRole("combobox")).toHaveTextContent("Kies…");
+  });
+  it("lets the labels prop win over the locale", () => {
+    renderAutocomplete({ locale: nl, labels: { placeholder: "Merk" } });
+    expect(screen.getByRole("combobox")).toHaveTextContent("Merk");
+  });
+  it("falls back to English for a key the locale lacks", () => {
+    const { clear: _clear, ...rest } = nl.autocomplete as typeof defaultAutocompleteLabels;
+    const old = { ...nl, autocomplete: rest } as unknown as typeof nl;
+    renderAutocomplete({ locale: old, defaultValue: "b1" });
+    expect(screen.getByRole("button", { name: "Clear selection" })).toBeInTheDocument();
+  });
+  it("stays English and warns once when a tag has no pack", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderAutocomplete({ locale: "de" });
+    expect(screen.getByRole("combobox")).toHaveTextContent("Select…");
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
   });
 });

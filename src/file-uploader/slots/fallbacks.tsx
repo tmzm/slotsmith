@@ -320,6 +320,7 @@ export const defaultFileUploaderLabels: FileUploaderLabels = {
  * files restored from a URL.
  *
  * @param size - Bytes.
+ * @param locale - A BCP 47 tag to write the number in. Optional.
  * @returns The formatted size, or "".
  */
-export const formatItemSize = (size: number) => (size > 0 ? formatBytes(size) : "");
+export const formatItemSize = (size: number, locale?: string) => (size > 0 ? formatBytes(size, locale) : "");

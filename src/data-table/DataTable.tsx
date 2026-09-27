@@ -1,5 +1,7 @@
 import type { RowData } from "@tanstack/react-table";
 import type { HTMLAttributes, ReactNode } from "react";
+import { useLocaleSection } from "../locale/context";
+import type { LocaleInput } from "../locale/types";
 import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
 import {
   DataTableBody,
@@ -24,8 +26,10 @@ import type { DataTableComponents, DataTableLabels, DataTableSlotProps } from ".
 export interface DataTableProviderProps<T extends RowData> extends UseDataTableOptions<T> {
   /** Replace any UI slot; the rest fall back to the built-in plain-HTML ones. */
   components?: Partial<DataTableComponents>;
-  /** Override any text, e.g. to translate the table. */
+  /** Override any text, e.g. to translate the table. Wins over `locale`. */
   labels?: Partial<DataTableLabels>;
+  /** The language: a locale object, or the tag of one given to `SlotsmithProvider`. Defaults to the provider's. */
+  locale?: LocaleInput;
   /** Extra DOM props for element slots, e.g. per-row classNames. */
   slotProps?: DataTableSlotProps<T>;
   /** Called when a body row is clicked (not its checkbox or expand toggle). */
@@ -65,17 +69,20 @@ const withoutUndefined = <O extends object>(object: O | undefined): Partial<O> =
 export function DataTableProvider<T extends RowData>({
   components,
   labels,
+  locale,
   slotProps,
   onRowClick,
   children,
   ...options
 }: DataTableProviderProps<T>) {
   const model = useDataTable(options);
+  const { labels: localeLabels } = useLocaleSection("table", locale);
 
   const value: DataTableContextValue<T> = {
     ...model,
     components: { ...fallbackComponents, ...withoutUndefined(components) },
-    labels: { ...defaultLabels, ...withoutUndefined(labels) },
+    /** English, then the locale, then the caller's own overrides. */
+    labels: { ...defaultLabels, ...withoutUndefined(localeLabels), ...withoutUndefined(labels) },
     slotProps: slotProps ?? {},
     onRowClick,
   };
@@ -150,7 +157,7 @@ const PROVIDER_KEYS = [
   "enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange",
   "getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows",
   "loading", "error", "onRetry", "tableOptions",
-  "components", "labels", "slotProps", "onRowClick",
+  "components", "labels", "locale", "slotProps", "onRowClick",
 ] as const;
 
 /**

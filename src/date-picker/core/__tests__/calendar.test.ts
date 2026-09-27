@@ -184,6 +184,20 @@ describe("locale names", () => {
     expect(monthNames("en-US", "short")[2]).toBe("Mar");
   });
 
+  it("names Gregorian months where the locale's own calendar is another", () => {
+    const saudi = monthNames("ar-SA");
+    expect(saudi).toHaveLength(12);
+    expect(saudi[0]).toBe("يناير");
+
+    const iranian = monthNames("fa-IR");
+    expect(iranian).toHaveLength(12);
+    expect(iranian[0]).toBe("ژانویه");
+  });
+
+  it("formats a date on the Gregorian calendar in every locale", () => {
+    expect(formatDate("2026-03-05", "fa-IR")).toBe("۵ مارس ۲۰۲۶");
+  });
+
   it("reads each locale's own first day of the week", () => {
     expect(localeWeekStart("en-US")).toBe(0);
     expect(localeWeekStart("en-GB")).toBe(1);

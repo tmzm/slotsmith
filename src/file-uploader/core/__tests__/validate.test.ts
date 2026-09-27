@@ -29,6 +29,13 @@ describe("formatBytes", () => {
     expect(formatBytes(-5)).toBe("0 B");
     expect(formatBytes(Number.NaN)).toBe("0 B");
   });
+
+  it("writes the number in a locale's digits when given a tag", () => {
+    expect(formatBytes(1536, "de")).toBe("1,5 KB");
+    expect(formatBytes(1536, "ar-EG")).toBe("١٫٥ KB");
+    /** No grouping separator, so the plain and localised forms agree in English. */
+    expect(formatBytes(1023, "en-US")).toBe("1023 B");
+  });
 });
 
 describe("isAccepted", () => {

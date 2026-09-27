@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
+import { useLocaleSection } from "../locale/context";
+import type { LocaleInput } from "../locale/types";
 import type { UploadItem } from "./core/types";
 import {
   useFileUploader,
   type FileUploaderModel,
   type UseFileUploaderOptions,
 } from "./core/useFileUploader";
-import { formatBytes } from "./core/validate";
+import { defaultValidationLabels, formatBytes, type ValidationLabels } from "./core/validate";
 import {
   FileUploaderActions,
   FileUploaderCompact,
@@ -57,8 +59,10 @@ export interface FileUploaderProviderProps<TData = unknown> extends UseFileUploa
   variant?: FileUploaderVariant;
   /** Replace any part; the rest stay as fallbacks. */
   components?: Partial<FileUploaderComponents>;
-  /** Override any text. */
+  /** Override any text. Wins over `locale`. */
   labels?: Partial<FileUploaderLabels>;
+  /** The language: a locale object, or the tag of one given to `SlotsmithProvider`. Defaults to the provider's. */
+  locale?: LocaleInput;
   /** Extra DOM props for the element parts. */
   slotProps?: FileUploaderSlotProps;
   /** Your layout, built from the compound parts and your own components. */
@@ -74,6 +78,32 @@ function withoutUndefined<O extends object>(object: O | undefined): Partial<O> {
   return Object.fromEntries(
     Object.entries(object ?? {}).filter(([, value]) => value !== undefined),
   ) as Partial<O>;
+}
+
+/**
+ * Validation for a locale
+ *
+ * The hook formats the size in a size message itself, always in plain digits.
+ * With a tag, the two size messages are handed the limit written in that
+ * language's digits instead; without one the wording is returned untouched.
+ *
+ * @param labels - The merged validation wording.
+ * @param code - The active tag, if any.
+ * @param limits - The size limits the hook checks against.
+ * @returns The wording to hand the hook.
+ */
+function validationFor(
+  labels: ValidationLabels,
+  code: string | undefined,
+  limits: { maxSize?: number; minSize?: number },
+): ValidationLabels {
+  if (!code) return labels;
+  const { maxSize, minSize } = limits;
+  return {
+    ...labels,
+    tooLarge: (name, max) => labels.tooLarge(name, maxSize === undefined ? max : formatBytes(maxSize, code)),
+    tooSmall: (name, min) => labels.tooSmall(name, minSize === undefined ? min : formatBytes(minSize, code)),
+  };
 }
 
 /**
@@ -102,24 +132,39 @@ export function FileUploaderProvider<TData = unknown>({
   variant = "dropzone",
   components,
   labels: labelOverrides,
+  locale,
   slotProps,
   children,
   ...options
 }: FileUploaderProviderProps<TData>) {
-  const model = useFileUploader<TData>(options);
+  const { code, labels: localeLabels } = useLocaleSection("fileUploader", locale);
+  const { labels: localeValidation } = useLocaleSection("fileValidation", locale);
+
+  /**
+   * The hook stays unaware of locales: it is handed the validation wording
+   * already merged, English then the locale then the caller's own. With a
+   * locale, the sizes in the size messages are rewritten in its digits.
+   */
+  const validation = validationFor(
+    { ...defaultValidationLabels, ...withoutUndefined(localeValidation), ...withoutUndefined(options.validationLabels) },
+    code,
+    options,
+  );
+  const model = useFileUploader<TData>({ ...options, validationLabels: validation });
 
   const parts = useMemo(
     () => ({ ...fileUploaderFallbacks, ...withoutUndefined(components) }),
     [components],
   );
+  /** English, then the locale, then the caller's own overrides. */
   const labels = useMemo(
-    () => ({ ...defaultFileUploaderLabels, ...withoutUndefined(labelOverrides) }),
-    [labelOverrides],
+    () => ({ ...defaultFileUploaderLabels, ...withoutUndefined(localeLabels), ...withoutUndefined(labelOverrides) }),
+    [localeLabels, labelOverrides],
   );
 
   const hint = labels.hint({
     accept: model.accept,
-    maxSize: options.maxSize ? formatBytes(options.maxSize) : undefined,
+    maxSize: options.maxSize ? formatBytes(options.maxSize, code) : undefined,
     maxFiles: options.maxFiles ?? (options.multiple ? undefined : 1),
   });
 
@@ -144,6 +189,7 @@ export function FileUploaderProvider<TData = unknown>({
     /** In tile mode the newest item *is* the zone's content. */
     tileItem: variant === "tile" ? model.items[model.items.length - 1] : undefined,
     statusLabel,
+    locale: code,
   };
 
   return <FileUploaderContext.Provider value={value}>{children}</FileUploaderContext.Provider>;
@@ -216,7 +262,7 @@ const PROVIDER_KEYS = [
   "value", "onValueChange", "defaultValue", "onFilesChange", "onUrlsChange",
   "upload", "autoUpload", "concurrency", "onUploaded", "onUploadError", "onReject",
   "preview", "validationLabels", "captureWindowDrops",
-  "variant", "components", "labels", "slotProps",
+  "variant", "components", "labels", "locale", "slotProps",
 ] as const;
 
 /**

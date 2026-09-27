@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
+import { useLocaleSection } from "../locale/context";
+import type { LocaleInput } from "../locale/types";
 import { mergeProps } from "../shared/mergeProps";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import { formatDate } from "./core/calendar";
@@ -24,7 +26,14 @@ import type { DatePickerComponents, DatePickerLabels, DatePickerSlotProps } from
  * Everything that means the same thing in every mode.
  */
 export interface DatePickerSharedProps
-  extends Omit<UseDatePickerOptions, "mode" | "value" | "defaultValue" | "onChange"> {
+  extends Omit<UseDatePickerOptions, "mode" | "value" | "defaultValue" | "onChange" | "locale"> {
+  /**
+   * The language: a locale object, or a BCP 47 tag. A tag formats dates and
+   * names with `Intl` as always, and takes its labels from the pack of that
+   * language given to `SlotsmithProvider`, if there is one. Defaults to the
+   * provider's, then `en-US`.
+   */
+  locale?: LocaleInput;
   /** Trigger text when nothing is picked. Defaults to `labels.placeholder`. */
   placeholder?: string;
   /** Shortcuts shown under the grid. A date preset in range mode picks that one day. */
@@ -33,7 +42,7 @@ export interface DatePickerSharedProps
   format?: Intl.DateTimeFormatOptions;
   /** Replace any part; the rest stay as fallbacks. */
   components?: Partial<DatePickerComponents>;
-  /** Override any string. */
+  /** Override any string. Wins over `locale`. */
   labels?: Partial<DatePickerLabels>;
   /** Extra DOM props for the element parts. */
   slotProps?: DatePickerSlotProps;
@@ -196,6 +205,7 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
   const {
     components,
     labels: labelOverrides,
+    locale,
     slotProps,
     placeholder,
     presets,
@@ -206,16 +216,23 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
     ...engineOptions
   } = props as LooseProps;
 
+  const { code, labels: localeLabels } = useLocaleSection("datePicker", locale);
+  /** English, then the locale, then the caller's own overrides. */
   const labels = useMemo(
-    () => ({ ...defaultDatePickerLabels, ...withoutUndefined(labelOverrides) }),
-    [labelOverrides],
+    () => ({
+      ...defaultDatePickerLabels,
+      ...withoutUndefined(localeLabels),
+      ...withoutUndefined(labelOverrides),
+    }),
+    [localeLabels, labelOverrides],
   );
   const parts = useMemo(
     () => ({ ...datePickerFallbacks, ...withoutUndefined(components) }) as DatePickerComponents,
     [components],
   );
 
-  const model = useDatePicker(engineOptions as UseDatePickerOptions);
+  /** The headless hook takes a tag, never a pack. */
+  const model = useDatePicker({ ...engineOptions, locale: code ?? "en-US" } as UseDatePickerOptions);
 
   /**
    * The calendar has a width of its own, so it only has to be at least as

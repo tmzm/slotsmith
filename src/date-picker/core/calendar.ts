@@ -243,6 +243,16 @@ export function buildMonth(month: ISODate, weekStartsOn: WeekStart = 0): Calenda
 }
 
 /**
+ * Grid calendar
+ *
+ * The calendar every name and date is formatted in. The grid is Gregorian, and
+ * `Intl` would otherwise follow the locale's own default, which is Persian for
+ * `fa-IR` and Hijri for some Arabic regions: the month names would then not
+ * match the days under them. Numbering systems are still left to the locale.
+ */
+const GRID_CALENDAR = "gregory";
+
+/**
  * Locale week start
  *
  * The day a locale's calendars start their week on: Sunday in the United
@@ -302,7 +312,8 @@ export function weekdayNames(
   weekStartsOn: WeekStart = 0,
   style: "narrow" | "short" | "long" = "narrow",
 ): string[] {
-  const format = new Intl.DateTimeFormat(locale, { weekday: style, timeZone: "UTC" });
+  // TODO(calendars): Hijri and Persian calendar grids.
+  const format = new Intl.DateTimeFormat(locale, { weekday: style, timeZone: "UTC", calendar: GRID_CALENDAR });
   /** 4 Jan 1970 was a Sunday, so it anchors the week cleanly. */
   return Array.from({ length: 7 }, (_, index) =>
     format.format(new Date(Date.UTC(1970, 0, 4 + ((index + weekStartsOn) % 7)))),
@@ -320,7 +331,8 @@ export function weekdayNames(
  * @returns Twelve names, January first.
  */
 export function monthNames(locale: string, style: "long" | "short" = "long"): string[] {
-  const format = new Intl.DateTimeFormat(locale, { month: style, timeZone: "UTC" });
+  // TODO(calendars): Hijri and Persian calendar grids.
+  const format = new Intl.DateTimeFormat(locale, { month: style, timeZone: "UTC", calendar: GRID_CALENDAR });
   return Array.from({ length: 12 }, (_, index) => format.format(new Date(Date.UTC(2021, index, 1))));
 }
 
@@ -346,5 +358,6 @@ export function formatDate(
   options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" },
 ): string {
   const date = fromISODate(value);
-  return date ? new Intl.DateTimeFormat(locale, options).format(date) : "";
+  // TODO(calendars): Hijri and Persian calendar grids.
+  return date ? new Intl.DateTimeFormat(locale, { ...options, calendar: GRID_CALENDAR }).format(date) : "";
 }
