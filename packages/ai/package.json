@@ -1,6 +1,6 @@
 {
   "name": "slotsmith-ai",
-  "version": "0.0.0",
+  "version": "1.4.0",
   "description": "An MCP server that teaches AI coding agents the slotsmith React components: props, slots, fallbacks and adapters, generated from the library source.",
   "license": "ISC",
   "author": "Tareq Al-Mozayek",
