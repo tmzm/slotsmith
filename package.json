@@ -78,6 +78,14 @@
         "default": "./dist/file-uploader.cjs"
       }
     },
+    "./locale": {
+      "import": { "types": "./dist/locale/index.d.ts", "default": "./dist/locale.js" },
+      "require": { "types": "./dist/locale/index.d.ts", "default": "./dist/locale.cjs" }
+    },
+    "./locales/*": {
+      "import": { "types": "./dist/locales/*.d.ts", "default": "./dist/locales/*.js" },
+      "require": { "types": "./dist/locales/*.d.ts", "default": "./dist/locales/*.cjs" }
+    },
     "./styles.css": "./dist/styles.css",
     "./autocomplete.css": "./dist/autocomplete.styles.css",
     "./data-table.css": "./dist/data-table.styles.css",
@@ -148,6 +156,8 @@
     "unstyled",
     "accessible",
     "rtl",
+    "i18n",
+    "locale",
     "file-upload",
     "dropzone",
     "uploader",

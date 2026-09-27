@@ -5,7 +5,7 @@
  * API needs Node's own globals — jsdom's `TextEncoder` is not the one it
  * expects.
  */
-import { build } from "esbuild";
+import { build, type Plugin } from "esbuild";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -26,6 +26,9 @@ const MARKERS = {
 
 type Component = keyof typeof MARKERS;
 
+/** A string from the Arabic pack. Its presence proves a pack was bundled. */
+const ARABIC_MARKER = "لا توجد بيانات";
+
 /**
  * Other markers
  *
@@ -36,6 +39,23 @@ const othersThan = (component: Component) =>
   (Object.keys(MARKERS) as Component[]).filter((key) => key !== component).map((key) => MARKERS[key]);
 
 const dist = (file: string) => resolve(process.cwd(), "dist", file);
+
+/**
+ * Package alias
+ *
+ * Snippets below import bare `slotsmith/...` specifiers, the way an
+ * application does through the package's `exports` map. esbuild has no
+ * `node_modules/slotsmith` to resolve against here, so this plugin points
+ * each specifier straight at the built file its `exports` entry names.
+ */
+const packageAlias: Plugin = {
+  name: "slotsmith-alias",
+  setup(pluginBuild) {
+    pluginBuild.onResolve({ filter: /^slotsmith(\/.*)?$/ }, (args) => ({
+      path: dist(`${args.path === "slotsmith" ? "index" : args.path.slice("slotsmith/".length)}.js`),
+    }));
+  },
+};
 
 /** The peers and React, which an app supplies rather than bundling from here. */
 const EXTERNAL = [
@@ -65,9 +85,13 @@ async function bundle(
     bundle: true,
     write: false,
     minify: true,
+    // Keeps non-ASCII text, such as the Arabic marker, literal instead of
+    // escaping it to \u sequences, so a `toContain` check on it still works.
+    charset: "utf8",
     format,
     platform: format === "cjs" ? "node" : "browser",
     external: EXTERNAL,
+    plugins: [packageAlias],
     logLevel: "silent",
   });
   return result.outputFiles[0]!.text;
@@ -200,5 +224,29 @@ describe.skipIf(!built)("the stylesheets", () => {
     expect(one).toContain(MARKERS[component]);
     for (const marker of othersThan(component)) expect(one).not.toContain(marker);
     expect(one.length).toBeLessThan(whole.length / 2);
+  });
+});
+
+describe.skipIf(!built)("locales", () => {
+  it("keeps every pack out of a component's bundle", async () => {
+    const code = await bundle(`import { DataTable } from "slotsmith/data-table"; console.log(DataTable);`);
+    expect(code).not.toContain(ARABIC_MARKER);
+  });
+
+  it("keeps every component out of a pack's bundle", async () => {
+    const code = await bundle(`import { ar } from "slotsmith/locales/ar"; console.log(ar);`);
+    expect(code).toContain(ARABIC_MARKER);
+    for (const marker of Object.values(MARKERS)) expect(code).not.toContain(marker);
+  });
+
+  it("keeps the provider free of components and packs", async () => {
+    const code = await bundle(`import { SlotsmithProvider } from "slotsmith/locale"; console.log(SlotsmithProvider);`);
+    expect(code).not.toContain(ARABIC_MARKER);
+    for (const marker of Object.values(MARKERS)) expect(code).not.toContain(marker);
+  });
+
+  it("ships the packs without a client directive, so they import anywhere", () => {
+    expect(readFileSync(dist("locales/ar.js"), "utf8").startsWith('"use client"')).toBe(false);
+    expect(readFileSync(dist("locale.js"), "utf8").startsWith('"use client"')).toBe(true);
   });
 });
