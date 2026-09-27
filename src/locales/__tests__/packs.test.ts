@@ -96,3 +96,27 @@ describe.each(PACKS.map((pack) => [pack.code, pack] as const))("%s pack", (_code
     }
   });
 });
+
+describe("ar pack plural forms", () => {
+  const ar = PACKS.find((pack) => pack.code === "ar")!;
+  const call = (name: LocaleSectionName, key: string, ...args: unknown[]) =>
+    String((build(ar, name)[key] as (...a: unknown[]) => unknown)(...args));
+
+  // 11 to 99 take the accusative singular, 100 and up the genitive singular.
+  it.each([
+    ["fileUploader", "rejectedTitle", "ملف"],
+    ["fileValidation", "tooMany", "ملف"],
+    ["autocomplete", "minChars", "حرف"],
+  ] as const)("%s.%s uses the accusative for 11 and the genitive for 100", (name, key, noun) => {
+    expect(call(name, key, 11)).toContain(`${noun}ًا`);
+    expect(call(name, key, 100)).toContain(noun);
+    expect(call(name, key, 100)).not.toContain(`${noun}ًا`);
+  });
+
+  it("does the same in the uploader hint", () => {
+    const hint = (maxFiles: number) => call("fileUploader", "hint", { maxFiles });
+    expect(hint(11)).toContain("ملفًا");
+    expect(hint(100)).toContain("ملف");
+    expect(hint(100)).not.toContain("ملفًا");
+  });
+});

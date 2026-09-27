@@ -4,8 +4,11 @@ import { createNumber, createPlural } from "../locale/plural";
 /**
  * Arabic
  *
- * Labels for every component. Counts use all six Arabic plural forms, and
- * numbers are written the way the active tag writes them, so `ar-EG` gets
+ * Labels for every component. Each count supplies the Arabic forms its
+ * phrase needs: `one` and `two` as words, `few` (3 to 10) with a plural noun,
+ * `many` (11 to 99) with the accusative singular ("11 ملفًا"), and `other`
+ * (100 and up) with the genitive singular ("100 ملف"); `zero` only where the
+ * phrase reads differently for none. Numbers are written the way the active tag writes them, so `ar-EG` gets
  * Arabic-Indic digits from the same text.
  *
  * @example
@@ -52,7 +55,8 @@ export const ar = defineLocale({
           one: "اكتب حرفًا واحدًا أو أكثر للبحث",
           two: "اكتب حرفين أو أكثر للبحث",
           few: "اكتب {count} أحرف أو أكثر للبحث",
-          other: "اكتب {count} حرفًا أو أكثر للبحث",
+          many: "اكتب {count} حرفًا أو أكثر للبحث",
+          other: "اكتب {count} حرف أو أكثر للبحث",
         }),
       retry: "إعادة المحاولة",
       create: (query) => `إنشاء “${query}”`,
@@ -101,7 +105,8 @@ export const ar = defineLocale({
             ? plural(maxFiles, {
                 two: "ملفان كحد أقصى",
                 few: "بحد أقصى {count} ملفات",
-                other: "بحد أقصى {count} ملفًا",
+                many: "بحد أقصى {count} ملفًا",
+                other: "بحد أقصى {count} ملف",
               })
             : null,
         ]
@@ -125,7 +130,8 @@ export const ar = defineLocale({
           one: "تعذّر إضافة ملف واحد",
           two: "تعذّر إضافة ملفين",
           few: "تعذّر إضافة {count} ملفات",
-          other: "تعذّر إضافة {count} ملفًا",
+          many: "تعذّر إضافة {count} ملفًا",
+          other: "تعذّر إضافة {count} ملف",
         }),
     };
   },
@@ -141,7 +147,8 @@ export const ar = defineLocale({
           one: "لا يمكن إضافة أكثر من ملف واحد",
           two: "لا يمكن إضافة أكثر من ملفين",
           few: "لا يمكن إضافة أكثر من {count} ملفات",
-          other: "لا يمكن إضافة أكثر من {count} ملفًا",
+          many: "لا يمكن إضافة أكثر من {count} ملفًا",
+          other: "لا يمكن إضافة أكثر من {count} ملف",
         }),
     };
   },
