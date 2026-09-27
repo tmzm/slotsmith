@@ -1,0 +1,54 @@
+{
+  "name": "slotsmith-ai",
+  "version": "0.0.0",
+  "description": "An MCP server that teaches AI coding agents the slotsmith React components: props, slots, fallbacks and adapters, generated from the library source.",
+  "license": "ISC",
+  "author": "Tareq Al-Mozayek",
+  "type": "module",
+  "bin": {
+    "slotsmith-ai": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "knowledge"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tmzm/slotsmith.git",
+    "directory": "packages/ai"
+  },
+  "homepage": "https://slotsmith-docs.netlify.app/#/docs/ai-tools",
+  "bugs": {
+    "url": "https://github.com/tmzm/slotsmith/issues"
+  },
+  "keywords": [
+    "slotsmith",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "agents",
+    "react",
+    "headless"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.1"
+  }
+}

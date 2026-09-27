@@ -90,7 +90,10 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:ai": "pnpm --filter slotsmith-ai build",
+    "test:ai": "pnpm --filter slotsmith-ai test",
+    "typecheck:ai": "pnpm --filter slotsmith-ai typecheck"
   },
   "peerDependencies": {
     "@tanstack/react-table": "^9.2.0",
