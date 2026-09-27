@@ -20,10 +20,10 @@
   },
   "scripts": {
     "generate": "node scripts/generate.ts",
-    "prebuild": "node scripts/generate.ts",
-    "build": "tsup",
+    "build": "node scripts/generate.ts && tsup",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
