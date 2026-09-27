@@ -58,6 +58,16 @@
         "default": "./dist/data-table.cjs"
       }
     },
+    "./date-picker": {
+      "import": {
+        "types": "./dist/date-picker/index.d.ts",
+        "default": "./dist/date-picker.js"
+      },
+      "require": {
+        "types": "./dist/date-picker/index.d.ts",
+        "default": "./dist/date-picker.cjs"
+      }
+    },
     "./file-uploader": {
       "import": {
         "types": "./dist/file-uploader/index.d.ts",
@@ -71,6 +81,7 @@
     "./styles.css": "./dist/styles.css",
     "./autocomplete.css": "./dist/autocomplete.styles.css",
     "./data-table.css": "./dist/data-table.styles.css",
+    "./date-picker.css": "./dist/date-picker.styles.css",
     "./file-uploader.css": "./dist/file-uploader.styles.css",
     "./package.json": "./package.json"
   },
@@ -136,7 +147,10 @@
     "rtl",
     "file-upload",
     "dropzone",
-    "uploader"
+    "uploader",
+    "date-picker",
+    "calendar",
+    "range"
   ],
   "bugs": {
     "url": "https://github.com/tmzm/slotsmith/issues"

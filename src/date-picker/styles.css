@@ -1,0 +1,439 @@
+/**
+ * Date picker styles
+ *
+ * Optional styles for the built-in fallback parts. Every colour is a --sdp-*
+ * token, and the data table's --rdt-* tokens are reused where they overlap,
+ * so one theme covers every component. Custom parts are unaffected.
+ *
+ * Every offset, radius and gutter is a logical property, so the whole
+ * calendar mirrors under `dir="rtl"` without a single direction-specific
+ * rule.
+ *
+ * The header, the weekday row and the week rows are not replaceable parts, so
+ * the rules for them are structural only: every skin inherits the
+ * seven-column grid and adds nothing but colour.
+ */
+
+:root {
+  --sdp-surface: var(--rdt-surface, #ffffff);
+  --sdp-border: var(--rdt-border, #e5e7eb);
+  --sdp-text: var(--rdt-text, #111827);
+  --sdp-muted: var(--rdt-muted, #6b7280);
+  --sdp-accent: var(--rdt-accent, #2563eb);
+  /** Text that sits on `--sdp-accent`. Flipped with the theme rather than guessed. */
+  --sdp-on-accent: #ffffff;
+  --sdp-radius: var(--rdt-radius, 8px);
+  /** One day cell. Square, so the column is sized from it rather than stretched. */
+  --sdp-cell: 2rem;
+  /** The gutter between day cells, on both axes. */
+  --sdp-gap: 0.25rem;
+}
+
+.dark,
+[data-theme="dark"] {
+  --sdp-surface: var(--rdt-surface, #141416);
+  --sdp-border: var(--rdt-border, #2a2a2a);
+  --sdp-text: var(--rdt-text, #f5f5f5);
+  --sdp-muted: var(--rdt-muted, #a3a3a3);
+  --sdp-accent: var(--rdt-accent, #60a5fa);
+  --sdp-on-accent: #0b0b0c;
+}
+
+/* ------------------------------------------------------------------- root */
+
+.sdp {
+  position: relative;
+  width: 100%;
+  max-width: 18rem;
+  color: var(--sdp-text);
+  font-size: 0.875rem;
+}
+
+/* ---------------------------------------------------------------- trigger */
+
+.sdp__trigger {
+  display: flex;
+  width: 100%;
+  min-height: 2.5rem;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.625rem;
+  border: 1px solid var(--sdp-border);
+  border-radius: var(--sdp-radius);
+  background: var(--sdp-surface);
+  color: var(--sdp-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.sdp__trigger:hover {
+  border-color: color-mix(in oklab, var(--sdp-border), var(--sdp-text) 25%);
+}
+
+.sdp__trigger[data-open],
+.sdp__trigger:focus-visible {
+  outline: none;
+  border-color: var(--sdp-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--sdp-accent), transparent 80%);
+}
+
+.sdp__trigger[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sdp__icon {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  fill: none;
+  stroke: var(--sdp-muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sdp__trigger[data-open] .sdp__icon {
+  stroke: var(--sdp-accent);
+}
+
+.sdp__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sdp__value--empty {
+  color: var(--sdp-muted);
+}
+
+.sdp__clear {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: var(--sdp-muted);
+  cursor: pointer;
+}
+
+.sdp__clear svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.sdp__clear:hover {
+  background: color-mix(in oklab, var(--sdp-text), transparent 88%);
+  color: var(--sdp-text);
+}
+
+.sdp__clear:focus-visible {
+  outline: 2px solid var(--sdp-accent);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------------ popup */
+
+/**
+ * Placement comes from the positioner as an inline style, so only the look
+ * lives here. It scrolls only if the viewport is shorter than the calendar.
+ */
+.sdp__popup {
+  z-index: 50;
+  width: 18rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--sdp-border);
+  border-radius: var(--sdp-radius);
+  background: var(--sdp-surface);
+  color: var(--sdp-text);
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 45%);
+}
+
+/** Not a replaceable part: keep it to layout so every skin can live with it. */
+.sdp__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding-block-end: 0.5rem;
+}
+
+.sdp__caption {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/**
+ * The month and year selects.
+ *
+ * The dropdown list is painted by the browser, not by this stylesheet, and
+ * it takes its colours from the element. Leaving the background transparent
+ * means the list keeps the light-scheme default while the inherited text
+ * colour goes near-white, so the options become unreadable in dark mode.
+ * Naming both the surface and the scheme fixes it in every browser.
+ */
+.sdp__select {
+  padding-block: 0.125rem;
+  padding-inline: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background-color: var(--sdp-surface);
+  color: var(--sdp-text);
+  color-scheme: inherit;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sdp__select option {
+  background-color: var(--sdp-surface);
+  color: var(--sdp-text);
+}
+
+.sdp__select:hover {
+  border-color: var(--sdp-border);
+}
+
+.sdp__select:focus-visible {
+  outline: 2px solid var(--sdp-accent);
+  outline-offset: 1px;
+}
+
+.sdp__nav {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0.375rem;
+  background: none;
+  color: var(--sdp-text);
+  cursor: pointer;
+}
+
+.sdp__nav:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--sdp-text), transparent 90%);
+}
+
+.sdp__nav:focus-visible {
+  outline: 2px solid var(--sdp-accent);
+  outline-offset: 1px;
+}
+
+.sdp__nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sdp__chevron {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --------------------------------------------------------------- calendar */
+
+.sdp__calendar {
+  display: grid;
+  gap: var(--sdp-gap);
+}
+
+/**
+ * Structural, and shared by every skin: seven columns sized to the cell
+ * rather than to the available width, so each day button is exactly as wide
+ * as it is tall. The grid is centred, and the same gutter separates the
+ * cells on both axes.
+ */
+.sdp__weekdays,
+.sdp__week {
+  display: grid;
+  grid-template-columns: repeat(7, var(--sdp-cell));
+  gap: var(--sdp-gap);
+  justify-content: center;
+}
+
+/** The `columnheader` and `gridcell` wrappers: they only centre what a part renders. */
+.sdp__columnheader,
+.sdp__cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.sdp__weekday {
+  padding-block: 0.25rem;
+  color: var(--sdp-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* -------------------------------------------------------------------- day */
+
+.sdp__day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: var(--sdp-cell);
+  block-size: var(--sdp-cell);
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--sdp-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+/** Hover stays out of the way of the picked states rather than fighting them. */
+.sdp__day:hover:not([data-disabled], [data-selected], [data-in-range]) {
+  background: color-mix(in oklab, var(--sdp-text), transparent 90%);
+}
+
+.sdp__day:focus-visible {
+  outline: 2px solid var(--sdp-accent);
+  outline-offset: -2px;
+}
+
+/**
+ * Blocked days are dimmed, not disabled: they stay focusable so the arrow
+ * keys can cross them, which is why this keys on the data attribute rather
+ * than on `:disabled`.
+ */
+.sdp__day[data-disabled] {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.sdp__day[data-outside] {
+  color: var(--sdp-muted);
+}
+
+/** Today is a dot, not a colour, so it survives a selected background. */
+.sdp__day[data-today]::after {
+  content: "";
+  position: absolute;
+  inset-block-end: 0.25rem;
+  inset-inline: 0;
+  width: 0.25rem;
+  height: 0.25rem;
+  margin-inline: auto;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.sdp__day[data-selected] {
+  background: var(--sdp-accent);
+  color: var(--sdp-on-accent);
+  font-weight: 600;
+}
+
+/**
+ * The band.
+ *
+ * The cells are separated by a gutter, so painting the range on the button
+ * itself would leave a gap between every pair of days. The band is drawn by a
+ * pseudo-element that reaches half the gutter past each inline edge, so
+ * neighbours meet, and it sits behind the label rather than on top of it.
+ * Only the two ends round their outer corner — which is why the rounding is
+ * keyed on `data-in-range` as well: a half-picked range has a start but no
+ * band, and should stay a plain round chip.
+ *
+ * The preview, shown while the end is still being chosen, is the same band at
+ * half the strength.
+ */
+.sdp__day[data-in-range]::before,
+.sdp__day[data-in-preview]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline: calc(var(--sdp-gap) / -2 - 0.5px);
+  background: color-mix(in oklab, var(--sdp-accent), transparent 85%);
+}
+
+.sdp__day[data-in-preview]:not([data-in-range])::before {
+  background: color-mix(in oklab, var(--sdp-accent), transparent 92%);
+}
+
+.sdp__day[data-in-range][data-range-start]::before,
+.sdp__day[data-in-preview][data-range-start]::before {
+  inset-inline-start: 0;
+  border-start-start-radius: 0.5rem;
+  border-end-start-radius: 0.5rem;
+}
+
+.sdp__day[data-in-range][data-range-end]::before {
+  inset-inline-end: 0;
+  border-start-end-radius: 0.5rem;
+  border-end-end-radius: 0.5rem;
+}
+
+.sdp__day[data-in-range][data-selected] {
+  background: var(--sdp-accent);
+  color: var(--sdp-on-accent);
+}
+
+/* ----------------------------------------------------------------- footer */
+
+.sdp__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin-block-start: 0.5rem;
+  padding-block-start: 0.5rem;
+  border-block-start: 1px solid var(--sdp-border);
+}
+
+.sdp__preset {
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  border: 1px solid var(--sdp-border);
+  border-radius: 999px;
+  background: var(--sdp-surface);
+  color: var(--sdp-text);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.sdp__preset:hover {
+  border-color: var(--sdp-accent);
+  color: var(--sdp-accent);
+}
+
+.sdp__preset:focus-visible {
+  outline: 2px solid var(--sdp-accent);
+  outline-offset: 1px;
+}
+
+/** Pushed to the far end, because it moves the month rather than picking one. */
+.sdp__preset--today {
+  margin-inline-start: auto;
+  border-color: transparent;
+  color: var(--sdp-muted);
+}

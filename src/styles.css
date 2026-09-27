@@ -7,9 +7,12 @@
  * import "slotsmith/styles.css";
  * ```
  *
- * Each component reads --rdt-* / --sfu-* tokens, so one theme covers them all.
+ * Each component reads its own tokens (--rdt-*, --sac-*, --sdp-*, --sfu-*).
+ * The date picker and the uploader fall back to the table's, so one theme
+ * covers all three.
  */
 
 @import "./autocomplete/styles.css";
 @import "./data-table/styles.css";
+@import "./date-picker/styles.css";
 @import "./file-uploader/styles.css";

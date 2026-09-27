@@ -7,11 +7,13 @@ export default defineConfig({
     // One entry per component, so an app can import exactly the one it uses.
     autocomplete: "src/autocomplete/index.ts",
     "data-table": "src/data-table/index.ts",
+    "date-picker": "src/date-picker/index.ts",
     "file-uploader": "src/file-uploader/index.ts",
     // The whole stylesheet, and one per component.
     styles: "src/styles.css",
     "autocomplete.styles": "src/autocomplete/styles.css",
     "data-table.styles": "src/data-table/styles.css",
+    "date-picker.styles": "src/date-picker/styles.css",
     "file-uploader.styles": "src/file-uploader/styles.css",
   },
   format: ["esm", "cjs"],
