@@ -214,6 +214,10 @@ pnpm build       # tsup (ESM + CJS) + tsc declarations
 pnpm test:ai     # the MCP server in packages/ai
 ```
 
+## Changelog
+
+- The autocomplete now turns dark with `.dark` or `[data-theme="dark"]` on the page, like the other components, instead of with the system setting.
+
 ## Author
 
 Built by **[Tareq Al-Mozayek](https://tareq-mozayek-portfolio.netlify.app/en)** — full-stack developer, frontend-focused, Damascus.
