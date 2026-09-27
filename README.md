@@ -57,6 +57,7 @@ Peer dependencies are per component, so you only install what you use:
 | --- | --- |
 | Data table | `@tanstack/react-table@^9` |
 | Autocomplete | nothing |
+| Date picker | nothing |
 | File uploader | nothing |
 | Any virtualized list | `@tanstack/react-virtual@^3` |
 
@@ -66,9 +67,10 @@ component you actually import.
 The stylesheet is optional too. Import the whole set, or just the component you use:
 
 ```tsx
-import "slotsmith/styles.css";            // all components — 17.3 KB
+import "slotsmith/styles.css";            // all components — 24.4 KB
 import "slotsmith/autocomplete.css";      // just this one — 5.5 KB
 import "slotsmith/data-table.css";
+import "slotsmith/date-picker.css";       // 7.0 KB
 import "slotsmith/file-uploader.css";
 ```
 
@@ -100,6 +102,7 @@ Sorting, pagination and selection work immediately, and each piece of state stay
 | **Data table** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/data-table) · sorting, pagination, selection that survives server pages, tree rows, virtual rows, loading / error / empty states, i18n and RTL |
 | **Autocomplete** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/autocomplete) · a combobox that is also a select; single or multiple, remote options with debounce and paging, create-as-you-type, full keyboard and typeahead |
 | **File uploader** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/file-uploader) · drop zone, image tile or picker-only; queued uploads with progress, retry and real cancellation; validation by type, size and count |
+| **Date picker** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/date-picker) · one date, several or a range as plain `YYYY-MM-DD` strings that never shift across time zones; full keyboard grid, min / max and blocked dates, presets, locale week start and RTL |
 | More | 🔜 next | Same rules: headless logic, replaceable parts, fallbacks good enough to ship |
 
 ## How it compares
@@ -142,17 +145,19 @@ Measured on the published output, bundling a single component:
 | --- | --- |
 | `Autocomplete` alone | 16.5 KB |
 | `useAutocomplete` alone | 7.9 KB |
-| all three components | 46.9 KB |
+| `DatePicker` alone | 16.7 KB |
+| `useDatePicker` alone | 9.1 KB |
+| all four components | 62.3 KB |
 
 Nothing special is required — `import { Autocomplete } from "slotsmith"` already drops
-the other two. A test in the suite bundles the real output and fails if any of it leaks
+the other three. A test in the suite bundles the real output and fails if any of it leaks
 back in.
 
 Two cases a bundler cannot solve on its own, and what to do about them:
 
 ```tsx
 // CommonJS cannot be tree-shaken, because require() resolves at run time.
-// Import the component's own entry and you get 23 KB instead of 63 KB.
+// Import the component's own entry and you get 23 KB instead of 81 KB.
 const { Autocomplete } = require("slotsmith/autocomplete");
 
 // CSS has no import graph to follow, so pick the stylesheet you need.
@@ -160,9 +165,10 @@ import "slotsmith/autocomplete.css";
 ```
 
 Per-component entries exist for every component — `slotsmith/autocomplete`,
-`slotsmith/data-table`, `slotsmith/file-uploader` — and they export exactly what the
-main entry does. On ES modules they make no difference at all; use them when you are on
-CommonJS, or when you want the guarantee written down rather than inferred.
+`slotsmith/data-table`, `slotsmith/date-picker`, `slotsmith/file-uploader` — and they
+export exactly what the main entry does. On ES modules they make no difference at all;
+use them when you are on CommonJS, or when you want the guarantee written down rather
+than inferred.
 
 ## Principles
 
