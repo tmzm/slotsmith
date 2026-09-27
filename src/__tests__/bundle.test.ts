@@ -6,7 +6,7 @@
  * expects.
  */
 import { build } from "esbuild";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -21,7 +21,19 @@ const MARKERS = {
   dataTable: "rdt__",
   fileUploader: "sfu__",
   autocomplete: "sac__",
+  datePicker: "sdp__",
 } as const;
+
+type Component = keyof typeof MARKERS;
+
+/**
+ * Other markers
+ *
+ * @param component - The component a bundle is meant to contain.
+ * @returns Every other component's marker, none of which may appear in it.
+ */
+const othersThan = (component: Component) =>
+  (Object.keys(MARKERS) as Component[]).filter((key) => key !== component).map((key) => MARKERS[key]);
 
 const dist = (file: string) => resolve(process.cwd(), "dist", file);
 
@@ -69,82 +81,124 @@ async function bundle(
  */
 const built = existsSync(dist("index.js"));
 
+/**
+ * Entries
+ *
+ * Each component's own entry point, the export that renders it, and its
+ * stylesheet, so every isolation check runs for all of them.
+ */
+const ENTRIES = [
+  { component: "autocomplete", file: "autocomplete", name: "Autocomplete" },
+  { component: "dataTable", file: "data-table", name: "DataTable" },
+  { component: "datePicker", file: "date-picker", name: "DatePicker" },
+  { component: "fileUploader", file: "file-uploader", name: "FileUploader" },
+] as const satisfies readonly { component: Component; file: string; name: string }[];
+
 describe.skipIf(!built)("what an application actually bundles", () => {
-  it("drops the components an ES module import never mentions", async () => {
+  it.each(ENTRIES)("drops everything but $name from a main-entry import", async ({ component, name }) => {
     const code = await bundle(`
-      import { Autocomplete } from ${JSON.stringify(dist("index.js"))};
-      console.log(Autocomplete);
+      import { ${name} } from ${JSON.stringify(dist("index.js"))};
+      console.log(${name});
     `);
 
-    expect(code).toContain(MARKERS.autocomplete);
-    expect(code).not.toContain(MARKERS.dataTable);
-    expect(code).not.toContain(MARKERS.fileUploader);
+    expect(code).toContain(MARKERS[component]);
+    for (const marker of othersThan(component)) expect(code).not.toContain(marker);
   });
 
-  it("drops the component bodies when only a hook is imported", async () => {
-    const code = await bundle(`
-      import { useAutocomplete } from ${JSON.stringify(dist("index.js"))};
-      console.log(useAutocomplete);
-    `);
+  it.each(["useAutocomplete", "useDatePicker"])(
+    "drops the component bodies when only %s is imported",
+    async (hook) => {
+      const code = await bundle(`
+        import { ${hook} } from ${JSON.stringify(dist("index.js"))};
+        console.log(${hook});
+      `);
 
-    for (const marker of Object.values(MARKERS))
-      expect(code).not.toContain(marker);
-  });
+      for (const marker of Object.values(MARKERS)) expect(code).not.toContain(marker);
+    },
+  );
 
   it("keeps everything an application does import", async () => {
+    const names = ENTRIES.map((entry) => entry.name).join(", ");
     const code = await bundle(`
-      import { Autocomplete, DataTable, FileUploader } from ${JSON.stringify(dist("index.js"))};
-      console.log(Autocomplete, DataTable, FileUploader);
+      import { ${names} } from ${JSON.stringify(dist("index.js"))};
+      console.log(${names});
     `);
 
     for (const marker of Object.values(MARKERS)) expect(code).toContain(marker);
   });
 
-  it("isolates each component behind its own entry point", async () => {
+  it.each(ENTRIES)("isolates $name behind its own entry point", async ({ component, file, name }) => {
     const code = await bundle(`
-      import { Autocomplete } from ${JSON.stringify(dist("autocomplete.js"))};
-      console.log(Autocomplete);
+      import { ${name} } from ${JSON.stringify(dist(`${file}.js`))};
+      console.log(${name});
     `);
 
-    expect(code).toContain(MARKERS.autocomplete);
-    expect(code).not.toContain(MARKERS.dataTable);
-    expect(code).not.toContain(MARKERS.fileUploader);
+    expect(code).toContain(MARKERS[component]);
+    for (const marker of othersThan(component)) expect(code).not.toContain(marker);
+  });
+
+  /**
+   * The date picker and the autocomplete both position a popup and both keep
+   * uncontrolled state, through the same two hooks. Those hooks must land in
+   * one chunk that both entries import, rather than in a copy per entry.
+   */
+  it("shares the popup and state hooks between entries instead of copying them", () => {
+    const imports = (file: string) =>
+      new Set(readFileSync(dist(file), "utf8").match(/chunk-[A-Z0-9]+\.js/g) ?? []);
+    const shared = [...imports("autocomplete.js")].filter((chunk) => imports("date-picker.js").has(chunk));
+    const positioners = readdirSync(dist("."))
+      .filter((file) => /^chunk-.*\.js$/.test(file))
+      .filter((file) => readFileSync(dist(file), "utf8").includes("function usePopupPosition"));
+
+    expect(positioners).toHaveLength(1);
+    expect(shared).toContain(positioners[0]);
+    for (const marker of Object.values(MARKERS)) {
+      expect(readFileSync(dist(positioners[0]!), "utf8")).not.toContain(marker);
+    }
   });
 
   /**
    * CommonJS cannot be tree-shaken, because `require` resolves at run time.
    * The per-component entry is the only way a CommonJS consumer avoids paying
-   * for all three, which is the reason those entries exist.
+   * for all of them, which is the reason those entries exist.
+   *
+   * The uploader is left out: it borrows the table's class-name helper, so its
+   * CommonJS entry still carries the table's fallbacks. Only ES module tree
+   * shaking, checked above, drops them.
    */
-  it("gives CommonJS consumers a way to import one component", async () => {
-    const barrel = await bundle(
-      `const { Autocomplete } = require(${JSON.stringify(dist("index.cjs"))}); console.log(Autocomplete);`,
-      "cjs",
-    );
-    const entry = await bundle(
-      `const { Autocomplete } = require(${JSON.stringify(dist("autocomplete.cjs"))}); console.log(Autocomplete);`,
-      "cjs",
-    );
+  it.each(ENTRIES.filter((entry) => entry.component === "autocomplete" || entry.component === "datePicker"))(
+    "gives CommonJS consumers a way to import $name alone",
+    async ({ component, file, name }) => {
+      const barrel = await bundle(
+        `const { ${name} } = require(${JSON.stringify(dist("index.cjs"))}); console.log(${name});`,
+        "cjs",
+      );
+      const entry = await bundle(
+        `const { ${name} } = require(${JSON.stringify(dist(`${file}.cjs`))}); console.log(${name});`,
+        "cjs",
+      );
 
-    expect(barrel).toContain(MARKERS.dataTable);
-    expect(entry).not.toContain(MARKERS.dataTable);
-    expect(entry).not.toContain(MARKERS.fileUploader);
-    expect(entry.length).toBeLessThan(barrel.length / 2);
-  });
+      expect(barrel).toContain(MARKERS.dataTable);
+      expect(entry).toContain(MARKERS[component]);
+      for (const marker of othersThan(component)) expect(entry).not.toContain(marker);
+      expect(entry.length).toBeLessThan(barrel.length / 2);
+    },
+  );
 });
 
 describe.skipIf(!built)("the stylesheets", () => {
-  it("ships one file per component as well as the whole set", () => {
+  it("ships the whole set", () => {
     const whole = readFileSync(dist("styles.css"), "utf8");
-    const one = readFileSync(dist("autocomplete.styles.css"), "utf8");
+    for (const marker of Object.values(MARKERS)) expect(whole).toContain(marker);
+  });
 
-    expect(whole).toContain(MARKERS.autocomplete);
-    expect(whole).toContain(MARKERS.dataTable);
+  it.each(ENTRIES)("ships $name's styles on their own", ({ component, file }) => {
+    const whole = readFileSync(dist("styles.css"), "utf8");
+    const one = readFileSync(dist(`${file}.styles.css`), "utf8");
 
     /** Nothing can tree-shake CSS, so the per-component file must stand alone. */
-    expect(one).toContain(MARKERS.autocomplete);
-    expect(one).not.toContain(MARKERS.dataTable);
-    expect(one).not.toContain(MARKERS.fileUploader);
+    expect(one).toContain(MARKERS[component]);
+    for (const marker of othersThan(component)) expect(one).not.toContain(marker);
     expect(one.length).toBeLessThan(whole.length / 2);
   });
 });
