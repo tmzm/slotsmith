@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { DatePickerComponents, DatePickerLabels } from "./types";
 
 /**
@@ -94,34 +95,40 @@ export const datePickerFallbacks: DatePickerComponents = {
 
   Calendar: ({ className, ...props }) => <div className={cx("sdp__calendar", className)} {...props} />,
 
-  Caption: ({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) => (
-    <span className="sdp__caption">
-      <select
-        className="sdp__select"
-        aria-label={labels.month}
-        value={monthIndex}
-        onChange={(event) => onMonthChange(Number(event.target.value))}
-      >
-        {months.map((name, index) => (
-          <option key={name} value={index}>
-            {name}
-          </option>
-        ))}
-      </select>
-      <select
-        className="sdp__select"
-        aria-label={labels.year}
-        value={year}
-        onChange={(event) => onYearChange(Number(event.target.value))}
-      >
-        {years.map((value) => (
-          <option key={value} value={value}>
-            {value}
-          </option>
-        ))}
-      </select>
-    </span>
-  ),
+  Caption: function Caption({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) {
+    // An id rather than a name keeps the selects out of an enclosing form's submission.
+    const id = useId();
+    return (
+      <span className="sdp__caption">
+        <select
+          id={`${id}-month`}
+          className="sdp__select"
+          aria-label={labels.month}
+          value={monthIndex}
+          onChange={(event) => onMonthChange(Number(event.target.value))}
+        >
+          {months.map((name, index) => (
+            <option key={name} value={index}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <select
+          id={`${id}-year`}
+          className="sdp__select"
+          aria-label={labels.year}
+          value={year}
+          onChange={(event) => onYearChange(Number(event.target.value))}
+        >
+          {years.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </span>
+    );
+  },
 
   Nav: ({ direction, onClick, disabled, ...aria }) => (
     <button type="button" className="sdp__nav" onClick={onClick} disabled={disabled} {...aria}>
