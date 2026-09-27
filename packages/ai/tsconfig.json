@@ -11,6 +11,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "noEmit": true
   },
   "include": ["src", "scripts", "tsup.config.ts", "vitest.config.ts"]

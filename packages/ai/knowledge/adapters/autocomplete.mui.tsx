@@ -1,0 +1,323 @@
+/**
+ * Autocomplete for MUI v7
+ *
+ * A complete `components` map for the slotsmith autocomplete, built from
+ * MUI v7 primitives. Copy the file, keep the parts you want, and pass
+ * the map as `components={muiComponents}`; every slot left out keeps its fallback.
+ */
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import InputBase from "@mui/material/InputBase";
+import List from "@mui/material/List";
+import MenuItem from "@mui/material/MenuItem";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import type {
+  AutocompleteCheckSlotProps,
+  AutocompleteClearSlotProps,
+  AutocompleteComponents,
+  AutocompleteCreateSlotProps,
+  AutocompleteEmptySlotProps,
+  AutocompleteErrorSlotProps,
+  AutocompleteIndicatorSlotProps,
+  AutocompleteListSlotProps,
+  AutocompleteLoadMoreSlotProps,
+  AutocompleteLoadingSlotProps,
+  AutocompleteOptionLabelSlotProps,
+  AutocompleteOptionSlotProps,
+  AutocompletePopupSlotProps,
+  AutocompleteRootSlotProps,
+  AutocompleteSearchSlotProps,
+  AutocompleteTagSlotProps,
+  AutocompleteTriggerSlotProps,
+  AutocompleteValueSlotProps,
+} from "slotsmith/autocomplete";
+
+/**
+ * MUI root
+ *
+ * A `Box` the popup is measured against.
+ */
+const MuiRoot = (props: AutocompleteRootSlotProps) => <Box sx={{ position: "relative" }} {...props} />;
+
+/**
+ * MUI trigger
+ *
+ * An outlined `Box`, styled off the `data-*` attributes the part carries
+ * rather than off props, so it stays a plain element part. `Box` reads `color`
+ * as a system prop, which is why the slot's props leave the DOM attribute of
+ * that name out.
+ */
+const MuiTrigger = (props: AutocompleteTriggerSlotProps) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 0.5,
+      minHeight: 40,
+      px: 1,
+      border: 1,
+      borderColor: "divider",
+      borderRadius: 1,
+      cursor: "pointer",
+      "&[data-open]": { borderColor: "primary.main" },
+      "&[data-disabled]": { opacity: 0.5, cursor: "default" },
+    }}
+    {...props}
+  />
+);
+
+/**
+ * MUI value
+ *
+ * The selected label, or the placeholder in the disabled text color.
+ */
+const MuiValue = ({ label, placeholder, empty }: AutocompleteValueSlotProps) => (
+  <Typography component="span" variant="body2" color={empty ? "text.disabled" : "text.primary"} noWrap>
+    {empty ? placeholder : label}
+  </Typography>
+);
+
+/**
+ * MUI tag
+ *
+ * A `Chip` per selected value. `Chip` clones its `deleteIcon` and attaches its
+ * own click handler to it, so the icon is an `IconButton` carrying the
+ * accessible name: the remove control has to be reachable by keyboard.
+ */
+const MuiTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlotProps) => (
+  <Chip
+    component="span"
+    size="small"
+    label={label}
+    onDelete={disabled ? undefined : onRemove}
+    deleteIcon={
+      <IconButton size="small" aria-label={removeLabel}>
+        ×
+      </IconButton>
+    }
+  />
+);
+
+/**
+ * MUI clear
+ *
+ * An `IconButton` that empties the selection. The click is stopped so it does
+ * not also reach the trigger and reopen the popup.
+ */
+const MuiClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
+  <IconButton
+    size="small"
+    sx={{ ml: "auto" }}
+    onClick={(event) => {
+      event.stopPropagation();
+      onClick();
+    }}
+    {...aria}
+  >
+    ×
+  </IconButton>
+);
+
+/**
+ * MUI indicator
+ *
+ * A `CircularProgress` while a first page is loading, a chevron otherwise.
+ */
+const MuiIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
+  loading ? (
+    <CircularProgress size={16} sx={{ ml: "auto" }} />
+  ) : (
+    <Box
+      component="span"
+      aria-hidden="true"
+      sx={{ ml: "auto", color: "text.secondary", transform: open ? "rotate(180deg)" : "none" }}
+    >
+      ▾
+    </Box>
+  );
+
+/**
+ * MUI popup
+ *
+ * A raised `Paper`. The component positions it, so the part only receives the
+ * computed style and adds the surface.
+ */
+const MuiPopup = (props: AutocompletePopupSlotProps) => (
+  <Paper elevation={8} sx={{ overflow: "auto" }} {...props} />
+);
+
+/**
+ * MUI search
+ *
+ * `InputBase` renders a wrapper around its input, so everything that belongs
+ * on the input element itself is handed over through `inputProps` — including
+ * the `role`, the aria wiring and the key handler the engine sets. Its `size`
+ * is a variant rather than the HTML attribute, which is why the slot's props
+ * leave `size` out.
+ */
+const MuiSearch = ({ ref, value, onChange, placeholder, ...input }: AutocompleteSearchSlotProps) => (
+  <InputBase
+    fullWidth
+    size="small"
+    inputRef={ref}
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    inputProps={input}
+    sx={{ px: 1.5, py: 0.5, borderBottom: 1, borderColor: "divider" }}
+  />
+);
+
+/**
+ * MUI list
+ *
+ * A dense `List`, which renders the `<ul>` the listbox role goes on.
+ */
+const MuiList = (props: AutocompleteListSlotProps) => <List dense disablePadding {...props} />;
+
+/**
+ * MUI option
+ *
+ * A `MenuItem`, with the part's `data-selected` mapped onto MUI's `selected`
+ * prop so the row gets `Mui-selected` styling. Disabled options keep MUI's
+ * `disabled` prop off on purpose: the engine already refuses them, and the
+ * row has to stay visible and hoverable.
+ */
+const MuiOption = (props: AutocompleteOptionSlotProps) => (
+  <MenuItem
+    dense
+    selected={props["data-selected" as keyof AutocompleteOptionSlotProps] === true}
+    {...props}
+  />
+);
+
+/**
+ * MUI option label
+ *
+ * The row's text.
+ */
+const MuiOptionLabel = ({ label }: AutocompleteOptionLabelSlotProps) => (
+  <Typography component="span" variant="body2" noWrap>
+    {label}
+  </Typography>
+);
+
+/**
+ * MUI check
+ *
+ * The mark on a selected row, hidden from assistive technology so it stays
+ * out of the option's accessible name.
+ */
+const MuiCheck = ({ selected }: AutocompleteCheckSlotProps) =>
+  selected ? (
+    <Box component="span" aria-hidden="true" sx={{ ml: "auto", color: "primary.main" }}>
+      ✓
+    </Box>
+  ) : null;
+
+/**
+ * MUI empty state
+ *
+ * Secondary `Typography` in place of the rows.
+ */
+const MuiEmpty = ({ message }: AutocompleteEmptySlotProps) => (
+  <li>
+    <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1 }}>
+      {message}
+    </Typography>
+  </li>
+);
+
+/**
+ * MUI loading state
+ *
+ * A `CircularProgress` beside the message.
+ */
+const MuiLoading = ({ message }: AutocompleteLoadingSlotProps) => (
+  <li>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1 }}>
+      <CircularProgress size={16} />
+      <Typography variant="body2" color="text.secondary">
+        {message}
+      </Typography>
+    </Box>
+  </li>
+);
+
+/**
+ * MUI error state
+ *
+ * The message in the error color and a retry `Button`.
+ */
+const MuiError = ({ error, onRetry, retryLabel }: AutocompleteErrorSlotProps) => (
+  <li>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1 }}>
+      <Typography variant="body2" color="error">
+        {error}
+      </Typography>
+      {onRetry ? (
+        <Button size="small" onClick={onRetry}>
+          {retryLabel}
+        </Button>
+      ) : null}
+    </Box>
+  </li>
+);
+
+/**
+ * MUI create row
+ *
+ * A full-width `Button` offering to create whatever was searched for.
+ */
+const MuiCreate = ({ onCreate, loading, label }: AutocompleteCreateSlotProps) => (
+  <li>
+    <Button size="small" fullWidth disabled={loading} onClick={onCreate}>
+      {label}
+    </Button>
+  </li>
+);
+
+/**
+ * MUI load-more row
+ *
+ * The paging sentinel, which is also a `Button` so the next page is reachable
+ * without a pointer.
+ */
+const MuiLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMoreSlotProps) => (
+  <li ref={ref}>
+    <Button size="small" fullWidth disabled={loading} onClick={onLoadMore}>
+      {label}
+    </Button>
+  </li>
+);
+
+/**
+ * MUI components
+ *
+ * The slot map an MUI v7 project would pass as `components`, built from the
+ * primitives — `Paper`, `MenuItem`, `Chip`, `InputBase` — rather than from
+ * MUI's own `Autocomplete`, which is a competing engine.
+ */
+export const muiComponents: Partial<AutocompleteComponents> = {
+  Root: MuiRoot,
+  Trigger: MuiTrigger,
+  Value: MuiValue,
+  Tag: MuiTag,
+  Clear: MuiClear,
+  Indicator: MuiIndicator,
+  Popup: MuiPopup,
+  Search: MuiSearch,
+  List: MuiList,
+  Option: MuiOption,
+  OptionLabel: MuiOptionLabel,
+  Check: MuiCheck,
+  Empty: MuiEmpty,
+  Loading: MuiLoading,
+  Error: MuiError,
+  Create: MuiCreate,
+  LoadMore: MuiLoadMore,
+};

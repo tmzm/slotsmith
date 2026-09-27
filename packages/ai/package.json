@@ -19,6 +19,8 @@
     "access": "public"
   },
   "scripts": {
+    "generate": "node scripts/generate.ts",
+    "prebuild": "node scripts/generate.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
