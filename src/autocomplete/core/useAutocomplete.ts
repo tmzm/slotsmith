@@ -20,7 +20,7 @@ import type {
   OptionValue,
   ResolvedOption,
 } from "./types";
-import { useControllableState } from "./useControllableState";
+import { useControllableState } from "../../shared/useControllableState";
 
 /** How long a typeahead run stays open before the next key starts a new one. */
 const TYPEAHEAD_TIMEOUT = 700;

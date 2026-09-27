@@ -14,8 +14,8 @@ export type Updater<S> = S | ((previous: S) => S);
  *
  * One piece of state that stays uncontrolled until its value prop is passed,
  * so nothing needs a `useState` to render. Separate from the data table's
- * equivalent, which is built on TanStack's `functionalUpdate`; this component
- * has no peer dependencies.
+ * equivalent, which is built on TanStack's `functionalUpdate`: the components
+ * that share this one have no peer dependencies.
  *
  * The current value is mirrored in a ref so that two updates within the same
  * event both read the newest value rather than the one captured when the

@@ -46,11 +46,11 @@ export type { AutocompleteModel, UseAutocompleteOptions } from "./core/useAutoco
 export { useAsyncOptions } from "./core/useAsyncOptions";
 export type { OptionsPage, UseAsyncOptionsOptions } from "./core/useAsyncOptions";
 
-export { usePopupPosition } from "./core/position";
-export type { PopupPlacement, PopupPosition, UsePopupPositionOptions } from "./core/position";
+export { usePopupPosition } from "../shared/position";
+export type { PopupPlacement, PopupPosition, UsePopupPositionOptions } from "../shared/position";
 
 export { defaultFilter, filterOptions, fold, typeaheadMatch } from "./core/filter";
-export { useControllableState } from "./core/useControllableState";
+export { useControllableState } from "../shared/useControllableState";
 
 export type {
   AutocompleteStatus,

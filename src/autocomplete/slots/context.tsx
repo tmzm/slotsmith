@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { AutocompleteModel } from "../core/useAutocomplete";
-import type { PopupPosition } from "../core/position";
+import type { PopupPosition } from "../../shared/position";
 import type { AutocompleteComponents, AutocompleteLabels, AutocompleteSlotProps } from "./types";
 
 /**

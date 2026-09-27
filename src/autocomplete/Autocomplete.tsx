@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
-import { usePopupPosition, type PopupPlacement } from "./core/position";
+import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import type { OptionValue } from "./core/types";
 import { useAutocomplete, type UseAutocompleteOptions } from "./core/useAutocomplete";
 import {
