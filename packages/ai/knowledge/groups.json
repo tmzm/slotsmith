@@ -6,7 +6,7 @@
     "Selection": ["enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange"],
     "Tree rows": ["getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows"],
     "Status": ["loading", "error", "onRetry"],
-    "Rendering": ["components", "labels", "slotProps", "onRowClick", "size", "striped", "tableOptions"]
+    "Rendering": ["components", "labels", "locale", "slotProps", "onRowClick", "size", "striped", "tableOptions"]
   },
   "autocomplete": {
     "Options": ["options", "getOptionValue", "getOptionLabel", "optionDisabled", "filter", "selected"],
@@ -15,14 +15,14 @@
     "Open state and keyboard": ["open", "defaultOpen", "onOpenChange", "loop", "disabled", "onBlur"],
     "Remote options": ["loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore"],
     "Creating": ["creatable", "onCreate", "createLoading"],
-    "Rendering": ["components", "labels", "slotProps", "placeholder", "maxTags"],
+    "Rendering": ["components", "labels", "locale", "slotProps", "placeholder", "maxTags"],
     "Positioning": ["placement", "popupOffset", "matchTriggerWidth", "popupMaxHeight"]
   },
   "file-uploader": {
     "Selection": ["accept", "multiple", "maxFiles", "maxSize", "minSize", "validate", "disabled"],
     "Value": ["value", "onValueChange", "defaultValue", "onFilesChange", "onUrlsChange"],
     "Uploading": ["upload", "autoUpload", "concurrency", "onUploaded", "onUploadError", "onReject"],
-    "Rendering": ["variant", "components", "labels", "validationLabels", "slotProps", "preview", "hideList", "children", "captureWindowDrops"]
+    "Rendering": ["variant", "components", "labels", "locale", "validationLabels", "slotProps", "preview", "hideList", "children", "captureWindowDrops"]
   },
   "date-picker": {
     "Value and mode": ["mode", "value", "defaultValue", "onChange", "clearable", "closeOnSelect"],

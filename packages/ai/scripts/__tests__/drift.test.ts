@@ -154,4 +154,21 @@ describe("knowledge drift", () => {
     const manifest = JSON.parse(readFileSync(join(DEFAULT_OPTIONS.libraryRoot, "package.json"), "utf8")) as { version: string };
     expect(generated.index.version).toBe(manifest.version);
   });
+
+  it("lists every locale pack, and names each one in the i18n guide and the README", () => {
+    const localesDir = join(srcDir, "locales");
+    const fromSource = readdirSync(localesDir)
+      .filter((file) => file.endsWith(".ts"))
+      .map((file) => file.replace(/\.ts$/, ""))
+      .sort();
+    expect(fromSource.length).toBeGreaterThan(0);
+    expect([...generated.index.locales].sort()).toEqual(fromSource);
+
+    const guide = readFileSync(join(knowledgeDir, "guides", "i18n.md"), "utf8");
+    const readme = readFileSync(join(DEFAULT_OPTIONS.libraryRoot, "README.md"), "utf8");
+    for (const code of fromSource) {
+      expect(guide, `i18n guide is missing "${code}"`).toContain(code);
+      expect(readme, `README is missing "${code}"`).toContain(code);
+    }
+  });
 });

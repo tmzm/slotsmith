@@ -252,4 +252,6 @@ export interface KnowledgeIndex {
   guides: GuideSummary[];
   /** Every adapter. */
   adapters: AdapterRef[];
+  /** Every ready-made locale pack's BCP 47 tag, e.g. `ar-EG`, from `src/locales/`. */
+  locales: string[];
 }

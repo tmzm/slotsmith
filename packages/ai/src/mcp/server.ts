@@ -103,10 +103,18 @@ export function createSlotsmithServer(options: SlotsmithServerOptions = {}): Mcp
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     () =>
-      result(`# slotsmith ${knowledge.index.version} components\n\n${renderComponentList(knowledge.index.components)}`, {
-        version: knowledge.index.version,
-        components: knowledge.index.components,
-      }),
+      result(
+        [
+          `# slotsmith ${knowledge.index.version} components`,
+          renderComponentList(knowledge.index.components),
+          `Locale packs available (\`slotsmith/locales/<code>\`): ${knowledge.index.locales.join(", ")}. See the i18n guide for the provider and \`defineLocale\`.`,
+        ].join("\n\n"),
+        {
+          version: knowledge.index.version,
+          components: knowledge.index.components,
+          locales: knowledge.index.locales,
+        },
+      ),
   );
 
   server.registerTool(

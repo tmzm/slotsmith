@@ -78,6 +78,22 @@ describe("slotsmith MCP server", () => {
     expect(text).toContain('import { DatePicker } from "slotsmith/date-picker"');
   });
 
+  it("list_components names the available locale packs", async () => {
+    const { text, data } = await call(client, "list_components");
+    const locales = data!.locales as string[];
+    expect(locales).toHaveLength(18);
+    expect(locales).toContain("ar");
+    expect(locales).toContain("ar-EG");
+    expect(locales).toContain("zh-CN");
+    expect(text).toContain("ar-EG");
+  });
+
+  it("search_docs for defineLocale returns the i18n guide first", async () => {
+    const { data } = await call(client, "search_docs", { query: "defineLocale" });
+    const [first] = data!.results as { anchor: string }[];
+    expect(first!.anchor).toContain("slotsmith://guides/i18n");
+  });
+
   it("get_component_api returns grouped props, defaults, pairs and labels", async () => {
     const { text, data } = await call(client, "get_component_api", { component: "date-picker" });
     expect(data!.groups).toEqual(["Value and mode", "Calendar", "Bounds", "Open state", "Display", "Slots and labels"]);

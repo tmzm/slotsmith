@@ -105,6 +105,57 @@ Sorting, pagination and selection work immediately, and each piece of state stay
 | **Date picker** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/date-picker) · one date, several or a range as plain `YYYY-MM-DD` strings that never shift across time zones; full keyboard grid, min / max and blocked dates, presets, locale week start and RTL |
 | More | 🔜 next | Same rules: headless logic, replaceable parts, fallbacks good enough to ship |
 
+## Languages
+
+Every component takes a `locale`: a ready-made pack, the tag of one registered with a provider, or a custom locale from `defineLocale`. `labels` still wins over any of them, one string at a time.
+
+```tsx
+// 1. A ready-made pack, passed as an object. No provider needed.
+import { ar } from "slotsmith/locales/ar";
+<DatePicker locale={ar} />
+
+// 2. A provider for the whole app. Strings resolve against the packs it was given.
+import { SlotsmithProvider } from "slotsmith/locale";
+import { ar } from "slotsmith/locales/ar";
+import { fr } from "slotsmith/locales/fr";
+<SlotsmithProvider locale={lang} locales={[ar, fr]}>…</SlotsmithProvider>
+
+// 3. A custom locale. Each section that is present must be complete.
+import { defineLocale } from "slotsmith/locale";
+const ku = defineLocale({ code: "ckb", table: { /* every DataTableLabels key */ } });
+<DataTable locale={ku} />
+
+// 4. One-off overrides still win.
+<DataTable locale={ar} labels={{ empty: "لا توجد طلبات" }} />
+```
+
+Precedence per string: `labels` on the component beats its own `locale`, which beats the provider's `locale`, which beats the English default.
+
+18 packs ship, 15 languages. "Drafted" means translated from the English labels and not yet checked by a native speaker; "reviewed by Tareq" means a native speaker checked it.
+
+| Import | Language | Direction | Status |
+| --- | --- | --- | --- |
+| `slotsmith/locales/ar` | Arabic | rtl | reviewed by Tareq |
+| `slotsmith/locales/ar-EG` | Arabic, Egypt | rtl | reviewed by Tareq |
+| `slotsmith/locales/ar-SA` | Arabic, Saudi Arabia | rtl | reviewed by Tareq |
+| `slotsmith/locales/ar-IQ` | Arabic, Iraq | rtl | reviewed by Tareq |
+| `slotsmith/locales/fa` | Persian | rtl | drafted |
+| `slotsmith/locales/he` | Hebrew | rtl | drafted |
+| `slotsmith/locales/tr` | Turkish | ltr | drafted |
+| `slotsmith/locales/fr` | French | ltr | drafted |
+| `slotsmith/locales/de` | German | ltr | drafted |
+| `slotsmith/locales/es` | Spanish | ltr | drafted |
+| `slotsmith/locales/pt-BR` | Portuguese, Brazil | ltr | drafted |
+| `slotsmith/locales/it` | Italian | ltr | drafted |
+| `slotsmith/locales/ru` | Russian | ltr | drafted |
+| `slotsmith/locales/zh-CN` | Chinese, simplified | ltr | drafted |
+| `slotsmith/locales/ja` | Japanese | ltr | drafted |
+| `slotsmith/locales/ko` | Korean | ltr | drafted |
+| `slotsmith/locales/hi` | Hindi | ltr | drafted |
+| `slotsmith/locales/id` | Indonesian | ltr | drafted |
+
+There is no `en` pack — English lives in each component's own defaults — and no bundled "all packs" entry; import only the languages an app ships. The date picker's calendar grid is always Gregorian, whatever the locale.
+
 ## How it compares
 
 |  | Styled kits (MUI, Chakra) | Headless kits (Radix, TanStack) | **slotsmith** |
@@ -170,6 +221,11 @@ export exactly what the main entry does. On ES modules they make no difference a
 use them when you are on CommonJS, or when you want the guarantee written down rather
 than inferred.
 
+`slotsmith/locale` (the provider and `defineLocale`) and `slotsmith/locales/<code>` (one
+entry per pack, e.g. `slotsmith/locales/ar`) are separate entries too, so importing a
+component never pulls in a language pack, and importing one language never pulls in
+another.
+
 ## Use with AI agents
 
 [`slotsmith-ai`](https://www.npmjs.com/package/slotsmith-ai) is an MCP server that gives coding agents the real API —
@@ -216,6 +272,7 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ## Changelog
 
+- **1.5.0** — Locale packs and a `SlotsmithProvider` for translating every component, formatting numbers and plurals, and right-to-left text; see [Languages](#languages). A string `locale` with no registered pack now logs one development-only warning instead of silently staying in English.
 - The autocomplete now turns dark with `.dark` or `[data-theme="dark"]` on the page, like the other components, instead of with the system setting.
 
 ## Author

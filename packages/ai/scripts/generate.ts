@@ -674,6 +674,24 @@ export function componentFolders(srcDir: string): string[] {
 }
 
 /**
+ * List locales
+ *
+ * Every ready-made pack's BCP 47 tag, one per file under `src/locales/`
+ * (`src/locale/` is the provider and stays out of this list).
+ *
+ * @param srcDir - The library's `src/`.
+ * @returns The tags, sorted.
+ */
+export function listLocales(srcDir: string): string[] {
+  const dir = join(srcDir, "locales");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
+    .map((entry) => entry.name.replace(/\.ts$/, ""))
+    .sort();
+}
+
+/**
  * Generate knowledge
  *
  * Builds the knowledge in memory, without writing anything.
@@ -787,6 +805,7 @@ export function generateKnowledge(options: GenerateOptions): GeneratedKnowledge 
     ),
     guides: listGuides(join(options.knowledgeDir, "guides")),
     adapters: listAdapters(join(options.knowledgeDir, "adapters")),
+    locales: listLocales(srcDir),
   };
 
   return { index, components };
