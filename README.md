@@ -170,6 +170,30 @@ export exactly what the main entry does. On ES modules they make no difference a
 use them when you are on CommonJS, or when you want the guarantee written down rather
 than inferred.
 
+## Use with AI agents
+
+[`slotsmith-ai`](https://www.npmjs.com/package/slotsmith-ai) is an MCP server that gives coding agents the real API —
+every prop, slot, fallback and label, generated from this source — plus ready-made
+MUI, shadcn/ui and Chakra UI adapters. Nothing is installed in your project; the client
+runs it with `npx`.
+
+```bash
+# Claude Code
+claude mcp add slotsmith -- npx -y slotsmith-ai mcp
+```
+
+```jsonc
+// Cursor: .cursor/mcp.json · Claude Desktop: claude_desktop_config.json
+{ "mcpServers": { "slotsmith": { "command": "npx", "args": ["-y", "slotsmith-ai", "mcp"] } } }
+
+// VS Code: .vscode/mcp.json (note the "servers" key)
+{ "servers": { "slotsmith": { "type": "stdio", "command": "npx", "args": ["-y", "slotsmith-ai", "mcp"] } } }
+```
+
+Tools, resources and prompts are listed in the [package README](https://github.com/tmzm/slotsmith/tree/master/packages/ai#readme);
+the [AI tools guide](https://slotsmith-docs.netlify.app/#/docs/ai-tools) walks through
+each client.
+
 ## Principles
 
 1. **Fallbacks ship.** If the built-in look isn't good enough to put in production, it isn't done.
@@ -187,6 +211,7 @@ pnpm install
 pnpm test        # vitest + testing-library
 pnpm typecheck
 pnpm build       # tsup (ESM + CJS) + tsc declarations
+pnpm test:ai     # the MCP server in packages/ai
 ```
 
 ## Author
