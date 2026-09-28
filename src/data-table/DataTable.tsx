@@ -84,6 +84,7 @@ export function DataTableProvider<T extends RowData>({
     /** English, then the locale, then the caller's own overrides. */
     labels: { ...defaultLabels, ...withoutUndefined(localeLabels), ...withoutUndefined(labels) },
     slotProps: slotProps ?? {},
+    locale,
     onRowClick,
   };
 

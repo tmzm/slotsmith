@@ -38,13 +38,15 @@ import { VirtualAutocomplete, VirtualDataTable, VirtualFileUploader } from "slot
 
 Prefer the per-component entry: on CommonJS it is the only way to avoid loading every component, and it states the intent.
 
+Importing one component never pulls in another, with one deliberate exception: the data table's page-size control is the autocomplete, so `DataTable` and `VirtualDataTable` bundle the autocomplete. The autocomplete never pulls in the table, and packs and `slotsmith/provider` pull in no component.
+
 ## Styles
 
 The stylesheet only styles the built-in fallbacks. Import it once, near the root of the app, either whole or per component:
 
 ```tsx
 import "slotsmith/styles.css";         // every component
-import "slotsmith/data-table.css";     // or just the ones you use
+import "slotsmith/data-table.css";     // or just the ones you use (this one includes the autocomplete's rules)
 import "slotsmith/autocomplete.css";
 import "slotsmith/date-picker.css";
 import "slotsmith/file-uploader.css";

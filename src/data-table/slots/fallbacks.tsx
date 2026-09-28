@@ -1,4 +1,7 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
+import { Autocomplete } from "../../autocomplete/Autocomplete";
+import type { OptionValue } from "../../autocomplete/core/types";
+import { cx } from "../../shared/cx";
 import { useDataTableContext } from "./context";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronIcon } from "./icons";
 import type {
@@ -22,21 +25,7 @@ import type {
   TableSlotProps,
 } from "./types";
 
-/**
- * Class names
- *
- * Joins the truthy class names with spaces.
- *
- * @param classes - Class names; falsy values are skipped.
- * @returns The joined class names, or `undefined` when there are none.
- *
- * @example
- * ```ts
- * cx("rdt__row", selected && "is-selected"); // "rdt__row is-selected"
- * ```
- */
-export const cx = (...classes: (string | false | null | undefined)[]) =>
-  classes.filter(Boolean).join(" ") || undefined;
+export { cx };
 
 /**
  * Root fallback
@@ -253,25 +242,32 @@ const PaginationButton = ({ direction, ...props }: PaginationButtonSlotProps) =>
 /**
  * Page size select fallback
  *
- * A labelled native `<select>`.
+ * The slotsmith autocomplete as a plain single select, so the table's one
+ * dropdown looks and behaves like the library's others: no search box for a
+ * handful of numbers, and no clear control, because a page always has a size.
+ * The visible label names the combobox, and the table's `locale` is passed on
+ * so its announcements follow the table's language.
  */
 const PageSizeSelect = ({ value, options, onValueChange, label }: PageSizeSelectSlotProps) => {
   const id = useId();
+  const { locale } = useDataTableContext();
+  const items = useMemo(() => options.map((option) => ({ value: option, label: String(option) })), [options]);
   return (
     <div className="rdt__page-size">
-      <label htmlFor={id}>{label}</label>
-      <select
-        id={id}
-        className="rdt__select"
+      <span id={id}>{label}</span>
+      <Autocomplete
+        className="rdt__page-size-select"
+        aria-labelledby={id}
+        options={items}
         value={value}
-        onChange={(event) => onValueChange(Number(event.target.value))}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+        onChange={(next: OptionValue | null) => {
+          if (next !== null) onValueChange(Number(next));
+        }}
+        searchable={false}
+        clearable={false}
+        matchTriggerWidth={false}
+        locale={locale}
+      />
     </div>
   );
 };

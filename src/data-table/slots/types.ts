@@ -242,7 +242,10 @@ export interface PaginationButtonSlotProps {
 /**
  * Page size select slot props
  *
- * Widget slot for the rows-per-page picker of the fallback `Pagination`.
+ * Widget slot for the rows-per-page picker of the fallback `Pagination`. The
+ * fallback is the slotsmith `Autocomplete` as a plain single select, labelled
+ * by `label` and following the table's `locale`, so the data table's bundle
+ * includes the autocomplete. Replace the slot to use your own select.
  */
 export interface PageSizeSelectSlotProps {
   /** The current page size. */
@@ -317,7 +320,7 @@ export interface DataTableComponents {
   Pagination: ComponentType<PaginationSlotProps>;
   /** Fallback: chevron `<button>`. */
   PaginationButton: ComponentType<PaginationButtonSlotProps>;
-  /** Fallback: labelled native `<select>`. */
+  /** Fallback: the slotsmith `Autocomplete` as a labelled single select (no search, no clear). */
   PageSizeSelect: ComponentType<PageSizeSelectSlotProps>;
 }
 

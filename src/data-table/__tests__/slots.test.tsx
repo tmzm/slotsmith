@@ -51,7 +51,8 @@ describe("slots", () => {
   it("renders the plain-HTML fallbacks by default", () => {
     const { container } = renderTable();
     expect(container.querySelector("table.rdt__table")).toBeInTheDocument();
-    expect(container.querySelector("select.rdt__select")).toBeInTheDocument();
+    expect(container.querySelector(".rdt__page-size .sac")).toBeInTheDocument();
+    expect(container.querySelector("select")).not.toBeInTheDocument();
   });
 
   it("replaces only the slots that are passed", async () => {

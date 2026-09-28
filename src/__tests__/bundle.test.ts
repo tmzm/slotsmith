@@ -31,13 +31,39 @@ type Component = keyof typeof MARKERS;
 const ARABIC_MARKER = "لا توجد بيانات";
 
 /**
+ * Bundled with
+ *
+ * The one allowed crossing: the data table's page-size fallback is the
+ * autocomplete, used as a single select, so the table (and
+ * `VirtualDataTable`) ships it, in its JavaScript and in its stylesheet. The
+ * other direction stays closed — the autocomplete never carries the table —
+ * and no other component, pack or provider may pull in a component.
+ */
+const BUNDLED_WITH: Partial<Record<Component, Component[]>> = {
+  dataTable: ["autocomplete"],
+};
+
+/**
  * Other markers
  *
  * @param component - The component a bundle is meant to contain.
- * @returns Every other component's marker, none of which may appear in it.
+ * @returns Every other component's marker, none of which may appear in it,
+ * apart from those of the components it is allowed to bundle.
  */
 const othersThan = (component: Component) =>
-  (Object.keys(MARKERS) as Component[]).filter((key) => key !== component).map((key) => MARKERS[key]);
+  (Object.keys(MARKERS) as Component[])
+    .filter((key) => key !== component && !BUNDLED_WITH[component]?.includes(key))
+    .map((key) => MARKERS[key]);
+
+/**
+ * Shipped markers
+ *
+ * @param component - The component a bundle is meant to contain.
+ * @returns Its own marker and those of the components it bundles, all of
+ * which must appear in it.
+ */
+const shippedWith = (component: Component) =>
+  [component, ...(BUNDLED_WITH[component] ?? [])].map((key) => MARKERS[key]);
 
 const dist = (file: string) => resolve(process.cwd(), "dist", file);
 
@@ -126,7 +152,7 @@ describe.skipIf(!built)("what an application actually bundles", () => {
       console.log(${name});
     `);
 
-    expect(code).toContain(MARKERS[component]);
+    for (const marker of shippedWith(component)) expect(code).toContain(marker);
     for (const marker of othersThan(component)) expect(code).not.toContain(marker);
   });
 
@@ -158,8 +184,18 @@ describe.skipIf(!built)("what an application actually bundles", () => {
       console.log(${name});
     `);
 
-    expect(code).toContain(MARKERS[component]);
+    for (const marker of shippedWith(component)) expect(code).toContain(marker);
     for (const marker of othersThan(component)) expect(code).not.toContain(marker);
+  });
+
+  it("bundles the autocomplete, and nothing else, with VirtualDataTable", async () => {
+    const code = await bundle(`
+      import { VirtualDataTable } from ${JSON.stringify(dist("virtual.js"))};
+      console.log(VirtualDataTable);
+    `);
+
+    for (const marker of shippedWith("dataTable")) expect(code).toContain(marker);
+    for (const marker of othersThan("dataTable")) expect(code).not.toContain(marker);
   });
 
   /**
@@ -209,6 +245,22 @@ describe.skipIf(!built)("what an application actually bundles", () => {
       expect(entry.length).toBeLessThan(barrel.length / 2);
     },
   );
+
+  /**
+   * The uploader's CommonJS entry carries the table's fallbacks (see above),
+   * but the autocomplete the table's page size now uses must not come along
+   * with them.
+   */
+  it("keeps the autocomplete out of the uploader's CommonJS entry", async () => {
+    const entry = await bundle(
+      `const { FileUploader } = require(${JSON.stringify(dist("file-uploader.cjs"))}); console.log(FileUploader);`,
+      "cjs",
+    );
+
+    expect(entry).toContain(MARKERS.fileUploader);
+    expect(entry).not.toContain(MARKERS.autocomplete);
+    expect(entry).not.toContain(MARKERS.datePicker);
+  });
 });
 
 describe.skipIf(!built)("the stylesheets", () => {
@@ -222,9 +274,19 @@ describe.skipIf(!built)("the stylesheets", () => {
     const one = readFileSync(dist(`${file}.styles.css`), "utf8");
 
     /** Nothing can tree-shake CSS, so the per-component file must stand alone. */
-    expect(one).toContain(MARKERS[component]);
+    for (const marker of shippedWith(component)) expect(one).toContain(marker);
     for (const marker of othersThan(component)) expect(one).not.toContain(marker);
-    expect(one.length).toBeLessThan(whole.length / 2);
+    expect(one.length).toBeLessThan(whole.length / (BUNDLED_WITH[component] ? 1.5 : 2));
+  });
+
+  /**
+   * The table's sheet imports the autocomplete's, and so does the whole one:
+   * the bundler must keep a single copy of those rules, not one per import.
+   */
+  it("ships the autocomplete's rules once in the whole set", () => {
+    const whole = readFileSync(dist("styles.css"), "utf8");
+    expect(whole.match(/\.sac__trigger\s*\{/g)).toHaveLength(1);
+    expect(whole.match(/\.rdt__table\s*\{/g)).toHaveLength(1);
   });
 });
 

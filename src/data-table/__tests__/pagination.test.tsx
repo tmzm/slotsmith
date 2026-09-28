@@ -18,17 +18,19 @@ describe("pagination", () => {
 
   it("changes the page size from the select", async () => {
     const { user: events } = renderTable({ data: users(30) });
-    await events.selectOptions(screen.getByLabelText("Rows per page"), "25");
+    await events.click(screen.getByRole("combobox", { name: "Rows per page" }));
+    await events.click(screen.getByRole("option", { name: "25" }));
     expect(bodyRows()).toHaveLength(25);
     expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
   });
 
-  it("uses custom page size options and keeps an unlisted current size", () => {
-    renderTable({
+  it("uses custom page size options and keeps an unlisted current size", async () => {
+    const { user: events } = renderTable({
       data: users(5),
       pageSizeOptions: [5, 20],
       defaultPagination: { pageIndex: 0, pageSize: 7 },
     });
+    await events.click(screen.getByRole("combobox", { name: "Rows per page" }));
     const options = screen.getAllByRole("option").map((option) => option.textContent);
     expect(options).toEqual(["5", "7", "20"]);
   });

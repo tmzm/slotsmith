@@ -98,7 +98,7 @@ describe("row selection", () => {
       const [selection, setSelection] = useState<User[]>([]);
       return (
         <>
-          <output>{selection.map((row) => row.id).join(",")}</output>
+          <output data-testid="selection">{selection.map((row) => row.id).join(",")}</output>
           <DataTable<User>
             data={users(3)}
             columns={columns}
@@ -113,10 +113,10 @@ describe("row selection", () => {
 
     await events.click(rowCheckbox(2));
     await events.click(rowCheckbox(0));
-    expect(screen.getByRole("status")).toHaveTextContent("u3,u1");
+    expect(screen.getByTestId("selection")).toHaveTextContent("u3,u1");
 
     await events.click(rowCheckbox(2));
-    expect(screen.getByRole("status")).toHaveTextContent("u1");
+    expect(screen.getByTestId("selection")).toHaveTextContent("u1");
   });
 
   it("does not trigger onRowClick when clicking a checkbox", async () => {

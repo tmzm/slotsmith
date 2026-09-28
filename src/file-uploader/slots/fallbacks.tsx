@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cx } from "../../data-table/slots/fallbacks";
+import { cx } from "../../shared/cx";
 import { formatBytes } from "../core/validate";
 import type {
   DropzoneSlotProps,

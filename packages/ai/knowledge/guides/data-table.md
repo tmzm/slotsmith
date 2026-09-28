@@ -67,7 +67,7 @@ Column definitions are TanStack's, with a `meta` for alignment and classes:
 
 ## Replacing parts
 
-The table, sections, rows and cells are element parts, so a library's table primitives drop straight in. Checkbox, sort icon, pagination, empty and error states are widget parts. With shadcn/ui:
+The table, sections, rows and cells are element parts, so a library's table primitives drop straight in. Checkbox, sort icon, pagination, empty and error states are widget parts. The `PageSizeSelect` fallback is the slotsmith autocomplete as a plain single select (no search, no clear), labelled by `labels.rowsPerPage` and following the table's `locale`; replace the slot to use your library's select. With shadcn/ui:
 
 ```tsx
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

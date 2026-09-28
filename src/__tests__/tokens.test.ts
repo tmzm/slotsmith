@@ -38,7 +38,9 @@ const SHEETS = { rdt: "data-table", sac: "autocomplete", sdp: "date-picker", sfu
  * or documented declarations never satisfy an assertion.
  */
 const read = (folder: string) =>
-  readFileSync(resolve(process.cwd(), "src", folder, "styles.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  readFileSync(resolve(process.cwd(), "src", folder, "styles.css"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/@import[^;]*;/g, "");
 
 /**
  * Rule body
@@ -97,10 +99,17 @@ describe.each(Object.entries(SHEETS))("--%s tokens", (prefix, folder) => {
  * Stylesheets whose fallbacks render a native `<select>`, and the token
  * prefix each one's rules are written against.
  */
-const SELECT_SHEETS = [
-  { folder: "data-table", prefix: "rdt", selectClass: "rdt__select" },
-  { folder: "date-picker", prefix: "sdp", selectClass: "sdp__select" },
-];
+const SELECT_SHEETS = [{ folder: "date-picker", prefix: "sdp", selectClass: "sdp__select" }];
+
+/**
+ * The data table's page size is the autocomplete, so its sheet brings the
+ * autocomplete's rules along instead of styling a native select of its own.
+ */
+it("styles the data table's page size with the autocomplete's rules", () => {
+  const raw = readFileSync(resolve(process.cwd(), "src", "data-table", "styles.css"), "utf8");
+  expect(raw).toMatch(/@import\s+"\.\.\/autocomplete\/styles\.css";/);
+  expect(read("data-table")).not.toContain(".rdt__select");
+});
 
 it.each(SELECT_SHEETS)(
   "$folder's native select uses the component's tokens, not the browser's light default",
@@ -273,10 +282,9 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
   });
 });
 
-/** Buttons, triggers and the table's select: one height, border and radius. */
+/** Buttons and triggers: one height, border and radius. */
 const CONTROLS = [
   { prefix: "rdt", folder: "data-table", selector: ".rdt__button" },
-  { prefix: "rdt", folder: "data-table", selector: ".rdt__select" },
   { prefix: "sac", folder: "autocomplete", selector: ".sac__trigger" },
   { prefix: "sac", folder: "autocomplete", selector: ".sac__button" },
   { prefix: "sdp", folder: "date-picker", selector: ".sdp__trigger" },
@@ -288,8 +296,6 @@ it.each(CONTROLS)("$selector is a 32px control with the shared border and radius
   expect(value(body, "height") ?? value(body, "min-height")).toBe("32px");
   expect(value(body, "border")).toBe(`1px solid var(--${prefix}-border)`);
   expect(value(body, "border-radius")).toBe(`var(--${prefix}-radius)`);
-  // The table's select keeps its own tighter padding around the arrow.
-  if (selector === ".rdt__select") return;
   const inline = value(body, "padding-inline") ?? value(body, "padding")?.split(" ")[1];
   expect(inline).toBe("12px");
 });

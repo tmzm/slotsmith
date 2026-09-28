@@ -1,5 +1,6 @@
 import { createContext, useContext, type MouseEvent } from "react";
 import type { RowData } from "@tanstack/react-table";
+import type { LocaleInput } from "../../locale/types";
 import type { DataTableRow } from "../core/features";
 import type { DataTableModel } from "../core/useDataTable";
 import type { DataTableComponents, DataTableLabels, DataTableSlotProps } from "./types";
@@ -19,6 +20,11 @@ export interface DataTableContextValue<T extends RowData> extends DataTableModel
   labels: DataTableLabels;
   /** The `slotProps` option, or `{}`. */
   slotProps: DataTableSlotProps<T>;
+  /**
+   * The `locale` option, as given. `undefined` means the provider's, so a
+   * nested component handed it follows the same language as the table.
+   */
+  locale?: LocaleInput;
   /** The `onRowClick` option. */
   onRowClick?: (row: DataTableRow<T>, event: MouseEvent<HTMLTableRowElement>) => void;
 }

@@ -69,7 +69,7 @@ The stylesheet is optional too. Import the whole set, or just the component you 
 ```tsx
 import "slotsmith/styles.css";            // all components — 24.4 KB
 import "slotsmith/autocomplete.css";      // just this one — 5.5 KB
-import "slotsmith/data-table.css";
+import "slotsmith/data-table.css";        // includes the autocomplete's rules, for its page-size menu
 import "slotsmith/date-picker.css";       // 7.0 KB
 import "slotsmith/file-uploader.css";
 ```
@@ -220,7 +220,10 @@ Measured on the published output, bundling a single component:
 | all four components | 62.3 KB |
 
 Nothing special is required — `import { Autocomplete } from "slotsmith"` already drops
-the other three. A test in the suite bundles the real output and fails if any of it leaks
+the other three. The one exception is deliberate: the data table's page-size control is
+the autocomplete, so `DataTable` and `VirtualDataTable` bring the autocomplete with them
+(and `slotsmith/data-table.css` its styles). Nothing else pulls in another component, and
+the autocomplete never pulls in the table. A test in the suite bundles the real output and fails if any of it leaks
 back in.
 
 Two cases a bundler cannot solve on its own, and what to do about them:
@@ -276,7 +279,7 @@ each client.
 2. **State is uncontrolled until you control it.** No required `useState` to render a component.
 3. **Every string is a label.** Translation and RTL are props, not a fork.
 4. **Accessible by default.** Keyboard paths, `aria-*` state and focus handling live in the fallbacks, so replacing a part can't silently remove them.
-5. **Pay only for what you import.** Components are independent and tree-shake cleanly, so a project that uses one of them ships one of them.
+5. **Pay only for what you import.** Components are independent and tree-shake cleanly, so a project that uses one of them ships one of them — except that the data table ships the autocomplete it uses for its page size.
 
 ## Contributing
 
@@ -296,7 +299,8 @@ pnpm test:ai     # the MCP server in packages/ai
 
 - `SlotsmithProvider` and `useSlotsmithLocale` now come from `slotsmith/provider`, which will also carry shared settings beyond the language. `slotsmith/locale` still exports them.
 - All four components now share one default palette and shape, read from the new shared `--ss-*` tokens. Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once; the per-component tokens still work.
-- Native selects (the data table's page size, the date picker's month and year) now use the component's colours in dark mode.
+- The date picker's month and year selects now use the component's colours in dark mode.
+- The data table's page-size control is now the slotsmith autocomplete, so it matches the other components; the data table's bundle includes the autocomplete.
 
 - **1.5.0** — Locale packs and a `SlotsmithProvider` for translating every component, formatting numbers and plurals, and right-to-left text; see [Languages](#languages). A string `locale` with no registered pack now logs one development-only warning instead of silently staying in English.
 - The autocomplete now turns dark with `.dark` or `[data-theme="dark"]` on the page, like the other components, instead of with the system setting.
