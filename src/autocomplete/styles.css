@@ -365,9 +365,14 @@
   cursor: not-allowed;
 }
 
-/** One focus ring for every button, the same as the other components'. */
+/** Inset on the small tag and clear buttons, so the ring stays inside the trigger and off the next tag. */
 .sac__tag-remove:focus-visible,
-.sac__clear:focus-visible,
+.sac__clear:focus-visible {
+  outline: 2px solid var(--sac-accent);
+  outline-offset: -2px;
+}
+
+/** One focus ring for every other button, the same as the other components'. */
 .sac__button:focus-visible,
 .sac__create-button:focus-visible,
 .sac__more-button:focus-visible {

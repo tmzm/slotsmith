@@ -204,7 +204,7 @@ Not using a component library? Every fallback also exposes `data-*` state, so Ta
 }
 ```
 
-The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--rdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others.
+The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--rdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others; the date picker and the uploader also still follow a theme written against `--rdt-*`. A value set on `:root` applies to both themes, so set its dark value under `.dark, [data-theme="dark"]` too.
 
 ## You ship only what you import
 

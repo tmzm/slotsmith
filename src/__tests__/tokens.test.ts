@@ -142,6 +142,15 @@ const PALETTE: Record<(typeof SHARED)[number], { light: string; dark?: string }>
   "font-size": { light: "14px" },
 };
 
+/** Components whose tokens have always fallen back to the data table's; that fallback is public. */
+const BORROWS_RDT: string[] = ["sdp", "sfu"];
+
+/** The shared tokens the data table declares, and so can be borrowed. */
+const RDT_TOKENS: string[] = ["surface", "text", "muted", "border", "accent", "danger", "hover", "selected", "radius", "font-size"];
+
+/** The only focus rings drawn inside their target: controls packed too tightly for an outside ring. */
+const INSET_RINGS = [".sdp__day:focus-visible", ".sfu__action:focus-visible", ".sac__tag-remove:focus-visible", ".sac__clear:focus-visible"];
+
 /** The shared tokens every component reads, whatever else it declares. */
 const CORE = ["surface", "text", "muted", "border", "accent", "hover", "radius", "font-size"] as const;
 
@@ -179,20 +188,39 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
     expect(light).toContain(`--${prefix}-${name}:`);
   });
 
+  /**
+   * The expected declaration: the shared token, then (for the components that
+   * have always borrowed them) the data table's, then the one literal.
+   */
+  const expected = (name: (typeof SHARED)[number], literal: string | undefined) =>
+    BORROWS_RDT.includes(prefix) && RDT_TOKENS.includes(name)
+      ? `var(--ss-${name}, var(--rdt-${name}, ${literal}))`
+      : `var(--ss-${name}, ${literal})`;
+
   it.each(SHARED)("falls back to the shared light literal for %s", (name) => {
     const token = value(light, `--${prefix}-${name}`);
     if (token === undefined) return;
-    expect(token).toBe(`var(--ss-${name}, ${PALETTE[name].light})`);
+    expect(token).toBe(expected(name, PALETTE[name].light));
   });
 
   it.each(COLOURS)("falls back to the shared dark literal for %s", (name) => {
     if (value(light, `--${prefix}-${name}`) === undefined) return;
-    expect(value(dark, `--${prefix}-${name}`)).toBe(`var(--ss-${name}, ${PALETTE[name].dark})`);
+    expect(value(dark, `--${prefix}-${name}`)).toBe(expected(name, PALETTE[name].dark));
   });
 
-  it("no longer borrows the data table's tokens", () => {
-    if (prefix === "rdt") return;
-    expect(css).not.toContain("--rdt-");
+  it("keeps the data table's tokens as the second fallback, so existing --rdt-* themes still apply", () => {
+    if (!BORROWS_RDT.includes(prefix)) return;
+    for (const block of [light, dark]) {
+      for (const name of RDT_TOKENS) {
+        const token = value(block, `--${prefix}-${name}`);
+        if (token === undefined) continue;
+        expect(token.startsWith(`var(--ss-${name}, var(--rdt-${name}, `), `--${prefix}-${name}`).toBe(true);
+      }
+    }
+    if (prefix === "sfu") {
+      expect(value(light, "--sfu-bg")).toBe("var(--rdt-bg, var(--sfu-surface))");
+      expect(value(dark, "--sfu-bg")).toBe("var(--rdt-bg, var(--sfu-surface))");
+    }
   });
 
   it("sets color-scheme on its own elements, not on the element carrying the theme", () => {
@@ -209,7 +237,13 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
     const outlines = [...css.matchAll(/(?<![-\w])outline:\s*([^;]+);/g)].map((match) => match[1]!.trim());
     expect(outlines.length).toBeGreaterThan(0);
     for (const outline of outlines) if (outline !== "none") expect(outline).toBe(`2px solid var(--${prefix}-accent)`);
-    for (const [, offset] of css.matchAll(/outline-offset:\s*([^;]+);/g)) expect(offset!.trim()).toBe("2px");
+    for (const entry of rules(css)) {
+      const offset = value(entry.body, "outline-offset");
+      if (offset === undefined) continue;
+      // Tightly packed targets keep the ring inside, off their neighbours.
+      const inset = entry.selector.split(", ").every((selector) => INSET_RINGS.includes(selector));
+      expect(offset, entry.selector).toBe(inset ? "-2px" : "2px");
+    }
     // The old halo on the triggers was a second, different ring.
     expect(css).not.toMatch(/box-shadow:\s*0 0 0/);
   });

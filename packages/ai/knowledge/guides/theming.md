@@ -20,16 +20,16 @@ All four components share one default look. Every colour, radius and font-size t
 | `--ss-radius` | `8px` |
 | `--ss-font-size` | `14px` |
 
-Each component also reads its own prefix, which overrides the shared token for that component alone:
+Each component also reads its own prefix, which overrides the shared token for that component alone. The date picker and the file uploader read the shared token first and the data table's `--rdt-*` token second, so a theme written against `--rdt-*` still reaches them:
 
 | Prefix | Component | Tokens |
 | --- | --- | --- |
 | `--rdt-*` | Data table | `accent`, `bg`, `border`, `checkbox-size`, `danger`, `font-size`, `header-bg`, `hover`, `max-height`, `muted`, `padding-x`, `padding-y`, `radius`, `selected`, `skeleton-bg`, `skeleton-bg-2`, `stripe`, `surface`, `text` |
 | `--sac-*` | Autocomplete | `accent`, `border`, `danger`, `font-size`, `hover`, `muted`, `radius`, `surface`, `text` |
-| `--sdp-*` | Date picker | `accent`, `border`, `cell`, `font-size`, `gap`, `hover`, `muted`, `on-accent`, `radius`, `surface`, `text` |
-| `--sfu-*` | File uploader | `accent`, `bg`, `border`, `danger`, `font-size`, `gap`, `hover`, `muted`, `radius`, `surface`, `text`, `tile-size` |
+| `--sdp-*` | Date picker (falls back to `--rdt-*`) | `accent`, `border`, `cell`, `font-size`, `gap`, `hover`, `muted`, `on-accent`, `radius`, `surface`, `text` |
+| `--sfu-*` | File uploader (falls back to `--rdt-*`) | `accent`, `bg`, `border`, `danger`, `font-size`, `gap`, `hover`, `muted`, `radius`, `surface`, `text`, `tile-size` |
 
-Every component token is declared on `:root`, so override it there (or on a component's root element for one instance).
+Every component token is declared on `:root`, so override it there (or on a component's root element for one instance). A value set on `:root`, shared or not, applies to both themes: set its dark value under `.dark, [data-theme="dark"]` too.
 
 ```css
 :root {
@@ -40,7 +40,7 @@ Every component token is declared on `:root`, so override it there (or on a comp
 
 /* Component-specific tokens on top. */
 :root {
-  --rdt-accent: #0f766e;  /* only the table */
+  --sac-accent: #0f766e;  /* only the autocomplete */
   --sfu-tile-size: 200px;
   --sdp-cell: 2.25rem;
 }
