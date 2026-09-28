@@ -5,7 +5,8 @@ import { VirtualDataTable } from "../../virtual";
 import type { DataTableColumnDef } from "../features";
 import type { RowOrderChange } from "../reorder";
 import { defaultReorderLabels } from "../reorderLabels";
-import { resetReorderWarnings, useDataTable } from "../useDataTable";
+import type { DataTableLabels } from "../../slots/types";
+import { resetReorderWarnings, useDataTable, type DataTableModel } from "../useDataTable";
 import { useRowReorder, type RowReorderModel } from "../useRowReorder";
 
 type Item = { id: string };
@@ -644,6 +645,8 @@ describe("useRowReorder, in useDataTable", () => {
     data: Item[];
     sort?: boolean;
     page?: number;
+    labels?: Partial<DataTableLabels>;
+    onModel?: (model: DataTableModel<Item>) => void;
     onRowOrderChange: (change: RowOrderChange<Item>) => void;
   }) {
     const model = useDataTable<Item>({
@@ -653,7 +656,9 @@ describe("useRowReorder, in useDataTable", () => {
       onRowOrderChange: props.onRowOrderChange,
       defaultSorting: props.sort ? [{ id: "id", desc: true }] : [],
       defaultPagination: { pageIndex: props.page ?? 0, pageSize: 3 },
+      labels: props.labels,
     });
+    props.onModel?.(model);
     return (
       <table>
         <tbody>
@@ -697,6 +702,24 @@ describe("useRowReorder, in useDataTable", () => {
     key(handle, "ArrowDown");
     key(handle, " ");
     expect(ids((onRowOrderChange.mock.calls[0]![0] as RowOrderChange<Item>).data)).toBe("abcedf");
+  });
+
+  it("takes the reorder text from labels, with English for any key left out", () => {
+    let model!: DataTableModel<Item>;
+    const labels: Partial<DataTableLabels> = {
+      reorderRow: "نقل الصف",
+      reorderMoved: (position, total) => `الموضع ${position} من ${total}`,
+      reorderLifted: undefined,
+    };
+    const { container } = render(
+      <Table data={items("abc")} labels={labels} onModel={(m) => (model = m)} onRowOrderChange={() => {}} />,
+    );
+    const handle = handleOf(container, "a");
+    expect(handle).toHaveAttribute("aria-label", "نقل الصف");
+    key(handle, " ");
+    expect(model.reorder.announcement).toBe(defaultReorderLabels.reorderLifted(1, 3));
+    key(handle, "ArrowDown");
+    expect(model.reorder.announcement).toBe("الموضع 2 من 3");
   });
 
   it("is off with a single row", () => {

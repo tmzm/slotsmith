@@ -19,6 +19,7 @@ import {
   type DataTableRow,
 } from "./features";
 import { canReorder, type RowOrderChange } from "./reorder";
+import type { DataTableLabels } from "../slots/types";
 import { defaultReorderLabels, type ReorderLabels } from "./reorderLabels";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
 import { useRowReorder, type ReorderTree, type RowReorderModel } from "./useRowReorder";
@@ -126,6 +127,13 @@ export interface UseDataTableOptions<T extends RowData> {
   onRowOrderChange?: (change: RowOrderChange<T>) => void;
   /** Adds a leading column with each row's drag handle. `false` lets you place `DataTable.DragHandle` yourself. Defaults to `true`. */
   reorderHandleColumn?: boolean;
+  /**
+   * Text for a table rendered with this hook alone. The hook reads the reorder
+   * keys (the handle's name, its instructions and the announcements); any key
+   * left out is English. `<DataTable>` fills them from its own `labels` and
+   * `locale` instead.
+   */
+  labels?: Partial<DataTableLabels>;
 
   /** Shows skeleton rows. Defaults to `false`. */
   loading?: boolean;
@@ -202,6 +210,24 @@ export interface DataTableInternals {
 }
 
 const warnings = createDevWarnings();
+
+/**
+ * With reorder defaults
+ *
+ * The reorder labels a headless table passed, over the English ones; an
+ * `undefined` value keeps the default.
+ *
+ * @param labels - The `labels` option.
+ * @returns A complete set of reorder labels.
+ */
+function withReorderDefaults(labels: Partial<DataTableLabels> | undefined): ReorderLabels {
+  if (!labels) return defaultReorderLabels;
+  const resolved = { ...defaultReorderLabels };
+  for (const key of Object.keys(resolved) as (keyof ReorderLabels)[]) {
+    if (labels[key] !== undefined) Object.assign(resolved, { [key]: labels[key] });
+  }
+  return resolved;
+}
 
 /** Forgets which reorder warnings were logged. For tests. */
 export function resetReorderWarnings(): void {
@@ -430,7 +456,7 @@ export function useDataTable<T extends RowData>(
     visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
     rows: coreRowModel.rows,
     tree: reorderTree,
-    labels: internals.labels ?? defaultReorderLabels,
+    labels: internals.labels ?? withReorderDefaults(options.labels),
     onRowOrderChange: options.onRowOrderChange,
   });
 
