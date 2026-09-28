@@ -1,3 +1,4 @@
+import { createDevWarnings } from "../shared/dev";
 import { directionOf } from "./direction";
 import type {
   LocaleInput,
@@ -39,37 +40,22 @@ export function findPack(code: string, packs: readonly SlotsmithLocale[]): Slots
   );
 }
 
-/**
- * Node's `process`, typed locally
- *
- * `@types/node`'s ambient global is not visible under every tsconfig this
- * file is built with (the declaration-emit pass excludes it), so this types
- * only the one property read below instead of depending on that ambient
- * global. The runtime check stays a literal `process.env.NODE_ENV` so a
- * consumer's bundler can still replace it at build time.
- */
-declare const process: { env: { NODE_ENV?: string } } | undefined;
-
-const warned = new Set<string>();
+const warnings = createDevWarnings();
 
 /** Forgets which tags were warned about. For tests. */
 export function resetLocaleWarnings(): void {
-  warned.clear();
+  warnings.reset();
 }
 
 /**
  * Warn about an unregistered locale
  *
  * Once per tag and only in development: a missing pack is a setup mistake to
- * notice while building, not something to log in production. `process` is
- * guarded because a browser bundle that skips define-time replacement of
- * `process.env.NODE_ENV` has no such global at all.
+ * notice while building, not something to log in production.
  */
 function warnUnregistered(code: string): void {
-  const isProduction = typeof process !== "undefined" && process.env.NODE_ENV === "production";
-  if (isProduction || warned.has(code)) return;
-  warned.add(code);
-  console.warn(
+  warnings.warn(
+    code,
     `slotsmith: no locale pack is registered for "${code}", so labels stay in English. ` +
       `Import the pack and pass it to <SlotsmithProvider locales={[…]}>, or pass the locale object itself.`,
   );
