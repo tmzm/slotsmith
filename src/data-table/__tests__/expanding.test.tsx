@@ -1,5 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { resetReorderWarnings } from "../core/useDataTable";
 import { bodyRows, firstColumn, renderTable, user, type User } from "./builders";
 
 const tree: User[] = [
@@ -55,5 +56,20 @@ describe("expandable rows", () => {
     await events.click(within(bodyRows()[0]!).getByRole("checkbox"));
     const ids = onSelectionChange.mock.lastCall?.[0].map((row: User) => row.id);
     expect(ids).toEqual(expect.arrayContaining(["u1", "u11", "u12", "u121"]));
+  });
+
+  it("ignores enableRowReorder: no handle, no extra column, one development warning", async () => {
+    resetReorderWarnings();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { container, user: events } = renderTable({ data: tree, getSubRows, enableRowReorder: true });
+    await events.click(screen.getByRole("button", { name: "Expand row" }));
+
+    expect(screen.queryByRole("button", { name: "Reorder row" })).not.toBeInTheDocument();
+    expect(container.querySelector("[data-slot=drag]")).toBeNull();
+    expect(container.querySelector("[role=status][aria-live=assertive]")).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toContain("getSubRows");
+    warn.mockRestore();
+    resetReorderWarnings();
   });
 });

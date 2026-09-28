@@ -1,5 +1,6 @@
 import { act, render } from "@testing-library/react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { resetReorderWarnings } from "../core/useDataTable";
 import { VirtualDataTable } from "../virtual";
 import { bodyRows, columns, users, type User } from "./builders";
 
@@ -72,5 +73,19 @@ describe("VirtualDataTable", () => {
   it("still shows status rows", () => {
     const { getByText } = render(<VirtualDataTable<User> data={[]} columns={columns} />);
     expect(getByText("No data found")).toBeInTheDocument();
+  });
+
+  it("ignores enableRowReorder: no handle, no extra column, one development warning", () => {
+    resetReorderWarnings();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { container, rerender } = render(<VirtualDataTable<User> data={users(20)} columns={columns} enableRowReorder />);
+    rerender(<VirtualDataTable<User> data={users(21)} columns={columns} enableRowReorder />);
+
+    expect(container.querySelector("[data-slot=drag], .rdt__drag")).toBeNull();
+    expect(container.querySelector("[role=status]")).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toContain("VirtualDataTable");
+    warn.mockRestore();
+    resetReorderWarnings();
   });
 });

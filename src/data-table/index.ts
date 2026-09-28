@@ -20,6 +20,7 @@ export type { DataTableProps, DataTableProviderProps, DataTableRootProps } from 
 
 export {
   DataTableBody,
+  DataTableDragHandle,
   DataTableFoot,
   DataTableHead,
   DataTablePagination,
@@ -33,6 +34,7 @@ export {
 export { useDataTable, defaultGetRowId, DEFAULT_PAGE_SIZE_OPTIONS } from "./core/useDataTable";
 export type { UseDataTableOptions, DataTableModel, DataTableStatus } from "./core/useDataTable";
 export type { RowReorderAttributes, RowReorderModel } from "./core/useRowReorder";
+export { moveItem } from "./core/reorder";
 export type { DropPosition, RowOrderChange } from "./core/reorder";
 
 export { dataTableFeatures, createDataTableColumnHelper } from "./core/features";

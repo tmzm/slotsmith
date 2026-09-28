@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DataTable } from "../DataTable";
 import { useDataTableContext, useDataTableRow } from "../slots/context";
 import { fallbackComponents } from "../slots/fallbacks";
-import type { CheckboxSlotProps, PaginationSlotProps } from "../slots/types";
+import type { CheckboxSlotProps, DragHandleSlotProps, PaginationSlotProps } from "../slots/types";
 import { bodyRows, columns, renderTable, users, type User } from "./builders";
 
 /**
@@ -208,9 +208,23 @@ describe("slots", () => {
     expect(ref.current).toBe(screen.getByRole("button", { name: "Reorder row" }));
   });
 
-  // Turned on when the table renders the handle (task 5.4): a custom DragHandle receives
-  // aria-label, onPointerDown and onKeyDown, and renders in place of the fallback.
-  it.todo("renders a custom DragHandle with its aria-label and pointer and key handlers");
+  it("renders a custom DragHandle with its aria-label and pointer and key handlers", () => {
+    const received: DragHandleSlotProps[] = [];
+    const LibraryHandle = (props: DragHandleSlotProps) => {
+      received.push(props);
+      return <button type="button" data-library="handle" {...props} />;
+    };
+    renderTable({ enableRowReorder: true, components: { DragHandle: LibraryHandle } });
+
+    const handles = screen.getAllByRole("button", { name: "Reorder row" });
+    expect(handles).toHaveLength(3);
+    for (const handle of handles) expect(handle).toHaveAttribute("data-library", "handle");
+    expect(document.querySelector(".rdt__drag")).toBeNull();
+    const props = received[received.length - 1]!;
+    expect(props["aria-label"]).toBe("Reorder row");
+    expect(props.onPointerDown).toEqual(expect.any(Function));
+    expect(props.onKeyDown).toEqual(expect.any(Function));
+  });
 });
 
 describe("compound parts", () => {

@@ -584,6 +584,8 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       disabled: !enabled,
       // Touch would scroll the page instead of dragging the row.
       style: { touchAction: "none" },
+      // A press on the handle is a drag, never a click on its row (`onRowClick`).
+      onClick: (event) => event.stopPropagation(),
       onPointerDown: (event) => engine.onPointerDown(rowId, event),
       onKeyDown: (event) => engine.onKeyDown(rowId, event),
       onBlur: () => engine.onBlur(rowId),

@@ -171,6 +171,15 @@ export interface DataTableModel<T extends RowData> {
   getRowKey: (row: T) => string;
   /** Row reordering: its state, and the props for rows and drag handles. */
   reorder: RowReorderModel;
+  /**
+   * Whether row reordering is on for this table: `enableRowReorder`, in a
+   * flat, non-virtual table. It stays on while too few rows show for a drag,
+   * so handles, the live region and the instructions do not come and go with
+   * the row count; `reorder.enabled` says whether a drag can start now.
+   */
+  reorderable: boolean;
+  /** Whether the table adds its own leading column of drag handles. */
+  reorderHandleColumn: boolean;
 }
 
 /**
@@ -392,6 +401,7 @@ export function useDataTable<T extends RowData>(
   const hasSubRows = getSubRows !== undefined;
   const virtual = internals.virtual ?? false;
   const enableRowReorder = options.enableRowReorder ?? false;
+  const reorderable = canReorder({ enabled: enableRowReorder, hasSubRows, virtual, rowCount: Infinity });
   const reorder = useRowReorder<T>({
     enabled: canReorder({ enabled: enableRowReorder, hasSubRows, virtual, rowCount: visibleRowCount }),
     visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
@@ -472,5 +482,7 @@ export function useDataTable<T extends RowData>(
     selection,
     getRowKey,
     reorder,
+    reorderable,
+    reorderHandleColumn: reorderable && options.reorderHandleColumn !== false,
   };
 }

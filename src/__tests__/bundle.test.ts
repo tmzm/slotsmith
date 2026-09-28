@@ -188,6 +188,29 @@ describe.skipIf(!built)("what an application actually bundles", () => {
     for (const marker of othersThan(component)) expect(code).not.toContain(marker);
   });
 
+  /**
+   * The table carries the autocomplete, never the other way round: the row
+   * reorder handle, its engine and its styles stay with the table.
+   */
+  it("keeps the row reorder handle out of an app that imports only Autocomplete", async () => {
+    const code = await bundle(`
+      import { Autocomplete } from ${JSON.stringify(dist("index.js"))};
+      console.log(Autocomplete);
+    `);
+    expect(code).toContain(MARKERS.autocomplete);
+    expect(code).not.toContain("rdt__drag");
+    expect(readFileSync(dist("autocomplete.styles.css"), "utf8")).not.toContain("rdt__drag");
+  });
+
+  it("ships the row reorder handle with the table", async () => {
+    const code = await bundle(`
+      import { DataTable } from ${JSON.stringify(dist("data-table.js"))};
+      console.log(DataTable);
+    `);
+    expect(code).toContain("rdt__drag");
+    expect(readFileSync(dist("data-table.styles.css"), "utf8")).toContain("rdt__drag");
+  });
+
   it("bundles the autocomplete, and nothing else, with VirtualDataTable", async () => {
     const code = await bundle(`
       import { VirtualDataTable } from ${JSON.stringify(dist("virtual.js"))};

@@ -1,8 +1,9 @@
 import { flexRender, type RowData } from "@tanstack/react-table";
 import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from "react";
 import type { DataTableColumnMeta, DataTableRow } from "./core/features";
-import { DataTableRowContext, useDataTableContext } from "./slots/context";
+import { DataTableRowContext, useDataTableContext, useDataTableRow } from "./slots/context";
 import { cx } from "./slots/fallbacks";
+import type { DragHandleSlotProps } from "./slots/types";
 
 type AnyProps = HTMLAttributes<HTMLElement> & Record<string, unknown>;
 
@@ -53,9 +54,29 @@ const alignStyle = (meta?: DataTableColumnMeta): CSSProperties | undefined =>
   meta?.align ? { textAlign: meta.align } : undefined;
 
 /**
+ * Visually hidden
+ *
+ * Inline as well as in the stylesheet (`rdt__sr`), so hidden text stays out
+ * of sight in an app that styles the table with its own components and no
+ * `styles.css`.
+ */
+const VISUALLY_HIDDEN: CSSProperties = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  margin: -1,
+  padding: 0,
+  overflow: "hidden",
+  clipPath: "inset(50%)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
+/**
  * useColumnSpan
  *
- * The number of cells a full-width row must span, counting the checkbox column.
+ * The number of cells a full-width row must span, counting the drag-handle
+ * and checkbox columns.
  *
  * @returns The column span.
  *
@@ -68,15 +89,15 @@ const alignStyle = (meta?: DataTableColumnMeta): CSSProperties | undefined =>
  * ```
  */
 export function useColumnSpan() {
-  const { table, selectable } = useDataTableContext();
-  return table.getAllLeafColumns().length + (selectable ? 1 : 0);
+  const { table, selectable, reorderHandleColumn } = useDataTableContext();
+  return table.getAllLeafColumns().length + (selectable ? 1 : 0) + (reorderHandleColumn ? 1 : 0);
 }
 
 /**
  * DataTable.Head
  *
- * The `Head` slot with a `HeaderRow` per header group: the select-all
- * checkbox, then a `HeaderCell` per column with its `SortTrigger` when sortable.
+ * The `Head` slot with a `HeaderRow` per header group: an empty cell over the
+ * drag handles when rows can be reordered, the select-all checkbox, then a `HeaderCell` per column with its `SortTrigger` when sortable.
  *
  * @example
  * ```tsx
@@ -87,13 +108,26 @@ export function useColumnSpan() {
  * ```
  */
 export function DataTableHead() {
-  const { table, components: C, labels, slotProps, selectable } = useDataTableContext();
+  const { table, components: C, labels, slotProps, selectable, reorderHandleColumn } = useDataTableContext();
   const pageRows = table.getRowModel().rows;
 
   return (
     <C.Head {...slotProps.head}>
       {table.getHeaderGroups().map((headerGroup, groupIndex) => (
         <C.HeaderRow key={headerGroup.id} {...slotProps.headerRow}>
+          {reorderHandleColumn && groupIndex === 0 && (
+            <C.HeaderCell
+              className="rdt__cell--drag"
+              rowSpan={table.getHeaderGroups().length}
+              data-slot="drag"
+            >
+              {/* A header cell needs a name for the column it heads; sighted users see the grips. */}
+              <span className="rdt__sr" style={VISUALLY_HIDDEN}>
+                {labels.reorderRow}
+              </span>
+            </C.HeaderCell>
+          )}
+
           {selectable &&
             (groupIndex === 0 ? (
               <C.HeaderCell
@@ -181,7 +215,7 @@ export function DataTableHead() {
  * ```
  */
 export function DataTableFoot() {
-  const { table, components: C, slotProps, selectable } = useDataTableContext();
+  const { table, components: C, slotProps, selectable, reorderHandleColumn } = useDataTableContext();
   const hasFooter = table.getAllLeafColumns().some((column) => column.columnDef.footer != null);
   if (!hasFooter) return null;
 
@@ -189,6 +223,14 @@ export function DataTableFoot() {
     <C.Foot {...slotProps.foot}>
       {table.getFooterGroups().map((footerGroup, groupIndex) => (
         <C.FooterRow key={footerGroup.id} {...slotProps.footerRow}>
+          {reorderHandleColumn && groupIndex === 0 && (
+            <C.FooterCell
+              className="rdt__cell--drag"
+              rowSpan={table.getFooterGroups().length}
+              data-slot="drag"
+            />
+          )}
+
           {selectable && groupIndex === 0 && (
             <C.FooterCell
               className="rdt__cell--select"
@@ -246,9 +288,10 @@ export interface DataTableRowViewProps<T extends RowData> {
 /**
  * DataTable.Row
  *
- * One body row: the `Row` slot with its checkbox cell and a `Cell` per
- * column, the first one indented and holding the `ExpandToggle` in tree
- * tables. Provides the row to `useDataTableRow()`.
+ * One body row: the `Row` slot with its drag-handle and checkbox cells and a
+ * `Cell` per column, the first one indented and holding the `ExpandToggle` in
+ * tree tables. Provides the row to `useDataTableRow()`. The row carries
+ * `data-row-id`, and `data-dragging` / `data-drop-position` during a drag.
  *
  * @typeParam T - The row data type.
  * @param props - See {@link DataTableRowViewProps}.
@@ -265,7 +308,7 @@ export interface DataTableRowViewProps<T extends RowData> {
  * ```
  */
 export function DataTableRowView<T extends RowData>({ row, style }: DataTableRowViewProps<T>) {
-  const { components: C, labels, slotProps, selectable, expandable, onRowClick } =
+  const { components: C, labels, slotProps, selectable, expandable, onRowClick, reorder, reorderHandleColumn } =
     useDataTableContext<T>();
   const selected = row.getIsSelected();
   const expanded = row.getIsExpanded();
@@ -278,6 +321,7 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
       "data-depth": row.depth,
       "data-expanded": expandable && row.getCanExpand() ? String(expanded) : undefined,
       "data-clickable": onRowClick ? "" : undefined,
+      ...reorder.getRowProps(row.id),
     } as HTMLAttributes<HTMLTableRowElement>,
     slotProps.row?.(row),
   );
@@ -285,6 +329,12 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
   return (
     <DataTableRowContext.Provider value={row as unknown as DataTableRow<any>}>
       <C.Row {...rowProps}>
+        {reorderHandleColumn && (
+          <C.Cell className="rdt__cell--drag" data-slot="drag">
+            <C.DragHandle {...mergeProps(reorder.getHandleProps(row.id), slotProps.dragHandle?.(row))} />
+          </C.Cell>
+        )}
+
         {selectable && (
           <C.Cell className="rdt__cell--select" data-slot="select">
             <C.Checkbox
@@ -340,6 +390,58 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
         })}
       </C.Row>
     </DataTableRowContext.Provider>
+  );
+}
+
+/**
+ * DataTable.DragHandle
+ *
+ * The handle that reorders the row it is rendered in. The table adds one in a
+ * leading column on its own; use this to place it in a cell of your own, with
+ * `reorderHandleColumn={false}`. Renders nothing outside a row or when
+ * reordering is off, and a disabled handle while too few rows show to move.
+ *
+ * @param props - Extra handle props, layered over the table's and `slotProps.dragHandle`.
+ *
+ * @example
+ * ```tsx
+ * { id: "move", header: "", cell: () => <DataTable.DragHandle /> }
+ * ```
+ */
+export function DataTableDragHandle(props: Partial<DragHandleSlotProps>) {
+  const { components: C, reorder, reorderable, slotProps } = useDataTableContext();
+  const row = useDataTableRow();
+  if (!row || !reorderable) return null;
+  return (
+    <C.DragHandle
+      {...mergeProps(mergeProps(reorder.getHandleProps(row.id), slotProps.dragHandle?.(row)), props)}
+    />
+  );
+}
+
+/**
+ * Reorder announcer
+ *
+ * The live region that reads each step of a row drag aloud, and the hidden
+ * instructions every drag handle's `aria-describedby` points at. Rendered by
+ * `DataTable.Root`; renders nothing unless rows can be reordered. Both stay
+ * mounted while reordering is on, because a live region added at the moment
+ * it changes is not announced.
+ *
+ * @internal
+ */
+export function DataTableReorderAnnouncer() {
+  const { reorder, reorderable, labels } = useDataTableContext();
+  if (!reorderable) return null;
+  return (
+    <>
+      <div role="status" aria-live="assertive" aria-atomic="true" className="rdt__sr" style={VISUALLY_HIDDEN}>
+        {reorder.announcement}
+      </div>
+      <div id={reorder.instructionsId} hidden>
+        {labels.reorderInstructions}
+      </div>
+    </>
   );
 }
 

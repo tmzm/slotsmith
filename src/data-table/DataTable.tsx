@@ -5,9 +5,11 @@ import type { LocaleInput } from "../locale/types";
 import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
 import {
   DataTableBody,
+  DataTableDragHandle,
   DataTableFoot,
   DataTableHead,
   DataTablePagination,
+  DataTableReorderAnnouncer,
   DataTableRowView,
   DataTableStatusRows,
   DataTableTable,
@@ -118,7 +120,8 @@ export interface DataTableRootProps extends HTMLAttributes<HTMLDivElement> {
  * DataTable.Root
  *
  * The `Root` slot, carrying `data-status`, `data-size`, `data-striped` and
- * `aria-busy` while loading.
+ * `aria-busy` while loading. When rows can be reordered it also holds the
+ * visually hidden live region and the drag handles' instructions.
  *
  * @param props - See {@link DataTableRootProps}.
  *
@@ -129,7 +132,7 @@ export interface DataTableRootProps extends HTMLAttributes<HTMLDivElement> {
  * </DataTable.Root>
  * ```
  */
-export function DataTableRoot({ size, striped, ...props }: DataTableRootProps) {
+export function DataTableRoot({ size, striped, children, ...props }: DataTableRootProps) {
   const { components: C, status } = useDataTableContext();
   return (
     <C.Root
@@ -138,7 +141,10 @@ export function DataTableRoot({ size, striped, ...props }: DataTableRootProps) {
       data-striped={striped || undefined}
       aria-busy={status === "loading" || undefined}
       {...props}
-    />
+    >
+      {children}
+      <DataTableReorderAnnouncer />
+    </C.Root>
   );
 }
 
@@ -251,7 +257,8 @@ function DataTableComponent<T extends RowData>(props: DataTableProps<T>) {
  * replaceable slot (`components`), every string a label (`labels`), and the
  * built-in fallbacks are plain HTML styled by the optional `styles.css`.
  * Also exposes the compound parts (`DataTable.Provider`, `.Root`, `.Table`,
- * `.Head`, `.Body`, `.Row`, `.StatusRows`, `.Pagination`) for custom layouts.
+ * `.Head`, `.Body`, `.Row`, `.StatusRows`, `.Pagination`, `.DragHandle`) for
+ * custom layouts.
  *
  * @typeParam T - The row data type.
  * @param props - See {@link DataTableProps}.
@@ -279,4 +286,5 @@ export const DataTable = /* @__PURE__ */ Object.assign(DataTableComponent, {
   Row: DataTableRowView,
   StatusRows: DataTableStatusRows,
   Pagination: DataTablePagination,
+  DragHandle: DataTableDragHandle,
 });

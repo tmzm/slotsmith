@@ -117,7 +117,8 @@
 .rdt__head .rdt__cell {
   position: sticky;
   top: 0;
-  z-index: 1;
+  /* Above a row being dragged, which scrolls underneath like any other. */
+  z-index: 2;
   background: var(--rdt-header-bg);
   font-weight: 600;
   white-space: nowrap;
@@ -368,7 +369,94 @@
   min-width: 72px;
 }
 
+/** Row reordering */
+
+.rdt__cell--drag {
+  width: 1%;
+  padding-inline: 4px;
+}
+
+.rdt__drag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: var(--rdt-muted);
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  cursor: grab;
+  /* Without this a touch drag scrolls the page instead of moving the row. */
+  touch-action: none;
+}
+
+.rdt__drag:hover:not(:disabled),
+.rdt__drag:focus-visible {
+  color: var(--rdt-text);
+  background: var(--rdt-hover);
+}
+
+.rdt__drag[data-dragging],
+.rdt__drag[aria-pressed="true"] {
+  cursor: grabbing;
+  color: var(--rdt-accent);
+}
+
+.rdt__drag:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/**
+ * The row being moved is drawn above the rows it passes. Its shadow sits on
+ * the row, not on each cell: per-cell shadows fall on the neighbouring cells
+ * and show a seam at every column border.
+ */
+.rdt__body .rdt__row[data-dragging] {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 6px 16px -6px rgb(0 0 0 / 30%);
+}
+
+/**
+ * Cells need an opaque background, or the rows underneath show through; the
+ * hover tint over it keeps the row apart where a dark theme hides the shadow.
+ */
+.rdt__body .rdt__row[data-dragging] > * {
+  background: linear-gradient(var(--rdt-hover), var(--rdt-hover)) var(--rdt-surface);
+}
+
+/** Visually hidden, still read by assistive technology: the reorder announcements. */
+.rdt__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /** Without motion nothing slides, so the target is marked with a line instead. */
+  .rdt__body .rdt__row[data-dragging] {
+    box-shadow: none;
+  }
+
+  .rdt__body .rdt__row[data-dragging] > * {
+    opacity: 0.5;
+  }
+
+  .rdt__body .rdt__row[data-drop-position="before"] > * {
+    box-shadow: inset 0 2px 0 0 var(--rdt-accent);
+  }
+
+  .rdt__body .rdt__row[data-drop-position="after"] > * {
+    box-shadow: inset 0 -2px 0 0 var(--rdt-accent);
+  }
+
   .rdt__skeleton {
     animation: none;
   }
