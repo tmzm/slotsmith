@@ -131,6 +131,8 @@ interface Session {
   /** The rows at rest, in content coordinates, top to bottom. */
   rects: RowRect[];
   ids: string[];
+  /** The `visibleIds` the drag started with; any change to them ends it. */
+  shown: readonly string[];
   saved: Map<string, SavedStyle>;
   /** The nearest scrolling ancestor; `null` for the window. */
   area: HTMLElement | null;
@@ -154,6 +156,24 @@ interface PendingSettle {
 }
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+const sameIds = (a: readonly string[], b: readonly string[]) =>
+  a === b || (a.length === b.length && a.every((id, index) => id === b[index]));
+
+/**
+ * Released off the rows
+ *
+ * Whether a pointer was let go above, below or beside the rows. The live
+ * preview clamps such a pointer to the first or last row, but a release there
+ * is not a drop.
+ */
+function releasedOffRows(s: Session, clientX: number, clientY: number): boolean {
+  const y = clientY - contentOrigin(s.area);
+  const first = s.rects[0]!;
+  const last = s.rects[s.rects.length - 1]!;
+  const box = s.parent.getBoundingClientRect();
+  return y < first.top || y > last.bottom || clientX < box.left || clientX > box.right;
+}
 
 const sameTarget = (a: DropTarget | null, b: DropTarget | null) =>
   a === b || (a !== null && b !== null && a.id === b.id && a.position === b.position);
@@ -351,6 +371,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
         parent,
         rects,
         ids,
+        shown: latest.current.options.visibleIds.slice(),
         saved: saveStyles(parent),
         area,
         reduced: prefersReducedMotion(),
@@ -402,22 +423,32 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       const onUp = (e: PointerEvent) => {
         if (e.pointerId !== s.pointerId) return;
         s.clientY = e.clientY;
+        if (releasedOffRows(s, e.clientX, e.clientY)) {
+          cancel();
+          return;
+        }
         track(s);
         if (s.target) commit();
         else cancel();
       };
-      const onCancel = () => cancel();
+      const onCancel = (e: Event) => {
+        if (e instanceof PointerEvent && e.pointerId !== s.pointerId) return;
+        cancel();
+      };
 
-      handle.addEventListener("pointermove", onMove);
-      handle.addEventListener("pointerup", onUp);
-      handle.addEventListener("pointercancel", onCancel);
-      handle.addEventListener("lostpointercapture", onCancel);
+      // On the window, not the handle: a handle that unmounts mid-drag
+      // (the body swapped for status rows, a row re-created) would take
+      // listeners on it along, and the drag would never end.
+      const listeners: [string, (e: PointerEvent) => void][] = [
+        ["pointermove", onMove],
+        ["pointerup", onUp],
+        ["pointercancel", onCancel],
+        ["lostpointercapture", onCancel],
+      ];
+      for (const [type, listener] of listeners) window.addEventListener(type, listener as EventListener);
       window.addEventListener("blur", onCancel);
       s.detach = () => {
-        handle.removeEventListener("pointermove", onMove);
-        handle.removeEventListener("pointerup", onUp);
-        handle.removeEventListener("pointercancel", onCancel);
-        handle.removeEventListener("lostpointercapture", onCancel);
+        for (const [type, listener] of listeners) window.removeEventListener(type, listener as EventListener);
         window.removeEventListener("blur", onCancel);
       };
 
@@ -486,11 +517,15 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     return { onPointerDown, onKeyDown, onBlur, abandon, stop };
   }, []);
 
-  /** A drag whose row left the view, or a table that turned reordering off, is cancelled. */
+  /**
+   * A drag is cancelled when the rows change under it (they were measured at
+   * the start), when its handle was unmounted (its events would never
+   * arrive), or when the table turned reordering off.
+   */
   useEffect(() => {
     const s = session.current;
-    if (s && (!enabled || !visibleIds.includes(s.id))) engine.abandon();
-  }, [enabled, visibleIds, engine]);
+    if (s && (!enabled || !s.handle.isConnected || !sameIds(s.shown, visibleIds))) engine.abandon();
+  });
 
   /** Unmounting mid-drag removes every listener and inline style. */
   useEffect(

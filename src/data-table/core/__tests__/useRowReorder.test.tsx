@@ -56,15 +56,15 @@ interface HarnessProps {
   view?: string[];
   enabled?: boolean;
   onRowOrderChange?: (change: RowOrderChange<Item>) => void;
-  /** Gives each row a new key on every render, as a table that re-creates its rows would. */
+  /** Gives each row a new key whenever the order of `data` changes, as a table that re-creates its rows would. */
   remount?: boolean;
+  /** Added to every row key: changing it re-creates every row. */
+  keySuffix?: string;
   model: { current: RowReorderModel | null };
   rowStyle?: Record<string, string>;
 }
 
-let renders = 0;
-
-function Harness({ data, view, enabled = true, onRowOrderChange, remount, model, rowStyle }: HarnessProps) {
+function Harness({ data, view, enabled = true, onRowOrderChange, remount, keySuffix = "", model, rowStyle }: HarnessProps) {
   const visibleIds = view ?? data.map((item) => item.id);
   const reorder = useRowReorder({
     enabled,
@@ -74,12 +74,11 @@ function Harness({ data, view, enabled = true, onRowOrderChange, remount, model,
     onRowOrderChange,
   });
   model.current = reorder;
-  renders += 1;
   return (
     <table>
       <tbody>
         {visibleIds.map((id) => (
-          <tr key={remount ? `${id}-${renders}` : id} {...reorder.getRowProps(id)} style={rowStyle?.[id] ? { transform: rowStyle[id] } : undefined}>
+          <tr key={(remount ? `${id}-${ids(data)}` : id) + keySuffix} {...reorder.getRowProps(id)} style={rowStyle?.[id] ? { transform: rowStyle[id] } : undefined}>
             <td>
               <button type="button" {...reorder.getHandleProps(id)}>
                 {id}
@@ -181,7 +180,7 @@ describe("useRowReorder, pointer", () => {
   it("cancels on lostpointercapture", () => {
     const { handle, onRowOrderChange, model } = setup();
     pointerDrag(handle("a"), 20, 110);
-    fireEvent(handle("a"), new PointerEvent("lostpointercapture", { pointerId: 1 }));
+    fireEvent(handle("a"), new PointerEvent("lostpointercapture", { pointerId: 1, bubbles: true }));
     fireEvent.pointerUp(handle("a"), { pointerId: 1, clientY: 110 });
 
     expect(onRowOrderChange).not.toHaveBeenCalled();
@@ -214,6 +213,90 @@ describe("useRowReorder, pointer", () => {
       expect(row).not.toHaveAttribute("data-drop-position");
       expect(row.style.transform).toBe("");
     }
+  });
+
+  describe("a release off the rows cancels", () => {
+    const cases: [string, number, number][] = [
+      ["below the table", 5000, 0],
+      ["above the table", -500, 0],
+      ["beside the table", 150, 500],
+    ];
+    it.each(cases)("%s", (_, y, x) => {
+      const { handle, onRowOrderChange, allRows, model } = setup();
+      fireEvent.pointerDown(handle("b"), { button: 0, pointerId: 1, clientY: 60, clientX: 10 });
+      fireEvent.pointerMove(handle("b"), { pointerId: 1, clientY: y, clientX: x });
+      frame();
+      fireEvent.pointerUp(handle("b"), { pointerId: 1, clientY: y, clientX: x });
+
+      expect(onRowOrderChange).not.toHaveBeenCalled();
+      expect(model.current).toMatchObject({ draggingId: null, target: null });
+      settleTimer();
+      for (const row of allRows()) {
+        expect(row).not.toHaveAttribute("data-dragging");
+        expect(row).not.toHaveAttribute("data-drop-position");
+        expect(row.style.transform).toBe("");
+        expect(row.style.transition).toBe("");
+      }
+    });
+  });
+
+  it("ends the drag when its handle is re-created, and a new drag can start", () => {
+    const model: { current: RowReorderModel | null } = { current: null };
+    const onRowOrderChange = vi.fn();
+    const { container, rerender } = render(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} />);
+    const handleOf = (id: string) => container.querySelector<HTMLElement>(`[data-row-id="${id}"] button`)!;
+    pointerDrag(handleOf("a"), 20, 110);
+
+    rerender(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} keySuffix="-new" />);
+    fireEvent.pointerUp(window, { pointerId: 1, clientY: 110 });
+    settleTimer();
+
+    expect(onRowOrderChange).not.toHaveBeenCalled();
+    expect(model.current).toMatchObject({ draggingId: null, target: null });
+    for (const row of Array.from(container.querySelectorAll<HTMLElement>("[data-row-id]"))) {
+      expect(row).not.toHaveAttribute("data-dragging");
+      expect(row.style.transform).toBe("");
+    }
+
+    pointerDrag(handleOf("a"), 20, 110);
+    expect(model.current!.draggingId).toBe("a");
+    fireEvent.pointerUp(handleOf("a"), { pointerId: 1, clientY: 110 });
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("follows a pointer released away from the handle", () => {
+    const { handle, onRowOrderChange } = setup();
+    pointerDrag(handle("a"), 20, 110);
+    fireEvent.pointerUp(document.body, { pointerId: 1, clientY: 110 });
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancels when the rows change mid-drag, even with the dragged row kept", () => {
+    const model: { current: RowReorderModel | null } = { current: null };
+    const onRowOrderChange = vi.fn();
+    const { container, rerender } = render(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} />);
+    const handleB = container.querySelector<HTMLElement>('[data-row-id="b"] button')!;
+    pointerDrag(handleB, 60, 150);
+
+    rerender(<Harness data={items("xabcd")} model={model} onRowOrderChange={onRowOrderChange} />);
+    fireEvent.pointerUp(handleB, { pointerId: 1, clientY: 150 });
+    settleTimer();
+
+    expect(onRowOrderChange).not.toHaveBeenCalled();
+    expect(model.current).toMatchObject({ draggingId: null, target: null });
+    for (const row of Array.from(container.querySelectorAll<HTMLElement>("[data-row-id]"))) {
+      expect(row).not.toHaveAttribute("data-dragging");
+      expect(row).not.toHaveAttribute("data-drop-position");
+      expect(row.style.transform).toBe("");
+      expect(row.style.transition).toBe("");
+    }
+  });
+
+  it("keeps the drag through a render that changes nothing", () => {
+    const { handle, model, rerender, onRowOrderChange } = setup({ stateful: false });
+    pointerDrag(handle("a"), 20, 110);
+    rerender(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} />);
+    expect(model.current!.draggingId).toBe("a");
   });
 
   it("ignores the secondary button", () => {
