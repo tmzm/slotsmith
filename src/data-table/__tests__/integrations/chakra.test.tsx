@@ -7,10 +7,13 @@ import { DataTable, type DataTableProps } from "../../index";
 import { chakraComponents, ChakraSpinnerSkeleton } from "./chakra/components";
 import {
   bodyRows,
+  dragHandles,
   employeeColumns,
   employees,
   failOnReactWarnings,
+  keyboardReorder,
   names,
+  ReorderableEmployees,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -111,5 +114,15 @@ describe("Chakra UI v3 (anes-track-new)", () => {
     const user = renderChakraTable({ error: new Error("500"), onRetry });
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it("reorders rows by keyboard with an IconButton drag handle", async () => {
+    const onMove = vi.fn();
+    const user = userEvent.setup();
+    render(<ReorderableEmployees components={chakraComponents} initial={employees(3)} onMove={onMove} />, {
+      wrapper: Wrapper,
+    });
+    expect(dragHandles()[0]).toHaveClass("chakra-button");
+    await keyboardReorder(user, onMove);
   });
 });

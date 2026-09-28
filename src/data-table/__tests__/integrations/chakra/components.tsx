@@ -16,6 +16,7 @@ import type {
   CellSlotProps,
   CheckboxSlotProps,
   DataTableComponents,
+  DragHandleSlotProps,
   EmptySlotProps,
   ErrorSlotProps,
   HeaderCellSlotProps,
@@ -41,13 +42,65 @@ const ChakraHead = (props: SectionSlotProps) => <Table.Header {...props} />;
 const ChakraBody = (props: SectionSlotProps) => <Table.Body {...props} />;
 
 /**
+ * Row drag styles
+ *
+ * While a row is lifted (`data-dragging`), it and its visible sub-rows
+ * (`data-dragging-child`) are drawn above the rows they pass, with opaque
+ * cells so those rows never show through, and one shadow under the block.
+ * With reduced motion nothing slides: the block is dimmed and a line on
+ * `data-drop-edge` shows where it will land.
+ */
+const rowDragCss = {
+  "&[data-dragging], &[data-dragging-child]": { position: "relative", zIndex: 1, "& > td": { bg: "bg.muted" } },
+  "&[data-dragging]": { boxShadow: "md" },
+  "&[data-dragging]:has(+ [data-dragging-child])": { boxShadow: "none" },
+  "&[data-dragging-child]:not(:has(+ [data-dragging-child]))": { boxShadow: "md" },
+  _motionReduce: {
+    "&[data-dragging], &[data-dragging-child]": { boxShadow: "none !important", "& > td": { opacity: 0.5 } },
+    "&[data-drop-edge=before] > td": { boxShadow: "inset 0 2px 0 0 {colors.colorPalette.solid}" },
+    "&[data-drop-edge=after] > td": { boxShadow: "inset 0 -2px 0 0 {colors.colorPalette.solid}" },
+  },
+} as const;
+
+/**
  * Chakra row
  *
- * `Table.Row` with a transparent background, like anes-track-new, and the
- * selected state mapped onto Chakra's `bg` prop.
+ * `Table.Row` with a transparent background, like anes-track-new, the
+ * selected state mapped onto Chakra's `bg` prop, and the drag styles for
+ * row reordering.
  */
 const ChakraRow = (props: RowSlotProps) => (
-  <Table.Row bg={props["data-state" as keyof RowSlotProps] === "selected" ? "bg.muted" : "transparent"} {...props} />
+  <Table.Row
+    bg={props["data-state" as keyof RowSlotProps] === "selected" ? "bg.muted" : "transparent"}
+    css={rowDragCss}
+    {...props}
+  />
+);
+
+/**
+ * Chakra drag handle
+ *
+ * A small ghost `IconButton` with a six-dot grip. Every slot prop goes to its
+ * `<button>`: the ref, the pointer and key handlers, the `aria-*`
+ * attributes and `disabled`.
+ */
+const ChakraDragHandle = (props: DragHandleSlotProps) => (
+  <IconButton
+    variant="ghost"
+    size="xs"
+    color="fg.muted"
+    cursor={props["data-dragging"] === undefined ? "grab" : "grabbing"}
+    {...props}
+  >
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <circle cx="9" cy="5" r="1.5" />
+      <circle cx="9" cy="12" r="1.5" />
+      <circle cx="9" cy="19" r="1.5" />
+      <circle cx="15" cy="5" r="1.5" />
+      <circle cx="15" cy="12" r="1.5" />
+      <circle cx="15" cy="19" r="1.5" />
+    </svg>
+  </IconButton>
 );
 
 /**
@@ -176,6 +229,7 @@ export const chakraComponents: Partial<DataTableComponents> = {
   Empty: ChakraEmpty,
   Error: ChakraError,
   Pagination: ChakraPagination,
+  DragHandle: ChakraDragHandle,
 };
 
 /**

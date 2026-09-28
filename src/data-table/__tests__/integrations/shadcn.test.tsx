@@ -5,10 +5,13 @@ import { DataTable, type DataTableProps } from "../../index";
 import { shadcnComponents } from "./shadcn/components";
 import {
   bodyRows,
+  dragHandles,
   employeeColumns,
   employees,
   failOnReactWarnings,
+  keyboardReorder,
   names,
+  ReorderableEmployees,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -110,5 +113,18 @@ describe("shadcn/ui (meliving)", () => {
     const user = renderShadcnTable({ error: new Error("500"), onRetry });
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it("reorders rows by keyboard with a ghost icon Button drag handle", async () => {
+    const onMove = vi.fn();
+    const user = userEvent.setup();
+    render(<ReorderableEmployees components={shadcnComponents} initial={employees(3)} onMove={onMove} />);
+    const handle = dragHandles()[0]!;
+    expect(handle).toHaveAttribute("data-slot", "button");
+    expect(handle).toHaveAttribute("data-variant", "ghost");
+    expect(handle).toHaveAttribute("data-size", "icon");
+    expect(handle.querySelector("svg.lucide-grip-vertical")).not.toBeNull();
+    expect(bodyRows()[0]!.className).toContain("data-dragging:");
+    await keyboardReorder(user, onMove);
   });
 });

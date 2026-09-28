@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
@@ -11,9 +12,12 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { createSvgIcon } from "@mui/material/utils";
 import type {
   CheckboxSlotProps,
   DataTableComponents,
+  DragHandleSlotProps,
   EmptySlotProps,
   ErrorSlotProps,
   PaginationSlotProps,
@@ -31,13 +35,65 @@ import type {
 const MuiRoot = (props: RootSlotProps) => <Stack overflow="hidden" {...props} />;
 
 /**
+ * Row drag styles
+ *
+ * While a row is lifted (`data-dragging`), it and its visible sub-rows
+ * (`data-dragging-child`) are drawn above the rows they pass, with opaque
+ * cells so those rows never show through, and one shadow under the block.
+ * With reduced motion nothing slides: the block is dimmed and a line on
+ * `data-drop-edge` shows where it will land.
+ */
+const rowDragSx: SxProps<Theme> = (theme) => ({
+  "&[data-dragging], &[data-dragging-child]": {
+    position: "relative",
+    zIndex: 1,
+    "& > td": {
+      backgroundColor: theme.palette.background.paper,
+      backgroundImage: `linear-gradient(${theme.palette.action.hover}, ${theme.palette.action.hover})`,
+    },
+  },
+  "&[data-dragging]": { boxShadow: theme.shadows[4] },
+  "&[data-dragging]:has(+ [data-dragging-child])": { boxShadow: "none" },
+  "&[data-dragging-child]:not(:has(+ [data-dragging-child]))": { boxShadow: theme.shadows[4] },
+  "@media (prefers-reduced-motion: reduce)": {
+    "&[data-dragging], &[data-dragging-child]": { boxShadow: "none !important", "& > td": { opacity: 0.5 } },
+    "&[data-drop-edge=before] > td": { boxShadow: `inset 0 2px 0 0 ${theme.palette.primary.main}` },
+    "&[data-drop-edge=after] > td": { boxShadow: `inset 0 -2px 0 0 ${theme.palette.primary.main}` },
+  },
+});
+
+/**
  * MUI row
  *
  * `TableRow`, with the slot's `data-state="selected"` mapped onto MUI's
- * `selected` prop so the row gets `Mui-selected` styling.
+ * `selected` prop so the row gets `Mui-selected` styling, and the drag
+ * styles for row reordering.
  */
 const MuiRow = (props: RowSlotProps) => (
-  <TableRow hover selected={props["data-state" as keyof RowSlotProps] === "selected"} {...props} />
+  <TableRow hover selected={props["data-state" as keyof RowSlotProps] === "selected"} sx={rowDragSx} {...props} />
+);
+
+/**
+ * Drag indicator icon
+ *
+ * The path of `@mui/icons-material`'s `DragIndicator`, built with
+ * `createSvgIcon` so the adapter needs no icons package.
+ */
+const DragIndicator = createSvgIcon(
+  <path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2m-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2" />,
+  "DragIndicator",
+);
+
+/**
+ * MUI drag handle
+ *
+ * A small `IconButton`. Every slot prop goes to its `<button>`: the ref, the
+ * pointer and key handlers, the `aria-*` attributes and `disabled`.
+ */
+const MuiDragHandle = ({ style, ...props }: DragHandleSlotProps) => (
+  <IconButton size="small" style={{ cursor: props["data-dragging"] === undefined ? "grab" : "grabbing", ...style }} {...props}>
+    <DragIndicator fontSize="small" />
+  </IconButton>
 );
 
 /**
@@ -151,4 +207,5 @@ export const muiComponents: Partial<DataTableComponents> = {
   Empty: MuiEmpty,
   Error: MuiError,
   Pagination: MuiPagination,
+  DragHandle: MuiDragHandle,
 };

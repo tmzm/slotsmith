@@ -2,11 +2,15 @@ import { Select as SelectPrimitive } from "radix-ui";
 import type {
   CheckboxSlotProps,
   DataTableComponents,
+  DragHandleSlotProps,
   EmptySlotProps,
   ErrorSlotProps,
   PaginationSlotProps,
+  RowSlotProps,
 } from "../../../index";
+import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
+import { GripVertical } from "./ui/icons";
 import { Skeleton } from "./ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { cn } from "./ui/utils";
@@ -24,6 +28,48 @@ const ShadcnCheckbox = ({ checked, indeterminate, onCheckedChange, ...props }: C
     onClick={(event) => event.stopPropagation()}
     {...props}
   />
+);
+
+/**
+ * Shadcn row
+ *
+ * `TableRow` with the drag styles for row reordering. While a row is lifted
+ * (`data-dragging`), it and its visible sub-rows (`data-dragging-child`) are
+ * drawn above the rows they pass, with opaque cells so those rows never show
+ * through, and one shadow under the block. With reduced motion nothing
+ * slides: the block is dimmed and a line on `data-drop-edge` shows where it
+ * will land.
+ */
+const ShadcnRow = ({ className, ...props }: RowSlotProps) => (
+  <TableRow
+    className={cn(
+      "data-dragging:relative data-dragging:z-10 data-dragging:shadow-lg data-dragging:*:bg-muted",
+      "data-dragging-child:relative data-dragging-child:z-10 data-dragging-child:*:bg-muted",
+      "[&[data-dragging]:has(+[data-dragging-child])]:shadow-none [&[data-dragging-child]:not(:has(+[data-dragging-child]))]:shadow-lg",
+      "motion-reduce:shadow-none! motion-reduce:data-dragging:*:opacity-50 motion-reduce:data-dragging-child:*:opacity-50",
+      "motion-reduce:data-[drop-edge=before]:*:shadow-[inset_0_2px_0_0_var(--primary)] motion-reduce:data-[drop-edge=after]:*:shadow-[inset_0_-2px_0_0_var(--primary)]",
+      className,
+    )}
+    {...props}
+  />
+);
+
+/**
+ * Shadcn drag handle
+ *
+ * A ghost icon `Button` with lucide's `GripVertical`. Every slot prop goes
+ * to its `<button>`: the ref, the pointer and key handlers, the `aria-*`
+ * attributes and `disabled`.
+ */
+const ShadcnDragHandle = ({ className, ...props }: DragHandleSlotProps) => (
+  <Button
+    variant="ghost"
+    size="icon"
+    className={cn("size-7 cursor-grab touch-none text-muted-foreground data-dragging:cursor-grabbing", className)}
+    {...props}
+  >
+    <GripVertical />
+  </Button>
 );
 
 /**
@@ -165,7 +211,7 @@ export const shadcnComponents: Partial<DataTableComponents> = {
   Head: TableHeader,
   Body: TableBody,
   HeaderRow: TableRow,
-  Row: TableRow,
+  Row: ShadcnRow,
   HeaderCell: TableHead,
   Cell: TableCell,
   Checkbox: ShadcnCheckbox,
@@ -173,4 +219,5 @@ export const shadcnComponents: Partial<DataTableComponents> = {
   Empty: ShadcnEmpty,
   Error: ShadcnError,
   Pagination: ShadcnPagination,
+  DragHandle: ShadcnDragHandle,
 };

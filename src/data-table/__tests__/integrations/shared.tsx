@@ -1,13 +1,16 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
+import type { UserEvent } from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, beforeEach, expect, vi, type MockInstance } from "vitest";
-import type { DataTableColumnDef } from "../../index";
+import { DataTable, type DataTableColumnDef, type DataTableComponents, type RowOrderChange } from "../../index";
 
 /**
  * Employee
  *
- * The row shape used by the UI library integration tests.
+ * The row shape used by the UI library integration tests. `reports` makes a
+ * tree for the tree-table tests.
  */
-export type Employee = { id: string; name: string; salary: number; active: boolean };
+export type Employee = { id: string; name: string; salary: number; active: boolean; reports?: Employee[] };
 
 /**
  * Employees builder
@@ -101,3 +104,103 @@ export const bodyRows = () => {
  */
 export const names = () =>
   bodyRows().map((row) => within(row).getByText(/^Employee \d+$/).textContent);
+
+/**
+ * Drag handles
+ *
+ * @returns Every row's drag handle, in row order.
+ */
+export const dragHandles = () => screen.getAllByRole("button", { name: "Reorder row" });
+
+/**
+ * Reorder live region
+ *
+ * @returns The table's assertive status region, which announces each reorder step.
+ */
+export const reorderStatus = () =>
+  screen.getAllByRole("status").find((element) => element.getAttribute("aria-live") === "assertive")!;
+
+/**
+ * Store a reorder
+ *
+ * What an app does with a change: keep the new `data` for a top-level move,
+ * or put the new `siblings` under their parent for a nested one.
+ *
+ * @param rows - The current rows.
+ * @param change - The change the table reported.
+ * @returns The rows in their new order.
+ */
+function storeOrder(rows: Employee[], change: RowOrderChange<Employee>): Employee[] {
+  if (change.parentId === null) return change.data;
+  const place = (list: Employee[]): Employee[] =>
+    list.map((row) =>
+      row.id === change.parentId ? { ...row, reports: change.siblings } : row.reports ? { ...row, reports: place(row.reports) } : row,
+    );
+  return place(rows);
+}
+
+/**
+ * Reorderable employees
+ *
+ * A reorderable table, fully expanded, that stores each new order at once.
+ */
+export function ReorderableEmployees({
+  components,
+  initial,
+  onMove,
+}: {
+  components: Partial<DataTableComponents>;
+  initial: Employee[];
+  onMove?: (change: RowOrderChange<Employee>) => void;
+}) {
+  const [rows, setRows] = useState(initial);
+  return (
+    <DataTable<Employee>
+      data={rows}
+      columns={employeeColumns}
+      components={components}
+      getRowId={(row) => row.id}
+      getSubRows={(row) => row.reports}
+      defaultExpanded
+      enableRowReorder
+      onRowOrderChange={(change) => {
+        onMove?.(change);
+        setRows((current) => storeOrder(current, change));
+      }}
+    />
+  );
+}
+
+/**
+ * Keyboard reorder
+ *
+ * Lifts the first of three rows with Space, moves it down one place and
+ * drops it, checking the drag state and the announcements on the way.
+ *
+ * @param user - The test's user-event instance.
+ * @param onMove - The spy passed to {@link ReorderableEmployees}.
+ */
+export async function keyboardReorder(user: UserEvent, onMove: MockInstance) {
+  const handle = dragHandles()[0]!;
+  expect(handle.tagName).toBe("BUTTON");
+  expect(handle).toHaveAccessibleDescription(
+    "Press space to lift the row, the arrow keys to move it, space to drop it, escape to cancel.",
+  );
+
+  act(() => handle.focus());
+  await user.keyboard(" ");
+  expect(bodyRows()[0]).toHaveAttribute("data-dragging", "");
+  expect(handle).toHaveAttribute("aria-pressed", "true");
+  expect(reorderStatus()).toHaveTextContent("Row lifted. Position 1 of 3.");
+
+  await user.keyboard("{ArrowDown}");
+  expect(bodyRows()[1]).toHaveAttribute("data-drop-position", "after");
+  expect(reorderStatus()).toHaveTextContent("Position 2 of 3.");
+
+  await user.keyboard(" ");
+  expect(onMove).toHaveBeenCalledTimes(1);
+  expect(names()).toEqual(["Employee 02", "Employee 01", "Employee 03"]);
+  expect(reorderStatus()).toHaveTextContent("Row dropped at position 2 of 3.");
+  expect(bodyRows().some((row) => row.hasAttribute("data-dragging"))).toBe(false);
+  expect(document.activeElement).toBe(dragHandles()[1]);
+}
