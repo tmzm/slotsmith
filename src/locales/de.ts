@@ -35,6 +35,13 @@ export const de = defineLocale({
       selectRow: "Zeile auswählen",
       expandRow: "Zeile aufklappen",
       collapseRow: "Zeile zuklappen",
+      reorderRow: "Zeile verschieben",
+      reorderInstructions:
+        "Leertaste drücken, um die Zeile anzuheben, Pfeiltasten, um sie zu verschieben, Leertaste, um sie abzulegen, Escape, um abzubrechen.",
+      reorderLifted: (position, total) => `Zeile angehoben. Position ${number(position)} von ${number(total)}.`,
+      reorderMoved: (position, total) => `Position ${number(position)} von ${number(total)}.`,
+      reorderDropped: (position, total) => `Zeile an Position ${number(position)} von ${number(total)} abgelegt.`,
+      reorderCancelled: "Verschieben abgebrochen.",
     };
   },
 

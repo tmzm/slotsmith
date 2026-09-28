@@ -1,8 +1,10 @@
 import type {
+  ButtonHTMLAttributes,
   ComponentType,
   HTMLAttributes,
   MouseEvent,
   ReactNode,
+  Ref,
   TableHTMLAttributes,
   TdHTMLAttributes,
   ThHTMLAttributes,
@@ -259,6 +261,30 @@ export interface PageSizeSelectSlotProps {
 }
 
 /**
+ * Drag handle slot props
+ *
+ * Element slot: plain `<button>` props for the handle a row is dragged by
+ * when `enableRowReorder` is on. The table supplies the accessible name, the
+ * pointer and key handlers and a ref, so a library's icon button that spreads
+ * its props works as is. The `color` attribute is left out so buttons with
+ * their own `color` prop fit. Carries `data-dragging` while its row is moving.
+ *
+ * @example
+ * ```tsx
+ * const DragHandle = (props: DragHandleSlotProps) => (
+ *   <Button variant="ghost" size="icon" {...props}>
+ *     <GripVertical />
+ *   </Button>
+ * );
+ * <DataTable enableRowReorder components={{ DragHandle }} />;
+ * ```
+ */
+export type DragHandleSlotProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color"> & {
+  ref?: Ref<HTMLButtonElement>;
+  "data-dragging"?: "";
+};
+
+/**
  * Data table components
  *
  * Every replaceable piece of the table. Element slots (`Root` … `Cell`) get
@@ -322,6 +348,8 @@ export interface DataTableComponents {
   PaginationButton: ComponentType<PaginationButtonSlotProps>;
   /** Fallback: the slotsmith `Autocomplete` as a labelled single select (no search, no clear). */
   PageSizeSelect: ComponentType<PageSizeSelectSlotProps>;
+  /** Fallback: `<button class="rdt__drag">` with a six-dot grip. Used when `enableRowReorder` is on. */
+  DragHandle: ComponentType<DragHandleSlotProps>;
 }
 
 /**
@@ -366,6 +394,18 @@ export interface DataTableLabels {
   expandRow: string;
   /** Accessible name of the expand toggle on an expanded row. */
   collapseRow: string;
+  /** Accessible name of each row's drag handle. Default: "Reorder row". */
+  reorderRow: string;
+  /** How to move a row with the keyboard, given to assistive technology with the drag handle. */
+  reorderInstructions: string;
+  /** Announced when a row is lifted. Default: `Row lifted. Position ${position} of ${total}.` */
+  reorderLifted: (position: number, total: number) => string;
+  /** Announced on each keyboard step. Default: `Position ${position} of ${total}.` */
+  reorderMoved: (position: number, total: number) => string;
+  /** Announced when a row is dropped. Default: `Row dropped at position ${position} of ${total}.` */
+  reorderDropped: (position: number, total: number) => string;
+  /** Announced when a move is cancelled. Default: "Reordering cancelled." */
+  reorderCancelled: string;
 }
 
 /**
@@ -407,4 +447,6 @@ export interface DataTableSlotProps<T extends RowData> {
   row?: (row: DataTableRow<T>) => RowSlotProps | undefined;
   /** Props for each body `Cell`. */
   cell?: (cell: DataTableCell<T>) => CellSlotProps | undefined;
+  /** Props for each row's `DragHandle`, when `enableRowReorder` is on. */
+  dragHandle?: (row: DataTableRow<T>) => DragHandleSlotProps | undefined;
 }

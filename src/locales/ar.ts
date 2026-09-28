@@ -37,6 +37,12 @@ export const ar = defineLocale({
       selectRow: "تحديد الصف",
       expandRow: "توسيع الصف",
       collapseRow: "طي الصف",
+      reorderRow: "إعادة ترتيب الصف",
+      reorderInstructions: "اضغط مفتاح المسافة لرفع الصف، ومفاتيح الأسهم لتحريكه، والمسافة لإفلاته، ومفتاح الهروب للإلغاء.",
+      reorderLifted: (position, total) => `تم رفع الصف. الموضع ${number(position)} من ${number(total)}.`,
+      reorderMoved: (position, total) => `الموضع ${number(position)} من ${number(total)}.`,
+      reorderDropped: (position, total) => `تم إفلات الصف في الموضع ${number(position)} من ${number(total)}.`,
+      reorderCancelled: "تم إلغاء إعادة الترتيب.",
     };
   },
 

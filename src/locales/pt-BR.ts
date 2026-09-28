@@ -35,6 +35,13 @@ export const ptBR = defineLocale({
       selectRow: "Selecionar linha",
       expandRow: "Expandir linha",
       collapseRow: "Recolher linha",
+      reorderRow: "Reordenar linha",
+      reorderInstructions:
+        "Pressione espaço para levantar a linha, as setas para movê-la, espaço para soltá-la e Esc para cancelar.",
+      reorderLifted: (position, total) => `Linha levantada. Posição ${number(position)} de ${number(total)}.`,
+      reorderMoved: (position, total) => `Posição ${number(position)} de ${number(total)}.`,
+      reorderDropped: (position, total) => `Linha solta na posição ${number(position)} de ${number(total)}.`,
+      reorderCancelled: "Reordenação cancelada.",
     };
   },
 

@@ -35,6 +35,13 @@ export const ru = defineLocale({
       selectRow: "Выбрать строку",
       expandRow: "Развернуть строку",
       collapseRow: "Свернуть строку",
+      reorderRow: "Переместить строку",
+      reorderInstructions:
+        "Нажмите пробел, чтобы поднять строку, стрелки — чтобы переместить её, пробел — чтобы отпустить, Escape — чтобы отменить.",
+      reorderLifted: (position, total) => `Строка поднята. Позиция ${number(position)} из ${number(total)}.`,
+      reorderMoved: (position, total) => `Позиция ${number(position)} из ${number(total)}.`,
+      reorderDropped: (position, total) => `Строка перемещена на позицию ${number(position)} из ${number(total)}.`,
+      reorderCancelled: "Перемещение отменено.",
     };
   },
 

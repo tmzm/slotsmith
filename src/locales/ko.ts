@@ -35,6 +35,13 @@ export const ko = defineLocale({
       selectRow: "행 선택",
       expandRow: "행 펼치기",
       collapseRow: "행 접기",
+      reorderRow: "행 순서 변경",
+      reorderInstructions:
+        "스페이스 키로 행을 들어 올리고, 화살표 키로 옮기고, 스페이스 키로 내려놓고, Esc 키로 취소합니다.",
+      reorderLifted: (position, total) => `행을 들어 올렸습니다. ${number(total)}개 중 ${number(position)}번째 위치입니다.`,
+      reorderMoved: (position, total) => `${number(total)}개 중 ${number(position)}번째 위치입니다.`,
+      reorderDropped: (position, total) => `행을 ${number(total)}개 중 ${number(position)}번째 위치에 놓았습니다.`,
+      reorderCancelled: "순서 변경을 취소했습니다.",
     };
   },
 

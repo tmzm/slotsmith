@@ -3,12 +3,13 @@ import { Autocomplete } from "../../autocomplete/Autocomplete";
 import type { OptionValue } from "../../autocomplete/core/types";
 import { cx } from "../../shared/cx";
 import { useDataTableContext } from "./context";
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronIcon } from "./icons";
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronIcon, GripIcon } from "./icons";
 import type {
   CellSlotProps,
   CheckboxSlotProps,
   DataTableComponents,
   DataTableLabels,
+  DragHandleSlotProps,
   EmptySlotProps,
   ErrorSlotProps,
   ExpandToggleSlotProps,
@@ -311,6 +312,18 @@ const Pagination = (props: PaginationSlotProps) => {
 };
 
 /**
+ * Drag handle fallback
+ *
+ * A `<button>` holding the grip icon. Everything the table passes, including
+ * the ref it measures the row through, lands on the button.
+ */
+const DragHandle = ({ className, ...props }: DragHandleSlotProps) => (
+  <button type="button" className={cx("rdt__drag", className)} {...props}>
+    <GripIcon />
+  </button>
+);
+
+/**
  * Fallback components
  *
  * The built-in plain-HTML slots, used for every slot you don't replace.
@@ -345,6 +358,7 @@ export const fallbackComponents: DataTableComponents = {
   Pagination,
   PaginationButton,
   PageSizeSelect,
+  DragHandle,
 };
 
 /**
@@ -370,4 +384,10 @@ export const defaultLabels: DataTableLabels = {
   selectRow: "Select row",
   expandRow: "Expand row",
   collapseRow: "Collapse row",
+  reorderRow: "Reorder row",
+  reorderInstructions: "Press space to lift the row, the arrow keys to move it, space to drop it, escape to cancel.",
+  reorderLifted: (position, total) => `Row lifted. Position ${position} of ${total}.`,
+  reorderMoved: (position, total) => `Position ${position} of ${total}.`,
+  reorderDropped: (position, total) => `Row dropped at position ${position} of ${total}.`,
+  reorderCancelled: "Reordering cancelled.",
 };

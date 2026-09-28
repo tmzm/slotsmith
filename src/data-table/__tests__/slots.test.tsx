@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { HTMLAttributes } from "react";
+import { createRef, type HTMLAttributes } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { DataTable } from "../DataTable";
 import { useDataTableContext, useDataTableRow } from "../slots/context";
@@ -188,6 +188,29 @@ describe("slots", () => {
     const [, , foot] = screen.getAllByRole("rowgroup");
     expect(within(foot!).getAllByRole("cell")[0]).toHaveAttribute("data-library", "foot");
   });
+
+  it("renders the drag handle fallback as a plain button with a decorative grip", () => {
+    const onPointerDown = vi.fn();
+    render(
+      <fallbackComponents.DragHandle aria-label="Reorder row" className="mine" onPointerDown={onPointerDown} data-dragging="" />,
+    );
+    const handle = screen.getByRole("button", { name: "Reorder row" });
+    expect(handle).toHaveAttribute("type", "button");
+    expect(handle).toHaveClass("rdt__drag", "mine");
+    expect(handle).toHaveAttribute("data-dragging", "");
+    expect(handle.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(handle.querySelectorAll("circle")).toHaveLength(6);
+  });
+
+  it("forwards a ref to the drag handle fallback's button", () => {
+    const ref = createRef<HTMLButtonElement>();
+    render(<fallbackComponents.DragHandle ref={ref} aria-label="Reorder row" />);
+    expect(ref.current).toBe(screen.getByRole("button", { name: "Reorder row" }));
+  });
+
+  // Turned on when the table renders the handle (task 5.4): a custom DragHandle receives
+  // aria-label, onPointerDown and onKeyDown, and renders in place of the fallback.
+  it.todo("renders a custom DragHandle with its aria-label and pointer and key handlers");
 });
 
 describe("compound parts", () => {

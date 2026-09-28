@@ -36,6 +36,13 @@ export const ja = defineLocale({
       selectRow: "行を選択",
       expandRow: "行を展開",
       collapseRow: "行を折りたたむ",
+      reorderRow: "行を並べ替え",
+      reorderInstructions:
+        "スペースキーで行を持ち上げ、矢印キーで移動し、スペースキーで配置します。Escキーでキャンセルします。",
+      reorderLifted: (position, total) => `行を持ち上げました。${number(total)}行中${number(position)}番目です。`,
+      reorderMoved: (position, total) => `${number(total)}行中${number(position)}番目です。`,
+      reorderDropped: (position, total) => `行を${number(total)}行中${number(position)}番目に配置しました。`,
+      reorderCancelled: "並べ替えをキャンセルしました。",
     };
   },
 

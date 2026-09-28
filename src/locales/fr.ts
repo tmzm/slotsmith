@@ -36,6 +36,13 @@ export const fr = defineLocale({
       selectRow: "Sélectionner la ligne",
       expandRow: "Développer la ligne",
       collapseRow: "Réduire la ligne",
+      reorderRow: "Réordonner la ligne",
+      reorderInstructions:
+        "Appuyer sur Espace pour soulever la ligne, sur les flèches pour la déplacer, sur Espace pour la déposer et sur Échap pour annuler.",
+      reorderLifted: (position, total) => `Ligne soulevée. Position ${number(position)} sur ${number(total)}.`,
+      reorderMoved: (position, total) => `Position ${number(position)} sur ${number(total)}.`,
+      reorderDropped: (position, total) => `Ligne déposée à la position ${number(position)} sur ${number(total)}.`,
+      reorderCancelled: "Réorganisation annulée.",
     };
   },
 

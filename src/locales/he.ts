@@ -36,6 +36,13 @@ export const he = defineLocale({
       selectRow: "לבחור שורה",
       expandRow: "להרחיב שורה",
       collapseRow: "לכווץ שורה",
+      reorderRow: "להזיז שורה",
+      reorderInstructions:
+        "יש להקיש על מקש הרווח כדי להרים את השורה, על מקשי החיצים כדי להזיז אותה, על מקש הרווח כדי לשחרר אותה ועל Escape כדי לבטל.",
+      reorderLifted: (position, total) => `השורה הורמה. מיקום ${number(position)} מתוך ${number(total)}.`,
+      reorderMoved: (position, total) => `מיקום ${number(position)} מתוך ${number(total)}.`,
+      reorderDropped: (position, total) => `השורה שוחררה במיקום ${number(position)} מתוך ${number(total)}.`,
+      reorderCancelled: "שינוי הסדר בוטל.",
     };
   },
 

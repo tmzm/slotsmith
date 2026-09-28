@@ -36,6 +36,13 @@ export const it = defineLocale({
       selectRow: "Seleziona riga",
       expandRow: "Espandi riga",
       collapseRow: "Comprimi riga",
+      reorderRow: "Riordina riga",
+      reorderInstructions:
+        "Premi Spazio per sollevare la riga, le frecce per spostarla, Spazio per rilasciarla ed Esc per annullare.",
+      reorderLifted: (position, total) => `Riga sollevata. Posizione ${number(position)} di ${number(total)}.`,
+      reorderMoved: (position, total) => `Posizione ${number(position)} di ${number(total)}.`,
+      reorderDropped: (position, total) => `Riga rilasciata in posizione ${number(position)} di ${number(total)}.`,
+      reorderCancelled: "Riordinamento annullato.",
     };
   },
 

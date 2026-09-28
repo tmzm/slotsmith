@@ -108,7 +108,7 @@ describe("slotsmith MCP server", () => {
   it("list_slots returns each slot's name, kind and summary", async () => {
     const { text, data } = await call(client, "list_slots", { component: "data-table" });
     const slots = data!.slots as { name: string; kind: string }[];
-    expect(slots).toHaveLength(21);
+    expect(slots).toHaveLength(22);
     expect(slots.find((slot) => slot.name === "Checkbox")?.kind).toBe("widget");
     expect(text).toContain("| `Row` | element |");
   });

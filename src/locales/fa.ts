@@ -36,6 +36,13 @@ export const fa = defineLocale({
       selectRow: "انتخاب ردیف",
       expandRow: "باز کردن ردیف",
       collapseRow: "بستن ردیف",
+      reorderRow: "جابه‌جایی ردیف",
+      reorderInstructions:
+        "برای برداشتن ردیف کلید فاصله، برای جابه‌جا کردن آن کلیدهای جهت‌نما، برای رها کردن آن کلید فاصله و برای لغو کلید Escape را فشار دهید.",
+      reorderLifted: (position, total) => `ردیف برداشته شد. موقعیت ${number(position)} از ${number(total)}.`,
+      reorderMoved: (position, total) => `موقعیت ${number(position)} از ${number(total)}.`,
+      reorderDropped: (position, total) => `ردیف در موقعیت ${number(position)} از ${number(total)} رها شد.`,
+      reorderCancelled: "جابه‌جایی لغو شد.",
     };
   },
 

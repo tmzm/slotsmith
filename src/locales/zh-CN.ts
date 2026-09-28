@@ -36,6 +36,12 @@ export const zhCN = defineLocale({
       selectRow: "选择行",
       expandRow: "展开行",
       collapseRow: "收起行",
+      reorderRow: "调整行顺序",
+      reorderInstructions: "按空格键拿起该行，按方向键移动，按空格键放下，按 Esc 键取消。",
+      reorderLifted: (position, total) => `已拿起该行。第${number(position)}行，共${number(total)}行。`,
+      reorderMoved: (position, total) => `第${number(position)}行，共${number(total)}行。`,
+      reorderDropped: (position, total) => `已将该行放到第${number(position)}行，共${number(total)}行。`,
+      reorderCancelled: "已取消调整顺序。",
     };
   },
 

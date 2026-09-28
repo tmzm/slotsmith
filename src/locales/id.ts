@@ -35,6 +35,13 @@ export const id = defineLocale({
       selectRow: "Pilih baris",
       expandRow: "Bentangkan baris",
       collapseRow: "Ciutkan baris",
+      reorderRow: "Ubah urutan baris",
+      reorderInstructions:
+        "Tekan spasi untuk mengangkat baris, tombol panah untuk memindahkannya, spasi untuk melepaskannya, dan Escape untuk membatalkan.",
+      reorderLifted: (position, total) => `Baris diangkat. Posisi ${number(position)} dari ${number(total)}.`,
+      reorderMoved: (position, total) => `Posisi ${number(position)} dari ${number(total)}.`,
+      reorderDropped: (position, total) => `Baris dilepas di posisi ${number(position)} dari ${number(total)}.`,
+      reorderCancelled: "Pengubahan urutan dibatalkan.",
     };
   },
 

@@ -35,6 +35,13 @@ export const hi = defineLocale({
       selectRow: "पंक्ति चुनें",
       expandRow: "पंक्ति खोलें",
       collapseRow: "पंक्ति समेटें",
+      reorderRow: "पंक्ति का क्रम बदलें",
+      reorderInstructions:
+        "पंक्ति उठाने के लिए स्पेस, उसे खिसकाने के लिए तीर कुंजियाँ, उसे छोड़ने के लिए स्पेस और रद्द करने के लिए एस्केप दबाएँ।",
+      reorderLifted: (position, total) => `पंक्ति उठाई गई। ${number(total)} में से स्थान ${number(position)}।`,
+      reorderMoved: (position, total) => `${number(total)} में से स्थान ${number(position)}।`,
+      reorderDropped: (position, total) => `पंक्ति ${number(total)} में से स्थान ${number(position)} पर छोड़ी गई।`,
+      reorderCancelled: "क्रम बदलना रद्द किया गया।",
     };
   },
 

@@ -36,6 +36,13 @@ export const tr = defineLocale({
       selectRow: "Satırı seç",
       expandRow: "Satırı genişlet",
       collapseRow: "Satırı daralt",
+      reorderRow: "Satırın sırasını değiştir",
+      reorderInstructions:
+        "Satırı kaldırmak için boşluk tuşuna, taşımak için ok tuşlarına, bırakmak için boşluk tuşuna, iptal etmek için Escape tuşuna basın.",
+      reorderLifted: (position, total) => `Satır kaldırıldı. Konum ${number(position)} / ${number(total)}.`,
+      reorderMoved: (position, total) => `Konum ${number(position)} / ${number(total)}.`,
+      reorderDropped: (position, total) => `Satır bırakıldı. Konum ${number(position)} / ${number(total)}.`,
+      reorderCancelled: "Sıralama iptal edildi.",
     };
   },
 

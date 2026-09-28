@@ -71,3 +71,20 @@ export const ChevronIcon = ({ direction }: { direction: "previous" | "next" | "d
     <path d={direction === "previous" ? "m15 18-6-6 6-6" : direction === "next" ? "m9 18 6-6-6-6" : "m6 9 6 6 6-6"} />
   </Svg>
 );
+
+/**
+ * Grip icon
+ *
+ * Six dots in two columns, the usual sign that a row can be dragged. Filled
+ * rather than stroked, so the dots stay round at 16px.
+ */
+export const GripIcon = () => (
+  <Svg fill="currentColor" stroke="none">
+    <circle cx="9" cy="5" r="1.5" />
+    <circle cx="9" cy="12" r="1.5" />
+    <circle cx="9" cy="19" r="1.5" />
+    <circle cx="15" cy="5" r="1.5" />
+    <circle cx="15" cy="12" r="1.5" />
+    <circle cx="15" cy="19" r="1.5" />
+  </Svg>
+);

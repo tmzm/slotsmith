@@ -35,6 +35,13 @@ export const es = defineLocale({
       selectRow: "Seleccionar fila",
       expandRow: "Expandir fila",
       collapseRow: "Contraer fila",
+      reorderRow: "Reordenar fila",
+      reorderInstructions:
+        "Pulsar la barra espaciadora para levantar la fila, las flechas para moverla, la barra espaciadora para soltarla y Escape para cancelar.",
+      reorderLifted: (position, total) => `Fila levantada. Posición ${number(position)} de ${number(total)}.`,
+      reorderMoved: (position, total) => `Posición ${number(position)} de ${number(total)}.`,
+      reorderDropped: (position, total) => `Fila soltada en la posición ${number(position)} de ${number(total)}.`,
+      reorderCancelled: "Reordenación cancelada.",
     };
   },
 
