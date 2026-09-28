@@ -3,6 +3,8 @@
  *
  * Optional styles for the built-in fallback slots.
  * Every value is a --rdt-* token; override them on :root or on any .rdt root.
+ * The colour, radius and font-size tokens read the shared --ss-* layer first,
+ * so one --ss-* override restyles every component at once.
  * Custom slots are unaffected — style them however your UI library does.
  */
 
@@ -14,9 +16,9 @@
   --rdt-border: var(--ss-border, #e5e7eb);
   --rdt-text: var(--ss-text, #111827);
   --rdt-muted: var(--ss-muted, #6b7280);
-  --rdt-hover: var(--ss-hover, rgba(0, 0, 0, 0.04));
+  --rdt-hover: var(--ss-hover, rgb(0 0 0 / 4%));
   --rdt-stripe: rgba(0, 0, 0, 0.025);
-  --rdt-selected: var(--ss-selected, rgba(37, 99, 235, 0.08));
+  --rdt-selected: var(--ss-selected, rgb(37 99 235 / 8%));
   --rdt-accent: var(--ss-accent, #2563eb);
   --rdt-danger: var(--ss-danger, #dc2626);
   --rdt-skeleton-bg: #e5e7eb;
@@ -43,14 +45,22 @@
   --rdt-border: var(--ss-border, #2a2a2a);
   --rdt-text: var(--ss-text, #f5f5f5);
   --rdt-muted: var(--ss-muted, #a3a3a3);
-  --rdt-hover: var(--ss-hover, rgba(255, 255, 255, 0.04));
+  --rdt-hover: var(--ss-hover, rgb(255 255 255 / 6%));
   --rdt-stripe: rgba(255, 255, 255, 0.025);
-  --rdt-selected: var(--ss-selected, rgba(96, 165, 250, 0.12));
+  --rdt-selected: var(--ss-selected, rgb(96 165 250 / 12%));
   --rdt-accent: var(--ss-accent, #60a5fa);
   --rdt-danger: var(--ss-danger, #f87171);
   --rdt-skeleton-bg: #262626;
   --rdt-skeleton-bg-2: #333333;
-  /** So the browser paints the page-size select's native popup and scrollbar dark. */
+}
+
+/**
+ * So the browser paints the page-size select's native popup and scrollbar
+ * dark. Set on the table itself rather than beside the tokens, so the page
+ * element carrying the theme keeps whatever scheme the app gave it.
+ */
+:is(.dark, [data-theme="dark"]) :is(.rdt),
+.rdt:is(.dark, [data-theme="dark"]) {
   color-scheme: dark;
 }
 
@@ -255,7 +265,7 @@
 }
 
 .rdt__button:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

@@ -4,42 +4,61 @@ The stylesheet styles only the built-in fallbacks, and every colour, radius and 
 
 ## Tokens
 
-Each component reads its own prefix and falls back to the data table's tokens where they overlap, so one theme covers every component:
+All four components share one default look. Every colour, radius and font-size token reads a shared `--ss-*` token first, so setting the shared ones restyles every component at once:
+
+| Shared token | Default (light / dark) |
+| --- | --- |
+| `--ss-surface` | `#ffffff` / `#141416` |
+| `--ss-text` | `#111827` / `#f5f5f5` |
+| `--ss-muted` | `#6b7280` / `#a3a3a3` |
+| `--ss-border` | `#e5e7eb` / `#2a2a2a` |
+| `--ss-accent` | `#2563eb` / `#60a5fa` |
+| `--ss-on-accent` | `#ffffff` / `#0b0b0c` |
+| `--ss-danger` | `#dc2626` / `#f87171` |
+| `--ss-hover` | `rgb(0 0 0 / 4%)` / `rgb(255 255 255 / 6%)` |
+| `--ss-selected` | `rgb(37 99 235 / 8%)` / `rgb(96 165 250 / 12%)` |
+| `--ss-radius` | `8px` |
+| `--ss-font-size` | `14px` |
+
+Each component also reads its own prefix, which overrides the shared token for that component alone:
 
 | Prefix | Component | Tokens |
 | --- | --- | --- |
-| `--rdt-*` | Data table, and the shared base | `accent`, `bg`, `border`, `checkbox-size`, `danger`, `font-size`, `header-bg`, `hover`, `max-height`, `muted`, `padding-x`, `padding-y`, `radius`, `selected`, `skeleton-bg`, `stripe`, `surface`, `text` |
-| `--sac-*` | Autocomplete | `accent`, `border`, `danger`, `hover`, `muted`, `radius`, `surface`, `text` |
-| `--sdp-*` | Date picker | `accent`, `border`, `cell`, `gap`, `muted`, `on-accent`, `radius`, `surface`, `text` |
+| `--rdt-*` | Data table | `accent`, `bg`, `border`, `checkbox-size`, `danger`, `font-size`, `header-bg`, `hover`, `max-height`, `muted`, `padding-x`, `padding-y`, `radius`, `selected`, `skeleton-bg`, `skeleton-bg-2`, `stripe`, `surface`, `text` |
+| `--sac-*` | Autocomplete | `accent`, `border`, `danger`, `font-size`, `hover`, `muted`, `radius`, `surface`, `text` |
+| `--sdp-*` | Date picker | `accent`, `border`, `cell`, `font-size`, `gap`, `hover`, `muted`, `on-accent`, `radius`, `surface`, `text` |
 | `--sfu-*` | File uploader | `accent`, `bg`, `border`, `danger`, `font-size`, `gap`, `hover`, `muted`, `radius`, `surface`, `text`, `tile-size` |
+
+Every component token is declared on `:root`, so override it there (or on a component's root element for one instance).
 
 ```css
 :root {
-  --rdt-accent: #7c3aed;   /* links, focus rings, progress, selected days */
-  --rdt-border: #e4e4e7;
-  --rdt-radius: 12px;
-  --rdt-surface: #ffffff;
+  --ss-accent: #7c3aed;   /* links, focus rings, progress, selected days */
+  --ss-border: #e4e4e7;
+  --ss-radius: 12px;
 }
 
 /* Component-specific tokens on top. */
 :root {
+  --rdt-accent: #0f766e;  /* only the table */
   --sfu-tile-size: 200px;
-  --sac-radius: 8px;
   --sdp-cell: 2.25rem;
 }
 ```
 
 ## Dark mode
 
-Dark mode is a class or an attribute on any ancestor: no provider, no JavaScript.
+Dark mode is a class or an attribute on any ancestor: no provider, no JavaScript. The stylesheet never follows the system setting on its own.
 
 ```css
 .dark, [data-theme="dark"] {
-  --rdt-surface: #141416;
-  --rdt-border: #2a2a2a;
-  --rdt-text: #f5f5f5;
+  --ss-surface: #0f172a;
+  --ss-border: #1e293b;
+  --ss-text: #f1f5f9;
 }
 ```
+
+A light island inside a dark page (`[data-theme="light"]` nested under `.dark`) is not supported.
 
 ## Class prefixes
 

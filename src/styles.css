@@ -7,9 +7,9 @@
  * import "slotsmith/styles.css";
  * ```
  *
- * Each component reads its own tokens (--rdt-*, --sac-*, --sdp-*, --sfu-*).
- * The date picker and the uploader fall back to the table's, so one theme
- * covers all three.
+ * Each component reads its own tokens (--rdt-*, --sac-*, --sdp-*, --sfu-*),
+ * and those read the shared --ss-* layer first, so one set of --ss-* values
+ * restyles all four.
  */
 
 @import "./autocomplete/styles.css";

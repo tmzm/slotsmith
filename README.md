@@ -189,6 +189,23 @@ Ready-made adapters for **shadcn/ui**, **MUI v7** and **Chakra UI v3** live in [
 
 Not using a component library? Every fallback also exposes `data-*` state, so Tailwind alone is enough: `[&_tr[data-state=selected]]:bg-muted`.
 
+## Theming
+
+`slotsmith/styles.css` gives all four components one default look. Every colour, radius and font size in it reads a shared `--ss-*` token first, so a few overrides restyle everything at once:
+
+```css
+:root {
+  --ss-accent: #7c3aed;
+  --ss-radius: 12px;
+}
+
+.dark, [data-theme="dark"] {
+  --ss-accent: #a78bfa;
+}
+```
+
+The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--rdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others.
+
 ## You ship only what you import
 
 Each component is independent, and the build is arranged so your bundler can prove it.
@@ -276,6 +293,7 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ### Unreleased
 
+- All four components now share one default palette and shape, read from the new shared `--ss-*` tokens. Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once; the per-component tokens still work.
 - Native selects (the data table's page size, the date picker's month and year) now use the component's colours in dark mode.
 
 - **1.5.0** — Locale packs and a `SlotsmithProvider` for translating every component, formatting numbers and plurals, and right-to-left text; see [Languages](#languages). A string `locale` with no registered pack now logs one development-only warning instead of silently staying in English.

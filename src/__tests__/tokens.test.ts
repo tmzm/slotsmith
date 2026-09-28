@@ -120,3 +120,168 @@ it.each(SELECT_SHEETS)(
     expect(css).toMatch(/color-scheme:\s*dark/);
   },
 );
+
+
+/**
+ * The one default palette
+ *
+ * With no theme imported every component falls back to the same literals, so
+ * the four look like one library. The data table's values are the baseline.
+ */
+const PALETTE: Record<(typeof SHARED)[number], { light: string; dark?: string }> = {
+  surface: { light: "#ffffff", dark: "#141416" },
+  text: { light: "#111827", dark: "#f5f5f5" },
+  muted: { light: "#6b7280", dark: "#a3a3a3" },
+  border: { light: "#e5e7eb", dark: "#2a2a2a" },
+  accent: { light: "#2563eb", dark: "#60a5fa" },
+  "on-accent": { light: "#ffffff", dark: "#0b0b0c" },
+  danger: { light: "#dc2626", dark: "#f87171" },
+  hover: { light: "rgb(0 0 0 / 4%)", dark: "rgb(255 255 255 / 6%)" },
+  selected: { light: "rgb(37 99 235 / 8%)", dark: "rgb(96 165 250 / 12%)" },
+  radius: { light: "8px" },
+  "font-size": { light: "14px" },
+};
+
+/** The shared tokens every component reads, whatever else it declares. */
+const CORE = ["surface", "text", "muted", "border", "accent", "hover", "radius", "font-size"] as const;
+
+/**
+ * Rules
+ *
+ * @param css - A stylesheet without comments.
+ * @returns Every innermost rule as a normalised selector and its body.
+ */
+const rules = (css: string) =>
+  [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((match) => ({
+    selector: match[1]!.trim().replace(/\s+/g, " "),
+    body: match[2]!,
+  }));
+
+/** The body of the rule whose selector is exactly `selector`, or `""`. */
+const rule = (css: string, selector: string) => rules(css).find((entry) => entry.selector === selector)?.body ?? "";
+
+/**
+ * Declaration
+ *
+ * @param body - A rule body.
+ * @param property - A property name, matched whole (`height` never matches `min-height`).
+ * @returns The property's value, or `undefined` when the rule does not set it.
+ */
+const value = (body: string, property: string) =>
+  body.match(new RegExp(`(?:^|[;\\s])${escape(property)}:\\s*([^;]+);`))?.[1]?.trim();
+
+describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) => {
+  const css = read(folder);
+  const light = block(css, /(?:^|\})\s*:root/);
+  const dark = block(css, /\.dark,\s*\[data-theme="dark"\]/);
+
+  it.each(CORE)("declares --%s", (name) => {
+    expect(light).toContain(`--${prefix}-${name}:`);
+  });
+
+  it.each(SHARED)("falls back to the shared light literal for %s", (name) => {
+    const token = value(light, `--${prefix}-${name}`);
+    if (token === undefined) return;
+    expect(token).toBe(`var(--ss-${name}, ${PALETTE[name].light})`);
+  });
+
+  it.each(COLOURS)("falls back to the shared dark literal for %s", (name) => {
+    if (value(light, `--${prefix}-${name}`) === undefined) return;
+    expect(value(dark, `--${prefix}-${name}`)).toBe(`var(--ss-${name}, ${PALETTE[name].dark})`);
+  });
+
+  it("no longer borrows the data table's tokens", () => {
+    if (prefix === "rdt") return;
+    expect(css).not.toContain("--rdt-");
+  });
+
+  it("sets color-scheme on its own elements, not on the element carrying the theme", () => {
+    expect(dark).not.toMatch(/color-scheme/);
+    const scoped = rules(css).find(
+      (entry) =>
+        new RegExp(`:is\\(\\.dark, \\[data-theme="dark"\\]\\) :is\\(\\.${prefix}[,)]`).test(entry.selector) &&
+        entry.selector.includes(`.${prefix}:is(.dark, [data-theme="dark"])`),
+    );
+    expect(scoped && value(scoped.body, "color-scheme")).toBe("dark");
+  });
+
+  it("draws every focus ring the same way", () => {
+    const outlines = [...css.matchAll(/(?<![-\w])outline:\s*([^;]+);/g)].map((match) => match[1]!.trim());
+    expect(outlines.length).toBeGreaterThan(0);
+    for (const outline of outlines) if (outline !== "none") expect(outline).toBe(`2px solid var(--${prefix}-accent)`);
+    for (const [, offset] of css.matchAll(/outline-offset:\s*([^;]+);/g)) expect(offset!.trim()).toBe("2px");
+    // The old halo on the triggers was a second, different ring.
+    expect(css).not.toMatch(/box-shadow:\s*0 0 0/);
+  });
+
+  it("dims every disabled control by the same amount", () => {
+    const disabled = rules(css).filter(
+      (entry) =>
+        /disabled/.test(entry.selector.replace(/:not\(:disabled\)/g, "")) &&
+        // Blocked days stay focusable, and must read as blocked beside the muted outside days.
+        entry.selector !== ".sdp__day[data-disabled]",
+    );
+    for (const entry of disabled) {
+      const opacity = value(entry.body, "opacity");
+      if (opacity !== undefined) expect(opacity, entry.selector).toBe("0.5");
+    }
+  });
+
+  it("paints every hover background with the hover token", () => {
+    for (const entry of rules(css).filter((candidate) => candidate.selector.includes(":hover"))) {
+      const background = value(entry.body, "background") ?? value(entry.body, "background-color");
+      if (background !== undefined) expect(background, entry.selector).toBe(`var(--${prefix}-hover)`);
+    }
+  });
+
+  it("sizes its root text from the font-size token", () => {
+    expect(value(rule(css, `.${prefix}`), "font-size")).toBe(`var(--${prefix}-font-size)`);
+  });
+});
+
+/** Buttons, triggers and the table's select: one height, border and radius. */
+const CONTROLS = [
+  { prefix: "rdt", folder: "data-table", selector: ".rdt__button" },
+  { prefix: "rdt", folder: "data-table", selector: ".rdt__select" },
+  { prefix: "sac", folder: "autocomplete", selector: ".sac__trigger" },
+  { prefix: "sac", folder: "autocomplete", selector: ".sac__button" },
+  { prefix: "sdp", folder: "date-picker", selector: ".sdp__trigger" },
+  { prefix: "sfu", folder: "file-uploader", selector: ".sfu__browse" },
+];
+
+it.each(CONTROLS)("$selector is a 32px control with the shared border and radius", ({ prefix, folder, selector }) => {
+  const body = rule(read(folder), selector);
+  expect(value(body, "height") ?? value(body, "min-height")).toBe("32px");
+  expect(value(body, "border")).toBe(`1px solid var(--${prefix}-border)`);
+  expect(value(body, "border-radius")).toBe(`var(--${prefix}-radius)`);
+  // The table's select keeps its own tighter padding around the arrow.
+  if (selector === ".rdt__select") return;
+  const inline = value(body, "padding-inline") ?? value(body, "padding")?.split(" ")[1];
+  expect(inline).toBe("12px");
+});
+
+it("gives both popups the same surface, border, radius, text and shadow", () => {
+  const popups = [
+    { prefix: "sac", body: rule(read("autocomplete"), ".sac__popup") },
+    { prefix: "sdp", body: rule(read("date-picker"), ".sdp__popup") },
+  ];
+  for (const { prefix, body } of popups) {
+    expect(value(body, "border")).toBe(`1px solid var(--${prefix}-border)`);
+    expect(value(body, "border-radius")).toBe(`var(--${prefix}-radius)`);
+    expect(value(body, "background")).toBe(`var(--${prefix}-surface)`);
+    expect(value(body, "color")).toBe(`var(--${prefix}-text)`);
+    expect(value(body, "font-size")).toBe(`var(--${prefix}-font-size)`);
+    expect(value(body, "box-shadow")).toBe("0 10px 30px -12px rgb(0 0 0 / 45%)");
+  }
+});
+
+it.each([
+  ["autocomplete", ".sac__overflow"],
+  ["autocomplete", ".sac__more-button"],
+  ["file-uploader", ".sfu__hint"],
+  ["file-uploader", ".sfu__sub"],
+  ["file-uploader", ".sfu__error"],
+  ["file-uploader", ".sfu__rejections"],
+])("%s's secondary text %s is 0.75rem", (folder, selector) => {
+  expect(value(rule(read(folder), selector), "font-size")).toBe("0.75rem");
+});
