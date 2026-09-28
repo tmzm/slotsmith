@@ -299,7 +299,9 @@ export interface DataTableRowViewProps<T extends RowData> {
  * One body row: the `Row` slot with its drag-handle and checkbox cells and a
  * `Cell` per column, the first one indented and holding the `ExpandToggle` in
  * tree tables. Provides the row to `useDataTableRow()`. The row carries
- * `data-row-id`, and `data-dragging` / `data-drop-position` during a drag.
+ * `data-row-id`, and during a drag `data-dragging` (the moved row),
+ * `data-dragging-child` (its visible sub-rows, which move with it),
+ * `data-drop-position` (the target) and `data-drop-edge` (where to draw a drop line).
  *
  * @typeParam T - The row data type.
  * @param props - See {@link DataTableRowViewProps}.

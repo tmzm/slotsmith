@@ -301,6 +301,7 @@ pnpm test:ai     # the MCP server in packages/ai
 - All four components now share one default palette and shape, read from the new shared `--ss-*` tokens. Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once; the per-component tokens still work.
 - The date picker's month and year selects now use the component's colours in dark mode.
 - The data table's page-size control is now the slotsmith autocomplete, so it matches the other components; the data table's bundle includes the autocomplete.
+- Row reordering works in tree tables (`getSubRows`): a row moves among its siblings only, together with its expanded sub-rows. `RowOrderChange` gains `parentId`, `parent` and `siblings`; for a sub-row, `data` is unchanged and `siblings` is the parent's new list of children. The sub-rows of a lifted row carry `data-dragging-child`, and `data-drop-edge` marks the row to draw a drop line on. The development warning for tree tables is gone.
 
 - **1.5.0** — Locale packs and a `SlotsmithProvider` for translating every component, formatting numbers and plurals, and right-to-left text; see [Languages](#languages). A string `locale` with no registered pack now logs one development-only warning instead of silently staying in English.
 - The autocomplete now turns dark with `.dark` or `[data-theme="dark"]` on the page, like the other components, instead of with the system setting.

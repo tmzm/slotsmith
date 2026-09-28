@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { resetReorderWarnings } from "../core/useDataTable";
 import { bodyRows, firstColumn, renderTable, user, type User } from "./builders";
@@ -58,18 +58,42 @@ describe("expandable rows", () => {
     expect(ids).toEqual(expect.arrayContaining(["u1", "u11", "u12", "u121"]));
   });
 
-  it("ignores enableRowReorder: no handle, no extra column, one development warning", async () => {
+  it("reorders with enableRowReorder: a handle on every row, sub-rows too, and no warning", async () => {
     resetReorderWarnings();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { container, user: events } = renderTable({ data: tree, getSubRows, enableRowReorder: true });
     await events.click(screen.getByRole("button", { name: "Expand row" }));
 
-    expect(screen.queryByRole("button", { name: "Reorder row" })).not.toBeInTheDocument();
-    expect(container.querySelector("[data-slot=drag]")).toBeNull();
-    expect(container.querySelector("[role=status][aria-live=assertive]")).toBeNull();
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]![0]).toContain("getSubRows");
+    const handles = screen.getAllByRole("button", { name: "Reorder row" });
+    expect(handles).toHaveLength(4);
+    expect(within(bodyRows()[1]!).getAllByRole("cell")[0]).toHaveAttribute("data-slot", "drag");
+    expect(container.querySelector("[role=status][aria-live=assertive]")).not.toBeNull();
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
     resetReorderWarnings();
+  });
+
+  it("moves a sub-row among its siblings by keyboard, and marks the lifted block", () => {
+    const onRowOrderChange = vi.fn();
+    renderTable({ data: tree, getSubRows, defaultExpanded: true, enableRowReorder: true, onRowOrderChange });
+    const handleOf = (index: number) => within(bodyRows()[index]!).getByRole("button", { name: "Reorder row" });
+
+    // Rows: User 01, User 11, User 12, User 121 (an only child), User 02.
+    expect(handleOf(3)).toBeDisabled();
+    act(() => handleOf(0).focus());
+    fireEvent.keyDown(handleOf(0), { key: " " });
+    expect(bodyRows()[0]).toHaveAttribute("data-dragging", "");
+    expect(bodyRows().slice(1, 4).every((row) => row.hasAttribute("data-dragging-child"))).toBe(true);
+    fireEvent.keyDown(handleOf(0), { key: "Escape" });
+
+    act(() => handleOf(1).focus());
+    fireEvent.keyDown(handleOf(1), { key: " " });
+    fireEvent.keyDown(handleOf(1), { key: "ArrowDown" });
+    fireEvent.keyDown(handleOf(1), { key: " " });
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    const change = onRowOrderChange.mock.calls[0]![0];
+    expect(change.parentId).toBe("u1");
+    expect(change.siblings.map((row: User) => row.id)).toEqual(["u12", "u11"]);
+    expect(change.data).toEqual(tree);
   });
 });

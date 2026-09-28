@@ -84,27 +84,28 @@ export function restoreStyles(parent: Element, saved: ReadonlyMap<string, SavedS
  * Apply offsets
  *
  * Draws each row at its offset from its resting place. Rows other than the
- * dragged one slide there; the dragged row jumps (it follows the pointer), or
- * slides too when `animate` is set (a keyboard drag, which moves in steps).
+ * dragged ones slide there; the dragged rows (the dragged row and, in a tree,
+ * its visible sub-rows) jump, because they follow the pointer, or slide too
+ * when `animate` is set (a keyboard drag, which moves in steps).
  * Rows missing from `offsets` slide back to rest. A value that is already set
  * is not written again, so a pointer move touches only the dragged row until
  * the target changes.
  *
  * @param parent - The element holding the rows.
  * @param offsets - Vertical offsets in pixels, by row id.
- * @param draggingId - The row being moved.
- * @param animate - Whether the dragged row slides too.
+ * @param dragging - The rows being moved, by id.
+ * @param animate - Whether the dragged rows slide too.
  */
 export function applyOffsets(
   parent: Element,
   offsets: ReadonlyMap<string, number>,
-  draggingId: string,
+  dragging: ReadonlySet<string>,
   animate: boolean,
 ): void {
   for (const row of rowsIn(parent)) {
     const id = idOf(row);
     const offset = offsets.get(id);
-    const transition = id === draggingId && !animate ? "none" : ROW_TRANSITION;
+    const transition = dragging.has(id) && !animate ? "none" : ROW_TRANSITION;
 
     if (offset === undefined) {
       if (!moved.has(row)) continue;

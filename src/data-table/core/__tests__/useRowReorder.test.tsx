@@ -711,15 +711,15 @@ describe("useRowReorder, in useDataTable", () => {
     expect(on.result.current.reorder.enabled).toBe(true);
   });
 
-  it("is off in a tree table, with one development warning", () => {
+  it("is on in a tree table, without a warning", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { result, rerender } = renderHook(() =>
       useDataTable<Item>({ data: items("ab"), columns, enableRowReorder: true, getSubRows: () => undefined }),
     );
     rerender();
-    expect(result.current.reorder.enabled).toBe(false);
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]![0]).toContain("enableRowReorder");
+    expect(result.current.reorder.enabled).toBe(true);
+    expect(result.current.reorderable).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("is off in a virtual table, with one development warning", () => {
@@ -743,5 +743,253 @@ describe("useRowReorder, in useDataTable", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     renderHook(() => useDataTable<Item>({ data: items("ab"), columns, getSubRows: () => undefined }));
     expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+describe("useRowReorder, in a tree table", () => {
+  type Node = { id: string; children?: Node[] };
+  const node = (id: string, children?: Node[]): Node => (children ? { id, children } : { id });
+  const columns: DataTableColumnDef<Node>[] = [{ accessorKey: "id", header: "Id" }];
+  const names = (rows: readonly Node[]) => rows.map((row) => row.id).join(",");
+
+  /**
+   * Fully expanded, every row 40 tall:
+   * a (0), a1 (40), a2 (80), a21 (120), a3 (160), b (200), c (240), c1 (280).
+   */
+  const forest = () => [
+    node("a", [node("a1"), node("a2", [node("a21")]), node("a3")]),
+    node("b"),
+    node("c", [node("c1")]),
+  ];
+
+  interface TreeProps {
+    data: Node[];
+    expanded?: Record<string, boolean> | true;
+    sort?: boolean;
+    page?: number;
+    pageSize?: number;
+    onRowOrderChange: (change: RowOrderChange<Node>) => void;
+    model?: { current: RowReorderModel | null };
+  }
+
+  function Tree(props: TreeProps) {
+    const model = useDataTable<Node>({
+      data: props.data,
+      columns,
+      getSubRows: (row) => row.children,
+      expanded: props.expanded ?? true,
+      enableRowReorder: true,
+      onRowOrderChange: props.onRowOrderChange,
+      defaultSorting: props.sort ? [{ id: "id", desc: true }] : [],
+      enablePagination: props.pageSize !== undefined,
+      defaultPagination: { pageIndex: props.page ?? 0, pageSize: props.pageSize ?? 10 },
+    });
+    if (props.model) props.model.current = model.reorder;
+    return (
+      <table>
+        <tbody>
+          {model.table.getRowModel().rows.map((row) => (
+            <tr key={row.id} {...model.reorder.getRowProps(row.id)}>
+              <td>
+                <button type="button" {...model.reorder.getHandleProps(row.id)}>
+                  {row.id}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  function setupTree(props: Partial<TreeProps> = {}) {
+    const model: { current: RowReorderModel | null } = { current: null };
+    const onRowOrderChange = vi.fn<(change: RowOrderChange<Node>) => void>();
+    const data = props.data ?? forest();
+    const utils = render(<Tree onRowOrderChange={onRowOrderChange} model={model} {...props} data={data} />);
+    const row = (id: string) => utils.container.querySelector<HTMLElement>(`[data-row-id="${id}"]`)!;
+    const handle = (id: string) => row(id).querySelector("button")!;
+    const change = () => onRowOrderChange.mock.calls[0]![0];
+    return { ...utils, data, model, onRowOrderChange, row, handle, change };
+  }
+
+  it("moves a top-level parent below its sibling, its subtree with it", () => {
+    const { handle, onRowOrderChange, change, data } = setupTree();
+    pointerDrag(handle("a"), 20, 230);
+    fireEvent.pointerUp(handle("a"), { pointerId: 1, clientY: 230 });
+
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    expect(change()).toMatchObject({ rowId: "a", targetId: "b", position: "after", parentId: null, parent: null });
+    expect(names(change().data)).toBe("b,a,c");
+    expect(change().data[1]).toBe(data[0]);
+    expect(names(change().data[1]!.children!)).toBe("a1,a2,a3");
+    expect(change().siblings).toEqual(change().data);
+  });
+
+  it("draws the lifted block as one piece and the passed block out of its way", () => {
+    const { handle, row } = setupTree();
+    pointerDrag(handle("a"), 20, 230);
+
+    // Held between the siblings' first and last block: a's block (0-200) may travel 120 at most.
+    for (const id of ["a", "a1", "a2", "a21", "a3"]) {
+      expect(row(id).style.transform).toBe("translate3d(0, 120px, 0)");
+      expect(row(id).style.transition).not.toContain("transform");
+    }
+    expect(row("b").style.transform).toBe("translate3d(0, -200px, 0)");
+    expect(row("b").style.transition).toBe(TRANSITION);
+    expect(row("c").style.transform).toBe("");
+    expect(row("a")).toHaveAttribute("data-dragging", "");
+    for (const id of ["a1", "a2", "a21", "a3"]) {
+      expect(row(id)).toHaveAttribute("data-dragging-child", "");
+      expect(row(id)).not.toHaveAttribute("data-dragging");
+    }
+    expect(row("b")).not.toHaveAttribute("data-dragging-child");
+    fireEvent.pointerCancel(handle("a"), { pointerId: 1 });
+    expect(row("a1")).not.toHaveAttribute("data-dragging-child");
+  });
+
+  it("moves a nested row among its siblings: parent and siblings reported, data unchanged", () => {
+    const { handle, onRowOrderChange, change, data } = setupTree();
+    pointerDrag(handle("a1"), 60, 150);
+    fireEvent.pointerUp(handle("a1"), { pointerId: 1, clientY: 150 });
+
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    expect(change()).toMatchObject({ rowId: "a1", targetId: "a2", position: "after", parentId: "a" });
+    expect(change().parent).toBe(data[0]);
+    expect(names(change().siblings)).toBe("a2,a1,a3");
+    expect(change().siblings[0]).toBe(data[0]!.children![1]);
+    expect(change().data).toEqual(data);
+    expect(change().data[0]).toBe(data[0]);
+  });
+
+  it("marks the target sibling, and the edge of its block where the row lands", () => {
+    const { handle, row } = setupTree();
+    pointerDrag(handle("a1"), 60, 150);
+    expect(row("a2")).toHaveAttribute("data-drop-position", "after");
+    expect(row("a21")).toHaveAttribute("data-drop-edge", "after");
+    expect(row("a2")).not.toHaveAttribute("data-drop-edge");
+
+    fireEvent.pointerMove(handle("a1"), { pointerId: 1, clientY: 190 });
+    expect(row("a3")).toHaveAttribute("data-drop-position", "after");
+    expect(row("a3")).toHaveAttribute("data-drop-edge", "after");
+    expect(row("a21")).not.toHaveAttribute("data-drop-edge");
+    fireEvent.pointerCancel(handle("a1"), { pointerId: 1 });
+  });
+
+  it("never targets another parent's rows, and a release over them cancels", () => {
+    const { handle, model, onRowOrderChange, row } = setupTree();
+    const others = ["a", "a21", "b", "c", "c1"];
+    fireEvent.pointerDown(handle("a1"), { button: 0, pointerId: 1, clientY: 60 });
+    for (const y of [300, 250, 210, 130, 10, -100, 600]) {
+      fireEvent.pointerMove(handle("a1"), { pointerId: 1, clientY: y });
+      expect(others).not.toContain(model.current!.target?.id);
+    }
+    // Below a's subtree the preview holds the row at the siblings' last edge.
+    fireEvent.pointerMove(handle("a1"), { pointerId: 1, clientY: 300 });
+    frame();
+    expect(model.current!.target).toEqual({ id: "a3", position: "after" });
+    expect(row("a1").style.transform).toBe("translate3d(0, 120px, 0)");
+
+    fireEvent.pointerUp(handle("a1"), { pointerId: 1, clientY: 300 });
+    expect(onRowOrderChange).not.toHaveBeenCalled();
+    expect(model.current!.announcement).toBe("Reordering cancelled.");
+  });
+
+  it("steps the keyboard among siblings only", () => {
+    const { handle, model, onRowOrderChange, change } = setupTree();
+    key(handle("a1"), " ");
+    key(handle("a1"), "ArrowUp");
+    expect(model.current!.target).toBeNull();
+    key(handle("a1"), "ArrowDown");
+    expect(model.current!.target).toEqual({ id: "a2", position: "after" });
+    key(handle("a1"), "ArrowDown");
+    key(handle("a1"), "ArrowDown");
+    key(handle("a1"), "ArrowDown");
+    expect(model.current!.target).toEqual({ id: "a3", position: "after" });
+    key(handle("a1"), " ");
+
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    expect(names(change().siblings)).toBe("a2,a3,a1");
+  });
+
+  it("announces positions among the siblings", () => {
+    const { handle, model } = setupTree();
+    key(handle("a2"), " ");
+    expect(model.current!.announcement).toBe("Row lifted. Position 2 of 3.");
+    key(handle("a2"), "ArrowDown");
+    expect(model.current!.announcement).toBe("Position 3 of 3.");
+    key(handle("a2"), " ");
+    expect(model.current!.announcement).toBe("Row dropped at position 3 of 3.");
+
+    key(handle("b"), " ");
+    expect(model.current!.announcement).toBe("Row lifted. Position 2 of 3.");
+    key(handle("b"), "Escape");
+  });
+
+  it("disables an only child's handle, and it cannot be lifted", () => {
+    const { handle, model } = setupTree();
+    expect(handle("c1")).toBeDisabled();
+    expect(handle("a21")).toBeDisabled();
+    for (const id of ["a", "a1", "a2", "a3", "b", "c"]) expect(handle(id)).not.toBeDisabled();
+    key(handle("c1"), " ");
+    expect(model.current!.draggingId).toBeNull();
+  });
+
+  it("moves within the parent's children, not within a sorted view", () => {
+    // Sorted descending: a's children show as a3, a2, a1.
+    const { handle, change, onRowOrderChange } = setupTree({ sort: true });
+    key(handle("a3"), " ");
+    key(handle("a3"), "ArrowDown");
+    key(handle("a3"), "ArrowDown");
+    key(handle("a3"), " ");
+
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    expect(change()).toMatchObject({ targetId: "a1", position: "after", parentId: "a" });
+    expect(names(change().siblings)).toBe("a1,a3,a2");
+  });
+
+  it("uses indexes among the parent's children and in data, not in the page", () => {
+    const data = [node("p"), node("q"), node("r", [node("r1"), node("r2"), node("r3")]), node("s")];
+    // Two top-level rows a page: page two shows r, r1, r2, r3, s.
+    const { handle, change, onRowOrderChange } = setupTree({ data, page: 1, pageSize: 2 });
+    key(handle("r1"), " ");
+    key(handle("r1"), "ArrowDown");
+    key(handle("r1"), " ");
+    expect(change()).toMatchObject({ parentId: "r", targetId: "r2", position: "after" });
+    expect(names(change().siblings)).toBe("r2,r1,r3");
+
+    key(handle("s"), " ");
+    key(handle("s"), "ArrowUp");
+    key(handle("s"), " ");
+    expect(onRowOrderChange).toHaveBeenCalledTimes(2);
+    expect(names(onRowOrderChange.mock.calls[1]![0].data)).toBe("p,q,s,r");
+  });
+
+  it("does not report a row dropped back in its own place", () => {
+    const { handle, onRowOrderChange } = setupTree();
+    key(handle("a2"), " ");
+    key(handle("a2"), "ArrowDown");
+    key(handle("a2"), "ArrowUp");
+    key(handle("a2"), " ");
+    expect(onRowOrderChange).not.toHaveBeenCalled();
+  });
+
+  it("cancels when a row expands mid-drag", () => {
+    const onRowOrderChange = vi.fn();
+    const model: { current: RowReorderModel | null } = { current: null };
+    const data = forest();
+    const { container, rerender } = render(
+      <Tree data={data} expanded={{ a: true }} onRowOrderChange={onRowOrderChange} model={model} />,
+    );
+    const handle = container.querySelector<HTMLElement>('[data-row-id="b"] button')!;
+    key(handle, " ");
+    key(handle, "ArrowDown");
+    expect(model.current!.draggingId).toBe("b");
+
+    rerender(<Tree data={data} expanded={{ a: true, c: true }} onRowOrderChange={onRowOrderChange} model={model} />);
+    expect(model.current!.draggingId).toBeNull();
+    expect(model.current!.announcement).toBe("Reordering cancelled.");
+    expect(container.querySelector("[data-dragging], [data-dragging-child]")).toBeNull();
+    expect(onRowOrderChange).not.toHaveBeenCalled();
   });
 });

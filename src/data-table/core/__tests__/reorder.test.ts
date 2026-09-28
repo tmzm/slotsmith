@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { canReorder, dropTargetAt, landingIndex, moveItem, rowOffsets, scrollSpeed, stepTarget } from "../reorder";
+import {
+  blockRowOffsets,
+  canReorder,
+  dropTargetAt,
+  landingIndex,
+  moveItem,
+  rowOffsets,
+  scrollSpeed,
+  siblingBlocks,
+  stepTarget,
+  type RowLevel,
+  type RowRect,
+} from "../reorder";
 
 const items = ["a", "b", "c", "d"];
 
@@ -99,10 +111,9 @@ describe("rowOffsets", () => {
 });
 
 describe("canReorder", () => {
-  const on = { enabled: true, hasSubRows: false, virtual: false, rowCount: 5 };
-  it("is on for a flat table with rows", () => expect(canReorder(on)).toBe(true));
+  const on = { enabled: true, virtual: false, rowCount: 5 };
+  it("is on for a table with rows, flat or tree", () => expect(canReorder(on)).toBe(true));
   it("is off when not enabled", () => expect(canReorder({ ...on, enabled: false })).toBe(false));
-  it("is off for a tree table", () => expect(canReorder({ ...on, hasSubRows: true })).toBe(false));
   it("is off for a virtual table", () => expect(canReorder({ ...on, virtual: true })).toBe(false));
   it("is off with fewer than two rows", () => expect(canReorder({ ...on, rowCount: 1 })).toBe(false));
 });
@@ -117,5 +128,115 @@ describe("scrollSpeed", () => {
   it("never exceeds the maximum", () => {
     expect(scrollSpeed(-500, 0, 400, 40, 16)).toBe(-16);
     expect(scrollSpeed(5000, 0, 400, 40, 16)).toBe(16);
+  });
+});
+
+/**
+ * A visible tree, every row 40 tall:
+ *
+ *   a        (0-40)
+ *     a1     (40-80)
+ *     a2     (80-120)
+ *       a21  (120-160)
+ *     a3     (160-200)
+ *   b        (200-240)   collapsed
+ *   c        (240-280)
+ *     c1     (280-320)
+ */
+const tree: RowLevel[] = [
+  { id: "a", parentId: null, depth: 0 },
+  { id: "a1", parentId: "a", depth: 1 },
+  { id: "a2", parentId: "a", depth: 1 },
+  { id: "a21", parentId: "a2", depth: 2 },
+  { id: "a3", parentId: "a", depth: 1 },
+  { id: "b", parentId: null, depth: 0 },
+  { id: "c", parentId: null, depth: 0 },
+  { id: "c1", parentId: "c", depth: 1 },
+];
+const treeRects: RowRect[] = tree.map((row, index) => ({ id: row.id, top: index * 40, bottom: index * 40 + 40 }));
+
+describe("siblingBlocks", () => {
+  it("groups top-level rows with their expanded subtrees", () => {
+    expect(siblingBlocks(tree, treeRects, "b")).toEqual([
+      { id: "a", top: 0, bottom: 200, ids: ["a", "a1", "a2", "a21", "a3"] },
+      { id: "b", top: 200, bottom: 240, ids: ["b"] },
+      { id: "c", top: 240, bottom: 320, ids: ["c", "c1"] },
+    ]);
+  });
+
+  it("takes only the dragged row's siblings, each with its own subtree", () => {
+    expect(siblingBlocks(tree, treeRects, "a1")).toEqual([
+      { id: "a1", top: 40, bottom: 80, ids: ["a1"] },
+      { id: "a2", top: 80, bottom: 160, ids: ["a2", "a21"] },
+      { id: "a3", top: 160, bottom: 200, ids: ["a3"] },
+    ]);
+  });
+
+  it("ends a last child's block where a shallower row starts", () => {
+    expect(siblingBlocks(tree, treeRects, "a2").at(-1)).toEqual({ id: "a3", top: 160, bottom: 200, ids: ["a3"] });
+  });
+
+  it("makes a collapsed parent a block of one row", () => {
+    expect(siblingBlocks(tree, treeRects, "a").find((block) => block.id === "b")?.ids).toEqual(["b"]);
+  });
+
+  it("gives an only child a single block", () => {
+    expect(siblingBlocks(tree, treeRects, "c1")).toEqual([{ id: "c1", top: 280, bottom: 320, ids: ["c1"] }]);
+  });
+
+  it("is empty for a row that is not rendered", () => expect(siblingBlocks(tree, treeRects, "z")).toEqual([]));
+
+  it("is one block per row in a flat table, equal to the rows' rects", () => {
+    const flat = rects.map((rect) => ({ id: rect.id, parentId: null, depth: 0 }));
+    const blocks = siblingBlocks(flat, rects, "b");
+    expect(blocks.map(({ id, top, bottom }) => ({ id, top, bottom }))).toEqual(rects);
+    expect(blocks.map((block) => block.ids)).toEqual([["a"], ["b"], ["c"]]);
+  });
+});
+
+describe("reordering over blocks", () => {
+  const top = siblingBlocks(tree, treeRects, "a");
+  const nested = siblingBlocks(tree, treeRects, "a1");
+  const entries = (map: Map<string, number>) => Object.fromEntries(map);
+
+  it("targets a block by its halves, never a row inside another sibling's subtree", () => {
+    // Over a21, which belongs to a2's block (80-160): its lower half.
+    expect(dropTargetAt(nested, 150)).toEqual({ id: "a2", position: "after" });
+    // Over a1, inside a's block (0-200): its upper half.
+    expect(dropTargetAt(top, 50)).toEqual({ id: "a", position: "before" });
+  });
+
+  it("steps the keyboard among siblings only", () => {
+    const ids = nested.map((block) => block.id);
+    expect(stepTarget(ids, "a1", null, 1)).toEqual({ id: "a2", position: "after" });
+    expect(stepTarget(ids, "a1", { id: "a2", position: "after" }, 1)).toEqual({ id: "a3", position: "after" });
+    expect(stepTarget(ids, "a1", { id: "a3", position: "after" }, 1)).toEqual({ id: "a3", position: "after" });
+  });
+
+  it("moves a whole block down: its rows travel together, the passed block slides up by its height", () => {
+    const offsets = blockRowOffsets(top, rowOffsets(top, "a", { id: "b", position: "after" }));
+    expect(entries(offsets)).toEqual({ a: 40, a1: 40, a2: 40, a21: 40, a3: 40, b: -200 });
+  });
+
+  it("moves a block up: every row of each block it passes slides down by its height", () => {
+    const offsets = blockRowOffsets(top, rowOffsets(top, "c", { id: "a", position: "before" }));
+    expect(entries(offsets)).toEqual({ c: -240, c1: -240, a: 80, a1: 80, a2: 80, a21: 80, a3: 80, b: 80 });
+  });
+
+  it("moves a nested row past a sibling with children", () => {
+    const offsets = blockRowOffsets(nested, rowOffsets(nested, "a1", { id: "a2", position: "after" }));
+    expect(entries(offsets)).toEqual({ a1: 80, a2: -40, a21: -40 });
+  });
+
+  it("counts the landing place among siblings", () =>
+    expect(landingIndex(nested.map((block) => block.id), "a3", { id: "a1", position: "before" })).toBe(0));
+
+  it("leaves a flat table's offsets as they were", () => {
+    const flat = rects.map((rect) => ({ id: rect.id, parentId: null, depth: 0 }));
+    const blocks = siblingBlocks(flat, rects, "a");
+    const target = { id: "c", position: "after" } as const;
+    expect(entries(blockRowOffsets(blocks, rowOffsets(blocks, "a", target)))).toEqual(
+      entries(rowOffsets(rects, "a", target)),
+    );
   });
 });

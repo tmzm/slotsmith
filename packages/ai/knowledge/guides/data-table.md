@@ -55,6 +55,8 @@ Selection is exposed as row objects (`selection` / `onSelectionChange`) and is k
 
 `getSubRows` turns the table into a tree: the first column indents by depth and grows an expand toggle, and selection cascades to children. Use `getRowCanExpand` to lazy-load children.
 
+With `enableRowReorder` a tree row moves among its siblings only, taking its expanded sub-rows with it. `onRowOrderChange` also reports `parentId`, `parent` and `siblings`; for a sub-row `data` is unchanged, so store `siblings` as the children of `parent`.
+
 ## Columns
 
 Column definitions are TanStack's, with a `meta` for alignment and classes:

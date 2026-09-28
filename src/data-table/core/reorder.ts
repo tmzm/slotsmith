@@ -17,7 +17,9 @@ export interface RowRect {
 /**
  * Row order change
  *
- * What a drop reports. The table does not reorder itself: store `data`.
+ * What a drop reports. The table does not reorder itself: store `data`, or,
+ * for a sub-row of a tree table, store `siblings` as the children of `parent`.
+ * A row only ever moves among its siblings, together with its sub-rows.
  *
  * @typeParam T - The row data type.
  */
@@ -25,13 +27,22 @@ export interface RowOrderChange<T> {
   /** The row that was moved. */
   row: T;
   rowId: string;
-  /** The row it was dropped next to. */
+  /** The row it was dropped next to: always one of its siblings. */
   target: T;
   targetId: string;
   /** Which side of the target it landed on. */
   position: DropPosition;
-  /** `data` with the row moved. */
+  /**
+   * The top-level rows: `data` with the row moved when it is a top-level row,
+   * `data` unchanged when it is a sub-row (store `siblings` then).
+   */
   data: T[];
+  /** The id of the moved row's parent; `null` for a top-level row. */
+  parentId: string | null;
+  /** The moved row's parent; `null` for a top-level row. */
+  parent: T | null;
+  /** The parent's children in their new order; for a top-level row, the same rows as `data`. */
+  siblings: T[];
 }
 
 /**
@@ -152,24 +163,100 @@ export function rowOffsets(
   return offsets;
 }
 
+/** Where a visible row sits in a tree. Every row of a flat table is top-level at depth zero. */
+export interface RowLevel {
+  id: string;
+  /** The parent row's id; `null` at the top level. */
+  parentId: string | null;
+  depth: number;
+}
+
+/**
+ * Row block
+ *
+ * A sibling of the dragged row together with its visible descendants: the
+ * unit that moves, makes room and is targeted in a tree. `id` is the
+ * sibling's, `top` and `bottom` span the whole block, `ids` lists its rows
+ * from the sibling down.
+ */
+export interface RowBlock extends RowRect {
+  ids: string[];
+}
+
+/**
+ * Sibling blocks
+ *
+ * The rows a row can move among, each grown to cover its expanded subtree:
+ * a block runs from a sibling to the next visible row at its depth or
+ * shallower. Treating each block as one rect lets {@link dropTargetAt},
+ * {@link stepTarget}, {@link landingIndex} and {@link rowOffsets} work on a
+ * tree unchanged. In a flat table every block is one row.
+ *
+ * @param rows - The visible rows, top to bottom.
+ * @param rects - Their extents, by id.
+ * @param draggingId - The row being moved.
+ * @returns The dragged row's siblings (itself included) as blocks, top to
+ *   bottom; empty when the row is not rendered.
+ */
+export function siblingBlocks(
+  rows: readonly RowLevel[],
+  rects: readonly RowRect[],
+  draggingId: string,
+): RowBlock[] {
+  const dragged = rows.find((row) => row.id === draggingId);
+  if (!dragged) return [];
+  const rectOf = new Map(rects.map((rect) => [rect.id, rect]));
+  const blocks: RowBlock[] = [];
+
+  for (let index = 0; index < rows.length; index++) {
+    const row = rows[index]!;
+    if (row.depth !== dragged.depth || row.parentId !== dragged.parentId) continue;
+    const ids = [row.id];
+    while (index + 1 < rows.length && rows[index + 1]!.depth > row.depth) ids.push(rows[++index]!.id);
+    const first = rectOf.get(ids[0]!);
+    const last = rectOf.get(ids[ids.length - 1]!);
+    if (first && last) blocks.push({ id: row.id, top: first.top, bottom: last.bottom, ids });
+  }
+  return blocks;
+}
+
+/**
+ * Block row offsets
+ *
+ * Spreads offsets computed per block (by {@link rowOffsets} over blocks) to
+ * every row of each block, so a block slides and travels as one piece.
+ *
+ * @param blocks - The blocks, from {@link siblingBlocks}.
+ * @param offsets - Offsets by block id.
+ * @returns Offsets by row id. Rows of blocks that do not move are absent.
+ */
+export function blockRowOffsets(
+  blocks: readonly RowBlock[],
+  offsets: ReadonlyMap<string, number>,
+): Map<string, number> {
+  const rows = new Map<string, number>();
+  for (const block of blocks) {
+    const offset = offsets.get(block.id);
+    if (offset === undefined) continue;
+    for (const id of block.ids) rows.set(id, offset);
+  }
+  return rows;
+}
+
 /**
  * Can reorder
  *
  * The one place that decides whether rows can be dragged. Sorting is
  * deliberately not part of it: a drop reorders the data even while the view is
- * sorted by a column.
+ * sorted by a column. A tree is not part of it either: its rows move among
+ * their siblings.
  *
  * @param state - What the table is doing.
  * @returns Whether dragging is on.
  */
-export function canReorder(state: {
-  enabled: boolean;
-  hasSubRows: boolean;
-  virtual: boolean;
-  rowCount: number;
-}): boolean {
+export function canReorder(state: { enabled: boolean; virtual: boolean; rowCount: number }): boolean {
   // TODO(reorder-sorting): decide what a drop means while a column sort is active (block it, or clear the sort).
-  return state.enabled && !state.hasSubRows && !state.virtual && state.rowCount > 1;
+  return state.enabled && !state.virtual && state.rowCount > 1;
 }
 
 /**

@@ -408,21 +408,39 @@
 }
 
 /**
- * The row being moved is drawn above the rows it passes. Its shadow sits on
- * the row, not on each cell: per-cell shadows fall on the neighbouring cells
- * and show a seam at every column border.
+ * The row being moved is drawn above the rows it passes, and so are its
+ * visible sub-rows in a tree (`data-dragging-child`), which move with it. The
+ * shadow sits on the row, not on each cell: per-cell shadows fall on the
+ * neighbouring cells and show a seam at every column border.
  */
-.rdt__body .rdt__row[data-dragging] {
+.rdt__body .rdt__row[data-dragging],
+.rdt__body .rdt__row[data-dragging-child] {
   position: relative;
   z-index: 1;
+}
+
+.rdt__body .rdt__row[data-dragging] {
+  box-shadow: 0 6px 16px -6px rgb(0 0 0 / 30%);
+}
+
+/**
+ * A lifted row with sub-rows reads as one piece: a single shadow, under the
+ * last row of the block, instead of one between each pair of rows.
+ */
+.rdt__body .rdt__row[data-dragging]:has(+ .rdt__row[data-dragging-child]) {
+  box-shadow: none;
+}
+
+.rdt__body .rdt__row[data-dragging-child]:not(:has(+ .rdt__row[data-dragging-child])) {
   box-shadow: 0 6px 16px -6px rgb(0 0 0 / 30%);
 }
 
 /**
  * Cells need an opaque background, or the rows underneath show through; the
- * hover tint over it keeps the row apart where a dark theme hides the shadow.
+ * hover tint over it keeps the rows apart where a dark theme hides the shadow.
  */
-.rdt__body .rdt__row[data-dragging] > * {
+.rdt__body .rdt__row[data-dragging] > *,
+.rdt__body .rdt__row[data-dragging-child] > * {
   background: linear-gradient(var(--rdt-hover), var(--rdt-hover)) var(--rdt-surface);
 }
 
@@ -440,20 +458,30 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /** Without motion nothing slides, so the target is marked with a line instead. */
-  .rdt__body .rdt__row[data-dragging] {
+  /**
+   * Without motion nothing slides: the lifted rows are dimmed in place, and a
+   * line marks where they would land, on the edge of the target's block.
+   */
+  .rdt__body .rdt__row[data-dragging],
+  .rdt__body .rdt__row[data-dragging-child] {
     box-shadow: none;
   }
 
-  .rdt__body .rdt__row[data-dragging] > * {
+  .rdt__body .rdt__row[data-dragging]:has(+ .rdt__row[data-dragging-child]),
+  .rdt__body .rdt__row[data-dragging-child]:not(:has(+ .rdt__row[data-dragging-child])) {
+    box-shadow: none;
+  }
+
+  .rdt__body .rdt__row[data-dragging] > *,
+  .rdt__body .rdt__row[data-dragging-child] > * {
     opacity: 0.5;
   }
 
-  .rdt__body .rdt__row[data-drop-position="before"] > * {
+  .rdt__body .rdt__row[data-drop-edge="before"] > * {
     box-shadow: inset 0 2px 0 0 var(--rdt-accent);
   }
 
-  .rdt__body .rdt__row[data-drop-position="after"] > * {
+  .rdt__body .rdt__row[data-drop-edge="after"] > * {
     box-shadow: inset 0 -2px 0 0 var(--rdt-accent);
   }
 

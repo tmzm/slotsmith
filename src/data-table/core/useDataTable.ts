@@ -21,7 +21,7 @@ import {
 import { canReorder, type RowOrderChange } from "./reorder";
 import { defaultReorderLabels, type ReorderLabels } from "./reorderLabels";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
-import { useRowReorder, type RowReorderModel } from "./useRowReorder";
+import { useRowReorder, type ReorderTree, type RowReorderModel } from "./useRowReorder";
 
 /**
  * Default page size options
@@ -112,12 +112,17 @@ export interface UseDataTableOptions<T extends RowData> {
   paginateExpandedRows?: boolean;
 
   /**
-   * Lets rows be dragged into a new order, by pointer, touch or keyboard.
-   * Ignored, with a development warning, in a tree table (`getSubRows`) and
-   * in `VirtualDataTable`. Defaults to `false`.
+   * Lets rows be dragged into a new order, by pointer, touch or keyboard. In
+   * a tree table (`getSubRows`) a row moves among its siblings only, with its
+   * sub-rows. Ignored, with a development warning, in `VirtualDataTable`.
+   * Defaults to `false`.
    */
   enableRowReorder?: boolean;
-  /** Called when a row is dropped in a new place. The table does not reorder itself: store `change.data`. */
+  /**
+   * Called when a row is dropped in a new place. The table does not reorder
+   * itself: store `change.data`, or for a sub-row, `change.siblings` as the
+   * children of `change.parent`.
+   */
   onRowOrderChange?: (change: RowOrderChange<T>) => void;
   /** Adds a leading column with each row's drag handle. `false` lets you place `DataTable.DragHandle` yourself. Defaults to `true`. */
   reorderHandleColumn?: boolean;
@@ -173,7 +178,7 @@ export interface DataTableModel<T extends RowData> {
   reorder: RowReorderModel;
   /**
    * Whether row reordering is on for this table: `enableRowReorder`, in a
-   * flat, non-virtual table. It stays on while too few rows show for a drag,
+   * non-virtual table. It stays on while too few rows show for a drag,
    * so handles, the live region and the instructions do not come and go with
    * the row count; `reorder.enabled` says whether a drag can start now.
    */
@@ -401,30 +406,43 @@ export function useDataTable<T extends RowData>(
   const hasSubRows = getSubRows !== undefined;
   const virtual = internals.virtual ?? false;
   const enableRowReorder = options.enableRowReorder ?? false;
-  const reorderable = canReorder({ enabled: enableRowReorder, hasSubRows, virtual, rowCount: Infinity });
+  const reorderable = canReorder({ enabled: enableRowReorder, virtual, rowCount: Infinity });
+  const coreRowModel = table.getCoreRowModel();
+
+  /** A tree's rows by id, from the data's own order (not the sorted or paged view), for sibling moves. */
+  const reorderTree = useMemo((): ReorderTree<T> | undefined => {
+    if (!hasSubRows) return undefined;
+    const byId = new Map(coreRowModel.flatRows.map((row) => [row.id, row]));
+    return {
+      levelOf: (id) => {
+        const row = byId.get(id);
+        return row && { id, parentId: row.parentId ?? null, depth: row.depth };
+      },
+      childrenOf: (parentId) => {
+        const parent = byId.get(parentId);
+        return parent && { parent: parent.original, rows: parent.subRows };
+      },
+    };
+  }, [hasSubRows, coreRowModel]);
+
   const reorder = useRowReorder<T>({
-    enabled: canReorder({ enabled: enableRowReorder, hasSubRows, virtual, rowCount: visibleRowCount }),
+    enabled: canReorder({ enabled: enableRowReorder, virtual, rowCount: visibleRowCount }),
     visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
-    rows: table.getCoreRowModel().rows,
+    rows: coreRowModel.rows,
+    tree: reorderTree,
     labels: internals.labels ?? defaultReorderLabels,
     onRowOrderChange: options.onRowOrderChange,
   });
 
-  /** Reordering a tree or a virtual table is not supported yet: say so while building. */
+  /** Reordering a virtual table is not supported yet: say so while building. */
   useEffect(() => {
-    if (!enableRowReorder) return;
-    if (virtual) {
+    if (enableRowReorder && virtual) {
       warnings.warn(
         "virtual",
         "slotsmith: enableRowReorder is ignored in VirtualDataTable; rows can be reordered in a non-virtual table only.",
       );
-    } else if (hasSubRows) {
-      warnings.warn(
-        "tree",
-        "slotsmith: enableRowReorder is ignored in a tree table (getSubRows); rows can be reordered in a flat table only.",
-      );
     }
-  }, [enableRowReorder, virtual, hasSubRows]);
+  }, [enableRowReorder, virtual]);
   const hasError = isPresent(error);
   const pageCount = table.getPageCount();
 

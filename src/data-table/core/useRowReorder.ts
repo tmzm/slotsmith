@@ -10,16 +10,19 @@ import {
 } from "react";
 import type { DragHandleSlotProps } from "../slots/types";
 import {
+  blockRowOffsets,
   dropTargetAt,
   landingIndex,
   moveItem,
   rowOffsets,
   scrollSpeed,
+  siblingBlocks,
   stepTarget,
   type DropPosition,
   type DropTarget,
+  type RowBlock,
+  type RowLevel,
   type RowOrderChange,
-  type RowRect,
 } from "./reorder";
 import type { ReorderLabels } from "./reorderLabels";
 import {
@@ -43,8 +46,16 @@ export interface RowReorderAttributes {
   "data-row-id": string;
   /** Set on the row being moved. */
   "data-dragging"?: "";
+  /** Set on the visible sub-rows of the row being moved, which move with it (tree tables). */
+  "data-dragging-child"?: "";
   /** Set on the row it would be dropped next to, naming the side. */
   "data-drop-position"?: DropPosition;
+  /**
+   * Set on the row whose edge the moved row would land against: the target
+   * row for `"before"`, and for `"after"` the last visible row of the
+   * target's subtree (the target itself in a flat table). Draw a drop line here.
+   */
+  "data-drop-edge"?: DropPosition;
 }
 
 /**
@@ -73,6 +84,20 @@ export interface RowReorderModel {
 }
 
 /**
+ * Reorder tree
+ *
+ * How a tree table's rows relate, for moving a row among its siblings.
+ *
+ * @typeParam T - The row data type.
+ */
+export interface ReorderTree<T> {
+  /** Where a row sits: its parent's id and its depth. */
+  levelOf: (id: string) => RowLevel | undefined;
+  /** A parent row and its children, in the order of its sub-rows in the data. */
+  childrenOf: (parentId: string) => { parent: T; rows: readonly { id: string; original: T }[] } | undefined;
+}
+
+/**
  * Row reorder options
  *
  * @typeParam T - The row data type.
@@ -83,6 +108,8 @@ export interface UseRowReorderOptions<T> {
   visibleIds: readonly string[];
   /** Every top-level row, in the order of `data`. */
   rows: readonly { id: string; original: T }[];
+  /** A tree table's structure. Omit for a flat table: every row is then top-level. */
+  tree?: ReorderTree<T>;
   labels: ReorderLabels;
   onRowOrderChange?: (change: RowOrderChange<T>) => void;
 }
@@ -91,7 +118,11 @@ type Mode = "pointer" | "keyboard";
 
 interface State {
   draggingId: string | null;
+  /** The dragged row's visible sub-rows, which move with it. */
+  children: readonly string[];
   target: DropTarget | null;
+  /** The row whose edge the dragged row would land against. */
+  edgeId: string | null;
   announcement: string;
   mode: Mode | null;
   /** Counts finished drags, so the settle and focus effects run once per drop. */
@@ -99,20 +130,36 @@ interface State {
 }
 
 type Action =
-  | { type: "start"; id: string; mode: Mode; announcement: string }
-  | { type: "target"; target: DropTarget | null; announcement: string }
+  | { type: "start"; id: string; children: readonly string[]; mode: Mode; announcement: string }
+  | { type: "target"; target: DropTarget | null; edgeId: string | null; announcement: string }
   | { type: "end"; announcement: string };
 
-const initialState: State = { draggingId: null, target: null, announcement: "", mode: null, ends: 0 };
+const initialState: State = {
+  draggingId: null,
+  children: [],
+  target: null,
+  edgeId: null,
+  announcement: "",
+  mode: null,
+  ends: 0,
+};
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "start":
-      return { ...state, draggingId: action.id, mode: action.mode, target: null, announcement: action.announcement };
+      return {
+        ...state,
+        draggingId: action.id,
+        children: action.children,
+        mode: action.mode,
+        target: null,
+        edgeId: null,
+        announcement: action.announcement,
+      };
     case "target":
-      return { ...state, target: action.target, announcement: action.announcement };
+      return { ...state, target: action.target, edgeId: action.edgeId, announcement: action.announcement };
     case "end":
-      return { draggingId: null, target: null, mode: null, announcement: action.announcement, ends: state.ends + 1 };
+      return { ...initialState, announcement: action.announcement, ends: state.ends + 1 };
   }
 }
 
@@ -122,15 +169,23 @@ function reducer(state: State, action: Action): State {
  * Everything about the drag in progress that event listeners read without
  * re-subscribing. Rects are measured once, at rest, in the coordinates of the
  * scroll area's content, so scrolling does not invalidate them.
+ *
+ * Targets, steps and offsets work on blocks: the dragged row's siblings, each
+ * with its visible sub-rows. In a flat table every block is one row.
  */
 interface Session {
   id: string;
   mode: Mode;
   handle: HTMLElement;
   parent: HTMLElement;
-  /** The rows at rest, in content coordinates, top to bottom. */
-  rects: RowRect[];
+  /** The dragged row's siblings with their subtrees, at rest, in content coordinates, top to bottom. */
+  blocks: RowBlock[];
+  /** The siblings' ids, in the order shown. */
   ids: string[];
+  /** Every row that moves with the drag: the dragged row and its visible sub-rows. */
+  moving: Set<string>;
+  /** The dragged row's parent; `null` at the top level. */
+  parentId: string | null;
   /** The `visibleIds` the drag started with; any change to them ends it. */
   shown: readonly string[];
   saved: Map<string, SavedStyle>;
@@ -163,14 +218,15 @@ const sameIds = (a: readonly string[], b: readonly string[]) =>
 /**
  * Released off the rows
  *
- * Whether a pointer was let go above, below or beside the rows. The live
- * preview clamps such a pointer to the first or last row, but a release there
- * is not a drop.
+ * Whether a pointer was let go above, below or beside the rows the dragged
+ * row can move among: its siblings and their subtrees. The live preview
+ * clamps such a pointer to the first or last sibling, but a release there
+ * (over another parent's rows, in a tree) is not a drop.
  */
 function releasedOffRows(s: Session, clientX: number, clientY: number): boolean {
   const y = clientY - contentOrigin(s.area);
-  const first = s.rects[0]!;
-  const last = s.rects[s.rects.length - 1]!;
+  const first = s.blocks[0]!;
+  const last = s.blocks[s.blocks.length - 1]!;
   const box = s.parent.getBoundingClientRect();
   return y < first.top || y > last.bottom || clientX < box.left || clientX > box.right;
 }
@@ -189,7 +245,7 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
  *
  * @returns Each row's rect in content coordinates. Called before any transform is written.
  */
-function measure(parent: HTMLElement, area: HTMLElement | null): RowRect[] {
+function measure(parent: HTMLElement, area: HTMLElement | null) {
   const origin = contentOrigin(area);
   return rowsIn(parent).map((row) => {
     const rect = row.getBoundingClientRect();
@@ -208,7 +264,7 @@ const positionOf = (s: Session, target: DropTarget | null) =>
  * leave the row where it is.
  */
 function pointerTarget(s: Session, y: number): DropTarget | null {
-  const target = dropTargetAt(s.rects, y);
+  const target = dropTargetAt(s.blocks, y);
   if (!target || target.id === s.id) return null;
   return landingIndex(s.ids, s.id, target) === s.ids.indexOf(s.id) ? null : target;
 }
@@ -261,20 +317,38 @@ function instantScroll(target: HTMLElement | Window, top: number): boolean {
   }
 }
 
+/** Where every row is drawn for a target: the blocks passed make room, the dragged block travels. */
+const targetOffsets = (s: Session, target: DropTarget | null) =>
+  blockRowOffsets(s.blocks, rowOffsets(s.blocks, s.id, target));
+
 /**
  * Draw a pointer drag
  *
- * The dragged row follows the pointer, kept between the first and the last
- * row; the rows it passed make room.
+ * The dragged block follows the pointer, kept between the first and the last
+ * sibling; the blocks it passed make room.
  */
 function drawPointer(s: Session): void {
-  const offsets = rowOffsets(s.rects, s.id, s.target);
-  const own = s.rects[s.ids.indexOf(s.id)]!;
-  const first = s.rects[0]!;
-  const last = s.rects[s.rects.length - 1]!;
+  const offsets = targetOffsets(s, s.target);
+  const own = s.blocks[s.ids.indexOf(s.id)]!;
+  const first = s.blocks[0]!;
+  const last = s.blocks[s.blocks.length - 1]!;
   const y = s.clientY - contentOrigin(s.area);
-  offsets.set(s.id, clamp(y - s.startY, first.top - own.top, last.bottom - own.bottom));
-  applyOffsets(s.parent, offsets, s.id, false);
+  const travel = clamp(y - s.startY, first.top - own.top, last.bottom - own.bottom);
+  for (const id of s.moving) offsets.set(id, travel);
+  applyOffsets(s.parent, offsets, s.moving, false);
+}
+
+/**
+ * Edge row
+ *
+ * @returns The row whose edge a drop on `target` lands against: the target
+ *   for `"before"`, the last row of its block for `"after"`.
+ */
+function edgeOf(s: Session, target: DropTarget | null): string | null {
+  if (!target) return null;
+  if (target.position === "before") return target.id;
+  const block = s.blocks.find((candidate) => candidate.id === target.id);
+  return block ? block.ids[block.ids.length - 1]! : target.id;
 }
 
 /**
@@ -284,6 +358,9 @@ function drawPointer(s: Session): void {
  * one table body, with animated rows, auto-scroll and announcements. It never
  * reorders anything itself: a drop reports the new `data` through
  * `onRowOrderChange`, and the app stores it.
+ *
+ * In a tree table a row moves only among its siblings, carrying its visible
+ * sub-rows with it; positions are announced among those siblings.
  *
  * Handles are found from events (`event.currentTarget`, then its closest
  * `[data-row-id]`), not from refs, because a function component slot does not
@@ -341,24 +418,31 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     function commit(): void {
       const s = session.current;
       if (!s) return;
-      const { rows, onRowOrderChange } = latest.current.options;
-      const { target } = s;
+      const { rows: top, tree, onRowOrderChange } = latest.current.options;
+      const { target, parentId } = s;
       const announcement = labelsNow().reorderDropped(positionOf(s, target), s.ids.length);
       stop(s, true);
 
-      if (target) {
+      // Indexes come from the data (the parent's sub-rows), never from the sorted or paged view.
+      const family = parentId === null ? { parent: null, rows: top } : tree?.childrenOf(parentId);
+      if (target && family) {
+        const { rows } = family;
         const from = rows.findIndex((row) => row.id === s.id);
         const to = rows.findIndex((row) => row.id === target.id);
         if (from >= 0 && to >= 0) {
           const order = moveItem(rows, from, to, target.position);
           if (order.some((row, index) => row.id !== rows[index]!.id)) {
+            const siblings = order.map((row) => row.original);
             onRowOrderChange?.({
               row: rows[from]!.original,
               rowId: s.id,
               target: rows[to]!.original,
               targetId: target.id,
               position: target.position,
-              data: order.map((row) => row.original),
+              data: parentId === null ? siblings : top.map((row) => row.original),
+              parentId,
+              parent: family.parent,
+              siblings: parentId === null ? siblings.slice() : siblings,
             });
           }
         }
@@ -371,7 +455,12 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     function setTarget(s: Session, target: DropTarget | null, force = false): void {
       if (!force && sameTarget(s.target, target)) return;
       s.target = target;
-      dispatch({ type: "target", target, announcement: labelsNow().reorderMoved(positionOf(s, target), s.ids.length) });
+      dispatch({
+        type: "target",
+        target,
+        edgeId: edgeOf(s, target),
+        announcement: labelsNow().reorderMoved(positionOf(s, target), s.ids.length),
+      });
     }
 
     function start(rowId: string, handle: HTMLElement, mode: Mode): Session | null {
@@ -384,16 +473,23 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
 
       const area = scrollAreaOf(parent);
       const rects = measure(parent, area);
-      const ids = rects.map((rect) => rect.id);
-      if (!ids.includes(rowId)) return null;
+      const { tree } = latest.current.options;
+      const levels = rects.map(({ id }) => tree?.levelOf(id) ?? { id, parentId: null, depth: 0 });
+      const blocks = siblingBlocks(levels, rects, rowId);
+      // Not rendered, or an only child: nothing to move among.
+      if (blocks.length < 2) return null;
+      const ids = blocks.map((block) => block.id);
+      const own = blocks[ids.indexOf(rowId)]!;
 
       const s: Session = {
         id: rowId,
         mode,
         handle,
         parent,
-        rects,
+        blocks,
         ids,
+        moving: new Set(own.ids),
+        parentId: levels.find((level) => level.id === rowId)!.parentId,
         shown: latest.current.options.visibleIds.slice(),
         saved: saveStyles(parent),
         area,
@@ -410,6 +506,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       dispatch({
         type: "start",
         id: rowId,
+        children: own.ids.slice(1),
         mode,
         announcement: labelsNow().reorderLifted(ids.indexOf(rowId) + 1, ids.length),
       });
@@ -491,7 +588,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     function step(s: Session, direction: -1 | 1): void {
       const target = stepTarget(s.ids, s.id, s.target, direction);
       setTarget(s, target, true);
-      if (!s.reduced) applyOffsets(s.parent, rowOffsets(s.rects, s.id, target), s.id, true);
+      if (!s.reduced) applyOffsets(s.parent, targetOffsets(s, target), s.moving, true);
       const shown = target?.id ?? s.id;
       rowsIn(s.parent)
         .find((row) => row.getAttribute("data-row-id") === shown)
@@ -587,7 +684,19 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     }
   }, [state.ends, instructionsId]);
 
-  const { draggingId, target, mode } = state;
+  const { draggingId, children, target, edgeId, mode } = state;
+
+  /** In a tree, a row with no visible sibling has nothing to swap with: its handle is disabled. */
+  const { tree } = options;
+  const siblingCounts = new Map<string | null, number>();
+  if (tree) {
+    for (const id of visibleIds) {
+      const parentId = tree.levelOf(id)?.parentId ?? null;
+      siblingCounts.set(parentId, (siblingCounts.get(parentId) ?? 0) + 1);
+    }
+  }
+  const alone = (rowId: string) =>
+    tree !== undefined && (siblingCounts.get(tree.levelOf(rowId)?.parentId ?? null) ?? 0) < 2;
 
   return {
     enabled,
@@ -600,7 +709,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       "aria-describedby": instructionsId,
       "aria-pressed": mode === "keyboard" && draggingId === rowId ? true : undefined,
       "data-dragging": draggingId === rowId ? "" : undefined,
-      disabled: !enabled,
+      disabled: !enabled || alone(rowId),
       // Touch would scroll the page instead of dragging the row.
       style: { touchAction: "none" },
       // A press on the handle is a drag, never a click on its row (`onRowClick`).
@@ -612,7 +721,9 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     getRowProps: (rowId) => {
       const attributes: RowReorderAttributes = { "data-row-id": rowId };
       if (draggingId === rowId) attributes["data-dragging"] = "";
+      else if (children.includes(rowId)) attributes["data-dragging-child"] = "";
       if (target?.id === rowId) attributes["data-drop-position"] = target.position;
+      if (target && edgeId === rowId) attributes["data-drop-edge"] = target.position;
       return attributes;
     },
   };
