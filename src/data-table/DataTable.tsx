@@ -1,5 +1,5 @@
 import type { RowData } from "@tanstack/react-table";
-import type { HTMLAttributes, ReactNode } from "react";
+import { useContext, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
@@ -12,7 +12,12 @@ import {
   DataTableStatusRows,
   DataTableTable,
 } from "./parts";
-import { DataTableContext, useDataTableContext, type DataTableContextValue } from "./slots/context";
+import {
+  DataTableContext,
+  useDataTableContext,
+  VirtualTableContext,
+  type DataTableContextValue,
+} from "./slots/context";
 import { defaultLabels, fallbackComponents } from "./slots/fallbacks";
 import type { DataTableComponents, DataTableLabels, DataTableSlotProps } from "./slots/types";
 
@@ -75,14 +80,20 @@ export function DataTableProvider<T extends RowData>({
   children,
   ...options
 }: DataTableProviderProps<T>) {
-  const model = useDataTable(options);
   const { labels: localeLabels } = useLocaleSection("table", locale);
+  /** English, then the locale, then the caller's own overrides. */
+  const resolvedLabels: DataTableLabels = {
+    ...defaultLabels,
+    ...withoutUndefined(localeLabels),
+    ...withoutUndefined(labels),
+  };
+  const virtual = useContext(VirtualTableContext);
+  const model = useDataTable(options, { labels: resolvedLabels, virtual });
 
   const value: DataTableContextValue<T> = {
     ...model,
     components: { ...fallbackComponents, ...withoutUndefined(components) },
-    /** English, then the locale, then the caller's own overrides. */
-    labels: { ...defaultLabels, ...withoutUndefined(localeLabels), ...withoutUndefined(labels) },
+    labels: resolvedLabels,
     slotProps: slotProps ?? {},
     locale,
     onRowClick,
@@ -157,6 +168,7 @@ const PROVIDER_KEYS = [
   "pageSizeOptions", "enablePagination",
   "enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange",
   "getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows",
+  "enableRowReorder", "onRowOrderChange", "reorderHandleColumn",
   "loading", "error", "onRetry", "tableOptions",
   "components", "labels", "locale", "slotProps", "onRowClick",
 ] as const;

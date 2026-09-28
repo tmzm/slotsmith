@@ -14,7 +14,7 @@ import {
   DataTableTable,
   useColumnSpan,
 } from "./parts";
-import { useDataTableContext } from "./slots/context";
+import { useDataTableContext, VirtualTableContext } from "./slots/context";
 
 /**
  * Virtual options
@@ -172,22 +172,24 @@ export function VirtualDataTable<T extends RowData>(props: VirtualDataTableProps
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
 
   return (
-    <DataTableProvider enablePagination={false} {...providerProps}>
-      <DataTableRoot size={size} data-virtual="" {...htmlProps}>
-        <DataTableTable
-          scrollRef={setScrollElement}
-          maxHeight={virtual.maxHeight ?? DEFAULT_MAX_HEIGHT}
-          body={
-            <DataTableVirtualBody
-              scrollElement={scrollElement}
-              estimateSize={virtual.estimateSize}
-              overscan={virtual.overscan}
-              maxHeight={virtual.maxHeight}
-            />
-          }
-        />
-        {!hidePagination && <DataTablePagination />}
-      </DataTableRoot>
-    </DataTableProvider>
+    <VirtualTableContext.Provider value>
+      <DataTableProvider enablePagination={false} {...providerProps}>
+        <DataTableRoot size={size} data-virtual="" {...htmlProps}>
+          <DataTableTable
+            scrollRef={setScrollElement}
+            maxHeight={virtual.maxHeight ?? DEFAULT_MAX_HEIGHT}
+            body={
+              <DataTableVirtualBody
+                scrollElement={scrollElement}
+                estimateSize={virtual.estimateSize}
+                overscan={virtual.overscan}
+                maxHeight={virtual.maxHeight}
+              />
+            }
+          />
+          {!hidePagination && <DataTablePagination />}
+        </DataTableRoot>
+      </DataTableProvider>
+    </VirtualTableContext.Provider>
   );
 }

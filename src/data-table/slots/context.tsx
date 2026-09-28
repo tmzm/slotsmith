@@ -62,6 +62,16 @@ export function useDataTableContext<T extends RowData = any>(): DataTableContext
 }
 
 /**
+ * Virtual table context
+ *
+ * `true` under `VirtualDataTable`, which tells the provider that its body is
+ * virtualized. Internal: row reordering is not supported there yet.
+ *
+ * @internal
+ */
+export const VirtualTableContext = createContext(false);
+
+/**
  * Data table row context
  *
  * The React context behind {@link useDataTableRow}.

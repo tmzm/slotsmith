@@ -5,6 +5,7 @@
     "Pagination": ["pagination", "onPaginationChange", "defaultPagination", "manualPagination", "rowCount", "pageSizeOptions", "enablePagination", "hidePagination"],
     "Selection": ["enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange"],
     "Tree rows": ["getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows"],
+    "Row reordering": ["enableRowReorder", "onRowOrderChange", "reorderHandleColumn"],
     "Status": ["loading", "error", "onRetry"],
     "Rendering": ["components", "labels", "locale", "slotProps", "onRowClick", "size", "striped", "tableOptions"]
   },

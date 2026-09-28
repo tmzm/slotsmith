@@ -10,6 +10,7 @@ import {
   type Updater,
 } from "@tanstack/react-table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createDevWarnings } from "../../shared/dev";
 import {
   dataTableFeatures,
   type DataTableColumnDef,
@@ -17,7 +18,10 @@ import {
   type DataTableInstance,
   type DataTableRow,
 } from "./features";
+import { canReorder, type RowOrderChange } from "./reorder";
+import { defaultReorderLabels, type ReorderLabels } from "./reorderLabels";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
+import { useRowReorder, type RowReorderModel } from "./useRowReorder";
 
 /**
  * Default page size options
@@ -107,6 +111,17 @@ export interface UseDataTableOptions<T extends RowData> {
   /** Count sub-rows towards the page size. Defaults to `false`. */
   paginateExpandedRows?: boolean;
 
+  /**
+   * Lets rows be dragged into a new order, by pointer, touch or keyboard.
+   * Ignored, with a development warning, in a tree table (`getSubRows`) and
+   * in `VirtualDataTable`. Defaults to `false`.
+   */
+  enableRowReorder?: boolean;
+  /** Called when a row is dropped in a new place. The table does not reorder itself: store `change.data`. */
+  onRowOrderChange?: (change: RowOrderChange<T>) => void;
+  /** Adds a leading column with each row's drag handle. `false` lets you place `DataTable.DragHandle` yourself. Defaults to `true`. */
+  reorderHandleColumn?: boolean;
+
   /** Shows skeleton rows. Defaults to `false`. */
   loading?: boolean;
   /** Any non-nullish value shows the error state. */
@@ -154,6 +169,29 @@ export interface DataTableModel<T extends RowData> {
   selection: T[];
   /** Returns the identity key of any row, including rows on other pages. */
   getRowKey: (row: T) => string;
+  /** Row reordering: its state, and the props for rows and drag handles. */
+  reorder: RowReorderModel;
+}
+
+/**
+ * Data table internals
+ *
+ * What `DataTable.Provider` hands the headless hook beyond the public
+ * options: the resolved reorder labels (English when absent) and whether the
+ * body is virtualized.
+ *
+ * @internal
+ */
+export interface DataTableInternals {
+  labels?: ReorderLabels;
+  virtual?: boolean;
+}
+
+const warnings = createDevWarnings();
+
+/** Forgets which reorder warnings were logged. For tests. */
+export function resetReorderWarnings(): void {
+  warnings.reset();
 }
 
 const DEFAULT_PAGINATION: PaginationState = { pageIndex: 0, pageSize: 10 };
@@ -241,7 +279,10 @@ const isPresent = (error: unknown) => error !== undefined && error !== null && e
  * }
  * ```
  */
-export function useDataTable<T extends RowData>(options: UseDataTableOptions<T>): DataTableModel<T> {
+export function useDataTable<T extends RowData>(
+  options: UseDataTableOptions<T>,
+  internals: DataTableInternals = {},
+): DataTableModel<T> {
   const {
     data,
     columns,
@@ -345,7 +386,35 @@ export function useDataTable<T extends RowData>(options: UseDataTableOptions<T>)
     }
   }
 
-  const visibleRowCount = table.getRowModel().rows.length;
+  const visibleRows = table.getRowModel().rows;
+  const visibleRowCount = visibleRows.length;
+
+  const hasSubRows = getSubRows !== undefined;
+  const virtual = internals.virtual ?? false;
+  const enableRowReorder = options.enableRowReorder ?? false;
+  const reorder = useRowReorder<T>({
+    enabled: canReorder({ enabled: enableRowReorder, hasSubRows, virtual, rowCount: visibleRowCount }),
+    visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
+    rows: table.getCoreRowModel().rows,
+    labels: internals.labels ?? defaultReorderLabels,
+    onRowOrderChange: options.onRowOrderChange,
+  });
+
+  /** Reordering a tree or a virtual table is not supported yet: say so while building. */
+  useEffect(() => {
+    if (!enableRowReorder) return;
+    if (virtual) {
+      warnings.warn(
+        "virtual",
+        "slotsmith: enableRowReorder is ignored in VirtualDataTable; rows can be reordered in a non-virtual table only.",
+      );
+    } else if (hasSubRows) {
+      warnings.warn(
+        "tree",
+        "slotsmith: enableRowReorder is ignored in a tree table (getSubRows); rows can be reordered in a flat table only.",
+      );
+    }
+  }, [enableRowReorder, virtual, hasSubRows]);
   const hasError = isPresent(error);
   const pageCount = table.getPageCount();
 
@@ -402,5 +471,6 @@ export function useDataTable<T extends RowData>(options: UseDataTableOptions<T>)
     pageSizeOptions,
     selection,
     getRowKey,
+    reorder,
   };
 }

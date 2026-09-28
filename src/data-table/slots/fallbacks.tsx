@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef } from "react";
 import { Autocomplete } from "../../autocomplete/Autocomplete";
 import type { OptionValue } from "../../autocomplete/core/types";
 import { cx } from "../../shared/cx";
+import { defaultReorderLabels } from "../core/reorderLabels";
 import { useDataTableContext } from "./context";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronIcon, GripIcon } from "./icons";
 import type {
@@ -384,10 +385,5 @@ export const defaultLabels: DataTableLabels = {
   selectRow: "Select row",
   expandRow: "Expand row",
   collapseRow: "Collapse row",
-  reorderRow: "Reorder row",
-  reorderInstructions: "Press space to lift the row, the arrow keys to move it, space to drop it, escape to cancel.",
-  reorderLifted: (position, total) => `Row lifted. Position ${position} of ${total}.`,
-  reorderMoved: (position, total) => `Position ${position} of ${total}.`,
-  reorderDropped: (position, total) => `Row dropped at position ${position} of ${total}.`,
-  reorderCancelled: "Reordering cancelled.",
+  ...defaultReorderLabels,
 };
