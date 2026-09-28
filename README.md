@@ -131,14 +131,16 @@ const ku = defineLocale({ code: "ckb", table: { /* every DataTableLabels key */ 
 
 Precedence per string: `labels` on the component beats its own `locale`, which beats the provider's `locale`, which beats the English default.
 
-18 packs ship, 15 languages. "Drafted" means translated from the English labels and not yet checked by a native speaker; "reviewed by Tareq" means a native speaker checked it.
+A section can also be a function of the active tag, built with `createNumber` and `createPlural` from `slotsmith/locale` — the same two helpers every pack above uses to format numbers and pick plural forms.
+
+18 packs ship, 15 languages. "Drafted" means translated from the English labels and not yet checked by a native speaker; "reviewed by Tareq" means a native speaker checked it; "same text as `ar`" means the region pack reuses the `ar` pack's text, formatted for its own tag.
 
 | Import | Language | Direction | Status |
 | --- | --- | --- | --- |
 | `slotsmith/locales/ar` | Arabic | rtl | reviewed by Tareq |
-| `slotsmith/locales/ar-EG` | Arabic, Egypt | rtl | reviewed by Tareq |
-| `slotsmith/locales/ar-SA` | Arabic, Saudi Arabia | rtl | reviewed by Tareq |
-| `slotsmith/locales/ar-IQ` | Arabic, Iraq | rtl | reviewed by Tareq |
+| `slotsmith/locales/ar-EG` | Arabic, Egypt | rtl | same text as `ar` |
+| `slotsmith/locales/ar-SA` | Arabic, Saudi Arabia | rtl | same text as `ar` |
+| `slotsmith/locales/ar-IQ` | Arabic, Iraq | rtl | same text as `ar` |
 | `slotsmith/locales/fa` | Persian | rtl | drafted |
 | `slotsmith/locales/he` | Hebrew | rtl | drafted |
 | `slotsmith/locales/tr` | Turkish | ltr | drafted |
