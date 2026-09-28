@@ -217,6 +217,9 @@ function pointerTarget(s: Session, y: number): DropTarget | null {
  * Auto-scroll
  *
  * Scrolls the scroll area while the pointer is near its top or bottom edge.
+ * Each step is an instant scroll: under `scroll-behavior: smooth` (common on
+ * the page itself) a plain step would start an animation that the next frame
+ * restarts, and the view would crawl at a fraction of the intended speed.
  *
  * @returns Whether it scrolled.
  */
@@ -229,12 +232,13 @@ function autoScroll(s: Session): boolean {
   if (area) {
     const next = Math.max(0, Math.min(area.scrollTop + speed, area.scrollHeight - area.clientHeight));
     if (next === area.scrollTop) return false;
-    area.scrollTop = next;
+    if (typeof area.scrollTo === "function") area.scrollTo({ top: next, behavior: "instant" });
+    else area.scrollTop = next;
     return true;
   }
   const next = Math.max(0, Math.min(window.scrollY + speed, document.documentElement.scrollHeight - window.innerHeight));
   if (next === window.scrollY) return false;
-  window.scrollTo(window.scrollX, next);
+  window.scrollTo({ top: next, behavior: "instant" });
   return true;
 }
 

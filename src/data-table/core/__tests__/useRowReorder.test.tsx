@@ -135,6 +135,43 @@ function pointerDrag(handle: HTMLElement, from: number, to: number) {
 
 const key = (element: HTMLElement, name: string) => fireEvent.keyDown(element, { key: name });
 
+/**
+ * Auto-scroll steps a little every frame. A page with `scroll-behavior:
+ * smooth` would turn each step into an animation that the next step restarts,
+ * so the view crawls; every step must ask for an instant scroll.
+ */
+describe("useRowReorder, auto-scroll", () => {
+  it("scrolls the window instantly near its bottom edge", () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    const scrollHeight = vi.spyOn(document.documentElement, "scrollHeight", "get").mockReturnValue(5000);
+    const { handle } = setup();
+    fireEvent.pointerDown(handle("a"), { button: 0, pointerId: 1, clientY: 20 });
+    fireEvent.pointerMove(handle("a"), { pointerId: 1, clientY: window.innerHeight - 2 });
+    frame();
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: expect.any(Number), behavior: "instant" });
+    expect(scrollTo.mock.calls.at(-1)![0]).toMatchObject({ top: expect.toSatisfy((top: number) => top > 0) });
+    fireEvent.pointerCancel(handle("a"), { pointerId: 1 });
+    scrollHeight.mockRestore();
+  });
+
+  it("scrolls a scroll area instantly near its bottom edge", () => {
+    const { handle, container } = setup();
+    container.style.overflowY = "auto";
+    vi.spyOn(container, "scrollHeight", "get").mockReturnValue(2000);
+    vi.spyOn(container, "clientHeight", "get").mockReturnValue(100);
+    const scrollTo = vi.fn();
+    container.scrollTo = scrollTo as typeof container.scrollTo;
+
+    fireEvent.pointerDown(handle("a"), { button: 0, pointerId: 1, clientY: 20 });
+    fireEvent.pointerMove(handle("a"), { pointerId: 1, clientY: 200 });
+    frame();
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: expect.toSatisfy((top: number) => top > 0), behavior: "instant" });
+    fireEvent.pointerCancel(handle("a"), { pointerId: 1 });
+  });
+});
+
 describe("useRowReorder, pointer", () => {
   it("drops after the target in the lower half of a row", () => {
     const { handle, onRowOrderChange } = setup();
