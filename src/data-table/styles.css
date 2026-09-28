@@ -43,6 +43,8 @@
   --rdt-danger: #f87171;
   --rdt-skeleton-bg: #262626;
   --rdt-skeleton-bg-2: #333333;
+  /** So the browser paints the page-size select's native popup and scrollbar dark. */
+  color-scheme: dark;
 }
 
 /** Root */
@@ -259,14 +261,20 @@
   padding: 0 8px;
   font: inherit;
   color: var(--rdt-text);
-  background: transparent;
+  background: var(--rdt-surface);
   border: 1px solid var(--rdt-border);
   border-radius: var(--rdt-radius);
   cursor: pointer;
 }
 
+/**
+ * The dropdown list is painted by the browser, not by this stylesheet, so it
+ * needs its own colours instead of the inherited `color: initial`, which
+ * always painted the list with the light-scheme default.
+ */
 .rdt__select option {
-  color: initial;
+  color: var(--rdt-text);
+  background-color: var(--rdt-surface);
 }
 
 .rdt :is(button, select, input):focus-visible {

@@ -274,6 +274,10 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ## Changelog
 
+### Unreleased
+
+- Native selects (the data table's page size, the date picker's month and year) now use the component's colours in dark mode.
+
 - **1.5.0** — Locale packs and a `SlotsmithProvider` for translating every component, formatting numbers and plurals, and right-to-left text; see [Languages](#languages). A string `locale` with no registered pack now logs one development-only warning instead of silently staying in English.
 - The autocomplete now turns dark with `.dark` or `[data-theme="dark"]` on the page, like the other components, instead of with the system setting.
 

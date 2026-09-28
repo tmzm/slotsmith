@@ -37,6 +37,8 @@
   --sdp-muted: var(--rdt-muted, #a3a3a3);
   --sdp-accent: var(--rdt-accent, #60a5fa);
   --sdp-on-accent: #0b0b0c;
+  /** So the browser paints the month/year selects' native popup and scrollbar dark. */
+  color-scheme: dark;
 }
 
 /* ------------------------------------------------------------------- root */
