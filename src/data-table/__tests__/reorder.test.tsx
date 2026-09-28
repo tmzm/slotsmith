@@ -159,6 +159,61 @@ describe("row reordering, rendered", () => {
     expect(first).toHaveAccessibleName("Reorder row");
   });
 
+  it("keeps keyboard reordering when slotProps.dragHandle adds its own onKeyDown", () => {
+    const onKeyDown = vi.fn();
+    const onMove = vi.fn<(change: RowOrderChange<User>) => void>();
+    render(<Reorderable onMove={onMove} slotProps={{ dragHandle: () => ({ onKeyDown }) }} />);
+
+    const handle = handles()[0]!;
+    act(() => handle.focus());
+    key(handle, " ");
+    key(handle, "ArrowDown");
+    key(handle, " ");
+
+    expect(onKeyDown).toHaveBeenCalledTimes(3);
+    expect(onMove).toHaveBeenCalledTimes(1);
+    expect(names()).toEqual(["User 02", "User 01", "User 03"]);
+  });
+
+  it("keeps pointer dragging when slotProps.dragHandle adds its own onPointerDown and onBlur", () => {
+    const onPointerDown = vi.fn();
+    const onBlur = vi.fn();
+    render(<Reorderable slotProps={{ dragHandle: () => ({ onPointerDown, onBlur }) }} />);
+
+    const handle = handles()[0]!;
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 1, clientY: 0 });
+    expect(onPointerDown).toHaveBeenCalledTimes(1);
+    expect(bodyRows()[0]).toHaveAttribute("data-dragging", "");
+    fireEvent.pointerCancel(window, { pointerId: 1 });
+    expect(bodyRows()[0]).not.toHaveAttribute("data-dragging");
+
+    // Keyboard lift, then blur: the engine's cancel-on-blur still runs beside the app's handler.
+    act(() => handle.focus());
+    key(handle, " ");
+    expect(bodyRows()[0]).toHaveAttribute("data-dragging", "");
+    fireEvent.blur(handle);
+    expect(onBlur).toHaveBeenCalled();
+    expect(bodyRows()[0]).not.toHaveAttribute("data-dragging");
+  });
+
+  it("keeps the engine's handlers when DataTable.DragHandle is given its own", () => {
+    const onKeyDown = vi.fn();
+    const withHandle: DataTableColumnDef<User>[] = [
+      ...columns,
+      { id: "move", header: "Move", cell: () => <DataTable.DragHandle onKeyDown={onKeyDown} /> },
+    ];
+    const onMove = vi.fn<(change: RowOrderChange<User>) => void>();
+    render(<Reorderable onMove={onMove} reorderHandleColumn={false} columns={withHandle} />);
+
+    const handle = handles()[0]!;
+    act(() => handle.focus());
+    key(handle, " ");
+    key(handle, "ArrowDown");
+    key(handle, " ");
+    expect(onKeyDown).toHaveBeenCalledTimes(3);
+    expect(onMove).toHaveBeenCalledTimes(1);
+  });
+
   it("describes every handle with the hidden instructions", () => {
     renderTable({ enableRowReorder: true });
     expect(handles()[0]).toHaveAccessibleDescription(

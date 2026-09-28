@@ -11,8 +11,10 @@ type AnyProps = HTMLAttributes<HTMLElement> & Record<string, unknown>;
  * Merge props
  *
  * Merges two prop objects the way slot props are merged: classNames are
- * joined, styles merged, `onClick` handlers chained, and anything else in
- * `extra` wins.
+ * joined, styles merged, event handlers (`on*`) chained, base first, so
+ * neither side's is lost, and anything else in `extra` wins. Chaining matters
+ * most for the drag handle, whose key, pointer and blur handlers are the
+ * reorder engine itself.
  *
  * @param base - The props the table computes.
  * @param extra - The props to layer on top.
@@ -32,14 +34,20 @@ export function mergeProps<P extends object>(base: P, extra?: Partial<P>): P {
     ...b,
     className: cx(a.className, b.className),
     style: a.style || b.style ? { ...a.style, ...b.style } : undefined,
-    onClick:
-      a.onClick && b.onClick
-        ? (event: never) => {
-            (a.onClick as (e: never) => void)(event);
-            (b.onClick as (e: never) => void)(event);
-          }
-        : (b.onClick ?? a.onClick),
   };
+  for (const key of Object.keys(b)) {
+    const first = a[key];
+    const second = b[key];
+    if (key.startsWith("on") && typeof first === "function" && typeof second === "function") {
+      merged[key] = (...args: unknown[]) => {
+        (first as (...a: unknown[]) => void)(...args);
+        (second as (...a: unknown[]) => void)(...args);
+      };
+    } else if (second === undefined && first !== undefined && key.startsWith("on")) {
+      // An explicit `onX: undefined` keeps the base handler, as `onClick` always did.
+      merged[key] = first;
+    }
+  }
   /** An explicit `undefined` would override a slot's own default (e.g. `className`). */
   for (const key of Object.keys(merged)) if (merged[key] === undefined) delete merged[key];
   return merged as P;

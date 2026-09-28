@@ -232,14 +232,33 @@ function autoScroll(s: Session): boolean {
   if (area) {
     const next = Math.max(0, Math.min(area.scrollTop + speed, area.scrollHeight - area.clientHeight));
     if (next === area.scrollTop) return false;
-    if (typeof area.scrollTo === "function") area.scrollTo({ top: next, behavior: "instant" });
-    else area.scrollTop = next;
+    // jsdom has no `Element.scrollTo`; plain `scrollTop` is the fallback there.
+    if (!instantScroll(area, next)) area.scrollTop = next;
     return true;
   }
   const next = Math.max(0, Math.min(window.scrollY + speed, document.documentElement.scrollHeight - window.innerHeight));
   if (next === window.scrollY) return false;
-  window.scrollTo({ top: next, behavior: "instant" });
+  if (!instantScroll(window, next)) window.scrollTo(window.scrollX, next);
   return true;
+}
+
+/**
+ * Instant scroll
+ *
+ * `scrollTo` with `behavior: "instant"`. Browsers that predate that value
+ * throw on it, and a throw inside the frame loop would end the drag, so
+ * this reports failure instead and the caller scrolls the plain way.
+ *
+ * @returns Whether it scrolled.
+ */
+function instantScroll(target: HTMLElement | Window, top: number): boolean {
+  if (typeof target.scrollTo !== "function") return false;
+  try {
+    target.scrollTo({ top, behavior: "instant" });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

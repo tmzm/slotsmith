@@ -155,6 +155,23 @@ describe("useRowReorder, auto-scroll", () => {
     scrollHeight.mockRestore();
   });
 
+  it("falls back to a plain scroll where behavior: instant throws, and keeps dragging", () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(((options: unknown) => {
+      if (typeof options === "object") throw new TypeError("The provided value 'instant' is not a valid enum value");
+    }) as typeof window.scrollTo);
+    const scrollHeight = vi.spyOn(document.documentElement, "scrollHeight", "get").mockReturnValue(5000);
+    const { handle, row } = setup();
+    fireEvent.pointerDown(handle("a"), { button: 0, pointerId: 1, clientY: 20 });
+    fireEvent.pointerMove(handle("a"), { pointerId: 1, clientY: window.innerHeight - 2 });
+    frame();
+    frame();
+
+    expect(scrollTo).toHaveBeenCalledWith(expect.any(Number), expect.any(Number));
+    expect(row("a")).toHaveAttribute("data-dragging", "");
+    fireEvent.pointerCancel(handle("a"), { pointerId: 1 });
+    scrollHeight.mockRestore();
+  });
+
   it("scrolls a scroll area instantly near its bottom edge", () => {
     const { handle, container } = setup();
     container.style.overflowY = "auto";
