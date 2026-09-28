@@ -7,40 +7,47 @@
  */
 
 :root {
-  --rdt-surface: #ffffff;
+  --rdt-surface: var(--ss-surface, #ffffff);
   --rdt-bg: var(--rdt-surface);
   /** Must stay opaque: the header is sticky and rows scroll underneath it. */
   --rdt-header-bg: var(--rdt-surface);
-  --rdt-border: #e5e7eb;
-  --rdt-text: #111827;
-  --rdt-muted: #6b7280;
-  --rdt-hover: rgba(0, 0, 0, 0.04);
+  --rdt-border: var(--ss-border, #e5e7eb);
+  --rdt-text: var(--ss-text, #111827);
+  --rdt-muted: var(--ss-muted, #6b7280);
+  --rdt-hover: var(--ss-hover, rgba(0, 0, 0, 0.04));
   --rdt-stripe: rgba(0, 0, 0, 0.025);
-  --rdt-selected: rgba(37, 99, 235, 0.08);
-  --rdt-accent: #2563eb;
-  --rdt-danger: #dc2626;
+  --rdt-selected: var(--ss-selected, rgba(37, 99, 235, 0.08));
+  --rdt-accent: var(--ss-accent, #2563eb);
+  --rdt-danger: var(--ss-danger, #dc2626);
   --rdt-skeleton-bg: #e5e7eb;
   --rdt-skeleton-bg-2: #f3f4f6;
 
-  --rdt-radius: 8px;
-  --rdt-font-size: 14px;
+  --rdt-radius: var(--ss-radius, 8px);
+  --rdt-font-size: var(--ss-font-size, 14px);
   --rdt-padding-x: 12px;
   --rdt-padding-y: 10px;
   --rdt-checkbox-size: 16px;
   --rdt-max-height: none;
 }
 
+/**
+ * Every colour token again, and the ones derived from them: a custom property
+ * is resolved where it is declared, so a `.dark` element below the root would
+ * otherwise inherit the light values.
+ */
 .dark,
 [data-theme="dark"] {
-  --rdt-surface: #141416;
-  --rdt-border: #2a2a2a;
-  --rdt-text: #f5f5f5;
-  --rdt-muted: #a3a3a3;
-  --rdt-hover: rgba(255, 255, 255, 0.04);
+  --rdt-surface: var(--ss-surface, #141416);
+  --rdt-bg: var(--rdt-surface);
+  --rdt-header-bg: var(--rdt-surface);
+  --rdt-border: var(--ss-border, #2a2a2a);
+  --rdt-text: var(--ss-text, #f5f5f5);
+  --rdt-muted: var(--ss-muted, #a3a3a3);
+  --rdt-hover: var(--ss-hover, rgba(255, 255, 255, 0.04));
   --rdt-stripe: rgba(255, 255, 255, 0.025);
-  --rdt-selected: rgba(96, 165, 250, 0.12);
-  --rdt-accent: #60a5fa;
-  --rdt-danger: #f87171;
+  --rdt-selected: var(--ss-selected, rgba(96, 165, 250, 0.12));
+  --rdt-accent: var(--ss-accent, #60a5fa);
+  --rdt-danger: var(--ss-danger, #f87171);
   --rdt-skeleton-bg: #262626;
   --rdt-skeleton-bg-2: #333333;
   /** So the browser paints the page-size select's native popup and scrollbar dark. */
@@ -60,14 +67,15 @@
   overflow: hidden;
 }
 
+/** The densities derive their font size from the shared one, so `--ss-font-size` still reaches them. */
 .rdt[data-size="default"] {
-  --rdt-font-size: 14px;
+  --rdt-font-size: var(--ss-font-size, 14px);
   --rdt-padding-x: 14px;
   --rdt-padding-y: 12px;
 }
 
 .rdt[data-size="sm"] {
-  --rdt-font-size: 13px;
+  --rdt-font-size: calc(var(--ss-font-size, 14px) - 1px);
   --rdt-padding-x: 10px;
   --rdt-padding-y: 8px;
   --rdt-checkbox-size: 14px;

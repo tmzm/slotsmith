@@ -7,23 +7,35 @@
  */
 
 :root {
-  --sfu-surface: var(--rdt-surface, #ffffff);
+  --sfu-surface: var(--ss-surface, var(--rdt-surface, #ffffff));
   --sfu-bg: var(--rdt-bg, var(--sfu-surface));
-  --sfu-border: var(--rdt-border, #e5e7eb);
-  --sfu-text: var(--rdt-text, #111827);
-  --sfu-muted: var(--rdt-muted, #6b7280);
-  --sfu-accent: var(--rdt-accent, #2563eb);
-  --sfu-danger: var(--rdt-danger, #dc2626);
-  --sfu-hover: var(--rdt-hover, rgba(0, 0, 0, 0.04));
-  --sfu-radius: var(--rdt-radius, 10px);
-  --sfu-font-size: var(--rdt-font-size, 14px);
+  --sfu-border: var(--ss-border, var(--rdt-border, #e5e7eb));
+  --sfu-text: var(--ss-text, var(--rdt-text, #111827));
+  --sfu-muted: var(--ss-muted, var(--rdt-muted, #6b7280));
+  --sfu-accent: var(--ss-accent, var(--rdt-accent, #2563eb));
+  --sfu-danger: var(--ss-danger, var(--rdt-danger, #dc2626));
+  --sfu-hover: var(--ss-hover, var(--rdt-hover, rgba(0, 0, 0, 0.04)));
+  --sfu-radius: var(--ss-radius, var(--rdt-radius, 10px));
+  --sfu-font-size: var(--ss-font-size, var(--rdt-font-size, 14px));
   --sfu-gap: 12px;
   --sfu-tile-size: 160px;
 }
 
+/**
+ * Every colour token again: a custom property is resolved where it is
+ * declared, so a `.dark` element below the root would otherwise inherit the
+ * light values.
+ */
 .dark,
 [data-theme="dark"] {
-  --sfu-hover: var(--rdt-hover, rgba(255, 255, 255, 0.05));
+  --sfu-surface: var(--ss-surface, var(--rdt-surface, #141416));
+  --sfu-bg: var(--rdt-bg, var(--sfu-surface));
+  --sfu-border: var(--ss-border, var(--rdt-border, #2a2a2a));
+  --sfu-text: var(--ss-text, var(--rdt-text, #f5f5f5));
+  --sfu-muted: var(--ss-muted, var(--rdt-muted, #a3a3a3));
+  --sfu-accent: var(--ss-accent, var(--rdt-accent, #60a5fa));
+  --sfu-danger: var(--ss-danger, var(--rdt-danger, #f87171));
+  --sfu-hover: var(--ss-hover, var(--rdt-hover, rgba(255, 255, 255, 0.05)));
 }
 
 /** Root */

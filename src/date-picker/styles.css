@@ -15,14 +15,14 @@
  */
 
 :root {
-  --sdp-surface: var(--rdt-surface, #ffffff);
-  --sdp-border: var(--rdt-border, #e5e7eb);
-  --sdp-text: var(--rdt-text, #111827);
-  --sdp-muted: var(--rdt-muted, #6b7280);
-  --sdp-accent: var(--rdt-accent, #2563eb);
+  --sdp-surface: var(--ss-surface, var(--rdt-surface, #ffffff));
+  --sdp-border: var(--ss-border, var(--rdt-border, #e5e7eb));
+  --sdp-text: var(--ss-text, var(--rdt-text, #111827));
+  --sdp-muted: var(--ss-muted, var(--rdt-muted, #6b7280));
+  --sdp-accent: var(--ss-accent, var(--rdt-accent, #2563eb));
   /** Text that sits on `--sdp-accent`. Flipped with the theme rather than guessed. */
-  --sdp-on-accent: #ffffff;
-  --sdp-radius: var(--rdt-radius, 8px);
+  --sdp-on-accent: var(--ss-on-accent, #ffffff);
+  --sdp-radius: var(--ss-radius, var(--rdt-radius, 8px));
   /** One day cell. Square, so the column is sized from it rather than stretched. */
   --sdp-cell: 2rem;
   /** The gutter between day cells, on both axes. */
@@ -31,12 +31,12 @@
 
 .dark,
 [data-theme="dark"] {
-  --sdp-surface: var(--rdt-surface, #141416);
-  --sdp-border: var(--rdt-border, #2a2a2a);
-  --sdp-text: var(--rdt-text, #f5f5f5);
-  --sdp-muted: var(--rdt-muted, #a3a3a3);
-  --sdp-accent: var(--rdt-accent, #60a5fa);
-  --sdp-on-accent: #0b0b0c;
+  --sdp-surface: var(--ss-surface, var(--rdt-surface, #141416));
+  --sdp-border: var(--ss-border, var(--rdt-border, #2a2a2a));
+  --sdp-text: var(--ss-text, var(--rdt-text, #f5f5f5));
+  --sdp-muted: var(--ss-muted, var(--rdt-muted, #a3a3a3));
+  --sdp-accent: var(--ss-accent, var(--rdt-accent, #60a5fa));
+  --sdp-on-accent: var(--ss-on-accent, #0b0b0c);
   /** So the browser paints the month/year selects' native popup and scrollbar dark. */
   color-scheme: dark;
 }

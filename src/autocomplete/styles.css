@@ -6,33 +6,37 @@
  * theme is a few overrides rather than a fork.
  */
 
-.sac {
-  --sac-surface: #ffffff;
-  --sac-text: #111827;
-  --sac-muted: #6b7280;
-  --sac-border: #e5e7eb;
-  --sac-accent: #2563eb;
-  --sac-hover: rgb(0 0 0 / 5%);
-  --sac-danger: #dc2626;
-  --sac-radius: 0.5rem;
+/**
+ * Tokens live on the root, like the other components', so an app can override
+ * them there and the popup reads them wherever it is mounted.
+ */
+:root {
+  --sac-surface: var(--ss-surface, #ffffff);
+  --sac-text: var(--ss-text, #111827);
+  --sac-muted: var(--ss-muted, #6b7280);
+  --sac-border: var(--ss-border, #e5e7eb);
+  --sac-accent: var(--ss-accent, #2563eb);
+  --sac-hover: var(--ss-hover, rgb(0 0 0 / 5%));
+  --sac-danger: var(--ss-danger, #dc2626);
+  --sac-radius: var(--ss-radius, 0.5rem);
+}
 
+.dark,
+[data-theme="dark"] {
+  --sac-surface: var(--ss-surface, #141416);
+  --sac-text: var(--ss-text, #f5f5f5);
+  --sac-muted: var(--ss-muted, #a3a3a3);
+  --sac-border: var(--ss-border, #2a2a2a);
+  --sac-accent: var(--ss-accent, #60a5fa);
+  --sac-hover: var(--ss-hover, rgb(255 255 255 / 8%));
+  --sac-danger: var(--ss-danger, #f87171);
+}
+
+.sac {
   position: relative;
   width: 100%;
   color: var(--sac-text);
   font-size: 0.875rem;
-}
-
-.dark .sac,
-[data-theme="dark"] .sac,
-.sac.dark,
-.sac[data-theme="dark"] {
-  --sac-surface: #141416;
-  --sac-text: #f5f5f5;
-  --sac-muted: #a3a3a3;
-  --sac-border: #2a2a2a;
-  --sac-accent: #60a5fa;
-  --sac-hover: rgb(255 255 255 / 8%);
-  --sac-danger: #f87171;
 }
 
 /* ------------------------------------------------------------------ trigger */
