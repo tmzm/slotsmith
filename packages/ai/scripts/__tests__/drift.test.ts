@@ -101,7 +101,7 @@ describe("knowledge drift", () => {
     const kinds = (name: string) =>
       Object.fromEntries(byName.get(name)!.slots.map((slot) => [slot.name, slot.kind]));
     expect(kinds("date-picker")).toMatchObject({ Root: "element", Day: "element", DayContent: "widget", Caption: "widget" });
-    expect(kinds("data-table")).toMatchObject({ Row: "element", Cell: "element", Checkbox: "widget", Pagination: "widget" });
+    expect(kinds("data-table")).toMatchObject({ Row: "element", Cell: "element", Checkbox: "widget", Pagination: "widget", DragHandle: "element" });
     expect(kinds("autocomplete")).toMatchObject({ Option: "element", OptionLabel: "widget" });
     expect(kinds("file-uploader")).toMatchObject({ Dropzone: "element", List: "element", Thumbnail: "widget" });
   });
@@ -118,6 +118,12 @@ describe("knowledge drift", () => {
       const slots = known!.slots.map((slot) => slot.name);
       for (const key of keys) expect(slots, `${file} references slot "${key}"`).toContain(key);
     }
+  });
+
+  it("gives every data table adapter a drag handle", () => {
+    const tables = readdirSync(join(knowledgeDir, "adapters")).filter((file) => file.startsWith("data-table."));
+    expect(tables.length).toBeGreaterThan(0);
+    for (const file of tables) expect(adapterSlots(file).keys, file).toContain("DragHandle");
   });
 
   it("imports each adapter's types from the component's own entry point", () => {

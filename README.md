@@ -95,11 +95,29 @@ export function Users({ users }: { users: User[] }) {
 
 Sorting, pagination and selection work immediately, and each piece of state stays **uncontrolled** until you pass its value — so `pagination` / `onPaginationChange` is opt-in, not required boilerplate.
 
+### Reordering rows
+
+Rows can be dragged into a new order by pointer, touch or keyboard (Space to lift, the arrow keys to move, Space to drop, Escape to cancel). The order is yours: the table reports each move, and you store it.
+
+```tsx
+const [rows, setRows] = useState(initialRows);
+
+<DataTable
+  data={rows}
+  columns={columns}
+  getRowId={(row) => row.id}
+  enableRowReorder
+  onRowOrderChange={(change) => setRows(change.data)}
+/>;
+```
+
+Store the new order in the same event, and save it to a server afterwards; a table that waits for the reply shows the row slide back, then jump. In a tree table a row moves among its siblings, with its sub-rows; for a sub-row, store `change.siblings` as the children of `change.parent`.
+
 ## Components
 
 | Component | Status | Docs |
 | --- | --- | --- |
-| **Data table** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/data-table) · sorting, pagination, selection that survives server pages, tree rows, virtual rows, loading / error / empty states, i18n and RTL |
+| **Data table** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/data-table) · sorting, pagination, selection that survives server pages, tree rows, drag-to-reorder rows, virtual rows, loading / error / empty states, i18n and RTL |
 | **Autocomplete** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/autocomplete) · a combobox that is also a select; single or multiple, remote options with debounce and paging, create-as-you-type, full keyboard and typeahead |
 | **File uploader** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/file-uploader) · drop zone, image tile or picker-only; queued uploads with progress, retry and real cancellation; validation by type, size and count |
 | **Date picker** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/date-picker) · one date, several or a range as plain `YYYY-MM-DD` strings that never shift across time zones; full keyboard grid, min / max and blocked dates, presets, locale week start and RTL |
@@ -295,13 +313,16 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ## Changelog
 
-### Unreleased
-
-- `SlotsmithProvider` and `useSlotsmithLocale` now come from `slotsmith/provider`, which will also carry shared settings beyond the language. `slotsmith/locale` still exports them.
-- All four components now share one default palette and shape, read from the new shared `--ss-*` tokens. Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once; the per-component tokens still work.
+- **1.6.0** — Drag-to-reorder rows in the data table, by pointer, touch or keyboard; see [Reordering rows](#reordering-rows). New props `enableRowReorder`, `onRowOrderChange` and `reorderHandleColumn`; a new `DragHandle` slot, `DataTable.DragHandle` for placing the handle in a cell of your own, and `slotProps.dragHandle`, whose handlers run alongside the table's own; six new labels (`reorderRow`, `reorderInstructions`, `reorderLifted`, `reorderMoved`, `reorderDropped`, `reorderCancelled`) in every locale pack; and `moveItem`. The order is controlled: `onRowOrderChange` receives `row`, `rowId`, `target`, `targetId`, `position` and the new `data`, and the table does not reorder until you store it. The dragged row follows the pointer while the others slide out of its way; with reduced motion nothing slides, the row is dimmed and a line marks where it will land. Every step is announced to screen readers.
+- Tree tables reorder too: a row moves among its siblings only, together with its expanded sub-rows. `RowOrderChange` also carries `parentId`, `parent` and `siblings`; for a sub-row `data` is the unchanged top level, and `siblings` is the parent's new list of children to store.
+- Row state for styling: every body row now carries `data-row-id`; during a drag the lifted row has `data-dragging`, its visible sub-rows `data-dragging-child`, the target `data-drop-position` (`before` / `after`), and the row to draw a drop line on `data-drop-edge`. A `Row` slot must keep its identity between renders (define it outside the component): a row that is re-created on every render cancels every drag.
+- While a column sort is active a drop still reorders `data`, but the view keeps its sorted order, so the row slides back to where the sort puts it. Turn sorting off on a table that is reordered by hand. `VirtualDataTable` ignores `enableRowReorder` with a development warning; dragging between tables, dragging several rows at once and moving a row to another parent are not supported.
+- The headless `useDataTable` returns `reorder` (the drag state, and the props for rows and handles), `reorderable` and `reorderHandleColumn`, and takes `labels` for the handle's name and the announcements.
+- The shadcn/ui, MUI and Chakra UI adapters gain a drag handle, and style a lifted row themselves (an opaque background and a shadow), because the built-in drag styles apply to the fallback row only.
+- `SlotsmithProvider` and `useSlotsmithLocale` now come from `slotsmith/provider`, which will also carry shared settings beyond the language. `slotsmith/locale` still exports them, marked deprecated.
+- All four components now share one default palette and shape, read from the new shared `--ss-*` tokens; see [Theming](#theming). Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once. The per-component tokens still work, and the date picker and the uploader still follow a theme written against `--rdt-*`.
 - The date picker's month and year selects now use the component's colours in dark mode.
-- The data table's page-size control is now the slotsmith autocomplete, so it matches the other components; the data table's bundle includes the autocomplete.
-- Row reordering works in tree tables (`getSubRows`): a row moves among its siblings only, together with its expanded sub-rows. `RowOrderChange` gains `parentId`, `parent` and `siblings`; for a sub-row, `data` is unchanged and `siblings` is the parent's new list of children. The sub-rows of a lifted row carry `data-dragging-child`, and `data-drop-edge` marks the row to draw a drop line on. The development warning for tree tables is gone.
+- The data table's page-size control is now the slotsmith autocomplete, so it matches the other components. The data table's bundle includes the autocomplete, and `slotsmith/data-table.css` includes the autocomplete's styles.
 
 - **1.5.0** — Locale packs and a `SlotsmithProvider` for translating every component, formatting numbers and plurals, and right-to-left text; see [Languages](#languages). A string `locale` with no registered pack now logs one development-only warning instead of silently staying in English.
 - The autocomplete now turns dark with `.dark` or `[data-theme="dark"]` on the page, like the other components, instead of with the system setting.
