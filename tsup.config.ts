@@ -32,8 +32,10 @@ export default defineConfig([
       "data-table": "src/data-table/index.ts",
       "date-picker": "src/date-picker/index.ts",
       "file-uploader": "src/file-uploader/index.ts",
-      // The provider and the helper that types a custom locale.
+      // The helper that types a custom locale.
       locale: "src/locale/index.ts",
+      // SlotsmithProvider, and the future home of any setting shared across components.
+      provider: "src/provider/index.ts",
       // The whole stylesheet, and one per component.
       styles: "src/styles.css",
       "autocomplete.styles": "src/autocomplete/styles.css",

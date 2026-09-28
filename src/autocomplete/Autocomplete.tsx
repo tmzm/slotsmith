@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
-import { useLocaleSection } from "../locale/context";
+import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import type { OptionValue } from "./core/types";

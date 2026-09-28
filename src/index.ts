@@ -11,8 +11,10 @@
  * - `data-table` — the data table, on TanStack Table v9.
  * - `date-picker` — one date, several dates or a range, on `YYYY-MM-DD` strings.
  * - `file-uploader` — drop zone, image previews, upload queue, or picker-only.
- * - `locale` — `SlotsmithProvider` and `defineLocale`; the ready-made packs are
- *   their own entry points (`slotsmith/locales/ar`), not re-exported here.
+ * - `locale` — `defineLocale`; the ready-made packs are their own entry
+ *   points (`slotsmith/locales/ar`), not re-exported here.
+ * - `provider` — `SlotsmithProvider`, the home of any setting shared across
+ *   components; only the locale lives there for now.
  *
  * @example
  * ```tsx
@@ -28,3 +30,4 @@ export * from "./data-table";
 export * from "./date-picker";
 export * from "./file-uploader";
 export * from "./locale";
+export * from "./provider";

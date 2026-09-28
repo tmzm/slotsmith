@@ -86,6 +86,10 @@
       "import": { "types": "./dist/locales/*.d.ts", "default": "./dist/locales/*.js" },
       "require": { "types": "./dist/locales/*.d.ts", "default": "./dist/locales/*.cjs" }
     },
+    "./provider": {
+      "import": { "types": "./dist/provider/index.d.ts", "default": "./dist/provider.js" },
+      "require": { "types": "./dist/provider/index.d.ts", "default": "./dist/provider.cjs" }
+    },
     "./styles.css": "./dist/styles.css",
     "./autocomplete.css": "./dist/autocomplete.styles.css",
     "./data-table.css": "./dist/data-table.styles.css",

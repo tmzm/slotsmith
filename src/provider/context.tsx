@@ -1,25 +1,37 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { resolveLocale, sectionOf, type ResolvedLocale } from "./resolve";
-import type {
-  LocaleInput,
-  LocaleSectionName,
-  LocaleSections,
-  SlotsmithLocale,
-  TextDirection,
-} from "./types";
+import { resolveLocale, type ResolvedLocale } from "../locale/resolve";
+import type { LocaleInput, SlotsmithLocale, TextDirection } from "../locale/types";
 
-interface LocaleContextValue {
+/**
+ * Provider context value
+ *
+ * Everything a provider shares with the components below it, and merges
+ * with an outer provider of the same kind. Today that is only the language;
+ * a shared theme or size, when they arrive, are one more field here and one
+ * more line in `SlotsmithProvider`'s merge below, not a second context or a
+ * second provider.
+ */
+export interface SlotsmithContextValue {
   locale: ResolvedLocale | undefined;
   packs: readonly SlotsmithLocale[];
 }
 
 const NO_PACKS: readonly SlotsmithLocale[] = [];
-const LocaleContext = createContext<LocaleContextValue>({ locale: undefined, packs: NO_PACKS });
+
+/**
+ * The shared context
+ *
+ * Exported so locale-specific code (`useLocaleSection`) can read it
+ * directly; `useSlotsmithLocale` below is the public hook, and only exposes
+ * the tag and direction it computes from this value.
+ */
+export const SlotsmithContext = createContext<SlotsmithContextValue>({ locale: undefined, packs: NO_PACKS });
 
 /**
  * Provider props
  *
- * The language every component below reads, and the packs a string resolves to.
+ * The language every component below reads, and the packs a string resolves
+ * to.
  */
 export interface SlotsmithProviderProps {
   /** A locale object, or the tag of one in `locales`. Defaults to the outer provider's. */
@@ -39,7 +51,7 @@ export interface SlotsmithProviderProps {
  *
  * @example
  * ```tsx
- * import { SlotsmithProvider } from "slotsmith/locale";
+ * import { SlotsmithProvider } from "slotsmith/provider";
  * import { ar } from "slotsmith/locales/ar";
  * import { fr } from "slotsmith/locales/fr";
  *
@@ -49,13 +61,13 @@ export interface SlotsmithProviderProps {
  * ```
  */
 export function SlotsmithProvider({ locale, locales, children }: SlotsmithProviderProps) {
-  const outer = useContext(LocaleContext);
+  const outer = useContext(SlotsmithContext);
   const packs = locales ?? outer.packs;
-  const value = useMemo<LocaleContextValue>(
+  const value = useMemo<SlotsmithContextValue>(
     () => ({ locale: locale === undefined ? outer.locale : resolveLocale(locale, packs), packs }),
     [locale, packs, outer.locale],
   );
-  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+  return <SlotsmithContext.Provider value={value}>{children}</SlotsmithContext.Provider>;
 }
 
 /**
@@ -67,27 +79,6 @@ export function SlotsmithProvider({ locale, locales, children }: SlotsmithProvid
  * @returns The tag and direction; `en-US` and `ltr` outside a provider.
  */
 export function useSlotsmithLocale(): { code: string; dir: TextDirection } {
-  const { locale } = useContext(LocaleContext);
+  const { locale } = useContext(SlotsmithContext);
   return useMemo(() => ({ code: locale?.code ?? "en-US", dir: locale?.dir ?? "ltr" }), [locale]);
-}
-
-/**
- * useLocaleSection
- *
- * What one component reads: its labels in the active language and the tag to
- * format with. A component's own `locale` replaces the provider's.
- *
- * @param name - The component's section.
- * @param locale - The component's own `locale` prop, when it has one.
- * @returns The tag and the labels; both `undefined` when no locale is set.
- */
-export function useLocaleSection<K extends LocaleSectionName>(
-  name: K,
-  locale?: LocaleInput,
-): { code: string | undefined; labels: LocaleSections[K] | undefined } {
-  const context = useContext(LocaleContext);
-  return useMemo(() => {
-    const resolved = locale === undefined ? context.locale : resolveLocale(locale, context.packs);
-    return { code: resolved?.code, labels: sectionOf(resolved, name) };
-  }, [locale, context, name]);
 }

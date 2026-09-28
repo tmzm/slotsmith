@@ -8,6 +8,7 @@
 import { build, type Plugin } from "esbuild";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -248,5 +249,40 @@ describe.skipIf(!built)("locales", () => {
   it("ships the packs without a client directive, so they import anywhere", () => {
     expect(readFileSync(dist("locales/ar.js"), "utf8").startsWith('"use client"')).toBe(false);
     expect(readFileSync(dist("locale.js"), "utf8").startsWith('"use client"')).toBe(true);
+  });
+});
+
+describe.skipIf(!built)("the provider entry point", () => {
+  it("keeps components and packs out of slotsmith/provider", async () => {
+    const code = await bundle(`import { SlotsmithProvider } from "slotsmith/provider"; console.log(SlotsmithProvider);`);
+    expect(code).not.toContain(ARABIC_MARKER);
+    for (const marker of Object.values(MARKERS)) expect(code).not.toContain(marker);
+  });
+
+  it("ships dist/provider.js with the client directive", () => {
+    expect(readFileSync(dist("provider.js"), "utf8").startsWith('"use client"')).toBe(true);
+  });
+
+  /**
+   * `slotsmith/locale` still re-exports the provider for compatibility, so an
+   * app on either import path must share the same context: a provider built
+   * from one entry has to be read correctly by a hook read from the other.
+   */
+  it("gives the same SlotsmithProvider whether imported from slotsmith/provider or slotsmith/locale", async () => {
+    const fromProvider = await import(pathToFileURL(dist("provider.js")).href);
+    const fromLocale = await import(pathToFileURL(dist("locale.js")).href);
+
+    expect(fromProvider.SlotsmithProvider).toBe(fromLocale.SlotsmithProvider);
+
+    const { createElement } = await import("react");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    function Probe() {
+      const { code } = fromLocale.useSlotsmithLocale();
+      return createElement("span", null, code);
+    }
+    const html = renderToStaticMarkup(
+      createElement(fromProvider.SlotsmithProvider, { locale: "fr" }, createElement(Probe)),
+    );
+    expect(html).toContain("fr");
   });
 });

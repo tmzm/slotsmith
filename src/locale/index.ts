@@ -1,14 +1,27 @@
 /**
  * Locales
  *
- * The provider that sets the language of every component, and the helper that
- * types a custom locale. The ready-made packs are separate entry points
- * (`slotsmith/locales/ar`), so an app bundles only the languages it imports.
+ * The helper that types a custom locale, and the plural and number
+ * formatting the shipped packs build their strings with. The ready-made
+ * packs are separate entry points (`slotsmith/locales/ar`), so an app
+ * bundles only the languages it imports. `SlotsmithProvider` now lives in
+ * `slotsmith/provider`; it is re-exported here for compatibility.
  *
  * @packageDocumentation
  */
 
-export { SlotsmithProvider, useSlotsmithLocale, type SlotsmithProviderProps } from "./context";
+/**
+ * @deprecated Import from "slotsmith/provider".
+ */
+export { SlotsmithProvider } from "../provider";
+/**
+ * @deprecated Import from "slotsmith/provider".
+ */
+export { useSlotsmithLocale } from "../provider";
+/**
+ * @deprecated Import from "slotsmith/provider".
+ */
+export type { SlotsmithProviderProps } from "../provider";
 export { defineLocale } from "./defineLocale";
 export { createNumber, createPlural, type PluralForms } from "./plural";
 export type {

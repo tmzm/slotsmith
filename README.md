@@ -115,7 +115,7 @@ import { ar } from "slotsmith/locales/ar";
 <DatePicker locale={ar} />
 
 // 2. A provider for the whole app. Strings resolve against the packs it was given.
-import { SlotsmithProvider } from "slotsmith/locale";
+import { SlotsmithProvider } from "slotsmith/provider";
 import { ar } from "slotsmith/locales/ar";
 import { fr } from "slotsmith/locales/fr";
 <SlotsmithProvider locale={lang} locales={[ar, fr]}>…</SlotsmithProvider>
@@ -240,8 +240,9 @@ export exactly what the main entry does. On ES modules they make no difference a
 use them when you are on CommonJS, or when you want the guarantee written down rather
 than inferred.
 
-`slotsmith/locale` (the provider and `defineLocale`) and `slotsmith/locales/<code>` (one
-entry per pack, e.g. `slotsmith/locales/ar`) are separate entries too, so importing a
+`slotsmith/provider` (`SlotsmithProvider`), `slotsmith/locale` (`defineLocale`, and
+`SlotsmithProvider` still, for compatibility) and `slotsmith/locales/<code>` (one entry
+per pack, e.g. `slotsmith/locales/ar`) are separate entries too, so importing a
 component never pulls in a language pack, and importing one language never pulls in
 another.
 
@@ -293,6 +294,7 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ### Unreleased
 
+- `SlotsmithProvider` and `useSlotsmithLocale` now come from `slotsmith/provider`, which will also carry shared settings beyond the language. `slotsmith/locale` still exports them.
 - All four components now share one default palette and shape, read from the new shared `--ss-*` tokens. Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once; the per-component tokens still work.
 - Native selects (the data table's page size, the date picker's month and year) now use the component's colours in dark mode.
 

@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { defaultLabels } from "../../data-table/slots/fallbacks";
-import { SlotsmithProvider, useLocaleSection, useSlotsmithLocale } from "../context";
-import { defineLocale } from "../defineLocale";
+import { defineLocale } from "../../locale/defineLocale";
+import { useLocaleSection } from "../../locale/useLocaleSection";
+import { SlotsmithProvider, useSlotsmithLocale } from "../context";
 
 const ar = defineLocale({ code: "ar", table: { ...defaultLabels, empty: "فارغ" } });
 const fr = defineLocale({ code: "fr", table: { ...defaultLabels, empty: "Vide" } });

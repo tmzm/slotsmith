@@ -1,6 +1,6 @@
 import type { RowData } from "@tanstack/react-table";
 import type { HTMLAttributes, ReactNode } from "react";
-import { useLocaleSection } from "../locale/context";
+import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
 import {
