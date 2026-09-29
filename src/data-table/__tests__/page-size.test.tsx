@@ -110,6 +110,30 @@ describe("page-size control", () => {
     expect(announcement.textContent).toMatch(/[؀-ۿ]/);
   });
 
+  it("focuses the control when its visible label is clicked", async () => {
+    const { user: events } = renderTable({ data: users(30) });
+
+    await events.click(screen.getByText("Rows per page"));
+    expect(pageSize()).toHaveFocus();
+  });
+
+  it("writes the option numbers in the table locale's digits and keeps the numeric value", async () => {
+    const events = userEvent.setup();
+    const onPaginationChange = vi.fn();
+    render(
+      <SlotsmithProvider locale="ar-EG" locales={[ar]}>
+        <DataTable<User> data={users(60)} columns={columns} onPaginationChange={onPaginationChange} />
+      </SlotsmithProvider>,
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "عدد الصفوف" });
+    expect(trigger).toHaveTextContent("١٠");
+    await events.click(trigger);
+    expect(screen.getByRole("option", { name: "٢٥" })).toBeInTheDocument();
+    await events.click(screen.getByRole("option", { name: "٥٠" }));
+    expect(onPaginationChange).toHaveBeenLastCalledWith({ pageIndex: 0, pageSize: 50 });
+  });
+
   it("is replaced entirely by a custom PageSizeSelect slot", async () => {
     const events = userEvent.setup();
     const Custom = ({ value, options, onValueChange, label }: PageSizeSelectSlotProps) => (

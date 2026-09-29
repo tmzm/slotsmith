@@ -1,6 +1,8 @@
 import { useEffect, useId, useMemo, useRef } from "react";
 import { Autocomplete } from "../../autocomplete/Autocomplete";
 import type { OptionValue } from "../../autocomplete/core/types";
+import { useLocaleSection } from "../../locale/useLocaleSection";
+import { createNumber } from "../../locale/plural";
 import { cx } from "../../shared/cx";
 import { classes } from "../classes";
 import { defaultReorderLabels } from "../core/reorderLabels";
@@ -248,16 +250,24 @@ const PaginationButton = ({ direction, ...props }: PaginationButtonSlotProps) =>
  * The slotsmith autocomplete as a plain single select, so the table's one
  * dropdown looks and behaves like the library's others: no search box for a
  * handful of numbers, and no clear control, because a page always has a size.
- * The visible label names the combobox, and the table's `locale` is passed on
+ * The visible label names the combobox and focuses it when clicked, the option
+ * numbers are written in the table's digits, and the table's `locale` is passed on
  * so its announcements follow the table's language.
  */
 const PageSizeSelect = ({ value, options, onValueChange, label }: PageSizeSelectSlotProps) => {
   const id = useId();
   const { locale } = useDataTableContext();
-  const items = useMemo(() => options.map((option) => ({ value: option, label: String(option) })), [options]);
+  const { code } = useLocaleSection("table", locale);
+  const root = useRef<HTMLDivElement>(null);
+  const items = useMemo(() => {
+    const number = code === undefined ? String : createNumber(code);
+    return options.map((option) => ({ value: option, label: number(option) }));
+  }, [options, code]);
   return (
-    <div className={classes.pageSize}>
-      <span id={id}>{label}</span>
+    <div className={classes.pageSize} ref={root}>
+      <span id={id} onClick={() => root.current?.querySelector<HTMLElement>("[role=combobox]")?.focus()}>
+        {label}
+      </span>
       <Autocomplete
         className={classes.pageSizeSelect}
         aria-labelledby={id}
