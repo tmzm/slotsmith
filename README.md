@@ -233,11 +233,11 @@ Measured on the published output, bundling a single component:
 
 | What you import | JavaScript |
 | --- | --- |
-| `Autocomplete` alone | 16.5 KB |
+| `Autocomplete` alone | 18.4 KB |
 | `useAutocomplete` alone | 7.9 KB |
-| `DatePicker` alone | 16.7 KB |
-| `useDatePicker` alone | 9.1 KB |
-| all four components | 62.3 KB |
+| `DatePicker` alone | 19.1 KB |
+| `useDatePicker` alone | 9.2 KB |
+| all four components | 81.2 KB |
 
 Nothing special is required — `import { Autocomplete } from "slotsmith"` already drops
 the other three. The one exception is deliberate: the data table's page-size control is
