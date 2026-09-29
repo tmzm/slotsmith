@@ -222,7 +222,7 @@ Not using a component library? Every fallback also exposes `data-*` state, so Ta
 }
 ```
 
-The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others; the date picker and the uploader also still follow a theme written against the data table's `--sdt-*`. A value set on `:root` applies to both themes, so set its dark value under `.dark, [data-theme="dark"]` too.
+The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others; the date picker and the uploader also still follow a theme written against the data table's `--sdt-*`. A value set on `:root` applies to both themes, so set its dark value under `.dark, [data-theme="dark"]` too. The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, on `:root`, a wrapper or the table, and then yours win at every size. `--sdt-font-size` otherwise follows `--ss-font-size` (one pixel smaller at the default `sm` size).
 
 Every component names its classes the same way: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state as `data-*` attributes. A part that plays the same role in several components has the same name in each: the popups are `__popup`, the triggers `__trigger`, an empty state `__message`, an error state `__error`, text for screen readers only `__sr-only`.
 
@@ -234,6 +234,8 @@ Every component names its classes the same way: `s` plus the component's initial
 | `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
 | `.rdt__placeholder` (empty state) | `.sdt__message` |
 | `.rdt__placeholder--error` (error state) | `.sdt__error` |
+
+In 1.5 the error state carried both `rdt__placeholder` and `rdt__placeholder--error`, so a `.rdt__placeholder` rule styled the empty and the error state alike. The error state is now only `sdt__error`: to keep styling both, select `.sdt__message, .sdt__error`.
 | `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 ## You ship only what you import

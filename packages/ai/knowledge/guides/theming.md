@@ -24,12 +24,14 @@ Each component also reads its own prefix, which overrides the shared token for t
 
 | Prefix | Component | Tokens |
 | --- | --- | --- |
-| `--sdt-*` | Data table | `accent`, `bg`, `border`, `checkbox-size`, `danger`, `font-size`, `header-bg`, `hover`, `max-height`, `muted`, `padding-x`, `padding-y`, `radius`, `selected`, `skeleton-bg`, `skeleton-bg-2`, `stripe`, `surface`, `text` |
+| `--sdt-*` | Data table | `accent`, `bg`, `border`, `checkbox-size`\*, `danger`, `font-size`\*, `header-bg`, `hover`, `max-height`, `muted`, `padding-x`\*, `padding-y`\*, `radius`, `selected`, `skeleton-bg`, `skeleton-bg-2`, `stripe`, `surface`, `text` |
 | `--sac-*` | Autocomplete | `accent`, `border`, `danger`, `font-size`, `hover`, `muted`, `radius`, `surface`, `text` |
 | `--sdp-*` | Date picker (falls back to `--sdt-*`) | `accent`, `border`, `cell`, `font-size`, `gap`, `hover`, `muted`, `on-accent`, `radius`, `surface`, `text` |
 | `--sfu-*` | File uploader (falls back to `--sdt-*`) | `accent`, `bg`, `border`, `danger`, `font-size`, `gap`, `hover`, `muted`, `radius`, `surface`, `text`, `tile-size` |
 
-Every component token is declared on `:root`, so override it there (or on a component's root element for one instance). A value set on `:root`, shared or not, applies to both themes: set its dark value under `.dark, [data-theme="dark"]` too.
+\* The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, on `:root`, a wrapper or the table, and then yours win at every size. `--sdt-font-size` otherwise follows `--ss-font-size` (one pixel smaller at the default `sm` size).
+
+Every other component token is declared on `:root`, so override it there (or on a component's root element for one instance). A value set on `:root`, shared or not, applies to both themes: set its dark value under `.dark, [data-theme="dark"]` too.
 
 ```css
 :root {
@@ -74,6 +76,8 @@ Before 1.6.0 the data table's prefix was `rdt`. 1.6.0 renamed it to `sdt` with n
 | `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
 | `.rdt__placeholder` (empty state) | `.sdt__message` |
 | `.rdt__placeholder--error` (error state) | `.sdt__error` |
+
+In 1.5 the error state carried both `rdt__placeholder` and `rdt__placeholder--error`, so a `.rdt__placeholder` rule styled the empty and the error state alike. The error state is now only `sdt__error`: to keep styling both, select `.sdt__message, .sdt__error`.
 | `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 ## Without the stylesheet

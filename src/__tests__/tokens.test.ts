@@ -160,6 +160,23 @@ const TABLE_TOKENS: string[] = ["surface", "text", "muted", "border", "accent", 
 /** The only focus rings drawn inside their target: controls packed too tightly for an outside ring. */
 const INSET_RINGS = [".sdp__day:focus-visible", ".sfu__action:focus-visible", ".sac__tag-remove:focus-visible", ".sac__clear:focus-visible"];
 
+/**
+ * The data table's density tokens. The library never declares them: the size
+ * rules set `--sdt-size-*` twins, and every rule reads the public token first.
+ */
+const DENSITY: string[] = ["font-size", "padding-x", "padding-y", "checkbox-size"];
+
+/**
+ * Token read
+ *
+ * @param prefix - A component's token prefix.
+ * @param name - A token name.
+ * @returns How a rule reads the token: plainly, or for a data table density
+ * token, with its internal size twin as the fallback.
+ */
+const tokenRead = (prefix: string, name: string) =>
+  prefix === "sdt" && DENSITY.includes(name) ? `var(--sdt-${name}, var(--sdt-size-${name}))` : `var(--${prefix}-${name})`;
+
 /** The shared tokens every component reads, whatever else it declares. */
 const CORE = ["surface", "text", "muted", "border", "accent", "hover", "radius", "font-size"] as const;
 
@@ -194,7 +211,9 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
   const dark = block(css, /\.dark,\s*\[data-theme="dark"\]/);
 
   it.each(CORE)("declares --%s", (name) => {
-    expect(light).toContain(`--${prefix}-${name}:`);
+    // The data table's density tokens are the app's to set; it declares an internal twin instead.
+    const declared = prefix === "sdt" && DENSITY.includes(name) ? `--sdt-size-${name}:` : `--${prefix}-${name}:`;
+    expect(light).toContain(declared);
   });
 
   /**
@@ -278,7 +297,7 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
   });
 
   it("sizes its root text from the font-size token", () => {
-    expect(value(rule(css, `.${prefix}`), "font-size")).toBe(`var(--${prefix}-font-size)`);
+    expect(value(rule(css, `.${prefix}`), "font-size")).toBe(tokenRead(prefix, "font-size"));
   });
 });
 
@@ -324,4 +343,62 @@ it.each([
   ["file-uploader", ".sfu__rejections"],
 ])("%s's secondary text %s is 0.75rem", (folder, selector) => {
   expect(value(rule(read(folder), selector), "font-size")).toBe("0.75rem");
+});
+
+/**
+ * Density overrides
+ *
+ * `DataTable` always sets a size, and the size rules sit on the table element
+ * itself, where a declaration beats any inherited value. So they declare only
+ * internal `--sdt-size-*` tokens, and an app's `--sdt-padding-x` on `:root`,
+ * a wrapper or the table reaches the cells whatever the size.
+ */
+describe("the data table's density tokens", () => {
+  const css = read("data-table");
+  const sizes = ['.sdt[data-size="default"]', '.sdt[data-size="sm"]'];
+
+  it.each(DENSITY)("never declares the public --sdt-%s, anywhere", (name) => {
+    expect(css).not.toMatch(new RegExp(`--sdt-${escape(name)}:`));
+  });
+
+  it.each(sizes)("%s sets only internal size tokens", (selector) => {
+    const body = rule(css, selector);
+    const names = [...body.matchAll(/(--[\w-]+):/g)].map((match) => match[1]!);
+    expect(names.length).toBeGreaterThan(2);
+    for (const name of names) expect(name).toMatch(/^--sdt-size-/);
+  });
+
+  it("keeps --ss-font-size flowing into every size", () => {
+    for (const selector of [":root", ...sizes]) {
+      expect(value(rule(css, selector), "--sdt-size-font-size"), selector).toMatch(/var\(--ss-font-size, 14px\)/);
+    }
+  });
+
+  it("reads the public token first in every rule that uses a density token", () => {
+    for (const name of DENSITY) {
+      const uses = [...css.matchAll(new RegExp(`var\\(--sdt-(?:size-)?${escape(name)}[,)][^;]*`, "g"))].map((match) => match[0]);
+      expect(uses.length, name).toBeGreaterThan(0);
+      for (const use of uses) expect(use.startsWith(`var(--sdt-${name}, var(--sdt-size-${name}))`), use).toBe(true);
+    }
+  });
+
+  it("lets a :root or wrapper value of --sdt-padding-x reach a cell at every size", () => {
+    const padding = value(rule(css, ".sdt__cell"), "padding")!;
+    // What the cell's padding resolves to, given the custom properties in scope.
+    const resolve = (scope: Record<string, string>) =>
+      padding.replace(/var\((--[\w-]+), var\((--[\w-]+)\)\)/g, (_, own: string, fallback: string) => scope[own] ?? scope[fallback]!);
+    for (const selector of sizes) {
+      const size = rule(css, selector);
+      // Nothing the sheet puts on the table element may shadow an inherited value.
+      for (const onTable of [".sdt", selector]) expect(rule(css, onTable)).not.toMatch(/--sdt-padding-x:/);
+      const scope = {
+        "--sdt-size-padding-x": value(size, "--sdt-size-padding-x")!,
+        "--sdt-size-padding-y": value(size, "--sdt-size-padding-y")!,
+      };
+      // The app's value is inherited from :root or a wrapper; the size rule
+      // never declares the public name, so nothing on the table shadows it.
+      expect(resolve({ ...scope, "--sdt-padding-x": "20px" }), selector).toBe(`${scope["--sdt-size-padding-y"]} 20px`);
+      expect(resolve(scope), selector).toBe(`${scope["--sdt-size-padding-y"]} ${scope["--sdt-size-padding-x"]}`);
+    }
+  });
 });

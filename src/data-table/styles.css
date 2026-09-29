@@ -5,6 +5,11 @@
  * Every value is a --sdt-* token; override them on :root or on any .sdt root.
  * The colour, radius and font-size tokens read the shared --ss-* layer, so one
  * --ss-* override restyles every component at once.
+ *
+ * The density tokens (--sdt-font-size, --sdt-padding-x, --sdt-padding-y,
+ * --sdt-checkbox-size) are never declared here: the `size` prop sets internal
+ * --sdt-size-* values on the table, and the rules read the public token first,
+ * so an app's value, set on :root or on any ancestor, beats the size.
  * Custom slots are unaffected — style them however your UI library does.
  */
 
@@ -33,10 +38,11 @@
   --sdt-skeleton-bg-2: #f3f4f6;
 
   --sdt-radius: var(--ss-radius, 8px);
-  --sdt-font-size: var(--ss-font-size, 14px);
-  --sdt-padding-x: 12px;
-  --sdt-padding-y: 10px;
-  --sdt-checkbox-size: 16px;
+  /** Internal: what the rules use when the app sets no density token. */
+  --sdt-size-font-size: var(--ss-font-size, 14px);
+  --sdt-size-padding-x: 12px;
+  --sdt-size-padding-y: 10px;
+  --sdt-size-checkbox-size: 16px;
   --sdt-max-height: none;
 }
 
@@ -77,7 +83,7 @@
 .sdt {
   width: 100%;
   font-family: inherit;
-  font-size: var(--sdt-font-size);
+  font-size: var(--sdt-font-size, var(--sdt-size-font-size));
   color: var(--sdt-text);
   background: var(--sdt-bg);
   border: 1px solid var(--sdt-border);
@@ -85,18 +91,22 @@
   overflow: hidden;
 }
 
-/** The densities derive their font size from the shared one, so `--ss-font-size` still reaches them. */
+/**
+ * The densities set only the internal --sdt-size-* tokens, so a public
+ * --sdt-* density token set by the app anywhere above still wins. They derive
+ * their font size from the shared one, so `--ss-font-size` still reaches them.
+ */
 .sdt[data-size="default"] {
-  --sdt-font-size: var(--ss-font-size, 14px);
-  --sdt-padding-x: 14px;
-  --sdt-padding-y: 12px;
+  --sdt-size-font-size: var(--ss-font-size, 14px);
+  --sdt-size-padding-x: 14px;
+  --sdt-size-padding-y: 12px;
 }
 
 .sdt[data-size="sm"] {
-  --sdt-font-size: calc(var(--ss-font-size, 14px) - 1px);
-  --sdt-padding-x: 10px;
-  --sdt-padding-y: 8px;
-  --sdt-checkbox-size: 14px;
+  --sdt-size-font-size: calc(var(--ss-font-size, 14px) - 1px);
+  --sdt-size-padding-x: 10px;
+  --sdt-size-padding-y: 8px;
+  --sdt-size-checkbox-size: 14px;
 }
 
 .sdt__scroll {
@@ -125,7 +135,7 @@
 }
 
 .sdt__cell {
-  padding: var(--sdt-padding-y) var(--sdt-padding-x);
+  padding: var(--sdt-padding-y, var(--sdt-size-padding-y)) var(--sdt-padding-x, var(--sdt-size-padding-x));
   text-align: start;
   vertical-align: middle;
   border-bottom: 1px solid var(--sdt-border);
@@ -240,8 +250,8 @@
 /** Inputs */
 
 .sdt__checkbox {
-  width: var(--sdt-checkbox-size);
-  height: var(--sdt-checkbox-size);
+  width: var(--sdt-checkbox-size, var(--sdt-size-checkbox-size));
+  height: var(--sdt-checkbox-size, var(--sdt-size-checkbox-size));
   margin: 0;
   accent-color: var(--sdt-accent);
   cursor: pointer;
@@ -348,7 +358,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px var(--sdt-padding-x);
+  padding: 8px var(--sdt-padding-x, var(--sdt-size-padding-x));
   border-top: 1px solid var(--sdt-border);
 }
 
