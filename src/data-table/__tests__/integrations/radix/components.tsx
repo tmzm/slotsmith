@@ -43,6 +43,10 @@ import {
  * data table owns its scroll box and its `<table>`, so the root and the table
  * take `Table.Root`'s classes instead (`rt-TableRoot`, `rt-TableRootTable`);
  * the sections, rows and cells are `Table.*` components as they are.
+ *
+ * Radix's `Button` and `IconButton` render a `<button>` with no `type`, which
+ * would submit a surrounding form, so each one here is given
+ * `type="button"` ahead of the slot's props.
  */
 
 /**
@@ -70,6 +74,7 @@ function tableSheet(scope: string) {
   const child = `${s} tbody > tr[data-dragging-child]`;
   return `
 ${s} { overflow: hidden; }
+${s} > div { overflow: auto; }
 ${s} th { position: sticky; top: 0; z-index: 2; background-color: var(--color-panel-solid); background-image: linear-gradient(var(--gray-a2), var(--gray-a2)); white-space: nowrap; }
 ${s} :is(th, td):is([data-slot=drag], [data-slot=select]) { width: 1%; padding-inline-end: 0; }
 ${s} tfoot td { font-weight: var(--font-weight-bold); box-shadow: inset 0 1px var(--gray-a5); }
@@ -113,7 +118,10 @@ function RadixRoot({ className, children, ...props }: RootSlotProps) {
  *
  * The `<table>` takes `Table.Root`'s table class; the rest are `Table.*`
  * parts. Radix Themes drops the DOM `color` attribute from these, since its
- * own `color` prop is an accent, so it is left out here too. Radix has no
+ * own `color` prop is an accent, so it is left out here too. Radix also reads
+ * a cell's `width` as a layout prop and turns it into a style, so a DOM
+ * `width` given through `slotProps.cell` or `slotProps.footerCell` is not
+ * forwarded; set a cell's width with `style` or a class instead. Radix has no
  * footer section, so the foot is a plain `<tfoot>` of `Table.Cell`s.
  */
 const RadixTable = ({ className, ...props }: TableSlotProps) => (
@@ -136,6 +144,7 @@ const RadixCell = ({ color: _color, width: _width, ...props }: CellSlotProps) =>
  */
 const RadixDragHandle = ({ style, ...props }: DragHandleSlotProps) => (
   <IconButton
+    type="button"
     variant="ghost"
     color="gray"
     size="1"
@@ -175,7 +184,7 @@ const RadixCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...a
 function RadixSortTrigger({ direction, onClick, children }: SortTriggerSlotProps) {
   const { components } = useDataTableContext();
   return (
-    <Button variant="ghost" color="gray" size="2" highContrast onClick={onClick} style={{ fontWeight: "inherit" }}>
+    <Button type="button" variant="ghost" color="gray" size="2" highContrast onClick={onClick} style={{ fontWeight: "inherit" }}>
       {children}
       <components.SortIcon direction={direction} />
     </Button>
@@ -207,6 +216,7 @@ const RadixSortIcon = ({ direction }: SortIconSlotProps) => (
  */
 const RadixExpandToggle = ({ expanded, onToggle, depth: _depth, ...aria }: ExpandToggleSlotProps) => (
   <IconButton
+    type="button"
     variant="ghost"
     color="gray"
     size="1"
@@ -255,7 +265,7 @@ const RadixError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
       {message}
     </Text>
     {onRetry && (
-      <Button size="1" variant="soft" onClick={onRetry}>
+      <Button type="button" size="1" variant="soft" onClick={onRetry}>
         {retryLabel}
       </Button>
     )}
@@ -268,7 +278,7 @@ const RadixError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
  * A soft `IconButton` with a chevron that points the way the page reads.
  */
 const RadixPaginationButton = ({ direction, ...props }: PaginationButtonSlotProps) => (
-  <IconButton size="1" variant="soft" color="gray" {...props}>
+  <IconButton type="button" size="1" variant="soft" color="gray" {...props}>
     <span data-flip="" style={{ display: "inline-flex" }}>
       {direction === "previous" ? <ChevronLeftIcon /> : <ChevronRightIcon />}
     </span>

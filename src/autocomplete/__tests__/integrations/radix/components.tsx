@@ -33,6 +33,10 @@ import type {
  * the app's `<Theme accentColor appearance>`; their state arrives as
  * `data-*` props, so each one reads its own. The app must import
  * `@radix-ui/themes/styles.css`, as every Radix Themes app already does.
+ *
+ * Radix's `Button` and `IconButton` render a `<button>` with no `type`, which
+ * would submit a surrounding form, so each one here is given
+ * `type="button"` ahead of the slot's props.
  */
 
 /**
@@ -110,6 +114,7 @@ const RadixTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlo
     {label}
     {!disabled && (
       <IconButton
+        type="button"
         size="1"
         variant="ghost"
         radius="full"
@@ -134,6 +139,7 @@ const RadixTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlo
  */
 const RadixClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
   <IconButton
+    type="button"
     size="1"
     variant="ghost"
     color="gray"
@@ -322,7 +328,7 @@ const RadixError = ({ error, onRetry, retryLabel }: AutocompleteErrorSlotProps) 
       {error}
     </Text>
     {onRetry ? (
-      <Button size="1" variant="soft" onClick={onRetry}>
+      <Button type="button" size="1" variant="soft" onClick={onRetry}>
         {retryLabel}
       </Button>
     ) : null}
@@ -337,7 +343,7 @@ const RadixError = ({ error, onRetry, retryLabel }: AutocompleteErrorSlotProps) 
  */
 const RadixCreate = ({ onCreate, loading, label }: AutocompleteCreateSlotProps) => (
   <li style={{ display: "flex", padding: "var(--space-1)" }}>
-    <Button variant="ghost" loading={loading} onClick={onCreate} style={{ flex: 1, margin: 0, justifyContent: "flex-start" }}>
+    <Button type="button" variant="ghost" loading={loading} onClick={onCreate} style={{ flex: 1, margin: 0, justifyContent: "flex-start" }}>
       {label}
     </Button>
   </li>
@@ -351,7 +357,7 @@ const RadixCreate = ({ onCreate, loading, label }: AutocompleteCreateSlotProps) 
  */
 const RadixLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMoreSlotProps) => (
   <li ref={ref} style={{ display: "flex", padding: "var(--space-1)" }}>
-    <Button variant="ghost" color="gray" disabled={loading} onClick={onLoadMore} style={{ flex: 1, margin: 0 }}>
+    <Button type="button" variant="ghost" color="gray" disabled={loading} onClick={onLoadMore} style={{ flex: 1, margin: 0 }}>
       {label}
     </Button>
   </li>

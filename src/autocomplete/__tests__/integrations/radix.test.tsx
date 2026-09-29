@@ -155,4 +155,19 @@ describe("Radix Themes v3", () => {
     expect(onChange).toHaveBeenCalledWith(null, undefined);
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
+
+  it("never submits a surrounding form from its buttons", async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    const Form = ({ children }: { children: ReactNode }) => (
+      <Theme>
+        <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
+      </Theme>
+    );
+    const user = renderIntegration(radixComponents, { multiple: true, defaultValue: ["b1", "b2"] }, Form);
+
+    await user.click(removeControl("Aalto"));
+    await user.click(screen.getByRole("button", { name: "Clear selection" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

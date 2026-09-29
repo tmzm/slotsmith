@@ -143,4 +143,22 @@ describe("Radix Themes v3", () => {
     const next = screen.getByRole("button", { name: "Next month" });
     expect(next.querySelector("[data-icon]")).toHaveAttribute("data-icon", "chevron-left");
   });
+
+  it("never submits a surrounding form from its buttons", async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    const Form = ({ children }: { children: ReactNode }) => (
+      <Theme>
+        <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
+      </Theme>
+    );
+    const user = renderRadixDatePicker({ defaultValue: "2026-03-05", presets: [{ label: "Soon", value: "2026-03-20" }] }, Form);
+
+    await open(user);
+    await user.click(screen.getByRole("button", { name: "Next month" }));
+    await user.click(screen.getByRole("button", { name: "Go to today" }));
+    await user.click(screen.getByRole("button", { name: "Soon" }));
+    await user.click(screen.getByRole("button", { name: "Clear date" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

@@ -26,6 +26,10 @@ import type {
  * app's `<Theme accentColor appearance>`; their state arrives as `data-*`
  * props, so each part reads its own. The app must import
  * `@radix-ui/themes/styles.css`, as every Radix Themes app already does.
+ *
+ * Radix's `Button` and `IconButton` render a `<button>` with no `type`, which
+ * would submit a surrounding form, so each one here is given
+ * `type="button"` ahead of the slot's props.
  */
 
 /**
@@ -106,6 +110,7 @@ const RadixEmpty = ({ title, hint }: UploaderEmptySlotProps) => (
  */
 const RadixTrigger = ({ onClick, disabled, children }: UploaderTriggerSlotProps) => (
   <Button
+    type="button"
     size="1"
     variant="soft"
     disabled={disabled}
@@ -214,6 +219,7 @@ const RadixProgress = ({ value, active, ...aria }: UploaderProgressSlotProps) =>
  */
 const RadixAction = ({ action, onClick, disabled, ...aria }: UploaderActionSlotProps) => (
   <IconButton
+    type="button"
     size="1"
     variant="ghost"
     color={action === "remove" ? "gray" : undefined}
@@ -249,7 +255,7 @@ const RadixRejections = ({ rejections, onDismiss, dismissLabel }: RejectionsSlot
           </span>
         ))}
       </Callout.Text>
-      <IconButton size="1" variant="ghost" color="red" aria-label={dismissLabel} onClick={onDismiss} style={{ margin: 0 }}>
+      <IconButton type="button" size="1" variant="ghost" color="red" aria-label={dismissLabel} onClick={onDismiss} style={{ margin: 0 }}>
         <Cross2Icon />
       </IconButton>
     </Flex>

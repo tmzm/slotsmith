@@ -1,7 +1,7 @@
 import { Theme } from "@radix-ui/themes";
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { FileUploaderProps } from "../../index";
 import { deferredUpload, dropzone, fileInput, itemNamed, items, makeFile } from "../builders";
 import { radixComponents } from "./radix/components";
@@ -99,5 +99,23 @@ describe("Radix Themes v3", () => {
 
     await user.click(within(callout).getByRole("button", { name: "Dismiss" }));
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("never submits a surrounding form from its buttons", async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    const Form = ({ children }: { children: ReactNode }) => (
+      <Theme>
+        <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
+      </Theme>
+    );
+    const user = renderIntegration(radixComponents, { maxSize: 20 }, Form);
+
+    await user.click(screen.getByRole("button", { name: "Browse" }));
+    await user.upload(fileInput(), makeFile("kept.png"));
+    await user.click(within(itemNamed("kept.png")).getByRole("button", { name: "Remove file" }));
+    await user.upload(fileInput(), makeFile("heavy.png", "image/png", 50));
+    await user.click(within(screen.getByRole("status")).getByRole("button", { name: "Dismiss" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

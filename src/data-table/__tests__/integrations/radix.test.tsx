@@ -1,6 +1,8 @@
 import { Theme } from "@radix-ui/themes";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
@@ -57,6 +59,24 @@ beforeAll(stubBrowserApis);
 
 describe("Radix Themes v3", () => {
   failOnReactWarnings();
+
+  /**
+   * The skin puts `Table.Root`'s classes on elements the data table owns,
+   * because `Table.Root` draws its own `<table>`. Those classes are Radix's
+   * stylesheet rather than a prop API, so this fails if a Radix release
+   * renames the selectors the skin borrows.
+   */
+  it("borrows only Table.Root selectors that Radix's stylesheet still has", () => {
+    const css = readFileSync(createRequire(import.meta.url).resolve("@radix-ui/themes/styles.css"), "utf8");
+    for (const selector of [
+      ".rt-TableRoot",
+      ".rt-TableRootTable",
+      ".rt-TableRoot:where(.rt-r-size-2)",
+      ".rt-TableRoot:where(.rt-variant-surface)",
+    ]) {
+      expect(css).toContain(selector);
+    }
+  });
 
   it("renders with Radix Themes' table parts", () => {
     renderRadixTable();
@@ -225,5 +245,30 @@ describe("Radix Themes v3", () => {
     expect(change.siblings.map((row: Employee) => row.id)).toEqual(["e3", "e2"]);
     expect(names()).toEqual(["Employee 01", "Employee 03", "Employee 02", "Employee 04"]);
     expect(document.activeElement).toBe(dragHandles()[2]);
+  });
+
+  it("never submits a surrounding form from its buttons", async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    const user = userEvent.setup();
+    const lead = { ...employees(1)[0]!, reports: employees(2).slice(1) };
+    render(
+      <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>
+        <DataTable<Employee>
+          data={[lead, ...employees(23).slice(2)]}
+          columns={employeeColumns}
+          components={radixComponents}
+          getRowId={(row) => row.id}
+          getSubRows={(row) => row.reports}
+          enableRowReorder
+          onRowOrderChange={() => {}}
+        />
+      </form>,
+      { wrapper: Wrapper },
+    );
+    await user.click(screen.getByRole("button", { name: /Name/ }));
+    await user.click(screen.getByRole("button", { name: "Expand row" }));
+    fireEvent.click(dragHandles()[0]!);
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

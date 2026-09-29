@@ -14,6 +14,10 @@ import type { DatePickerComponents } from "../../../index";
  * `data-*` props, so each part reads its own. The app must import
  * `@radix-ui/themes/styles.css`, as every Radix Themes app already does.
  *
+ * Radix's `Button` and `IconButton` render a `<button>` with no `type`, which
+ * would submit a surrounding form, so each one here is given
+ * `type="button"` ahead of the slot's props.
+ *
  * The element parts `Omit` `color` from their DOM props because Radix's
  * `color` prop is an accent colour, which a forwarded DOM `color` would
  * collide with.
@@ -99,6 +103,7 @@ export const radixComponents: Partial<DatePickerComponents> = {
 
   Clear: ({ onClick, ...aria }) => (
     <IconButton
+      type="button"
       size="1"
       variant="ghost"
       color="gray"
@@ -154,7 +159,7 @@ export const radixComponents: Partial<DatePickerComponents> = {
 
   /** `direction` already accounts for right to left, so the arrow follows it as is. */
   Nav: ({ direction, onClick, disabled, ...aria }) => (
-    <IconButton size="1" variant="ghost" color="gray" onClick={onClick} disabled={disabled} style={{ margin: 0 }} {...aria}>
+    <IconButton type="button" size="1" variant="ghost" color="gray" onClick={onClick} disabled={disabled} style={{ margin: 0 }} {...aria}>
       <span data-icon={direction === "next" ? "chevron-right" : "chevron-left"} style={{ display: "inline-flex" }}>
         {direction === "next" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
       </span>
@@ -197,6 +202,7 @@ export const radixComponents: Partial<DatePickerComponents> = {
     const bleed = "calc(var(--sdp-gap, 0.25rem) / -2 - 0.5px)";
     return (
       <Button
+        type="button"
         variant={selected ? "solid" : "ghost"}
         color={selected ? undefined : "gray"}
         highContrast={!selected}
@@ -245,11 +251,11 @@ export const radixComponents: Partial<DatePickerComponents> = {
   Footer: ({ presets, onPreset, onToday, todayLabel }) => (
     <Flex wrap="wrap" align="center" gap="1" mt="2" pt="2" style={{ boxShadow: "inset 0 1px var(--gray-a5)" }}>
       {presets.map((preset) => (
-        <Button key={preset.label} size="1" variant="soft" color="gray" onClick={() => onPreset(preset.value)}>
+        <Button type="button" key={preset.label} size="1" variant="soft" color="gray" onClick={() => onPreset(preset.value)}>
           {preset.label}
         </Button>
       ))}
-      <Button size="1" variant="ghost" onClick={onToday} style={{ marginBlock: 0, marginInlineStart: "auto", marginInlineEnd: 0 }}>
+      <Button type="button" size="1" variant="ghost" onClick={onToday} style={{ marginBlock: 0, marginInlineStart: "auto", marginInlineEnd: 0 }}>
         {todayLabel}
       </Button>
     </Flex>
