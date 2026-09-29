@@ -1,5 +1,5 @@
 import { defineConfig } from "vitest/config";
-import { aliases } from "./aliases";
+import { aliases } from "./aliases.ts";
 
 export default defineConfig({
   resolve: {

@@ -1,8 +1,8 @@
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
-import { SITE } from "./site.config";
-import { aliases } from "./aliases";
+import { SITE } from "./site.config.ts";
+import { aliases } from "./aliases.ts";
 
 export default defineConfig({
   site: SITE.url,
