@@ -233,6 +233,8 @@ import "slotsmith/styles.css";
 import "slotsmith/themes/soft.css";
 ```
 
+A theme sets the same `--ss-*` tokens on `:root` and `.dark, [data-theme="dark"]` as your own overrides, so import order decides: import your own overrides after the theme to keep them.
+
 ## You ship only what you import
 
 Each component is independent, and the build is arranged so your bundler can prove it.
