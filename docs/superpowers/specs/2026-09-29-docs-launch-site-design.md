@@ -250,7 +250,8 @@ here.
    it, the code with the lines that change highlighted.
    - The fallback renders in the prerendered HTML.
    - Each design-system adapter is a separate dynamic import, prefetched on
-     hover or focus of its segment and on idle after load.
+     hover, focus or touchstart of its segment. Not on idle: evaluating MUI or
+     Chakra on idle adds main-thread work that Lighthouse counts.
    - The shadcn adapter uses real shadcn component sources (Radix + Tailwind);
      its Tailwind CSS is compiled at build into a stylesheet scoped to the
      demo and loaded with the adapter.
@@ -356,7 +357,8 @@ Generated from the `## Changelog` section of the root README.
 ## Performance
 
 Targets: Lighthouse mobile ≥ 95 (all four categories) on `/` and
-`/components/data-table/`, CLS 0 from demos.
+`/components/data-table/`, CLS 0 from demos (the Lighthouse CI gate is
+CLS ≤ 0.01, to absorb rounding).
 
 - Fonts self-hosted as woff2 subsets (Latin for Inter and JetBrains Mono,
   Arabic for IBM Plex Sans Arabic on `/ar/` pages only); Inter 400 and 700
