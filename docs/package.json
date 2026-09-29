@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "redirects": "node scripts/redirects.ts",
+    "build": "node scripts/redirects.ts && astro build",
     "check": "astro check && tsc --noEmit",
     "test": "vitest run",
     "verify": "echo \"verify: filled by a later task\"",
