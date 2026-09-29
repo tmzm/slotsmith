@@ -64,6 +64,11 @@ export const en = {
   "component.accessibility": "Accessibility",
   "component.limitations": "Limitations",
 
+  "component.guideTitle": "{component}: {guide}",
+  "component.guideDescription": "A guide to {guide} in the slotsmith {component}.",
+  "component.apiDescription": "Props, slots, labels and styling of the slotsmith {component}.",
+  "component.adaptersDescription": "Using the slotsmith {component} with shadcn/ui, MUI, Chakra, Ant Design and Radix Themes.",
+
   "common.stub": "This page is being written.",
 
   "summary.dataTable": "A table with sorting, selection, pagination, server data, tree rows, virtual rows and row reorder.",

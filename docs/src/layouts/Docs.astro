@@ -9,11 +9,14 @@ import { t } from "@/i18n";
 import { editUrl } from "@/lib/page";
 
 interface Props extends BaseProps {
-  sourcePath: string;
+  /** The MDX file behind the page; omit it and the "Edit this page" link is left out. */
+  sourcePath?: string;
+  /** Set to "en" when the contents links are English on an Arabic page. */
+  tocLang?: "en";
   toc?: { id: string; text: string; depth: 2 | 3 }[];
 }
 
-const { sourcePath, toc = [], ...base } = Astro.props;
+const { sourcePath, toc = [], tocLang, ...base } = Astro.props;
 const { lang, path } = base;
 ---
 <Base {...base}>
@@ -21,7 +24,7 @@ const { lang, path } = base;
   <div class="docs" data-toc={toc.length > 0 || undefined}>
     <article class="docs__article">
       <slot />
-      <a class="docs__edit" href={editUrl(sourcePath)}>{t(lang, "common.editPage")}</a>
+      {sourcePath && <a class="docs__edit" href={editUrl(sourcePath)}>{t(lang, "common.editPage")}</a>}
     </article>
     {
       toc.length > 0 && (
@@ -30,7 +33,7 @@ const { lang, path } = base;
           <ul>
             {toc.map((heading) => (
               <li data-depth={heading.depth}>
-                <a href={`#${heading.id}`}>{heading.text}</a>
+                <a href={`#${heading.id}`} lang={tocLang} dir={tocLang && "ltr"}>{heading.text}</a>
               </li>
             ))}
           </ul>

@@ -4,11 +4,13 @@ interface Props {
   title: string;
   lead?: string;
   meta?: { key: string; value: string }[];
+  /** "en" on an Arabic page that shows English text. */
+  contentLang?: "en";
 }
 
-const { title, lead, meta } = Astro.props;
+const { title, lead, meta, contentLang } = Astro.props;
 ---
-<header class="page-header">
+<header class="page-header" lang={contentLang} dir={contentLang && "ltr"}>
   <h1 class="display page-header__title">{title}</h1>
   {lead && <p class="page-header__lead">{lead}</p>}
   {

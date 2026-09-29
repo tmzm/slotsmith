@@ -16,7 +16,7 @@ interface Props {
   /** Language-neutral path with trailing slash. */
   path: string;
   /** Used when there is no prose yet. */
-  fallback?: { title: string; description: string; sourcePath: string };
+  fallback?: { title: string; description: string };
   prose?: ProseData;
   /** The `{key} value` row under the title. */
   meta?: { key: string; value: string }[];
@@ -27,14 +27,16 @@ interface Props {
 const { lang, path, prose, fallback, meta, title: titleOverride } = Astro.props;
 const title = titleOverride ?? prose?.entry.data.title ?? fallback?.title ?? "";
 const description = prose?.entry.data.description ?? fallback?.description ?? "";
-const sourcePath = prose?.sourcePath ?? fallback?.sourcePath ?? "";
+const sourcePath = prose?.sourcePath;
+// An Arabic page showing English prose: the header and the contents links are English too.
+const contentLang = lang === "ar" && prose && !prose.translated ? "en" : undefined;
 const stub = prose ? prose.entry.data.draft === true : true;
 const headings = prose ? (await render(prose.entry)).headings : [];
 const toc = headings
   .filter((h) => h.depth === 2 || h.depth === 3)
   .map((h) => ({ id: h.slug, text: h.text, depth: h.depth as 2 | 3 }));
 ---
-<Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub}>
-  <PageHeader title={title} lead={prose ? undefined : description} meta={meta} />
+<Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub} tocLang={contentLang}>
+  <PageHeader title={title} lead={prose ? undefined : description} meta={meta} contentLang={contentLang} />
   {prose ? <Prose prose={prose} /> : <p>{t(lang, "common.stub")}</p>}
 </Docs>

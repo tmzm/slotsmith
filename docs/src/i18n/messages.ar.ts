@@ -66,6 +66,11 @@ export const ar: Record<MessageKey, string> = {
   "component.accessibility": "إمكانية الوصول",
   "component.limitations": "القيود",
 
+  "component.guideTitle": "{component}: {guide}",
+  "component.guideDescription": "دليل {guide} في {component} من slotsmith.",
+  "component.apiDescription": "الخصائص والفتحات والنصوص والتنسيق في {component} من slotsmith.",
+  "component.adaptersDescription": "استخدام {component} من slotsmith مع shadcn/ui وMUI وChakra وAnt Design وRadix Themes.",
+
   "common.stub": "هذه الصفحة قيد الكتابة.",
 
   "summary.dataTable": "جدول يدعم الفرز والتحديد والترقيم وبيانات الخادم والصفوف الشجرية والصفوف الافتراضية وإعادة ترتيب الصفوف.",
