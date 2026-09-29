@@ -2,22 +2,33 @@
 
 Read this file first, then the spec, then plan 01.
 
-**Spec:** `docs/superpowers/specs/2026-09-29-docs-launch-site-design.md`
+This handoff folder is `E:\Projects\Personal\slotsmith-docs-plans\`. It holds
+the spec (`2026-09-29-docs-launch-site-design.md`) and plans 00–08. The library
+repo is `E:\Projects\Personal\React-data-table` (package `slotsmith`); all paths
+in the plans are relative to that repo.
+
+**Spec:** `docs/superpowers/specs/2026-09-29-docs-launch-site-design.md` (in the
+repo, after step 2 below; the same file is in this folder)
 
 ## What this is
 
 The slotsmith docs site moves from a separate repo (`tmzm/slotsmith-docs`,
 checked out at `E:\Projects\Personal\react-data-table-docs`, a hash-routed Vite
-SPA) into this repo as `docs/`, an Astro site with React islands. The spec says
-what to build; these plans say how, in order.
+SPA) into the library repo as `docs/`, an Astro site with React islands. The
+spec says what to build; these plans say how, in order.
 
 ## How to start
 
 1. Finish and commit your current work on `master` (the antd suites etc.).
    Delete or git-ignore `src/__scratch__/` first: its probe test matches the
    vitest include pattern and runs with the suite.
-2. `git checkout docs/launch-site && git rebase master`. The branch holds only
-   the spec and these plans, so the rebase is trivial.
+2. Get the spec and plans onto a working branch:
+   - If the branch `docs/launch-site` exists (it already holds the spec and
+     these plans as three commits): `git checkout docs/launch-site && git
+     rebase master`.
+   - Otherwise: `git checkout -b docs/launch-site master`, copy the spec to
+     `docs/superpowers/specs/` and the plans to `docs/superpowers/plans/`, and
+     commit them (`docs: add the launch docs spec and plans`).
 3. `pnpm install && pnpm build && pnpm test` — must be green before Task 1.
 4. Execute the plans in order. Each plan ends with a working, deployable site;
    do not start a plan before the previous one's final verification passes.
@@ -33,7 +44,7 @@ what to build; these plans say how, in order.
 | 05 | `…-05-getting-started-and-guides.md` | Getting started, `/guides/`, theming, languages, AI tools, about |
 | 06 | `…-06-trust.md` | Generated facts, coverage, sizes, axe results, the Trust page |
 | 07 | `…-07-roadmap-comparison-changelog.md` | Roadmap, Comparison (researched), Changelog |
-| 08 | `…-08-seo-search-performance.md` | sitemap, robots, llms.txt, OG images, Pagefind, Lighthouse ≥ 95, README and package.json positioning, Netlify switch, final report |
+| 08 | `…-08-seo-search-performance.md` | sitemap, robots, llms.txt, OG images, GEO (JSON-LD, Markdown copies, answer-first check, FAQs, AI-crawler rules, last-updated dates), Pagefind, Lighthouse ≥ 95, README and package.json positioning, Netlify switch, final report |
 
 ## Rules for every plan
 
@@ -55,6 +66,10 @@ what to build; these plans say how, in order.
   pick the reversible default, keep going.
 - Copy rules: plain, specific, short sentences, no marketing adjectives. Every
   claim about a feature links to its live demo.
+- Answer first: every MDX page opens with one prose paragraph of at most 50
+  words that names the page's subject and answers "what is this / how do I do
+  it". Write pages this way from plan 03 on; plan 08 adds the check that
+  enforces it.
 
 ## Audit findings (from the old site, 2026-09-29)
 

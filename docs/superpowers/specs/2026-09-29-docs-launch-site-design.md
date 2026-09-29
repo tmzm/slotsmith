@@ -58,7 +58,7 @@ Every English page below also exists at `/ar/<same path>`.
 /comparison/
 /changelog/
 /about/
-/sitemap.xml  /robots.txt  /llms.txt  /llms-full.txt  /og/<page>.png
+/sitemap.xml  /robots.txt  /llms.txt  /llms-full.txt  /og/<page>.png  <every page>/index.md
 ```
 
 `<c>` is `data-table`, `autocomplete`, `date-picker`, `file-uploader`.
@@ -353,6 +353,32 @@ Generated from the `## Changelog` section of the root README.
 - `/llms.txt`: title, positioning, and a linked list of every page with its
   description. `/llms-full.txt`: every page's prose plus the generated
   reference as plain Markdown. Both generated from the content collections.
+
+## Generative-engine optimisation (GEO)
+
+For AI search and assistants that read, quote and cite docs pages:
+
+- **Structured data.** The landing has `SoftwareSourceCode` JSON-LD (name,
+  positioning, license, version, repository, npm and GitHub as `sameAs`,
+  author). Every other page has `TechArticle` (with `dateModified`) and
+  `BreadcrumbList`. Component overviews and the landing add `FAQPage`.
+- **Markdown copies.** Every page is also served as Markdown at
+  `<path>index.md`, linked with `<link rel="alternate" type="text/markdown">`,
+  with a "Copy page as Markdown" button and a "View as Markdown" link.
+  `llms.txt` links to these.
+- **Answer-first pages.** Every page opens with one paragraph of at most 50
+  words that names its subject and answers the question the page exists for.
+  A build check enforces it.
+- **FAQs.** The landing and each component overview end with real questions
+  (framework support, styling without Tailwind, bundle cost, versions), each
+  answer linking to where it is shown. The visible FAQ and its JSON-LD come
+  from the same data.
+- **AI crawlers.** `robots.txt` names and allows GPTBot, OAI-SearchBot,
+  ChatGPT-User, ClaudeBot, Claude-User, Claude-SearchBot, PerplexityBot,
+  Perplexity-User, Google-Extended, Applebot-Extended and CCBot, so the choice
+  is explicit and one line to reverse.
+- **Last updated.** Each page shows the date of the last commit touching its
+  sources, from git. When history is shallow or missing, no date is shown.
 
 ## Performance
 
