@@ -222,7 +222,11 @@ Not using a component library? Every fallback also exposes `data-*` state, so Ta
 }
 ```
 
-The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--rdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others; the date picker and the uploader also still follow a theme written against `--rdt-*`. A value set on `:root` applies to both themes, so set its dark value under `.dark, [data-theme="dark"]` too.
+The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others; the date picker and the uploader also still follow a theme written against the data table's `--sdt-*`. A value set on `:root` applies to both themes, so set its dark value under `.dark, [data-theme="dark"]` too.
+
+Every component names its classes the same way: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state as `data-*` attributes.
+
+> **Deprecated:** before 1.6.0 the data table's prefix was `rdt`. The old `rdt__*` classes are still on every element and the `--rdt-*` tokens are still read (set on `:root` or under `.dark, [data-theme="dark"]`, they win over `--ss-*` as before), so a theme or an override written against them keeps working. The stylesheet itself uses only the new names. Both are removed in 2.0: rename `.rdt__row` to `.sdt__row` and `--rdt-accent` to `--sdt-accent`, and so on. A `--rdt-*` value set on a single table's element rather than on `:root` no longer reaches it; set the `--sdt-*` token there instead.
 
 ## You ship only what you import
 
@@ -320,7 +324,8 @@ pnpm test:ai     # the MCP server in packages/ai
 - The headless `useDataTable` returns `reorder` (the drag state, and the props for rows and handles), `reorderable` and `reorderHandleColumn`, and takes `labels` for the handle's name and the announcements.
 - The shadcn/ui, MUI and Chakra UI adapters gain a drag handle, and style a lifted row themselves (an opaque background and a shadow), because the built-in drag styles apply to the fallback row only.
 - `SlotsmithProvider` and `useSlotsmithLocale` now come from `slotsmith/provider`, which will also carry shared settings beyond the language. `slotsmith/locale` still exports them, marked deprecated.
-- All four components now share one default palette and shape, read from the new shared `--ss-*` tokens; see [Theming](#theming). Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once. The per-component tokens still work, and the date picker and the uploader still follow a theme written against `--rdt-*`.
+- The data table's class prefix is now `sdt` and its tokens are `--sdt-*`, like the other components' `sac`, `sdp` and `sfu`. The `rdt__*` classes stay on the elements and the `--rdt-*` tokens are still read, so existing overrides and themes keep working; both are deprecated and removed in 2.0. See [Theming](#theming).
+- All four components now share one default palette and shape, read from the new shared `--ss-*` tokens; see [Theming](#theming). Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once. The per-component tokens still work, and the date picker and the uploader still follow a theme written against the data table's tokens.
 - The date picker's month and year selects now use the component's colours in dark mode.
 - The data table's page-size control is now the slotsmith autocomplete, so it matches the other components. The data table's bundle includes the autocomplete, and `slotsmith/data-table.css` includes the autocomplete's styles.
 - The date picker's footer control now reads "Go to today" and looks like navigation, so it isn't mistaken for a preset.

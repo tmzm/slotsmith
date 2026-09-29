@@ -306,9 +306,9 @@ export type DragHandleSlotProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
  * ```
  */
 export interface DataTableComponents {
-  /** Outer element. Fallback: `<div class="rdt">`. */
+  /** Outer element. Fallback: `<div class="sdt">`. */
   Root: ComponentType<RootSlotProps>;
-  /** Fallback: `<table class="rdt__table">`. */
+  /** Fallback: `<table class="sdt__table">`. */
   Table: ComponentType<TableSlotProps>;
   /** Fallback: `<thead>`. */
   Head: ComponentType<SectionSlotProps>;
@@ -348,7 +348,7 @@ export interface DataTableComponents {
   PaginationButton: ComponentType<PaginationButtonSlotProps>;
   /** Fallback: the slotsmith `Autocomplete` as a labelled single select (no search, no clear). */
   PageSizeSelect: ComponentType<PageSizeSelectSlotProps>;
-  /** Fallback: `<button class="rdt__drag">` with a six-dot grip. Used when `enableRowReorder` is on. */
+  /** Fallback: `<button class="sdt__drag">` with a six-dot grip. Used when `enableRowReorder` is on. */
   DragHandle: ComponentType<DragHandleSlotProps>;
 }
 

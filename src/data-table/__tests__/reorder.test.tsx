@@ -70,7 +70,7 @@ describe("row reordering, rendered", () => {
     for (const row of bodyRows()) {
       const first = within(row).getAllByRole("cell")[0]!;
       expect(first).toHaveAttribute("data-slot", "drag");
-      expect(first).toHaveClass("rdt__cell--drag");
+      expect(first).toHaveClass("sdt__cell--drag");
       expect(within(first).getByRole("button", { name: "Reorder row" })).toBeInTheDocument();
     }
     expect(headerCells()).toHaveLength(3);
@@ -135,7 +135,7 @@ describe("row reordering, rendered", () => {
     for (const row of bodyRows()) {
       const cells = within(row).getAllByRole("cell");
       expect(within(row).getAllByRole("button", { name: "Reorder row" })).toHaveLength(1);
-      expect(within(cells[2]!).getByRole("button", { name: "Reorder row" })).toHaveClass("rdt__drag", "mine");
+      expect(within(cells[2]!).getByRole("button", { name: "Reorder row" })).toHaveClass("sdt__drag", "mine");
     }
   });
 
@@ -154,7 +154,7 @@ describe("row reordering, rendered", () => {
       slotProps: { dragHandle: (row) => ({ className: "mine", title: `Move ${row.original.name}` }) },
     });
     const [first] = handles();
-    expect(first).toHaveClass("rdt__drag", "mine");
+    expect(first).toHaveClass("sdt__drag", "mine");
     expect(first).toHaveAttribute("title", "Move User 01");
     expect(first).toHaveAccessibleName("Reorder row");
   });

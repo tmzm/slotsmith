@@ -2,6 +2,7 @@ import { flexRender, type RowData } from "@tanstack/react-table";
 import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from "react";
 import type { DataTableColumnMeta, DataTableRow } from "./core/features";
 import { DataTableRowContext, useDataTableContext, useDataTableRow } from "./slots/context";
+import { classes } from "./classes";
 import { cx } from "./slots/fallbacks";
 import type { DragHandleSlotProps } from "./slots/types";
 
@@ -64,7 +65,7 @@ const alignStyle = (meta?: DataTableColumnMeta): CSSProperties | undefined =>
 /**
  * Visually hidden
  *
- * Inline as well as in the stylesheet (`rdt__sr`), so hidden text stays out
+ * Inline as well as in the stylesheet (`sdt__sr`), so hidden text stays out
  * of sight in an app that styles the table with its own components and no
  * `styles.css`.
  */
@@ -125,12 +126,12 @@ export function DataTableHead() {
         <C.HeaderRow key={headerGroup.id} {...slotProps.headerRow}>
           {reorderHandleColumn && groupIndex === 0 && (
             <C.HeaderCell
-              className="rdt__cell--drag"
+              className={classes.cellDrag}
               rowSpan={table.getHeaderGroups().length}
               data-slot="drag"
             >
               {/* A header cell needs a name for the column it heads; sighted users see the grips. */}
-              <span className="rdt__sr" style={VISUALLY_HIDDEN}>
+              <span className={classes.srOnly} style={VISUALLY_HIDDEN}>
                 {labels.reorderRow}
               </span>
             </C.HeaderCell>
@@ -139,7 +140,7 @@ export function DataTableHead() {
           {selectable &&
             (groupIndex === 0 ? (
               <C.HeaderCell
-                className="rdt__cell--select"
+                className={classes.cellSelect}
                 rowSpan={table.getHeaderGroups().length}
                 data-slot="select"
               >
@@ -233,7 +234,7 @@ export function DataTableFoot() {
         <C.FooterRow key={footerGroup.id} {...slotProps.footerRow}>
           {reorderHandleColumn && groupIndex === 0 && (
             <C.FooterCell
-              className="rdt__cell--drag"
+              className={classes.cellDrag}
               rowSpan={table.getFooterGroups().length}
               data-slot="drag"
             />
@@ -241,7 +242,7 @@ export function DataTableFoot() {
 
           {selectable && groupIndex === 0 && (
             <C.FooterCell
-              className="rdt__cell--select"
+              className={classes.cellSelect}
               rowSpan={table.getFooterGroups().length}
               data-slot="select"
             />
@@ -340,13 +341,13 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
     <DataTableRowContext.Provider value={row as unknown as DataTableRow<any>}>
       <C.Row {...rowProps}>
         {reorderHandleColumn && (
-          <C.Cell className="rdt__cell--drag" data-slot="drag">
+          <C.Cell className={classes.cellDrag} data-slot="drag">
             <C.DragHandle {...mergeProps(reorder.getHandleProps(row.id), slotProps.dragHandle?.(row))} />
           </C.Cell>
         )}
 
         {selectable && (
-          <C.Cell className="rdt__cell--select" data-slot="select">
+          <C.Cell className={classes.cellSelect} data-slot="select">
             <C.Checkbox
               checked={selected}
               indeterminate={row.getIsSomeSelected() && !selected}
@@ -364,7 +365,7 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
           if (expandable && index === 0) {
             content = (
               <div
-                className="rdt__tree"
+                className={classes.tree}
                 style={{ paddingInlineStart: `${row.depth * INDENT_REM}rem` }}
               >
                 {row.getCanExpand() ? (
@@ -375,7 +376,7 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
                     aria-label={expanded ? labels.collapseRow : labels.expandRow}
                   />
                 ) : (
-                  <span className="rdt__tree-spacer" aria-hidden="true" />
+                  <span className={classes.treeSpacer} aria-hidden="true" />
                 )}
                 {content}
               </div>
@@ -445,7 +446,7 @@ export function DataTableReorderAnnouncer() {
   if (!reorderable) return null;
   return (
     <>
-      <div role="status" aria-live="assertive" aria-atomic="true" className="rdt__sr" style={VISUALLY_HIDDEN}>
+      <div role="status" aria-live="assertive" aria-atomic="true" className={classes.srOnly} style={VISUALLY_HIDDEN}>
         {reorder.announcement}
       </div>
       <div id={reorder.instructionsId} hidden>
@@ -571,7 +572,7 @@ export function DataTableTable({ children, body, maxHeight, scrollRef }: DataTab
   return (
     <div
       ref={scrollRef}
-      className="rdt__scroll"
+      className={classes.scroll}
       style={maxHeight !== undefined ? { maxHeight } : undefined}
     >
       <C.Table {...slotProps.table}>

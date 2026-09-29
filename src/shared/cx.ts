@@ -12,7 +12,7 @@
  *
  * @example
  * ```ts
- * cx("rdt__row", selected && "is-selected"); // "rdt__row is-selected"
+ * cx("sdt__row", selected && "is-selected"); // "sdt__row is-selected"
  * ```
  */
 export const cx = (...classes: (string | false | null | undefined)[]) =>

@@ -46,7 +46,7 @@ describe("VirtualDataTable", () => {
     const { container } = render(
       <VirtualDataTable<User> data={users(1000)} columns={columns} virtual={{ estimateSize: 40, overscan: 0 }} />,
     );
-    const scroller = container.querySelector<HTMLDivElement>(".rdt__scroll")!;
+    const scroller = container.querySelector<HTMLDivElement>(".sdt__scroll")!;
     expect(dataRows()[0]).toHaveTextContent("User 01");
 
     await act(async () => {
@@ -81,7 +81,7 @@ describe("VirtualDataTable", () => {
     const { container, rerender } = render(<VirtualDataTable<User> data={users(20)} columns={columns} enableRowReorder />);
     rerender(<VirtualDataTable<User> data={users(21)} columns={columns} enableRowReorder />);
 
-    expect(container.querySelector("[data-slot=drag], .rdt__drag")).toBeNull();
+    expect(container.querySelector("[data-slot=drag], .sdt__drag")).toBeNull();
     expect(container.querySelector("[role=status]")).toBeNull();
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]![0]).toContain("VirtualDataTable");

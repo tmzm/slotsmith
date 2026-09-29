@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef } from "react";
 import { Autocomplete } from "../../autocomplete/Autocomplete";
 import type { OptionValue } from "../../autocomplete/core/types";
 import { cx } from "../../shared/cx";
+import { classes } from "../classes";
 import { defaultReorderLabels } from "../core/reorderLabels";
 import { useDataTableContext } from "./context";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronIcon, GripIcon } from "./icons";
@@ -32,100 +33,100 @@ export { cx };
 /**
  * Root fallback
  *
- * `<div class="rdt">`.
+ * `<div class="sdt">`.
  */
 const Root = ({ className, ...props }: RootSlotProps) => (
-  <div className={cx("rdt", className)} {...props} />
+  <div className={cx(classes.root, className)} {...props} />
 );
 
 /**
  * Table fallback
  *
- * `<table class="rdt__table">`.
+ * `<table class="sdt__table">`.
  */
 const Table = ({ className, ...props }: TableSlotProps) => (
-  <table className={cx("rdt__table", className)} {...props} />
+  <table className={cx(classes.table, className)} {...props} />
 );
 
 /**
  * Head fallback
  *
- * `<thead class="rdt__head">`.
+ * `<thead class="sdt__head">`.
  */
 const Head = ({ className, ...props }: SectionSlotProps) => (
-  <thead className={cx("rdt__head", className)} {...props} />
+  <thead className={cx(classes.head, className)} {...props} />
 );
 
 /**
  * Body fallback
  *
- * `<tbody class="rdt__body">`.
+ * `<tbody class="sdt__body">`.
  */
 const Body = ({ className, ...props }: SectionSlotProps) => (
-  <tbody className={cx("rdt__body", className)} {...props} />
+  <tbody className={cx(classes.body, className)} {...props} />
 );
 
 /**
  * Foot fallback
  *
- * `<tfoot class="rdt__foot">`.
+ * `<tfoot class="sdt__foot">`.
  */
 const Foot = ({ className, ...props }: SectionSlotProps) => (
-  <tfoot className={cx("rdt__foot", className)} {...props} />
+  <tfoot className={cx(classes.foot, className)} {...props} />
 );
 
 /**
  * Footer row fallback
  *
- * `<tr class="rdt__row">` in the foot.
+ * `<tr class="sdt__row">` in the foot.
  */
 const FooterRow = ({ className, ...props }: RowSlotProps) => (
-  <tr className={cx("rdt__row", className)} {...props} />
+  <tr className={cx(classes.row, className)} {...props} />
 );
 
 /**
  * Footer cell fallback
  *
- * `<td class="rdt__cell">` in the foot.
+ * `<td class="sdt__cell">` in the foot.
  */
 const FooterCell = ({ className, ...props }: CellSlotProps) => (
-  <td className={cx("rdt__cell", className)} {...props} />
+  <td className={cx(classes.cell, className)} {...props} />
 );
 
 /**
  * Header row fallback
  *
- * `<tr class="rdt__row">` in the head.
+ * `<tr class="sdt__row">` in the head.
  */
 const HeaderRow = ({ className, ...props }: RowSlotProps) => (
-  <tr className={cx("rdt__row", className)} {...props} />
+  <tr className={cx(classes.row, className)} {...props} />
 );
 
 /**
  * Header cell fallback
  *
- * `<th class="rdt__cell">`.
+ * `<th class="sdt__cell">`.
  */
 const HeaderCell = ({ className, ...props }: HeaderCellSlotProps) => (
-  <th className={cx("rdt__cell", className)} {...props} />
+  <th className={cx(classes.cell, className)} {...props} />
 );
 
 /**
  * Row fallback
  *
- * `<tr class="rdt__row">` in the body.
+ * `<tr class="sdt__row">` in the body.
  */
 const Row = ({ className, ...props }: RowSlotProps) => (
-  <tr className={cx("rdt__row", className)} {...props} />
+  <tr className={cx(classes.row, className)} {...props} />
 );
 
 /**
  * Cell fallback
  *
- * `<td class="rdt__cell">`.
+ * `<td class="sdt__cell">`.
  */
 const Cell = ({ className, ...props }: CellSlotProps) => (
-  <td className={cx("rdt__cell", className)} {...props} />
+  <td className={cx(classes.cell, className)} {...props} />
 );
 
 /**
@@ -144,7 +145,7 @@ const Checkbox = ({ checked, indeterminate, disabled, onCheckedChange, ...aria }
     <input
       ref={ref}
       type="checkbox"
-      className="rdt__checkbox"
+      className={classes.checkbox}
       checked={checked}
       disabled={disabled}
       onChange={(event) => onCheckedChange(event.target.checked)}
@@ -170,9 +171,9 @@ const SortIcon = ({ direction }: SortIconSlotProps) =>
 const SortTrigger = ({ direction, onClick, children }: SortTriggerSlotProps) => {
   const { components } = useDataTableContext();
   return (
-    <button type="button" className="rdt__sort" data-sorted={direction || undefined} onClick={onClick}>
+    <button type="button" className={classes.sort} data-sorted={direction || undefined} onClick={onClick}>
       {children}
-      <span className="rdt__sort-icon">
+      <span className={classes.sortIcon}>
         <components.SortIcon direction={direction} />
       </span>
     </button>
@@ -187,7 +188,7 @@ const SortTrigger = ({ direction, onClick, children }: SortTriggerSlotProps) => 
 const ExpandToggle = ({ expanded, onToggle, depth: _depth, ...aria }: ExpandToggleSlotProps) => (
   <button
     type="button"
-    className="rdt__expand"
+    className={classes.expand}
     aria-expanded={expanded}
     data-expanded={expanded || undefined}
     onClick={(event) => {
@@ -205,14 +206,14 @@ const ExpandToggle = ({ expanded, onToggle, depth: _depth, ...aria }: ExpandTogg
  *
  * A shimmering bar.
  */
-const Skeleton = (_: SkeletonSlotProps) => <div className="rdt__skeleton" />;
+const Skeleton = (_: SkeletonSlotProps) => <div className={classes.skeleton} />;
 
 /**
  * Empty fallback
  *
  * A centered, muted message.
  */
-const Empty = ({ message }: EmptySlotProps) => <div className="rdt__placeholder">{message}</div>;
+const Empty = ({ message }: EmptySlotProps) => <div className={classes.placeholder}>{message}</div>;
 
 /**
  * Error fallback
@@ -220,10 +221,10 @@ const Empty = ({ message }: EmptySlotProps) => <div className="rdt__placeholder"
  * The message with a retry button, announced with `role="alert"`.
  */
 const ErrorState = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
-  <div className="rdt__placeholder rdt__placeholder--error" role="alert">
+  <div className={cx(classes.placeholder, classes.placeholderError)} role="alert">
     <span>{message}</span>
     {onRetry && (
-      <button type="button" className="rdt__button" onClick={onRetry}>
+      <button type="button" className={classes.button} onClick={onRetry}>
         {retryLabel}
       </button>
     )}
@@ -236,7 +237,7 @@ const ErrorState = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
  * A chevron `<button>`; the chevron flips in RTL.
  */
 const PaginationButton = ({ direction, ...props }: PaginationButtonSlotProps) => (
-  <button type="button" className="rdt__button rdt__button--icon" {...props}>
+  <button type="button" className={cx(classes.button, classes.buttonIcon)} {...props}>
     <ChevronIcon direction={direction} />
   </button>
 );
@@ -255,10 +256,10 @@ const PageSizeSelect = ({ value, options, onValueChange, label }: PageSizeSelect
   const { locale } = useDataTableContext();
   const items = useMemo(() => options.map((option) => ({ value: option, label: String(option) })), [options]);
   return (
-    <div className="rdt__page-size">
+    <div className={classes.pageSize}>
       <span id={id}>{label}</span>
       <Autocomplete
-        className="rdt__page-size-select"
+        className={classes.pageSizeSelect}
         aria-labelledby={id}
         options={items}
         value={value}
@@ -284,8 +285,8 @@ const Pagination = (props: PaginationSlotProps) => {
   const { components } = useDataTableContext();
   const { labels } = props;
   return (
-    <nav className="rdt__pagination" aria-label={labels.pagination}>
-      <div className="rdt__pagination-buttons">
+    <nav className={classes.pagination} aria-label={labels.pagination}>
+      <div className={classes.paginationButtons}>
         <components.PaginationButton
           direction="previous"
           disabled={!props.canPreviousPage}
@@ -299,7 +300,7 @@ const Pagination = (props: PaginationSlotProps) => {
           aria-label={labels.nextPage}
         />
       </div>
-      <span className="rdt__pagination-info" aria-live="polite">
+      <span className={classes.paginationInfo} aria-live="polite">
         {labels.pageInfo(props.pageIndex + 1, props.pageCount)}
       </span>
       <components.PageSizeSelect
@@ -319,7 +320,7 @@ const Pagination = (props: PaginationSlotProps) => {
  * the ref it measures the row through, lands on the button.
  */
 const DragHandle = ({ className, ...props }: DragHandleSlotProps) => (
-  <button type="button" className={cx("rdt__drag", className)} {...props}>
+  <button type="button" className={cx(classes.drag, className)} {...props}>
     <GripIcon />
   </button>
 );

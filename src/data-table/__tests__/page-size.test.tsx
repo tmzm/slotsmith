@@ -29,7 +29,7 @@ describe("page-size control", () => {
   it("is the autocomplete, labelled by the rows-per-page label", () => {
     const { container } = renderTable({ data: users(30) });
     const trigger = pageSize();
-    expect(container.querySelector(".rdt__page-size .sac")).toContainElement(trigger);
+    expect(container.querySelector(".sdt__page-size .sac")).toContainElement(trigger);
     expect(trigger).toHaveTextContent("10");
   });
 
@@ -93,7 +93,7 @@ describe("page-size control", () => {
     );
 
     await events.click(screen.getByRole("combobox", { name: "عدد الصفوف" }));
-    const announcement = container.querySelector(".rdt__page-size [role=status]")!;
+    const announcement = container.querySelector(".sdt__page-size [role=status]")!;
     expect(announcement.textContent).toMatch(/[؀-ۿ]/);
   });
 
@@ -106,7 +106,7 @@ describe("page-size control", () => {
     );
 
     await events.click(screen.getByRole("combobox", { name: "عدد الصفوف" }));
-    const announcement = container.querySelector(".rdt__page-size [role=status]")!;
+    const announcement = container.querySelector(".sdt__page-size [role=status]")!;
     expect(announcement.textContent).toMatch(/[؀-ۿ]/);
   });
 

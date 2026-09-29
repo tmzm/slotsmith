@@ -2,10 +2,16 @@
  * Data table styles
  *
  * Optional styles for the built-in fallback slots.
- * Every value is a --rdt-* token; override them on :root or on any .rdt root.
- * The colour, radius and font-size tokens read the shared --ss-* layer first,
- * so one --ss-* override restyles every component at once.
+ * Every value is a --sdt-* token; override them on :root or on any .sdt root.
+ * The colour, radius and font-size tokens read the shared --ss-* layer, so one
+ * --ss-* override restyles every component at once.
  * Custom slots are unaffected — style them however your UI library does.
+ *
+ * Only the `sdt` class names are selected. The elements still carry the old
+ * `rdt` names, so an app's own `.rdt__…` rules keep matching, and each
+ * --sdt-* token reads its deprecated --rdt-* twin first, so a theme written
+ * against --rdt-* on :root or the dark block still applies. Both are removed
+ * in 2.0.
  */
 
 /**
@@ -17,27 +23,27 @@
 @import "../autocomplete/styles.css";
 
 :root {
-  --rdt-surface: var(--ss-surface, #ffffff);
-  --rdt-bg: var(--rdt-surface);
+  --sdt-surface: var(--rdt-surface, var(--ss-surface, #ffffff));
+  --sdt-bg: var(--rdt-bg, var(--sdt-surface));
   /** Must stay opaque: the header is sticky and rows scroll underneath it. */
-  --rdt-header-bg: var(--rdt-surface);
-  --rdt-border: var(--ss-border, #e5e7eb);
-  --rdt-text: var(--ss-text, #111827);
-  --rdt-muted: var(--ss-muted, #6b7280);
-  --rdt-hover: var(--ss-hover, rgb(0 0 0 / 4%));
-  --rdt-stripe: rgba(0, 0, 0, 0.025);
-  --rdt-selected: var(--ss-selected, rgb(37 99 235 / 8%));
-  --rdt-accent: var(--ss-accent, #2563eb);
-  --rdt-danger: var(--ss-danger, #dc2626);
-  --rdt-skeleton-bg: #e5e7eb;
-  --rdt-skeleton-bg-2: #f3f4f6;
+  --sdt-header-bg: var(--rdt-header-bg, var(--sdt-surface));
+  --sdt-border: var(--rdt-border, var(--ss-border, #e5e7eb));
+  --sdt-text: var(--rdt-text, var(--ss-text, #111827));
+  --sdt-muted: var(--rdt-muted, var(--ss-muted, #6b7280));
+  --sdt-hover: var(--rdt-hover, var(--ss-hover, rgb(0 0 0 / 4%)));
+  --sdt-stripe: var(--rdt-stripe, rgba(0, 0, 0, 0.025));
+  --sdt-selected: var(--rdt-selected, var(--ss-selected, rgb(37 99 235 / 8%)));
+  --sdt-accent: var(--rdt-accent, var(--ss-accent, #2563eb));
+  --sdt-danger: var(--rdt-danger, var(--ss-danger, #dc2626));
+  --sdt-skeleton-bg: var(--rdt-skeleton-bg, #e5e7eb);
+  --sdt-skeleton-bg-2: var(--rdt-skeleton-bg-2, #f3f4f6);
 
-  --rdt-radius: var(--ss-radius, 8px);
-  --rdt-font-size: var(--ss-font-size, 14px);
-  --rdt-padding-x: 12px;
-  --rdt-padding-y: 10px;
-  --rdt-checkbox-size: 16px;
-  --rdt-max-height: none;
+  --sdt-radius: var(--rdt-radius, var(--ss-radius, 8px));
+  --sdt-font-size: var(--rdt-font-size, var(--ss-font-size, 14px));
+  --sdt-padding-x: var(--rdt-padding-x, 12px);
+  --sdt-padding-y: var(--rdt-padding-y, 10px);
+  --sdt-checkbox-size: var(--rdt-checkbox-size, 16px);
+  --sdt-max-height: var(--rdt-max-height, none);
 }
 
 /**
@@ -47,19 +53,19 @@
  */
 .dark,
 [data-theme="dark"] {
-  --rdt-surface: var(--ss-surface, #141416);
-  --rdt-bg: var(--rdt-surface);
-  --rdt-header-bg: var(--rdt-surface);
-  --rdt-border: var(--ss-border, #2a2a2a);
-  --rdt-text: var(--ss-text, #f5f5f5);
-  --rdt-muted: var(--ss-muted, #a3a3a3);
-  --rdt-hover: var(--ss-hover, rgb(255 255 255 / 6%));
-  --rdt-stripe: rgba(255, 255, 255, 0.025);
-  --rdt-selected: var(--ss-selected, rgb(96 165 250 / 12%));
-  --rdt-accent: var(--ss-accent, #60a5fa);
-  --rdt-danger: var(--ss-danger, #f87171);
-  --rdt-skeleton-bg: #262626;
-  --rdt-skeleton-bg-2: #333333;
+  --sdt-surface: var(--rdt-surface, var(--ss-surface, #141416));
+  --sdt-bg: var(--rdt-bg, var(--sdt-surface));
+  --sdt-header-bg: var(--rdt-header-bg, var(--sdt-surface));
+  --sdt-border: var(--rdt-border, var(--ss-border, #2a2a2a));
+  --sdt-text: var(--rdt-text, var(--ss-text, #f5f5f5));
+  --sdt-muted: var(--rdt-muted, var(--ss-muted, #a3a3a3));
+  --sdt-hover: var(--rdt-hover, var(--ss-hover, rgb(255 255 255 / 6%)));
+  --sdt-stripe: var(--rdt-stripe, rgba(255, 255, 255, 0.025));
+  --sdt-selected: var(--rdt-selected, var(--ss-selected, rgb(96 165 250 / 12%)));
+  --sdt-accent: var(--rdt-accent, var(--ss-accent, #60a5fa));
+  --sdt-danger: var(--rdt-danger, var(--ss-danger, #f87171));
+  --sdt-skeleton-bg: var(--rdt-skeleton-bg, #262626);
+  --sdt-skeleton-bg-2: var(--rdt-skeleton-bg-2, #333333);
 }
 
 /**
@@ -67,110 +73,115 @@
  * checkboxes dark. Set on the table itself rather than beside the tokens, so the page
  * element carrying the theme keeps whatever scheme the app gave it.
  */
-:is(.dark, [data-theme="dark"]) :is(.rdt),
-.rdt:is(.dark, [data-theme="dark"]) {
+:is(.dark, [data-theme="dark"]) :is(.sdt),
+.sdt:is(.dark, [data-theme="dark"]) {
   color-scheme: dark;
 }
 
 /** Root */
 
-.rdt {
+.sdt {
   width: 100%;
   font-family: inherit;
-  font-size: var(--rdt-font-size);
-  color: var(--rdt-text);
-  background: var(--rdt-bg);
-  border: 1px solid var(--rdt-border);
-  border-radius: var(--rdt-radius);
+  font-size: var(--sdt-font-size);
+  color: var(--sdt-text);
+  background: var(--sdt-bg);
+  border: 1px solid var(--sdt-border);
+  border-radius: var(--sdt-radius);
   overflow: hidden;
 }
 
-/** The densities derive their font size from the shared one, so `--ss-font-size` still reaches them. */
-.rdt[data-size="default"] {
-  --rdt-font-size: var(--ss-font-size, 14px);
-  --rdt-padding-x: 14px;
-  --rdt-padding-y: 12px;
+/**
+ * The densities derive their font size from the shared one, so `--ss-font-size`
+ * still reaches them. Each also reads the deprecated `--rdt-*` name first: the
+ * old rules set those names here, so an app rule that overrode one on the
+ * table (`.rdt[data-size="sm"] { --rdt-padding-x: … }`) still wins.
+ */
+.sdt[data-size="default"] {
+  --sdt-font-size: var(--rdt-font-size, var(--ss-font-size, 14px));
+  --sdt-padding-x: var(--rdt-padding-x, 14px);
+  --sdt-padding-y: var(--rdt-padding-y, 12px);
 }
 
-.rdt[data-size="sm"] {
-  --rdt-font-size: calc(var(--ss-font-size, 14px) - 1px);
-  --rdt-padding-x: 10px;
-  --rdt-padding-y: 8px;
-  --rdt-checkbox-size: 14px;
+.sdt[data-size="sm"] {
+  --sdt-font-size: var(--rdt-font-size, calc(var(--ss-font-size, 14px) - 1px));
+  --sdt-padding-x: var(--rdt-padding-x, 10px);
+  --sdt-padding-y: var(--rdt-padding-y, 8px);
+  --sdt-checkbox-size: var(--rdt-checkbox-size, 14px);
 }
 
-.rdt__scroll {
+.sdt__scroll {
   width: 100%;
-  max-height: var(--rdt-max-height);
+  max-height: var(--sdt-max-height);
   overflow: auto;
 }
 
 /** Table */
 
-.rdt__table {
+.sdt__table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   text-align: start;
 }
 
-.rdt__head .rdt__cell {
+.sdt__head .sdt__cell {
   position: sticky;
   top: 0;
   /* Above a row being dragged, which scrolls underneath like any other. */
   z-index: 2;
-  background: var(--rdt-header-bg);
+  background: var(--sdt-header-bg);
   font-weight: 600;
   white-space: nowrap;
 }
 
-.rdt__cell {
-  padding: var(--rdt-padding-y) var(--rdt-padding-x);
+.sdt__cell {
+  padding: var(--sdt-padding-y) var(--sdt-padding-x);
   text-align: start;
   vertical-align: middle;
-  border-bottom: 1px solid var(--rdt-border);
+  border-bottom: 1px solid var(--sdt-border);
 }
 
-.rdt__body .rdt__row:last-child .rdt__cell {
+.sdt__body .sdt__row:last-child .sdt__cell {
   border-bottom: none;
 }
 
 /** The foot is a totals band: a firm rule above it, no rule below. */
-.rdt__foot .rdt__cell {
-  background: var(--rdt-header-bg);
-  border-top: 1px solid var(--rdt-border);
+.sdt__foot .sdt__cell {
+  background: var(--sdt-header-bg);
+  border-top: 1px solid var(--sdt-border);
   border-bottom: none;
   font-weight: 600;
 }
 
-.rdt__cell--select {
+.sdt__cell--select {
   width: 1%;
   padding-inline-end: 0;
 }
 
-.rdt__body .rdt__row {
+.sdt__body .sdt__row {
   transition: background-color 0.15s ease;
 }
 
-.rdt__body .rdt__row:hover {
-  background: var(--rdt-hover);
+.sdt__body .sdt__row:hover {
+  background: var(--sdt-hover);
 }
 
-.rdt[data-striped] .rdt__body .rdt__row:nth-child(even) {
-  background: var(--rdt-stripe);
+.sdt[data-striped] .sdt__body .sdt__row:nth-child(even) {
+  background: var(--sdt-stripe);
 }
 
-.rdt__body .rdt__row[data-state="selected"] {
-  background: var(--rdt-selected);
+.sdt__body .sdt__row[data-state="selected"] {
+  background: var(--sdt-selected);
 }
 
-.rdt__row[data-clickable] {
+.sdt__row[data-clickable] {
   cursor: pointer;
 }
 
 /** Sorting */
 
-.rdt__sort {
+.sdt__sort {
   all: unset;
   display: inline-flex;
   align-items: center;
@@ -180,40 +191,40 @@
   border-radius: 4px;
 }
 
-.rdt__cell[data-align="end"] .rdt__sort {
+.sdt__cell[data-align="end"] .sdt__sort {
   flex-direction: row-reverse;
 }
 
-.rdt__sort-icon {
+.sdt__sort-icon {
   display: inline-flex;
   opacity: 0.35;
 }
 
-.rdt__sort[data-sorted] .rdt__sort-icon {
+.sdt__sort[data-sorted] .sdt__sort-icon {
   opacity: 1;
 }
 
-.rdt__sort-icon svg {
+.sdt__sort-icon svg {
   width: 14px;
   height: 14px;
 }
 
 /** Tree rows */
 
-.rdt__tree {
+.sdt__tree {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.rdt__expand,
-.rdt__tree-spacer {
+.sdt__expand,
+.sdt__tree-spacer {
   flex: none;
   width: 20px;
   height: 20px;
 }
 
-.rdt__expand {
+.sdt__expand {
   all: unset;
   display: inline-flex;
   align-items: center;
@@ -222,38 +233,38 @@
   height: 20px;
   border-radius: 4px;
   cursor: pointer;
-  color: var(--rdt-muted);
+  color: var(--sdt-muted);
 }
 
-.rdt__expand:hover {
-  background: var(--rdt-hover);
+.sdt__expand:hover {
+  background: var(--sdt-hover);
 }
 
-.rdt__expand svg {
+.sdt__expand svg {
   transition: transform 0.15s ease;
 }
 
-.rdt__expand[data-expanded] svg {
+.sdt__expand[data-expanded] svg {
   transform: rotate(90deg);
 }
 
 /** Inputs */
 
-.rdt__checkbox {
-  width: var(--rdt-checkbox-size);
-  height: var(--rdt-checkbox-size);
+.sdt__checkbox {
+  width: var(--sdt-checkbox-size);
+  height: var(--sdt-checkbox-size);
   margin: 0;
-  accent-color: var(--rdt-accent);
+  accent-color: var(--sdt-accent);
   cursor: pointer;
   vertical-align: middle;
 }
 
-.rdt__checkbox:disabled {
+.sdt__checkbox:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
 
-.rdt__button {
+.sdt__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -261,61 +272,61 @@
   height: 32px;
   padding: 0 12px;
   font: inherit;
-  color: var(--rdt-text);
+  color: var(--sdt-text);
   background: transparent;
-  border: 1px solid var(--rdt-border);
-  border-radius: var(--rdt-radius);
+  border: 1px solid var(--sdt-border);
+  border-radius: var(--sdt-radius);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
-.rdt__button:hover:not(:disabled) {
-  background: var(--rdt-hover);
+.sdt__button:hover:not(:disabled) {
+  background: var(--sdt-hover);
 }
 
-.rdt__button:disabled {
+.sdt__button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.rdt__button--icon {
+.sdt__button--icon {
   width: 32px;
   padding: 0;
 }
 
-.rdt :is(button, select, input):focus-visible {
-  outline: 2px solid var(--rdt-accent);
+.sdt :is(button, select, input):focus-visible {
+  outline: 2px solid var(--sdt-accent);
   outline-offset: 2px;
 }
 
 /** In RTL, "previous"/"next" chevrons and the expand arrow point the other way. */
-.rdt:dir(rtl) svg[data-direction="previous"],
-.rdt:dir(rtl) svg[data-direction="next"] {
+.sdt:dir(rtl) svg[data-direction="previous"],
+.sdt:dir(rtl) svg[data-direction="next"] {
   transform: scaleX(-1);
 }
 
-.rdt:dir(rtl) .rdt__expand[data-expanded] svg {
+.sdt:dir(rtl) .sdt__expand[data-expanded] svg {
   transform: scaleX(-1) rotate(90deg);
 }
 
 /** States */
 
-.rdt__skeleton {
+.sdt__skeleton {
   width: 100%;
   min-width: 24px;
   height: 14px;
   border-radius: 4px;
   background: linear-gradient(
     90deg,
-    var(--rdt-skeleton-bg) 25%,
-    var(--rdt-skeleton-bg-2) 37%,
-    var(--rdt-skeleton-bg) 63%
+    var(--sdt-skeleton-bg) 25%,
+    var(--sdt-skeleton-bg-2) 37%,
+    var(--sdt-skeleton-bg) 63%
   );
   background-size: 400% 100%;
-  animation: rdt-loading 1.4s ease infinite;
+  animation: sdt-loading 1.4s ease infinite;
 }
 
-@keyframes rdt-loading {
+@keyframes sdt-loading {
   from {
     background-position: 100% 0;
   }
@@ -324,64 +335,64 @@
   }
 }
 
-.rdt__placeholder {
+.sdt__placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   padding: 32px 0;
   text-align: center;
-  color: var(--rdt-muted);
+  color: var(--sdt-muted);
 }
 
-.rdt__placeholder--error {
-  color: var(--rdt-danger);
+.sdt__placeholder--error {
+  color: var(--sdt-danger);
 }
 
 /** Pagination */
 
-.rdt__pagination {
+.sdt__pagination {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px var(--rdt-padding-x);
-  border-top: 1px solid var(--rdt-border);
+  padding: 8px var(--sdt-padding-x);
+  border-top: 1px solid var(--sdt-border);
 }
 
-.rdt__pagination-buttons {
+.sdt__pagination-buttons {
   display: flex;
   gap: 4px;
 }
 
-.rdt__pagination-info,
-.rdt__page-size {
+.sdt__pagination-info,
+.sdt__page-size {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--rdt-muted);
+  color: var(--sdt-muted);
 }
 
 /** The autocomplete fills its container by default; here it sizes to the number it shows. */
-.rdt__page-size .rdt__page-size-select {
+.sdt__page-size .sdt__page-size-select {
   width: auto;
   min-width: 72px;
 }
 
 /** Row reordering */
 
-.rdt__cell--drag {
+.sdt__cell--drag {
   width: 1%;
   padding-inline: 4px;
 }
 
-.rdt__drag {
+.sdt__drag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 4px;
-  color: var(--rdt-muted);
+  color: var(--sdt-muted);
   background: none;
   border: 0;
   border-radius: 4px;
@@ -390,19 +401,19 @@
   touch-action: none;
 }
 
-.rdt__drag:hover:not(:disabled),
-.rdt__drag:focus-visible {
-  color: var(--rdt-text);
-  background: var(--rdt-hover);
+.sdt__drag:hover:not(:disabled),
+.sdt__drag:focus-visible {
+  color: var(--sdt-text);
+  background: var(--sdt-hover);
 }
 
-.rdt__drag[data-dragging],
-.rdt__drag[aria-pressed="true"] {
+.sdt__drag[data-dragging],
+.sdt__drag[aria-pressed="true"] {
   cursor: grabbing;
-  color: var(--rdt-accent);
+  color: var(--sdt-accent);
 }
 
-.rdt__drag:disabled {
+.sdt__drag:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -413,13 +424,13 @@
  * shadow sits on the row, not on each cell: per-cell shadows fall on the
  * neighbouring cells and show a seam at every column border.
  */
-.rdt__body .rdt__row[data-dragging],
-.rdt__body .rdt__row[data-dragging-child] {
+.sdt__body .sdt__row[data-dragging],
+.sdt__body .sdt__row[data-dragging-child] {
   position: relative;
   z-index: 1;
 }
 
-.rdt__body .rdt__row[data-dragging] {
+.sdt__body .sdt__row[data-dragging] {
   box-shadow: 0 6px 16px -6px rgb(0 0 0 / 30%);
 }
 
@@ -427,11 +438,11 @@
  * A lifted row with sub-rows reads as one piece: a single shadow, under the
  * last row of the block, instead of one between each pair of rows.
  */
-.rdt__body .rdt__row[data-dragging]:has(+ .rdt__row[data-dragging-child]) {
+.sdt__body .sdt__row[data-dragging]:has(+ .sdt__row[data-dragging-child]) {
   box-shadow: none;
 }
 
-.rdt__body .rdt__row[data-dragging-child]:not(:has(+ .rdt__row[data-dragging-child])) {
+.sdt__body .sdt__row[data-dragging-child]:not(:has(+ .sdt__row[data-dragging-child])) {
   box-shadow: 0 6px 16px -6px rgb(0 0 0 / 30%);
 }
 
@@ -439,13 +450,13 @@
  * Cells need an opaque background, or the rows underneath show through; the
  * hover tint over it keeps the rows apart where a dark theme hides the shadow.
  */
-.rdt__body .rdt__row[data-dragging] > *,
-.rdt__body .rdt__row[data-dragging-child] > * {
-  background: linear-gradient(var(--rdt-hover), var(--rdt-hover)) var(--rdt-surface);
+.sdt__body .sdt__row[data-dragging] > *,
+.sdt__body .sdt__row[data-dragging-child] > * {
+  background: linear-gradient(var(--sdt-hover), var(--sdt-hover)) var(--sdt-surface);
 }
 
 /** Visually hidden, still read by assistive technology: the reorder announcements. */
-.rdt__sr {
+.sdt__sr {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -462,34 +473,34 @@
    * Without motion nothing slides: the lifted rows are dimmed in place, and a
    * line marks where they would land, on the edge of the target's block.
    */
-  .rdt__body .rdt__row[data-dragging],
-  .rdt__body .rdt__row[data-dragging-child] {
+  .sdt__body .sdt__row[data-dragging],
+  .sdt__body .sdt__row[data-dragging-child] {
     box-shadow: none;
   }
 
-  .rdt__body .rdt__row[data-dragging]:has(+ .rdt__row[data-dragging-child]),
-  .rdt__body .rdt__row[data-dragging-child]:not(:has(+ .rdt__row[data-dragging-child])) {
+  .sdt__body .sdt__row[data-dragging]:has(+ .sdt__row[data-dragging-child]),
+  .sdt__body .sdt__row[data-dragging-child]:not(:has(+ .sdt__row[data-dragging-child])) {
     box-shadow: none;
   }
 
-  .rdt__body .rdt__row[data-dragging] > *,
-  .rdt__body .rdt__row[data-dragging-child] > * {
+  .sdt__body .sdt__row[data-dragging] > *,
+  .sdt__body .sdt__row[data-dragging-child] > * {
     opacity: 0.5;
   }
 
-  .rdt__body .rdt__row[data-drop-edge="before"] > * {
-    box-shadow: inset 0 2px 0 0 var(--rdt-accent);
+  .sdt__body .sdt__row[data-drop-edge="before"] > * {
+    box-shadow: inset 0 2px 0 0 var(--sdt-accent);
   }
 
-  .rdt__body .rdt__row[data-drop-edge="after"] > * {
-    box-shadow: inset 0 -2px 0 0 var(--rdt-accent);
+  .sdt__body .sdt__row[data-drop-edge="after"] > * {
+    box-shadow: inset 0 -2px 0 0 var(--sdt-accent);
   }
 
-  .rdt__skeleton {
+  .sdt__skeleton {
     animation: none;
   }
-  .rdt__body .rdt__row,
-  .rdt__expand svg {
+  .sdt__body .sdt__row,
+  .sdt__expand svg {
     transition: none;
   }
 }

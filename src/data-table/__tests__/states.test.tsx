@@ -6,7 +6,7 @@ describe("loading, error and empty states", () => {
   it("shows one skeleton row per page-size row and marks the table busy", () => {
     const { container } = renderTable({ loading: true, defaultPagination: { pageIndex: 0, pageSize: 5 } });
     expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
-    expect(container.querySelectorAll(".rdt__skeleton")).toHaveLength(5 * 2);
+    expect(container.querySelectorAll(".sdt__skeleton")).toHaveLength(5 * 2);
     expect(container.firstElementChild).toHaveAttribute("aria-busy", "true");
   });
 
@@ -16,7 +16,7 @@ describe("loading, error and empty states", () => {
       enableRowSelection: true,
       defaultPagination: { pageIndex: 0, pageSize: 1 },
     });
-    expect(container.querySelectorAll(".rdt__skeleton")).toHaveLength(3);
+    expect(container.querySelectorAll(".sdt__skeleton")).toHaveLength(3);
   });
 
   it("shows the empty message spanning every column", () => {

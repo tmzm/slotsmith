@@ -50,8 +50,8 @@ const LibraryPagination = ({ pageIndex, pageCount, nextPage }: PaginationSlotPro
 describe("slots", () => {
   it("renders the plain-HTML fallbacks by default", () => {
     const { container } = renderTable();
-    expect(container.querySelector("table.rdt__table")).toBeInTheDocument();
-    expect(container.querySelector(".rdt__page-size .sac")).toBeInTheDocument();
+    expect(container.querySelector("table.sdt__table")).toBeInTheDocument();
+    expect(container.querySelector(".sdt__page-size .sac")).toBeInTheDocument();
     expect(container.querySelector("select")).not.toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe("slots", () => {
     expect(screen.getByTestId("library-pagination")).toHaveTextContent("2/2");
 
     /** Unreplaced slots still use the fallbacks. */
-    expect(document.querySelector("table.rdt__table")).toBeInTheDocument();
+    expect(document.querySelector("table.sdt__table")).toBeInTheDocument();
   });
 
   it("passes selection state to element slots as data attributes", async () => {
@@ -112,7 +112,7 @@ describe("slots", () => {
       <fallbackComponents.Row {...props} className="mine" />
     );
     render(<DataTable<User> data={users(1)} columns={columns} components={{ Row: Wrapped }} />);
-    expect(bodyRows()[0]).toHaveClass("rdt__row", "mine");
+    expect(bodyRows()[0]).toHaveClass("sdt__row", "mine");
   });
 
   it("merges slotProps and column meta into cells", () => {
@@ -123,7 +123,7 @@ describe("slots", () => {
       },
     });
     const [first, second] = bodyRows();
-    expect(first).toHaveClass("rdt__row", "first");
+    expect(first).toHaveClass("sdt__row", "first");
     expect(second).not.toHaveClass("first");
 
     const ageCell = within(first!).getAllByRole("cell")[1]!;
@@ -136,7 +136,7 @@ describe("slots", () => {
   it("forwards HTML attributes to the root", () => {
     const { container } = renderTable({ className: "outer", id: "users", striped: true });
     const root = container.firstElementChild!;
-    expect(root).toHaveClass("rdt", "outer");
+    expect(root).toHaveClass("sdt", "outer");
     expect(root).toHaveAttribute("id", "users");
     expect(root).toHaveAttribute("data-striped", "true");
     expect(root).toHaveAttribute("data-size", "sm");
@@ -196,7 +196,7 @@ describe("slots", () => {
     );
     const handle = screen.getByRole("button", { name: "Reorder row" });
     expect(handle).toHaveAttribute("type", "button");
-    expect(handle).toHaveClass("rdt__drag", "mine");
+    expect(handle).toHaveClass("sdt__drag", "mine");
     expect(handle).toHaveAttribute("data-dragging", "");
     expect(handle.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
     expect(handle.querySelectorAll("circle")).toHaveLength(6);
@@ -219,7 +219,7 @@ describe("slots", () => {
     const handles = screen.getAllByRole("button", { name: "Reorder row" });
     expect(handles).toHaveLength(3);
     for (const handle of handles) expect(handle).toHaveAttribute("data-library", "handle");
-    expect(document.querySelector(".rdt__drag")).toBeNull();
+    expect(document.querySelector(".sdt__drag")).toBeNull();
     const props = received[received.length - 1]!;
     expect(props["aria-label"]).toBe("Reorder row");
     expect(props.onPointerDown).toEqual(expect.any(Function));

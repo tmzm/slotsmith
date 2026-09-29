@@ -19,13 +19,24 @@ import { describe, expect, it } from "vitest";
  * component's code survived tree shaking, and their absence proves it did not.
  */
 const MARKERS = {
-  dataTable: "rdt__",
+  dataTable: "sdt__",
   fileUploader: "sfu__",
   autocomplete: "sac__",
   datePicker: "sdp__",
 } as const;
 
 type Component = keyof typeof MARKERS;
+
+/**
+ * Deprecated markers
+ *
+ * The data table's elements still carry their old `rdt` class names until
+ * 2.0, so its JavaScript holds this prefix too; like the marker, it must never
+ * reach another component's bundle.
+ */
+const DEPRECATED_MARKERS: Partial<Record<Component, string>> = {
+  dataTable: "rdt__",
+};
 
 /** A string from the Arabic pack. Its presence proves a pack was bundled. */
 const ARABIC_MARKER = "لا توجد بيانات";
@@ -53,7 +64,7 @@ const BUNDLED_WITH: Partial<Record<Component, Component[]>> = {
 const othersThan = (component: Component) =>
   (Object.keys(MARKERS) as Component[])
     .filter((key) => key !== component && !BUNDLED_WITH[component]?.includes(key))
-    .map((key) => MARKERS[key]);
+    .flatMap((key) => [MARKERS[key], DEPRECATED_MARKERS[key] ?? []].flat());
 
 /**
  * Shipped markers
@@ -198,8 +209,9 @@ describe.skipIf(!built)("what an application actually bundles", () => {
       console.log(Autocomplete);
     `);
     expect(code).toContain(MARKERS.autocomplete);
+    expect(code).not.toContain("sdt__drag");
     expect(code).not.toContain("rdt__drag");
-    expect(readFileSync(dist("autocomplete.styles.css"), "utf8")).not.toContain("rdt__drag");
+    expect(readFileSync(dist("autocomplete.styles.css"), "utf8")).not.toContain("sdt__drag");
   });
 
   it("ships the row reorder handle with the table", async () => {
@@ -207,8 +219,8 @@ describe.skipIf(!built)("what an application actually bundles", () => {
       import { DataTable } from ${JSON.stringify(dist("data-table.js"))};
       console.log(DataTable);
     `);
-    expect(code).toContain("rdt__drag");
-    expect(readFileSync(dist("data-table.styles.css"), "utf8")).toContain("rdt__drag");
+    expect(code).toContain("sdt__drag");
+    expect(readFileSync(dist("data-table.styles.css"), "utf8")).toContain("sdt__drag");
   });
 
   it("bundles the autocomplete, and nothing else, with VirtualDataTable", async () => {
@@ -309,7 +321,7 @@ describe.skipIf(!built)("the stylesheets", () => {
   it("ships the autocomplete's rules once in the whole set", () => {
     const whole = readFileSync(dist("styles.css"), "utf8");
     expect(whole.match(/\.sac__trigger\s*\{/g)).toHaveLength(1);
-    expect(whole.match(/\.rdt__table\s*\{/g)).toHaveLength(1);
+    expect(whole.match(/\.sdt__table\s*\{/g)).toHaveLength(1);
   });
 });
 
