@@ -1,0 +1,9 @@
+---
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: "ar" } }];
+}
+---
+<html lang="en">
+  <head><meta charset="utf-8" /><title>slotsmith</title></head>
+  <body><h1>Hello</h1></body>
+</html>

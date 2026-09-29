@@ -1,0 +1,30 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "noUncheckedIndexedAccess": true,
+    "types": ["node"],
+    "paths": {
+      "slotsmith": ["../src/index.ts"],
+      "slotsmith/virtual": ["../src/virtual.ts"],
+      "slotsmith/autocomplete": ["../src/autocomplete/index.ts"],
+      "slotsmith/data-table": ["../src/data-table/index.ts"],
+      "slotsmith/date-picker": ["../src/date-picker/index.ts"],
+      "slotsmith/file-uploader": ["../src/file-uploader/index.ts"],
+      "slotsmith/locale": ["../src/locale/index.ts"],
+      "slotsmith/provider": ["../src/provider/index.ts"],
+      "slotsmith/locales/*": ["../src/locales/*.ts"],
+      "slotsmith/themes/*.css": ["../src/themes/*.css"],
+      "slotsmith/styles.css": ["../src/styles.css"],
+      "slotsmith/autocomplete.css": ["../src/autocomplete/styles.css"],
+      "slotsmith/data-table.css": ["../src/data-table/styles.css"],
+      "slotsmith/date-picker.css": ["../src/date-picker/styles.css"],
+      "slotsmith/file-uploader.css": ["../src/file-uploader/styles.css"],
+      "@samples/*": ["./samples/*"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "scripts", "*.ts", ".astro/types.d.ts"],
+  "exclude": ["dist"]
+}
