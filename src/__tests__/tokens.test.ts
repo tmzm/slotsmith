@@ -301,6 +301,18 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
   });
 });
 
+/**
+ * The page-size menu is not portalled, so inside the table the autocomplete's
+ * colour, radius and font tokens read the table's: an app that restyles only
+ * the table restyles the page-size menu with it.
+ */
+it("maps the autocomplete's tokens to the table's inside the table", () => {
+  const body = rule(read("data-table"), ".sdt .sac");
+  for (const name of [...COLOURS.filter((colour) => colour !== "on-accent" && colour !== "selected"), "radius", "font-size"]) {
+    expect(value(body, `--sac-${name}`), name).toBe(tokenRead("sdt", name));
+  }
+});
+
 /** Buttons and triggers: one height, border and radius. */
 const CONTROLS = [
   { prefix: "sdt", folder: "data-table", selector: ".sdt__button" },

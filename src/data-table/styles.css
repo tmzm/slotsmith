@@ -69,6 +69,24 @@
 }
 
 /**
+ * The page-size menu is the autocomplete, and its popup is not portalled, so
+ * inside the table its colour, radius and font tokens read the table's. An app
+ * that restyles only the table restyles the menu with it. The table's tokens
+ * already switch with the theme, so one rule covers light and dark.
+ */
+.sdt .sac {
+  --sac-surface: var(--sdt-surface);
+  --sac-text: var(--sdt-text);
+  --sac-muted: var(--sdt-muted);
+  --sac-border: var(--sdt-border);
+  --sac-accent: var(--sdt-accent);
+  --sac-hover: var(--sdt-hover);
+  --sac-danger: var(--sdt-danger);
+  --sac-radius: var(--sdt-radius);
+  --sac-font-size: var(--sdt-font-size, var(--sdt-size-font-size));
+}
+
+/**
  * So the browser paints the scroll area's scrollbars and the native
  * checkboxes dark. Set on the table itself rather than beside the tokens, so the page
  * element carrying the theme keeps whatever scheme the app gave it.
