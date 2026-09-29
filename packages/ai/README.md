@@ -89,6 +89,35 @@ Every result is Markdown for the model, with the same facts as structured JSON f
 - Prompt `build-component` (`component`, `library?`): build a feature with a component, following its real API.
 - Prompt `adapt-slots-to-library` (`component`, `library`): write a slot map for a component library.
 
+## Adding an adapter
+
+`slotsmith-ai add` copies a ready-made adapter into the project as source you own, so you can edit it like any other component:
+
+```bash
+npx slotsmith-ai add date-picker --ui mui
+npx slotsmith-ai add data-table --ui antd --out src/ui/slotsmith
+npx slotsmith-ai add --all --ui shadcn
+```
+
+```
+slotsmith-ai add <component...> --ui <library> [--out <dir>] [--force] [--dry-run]
+slotsmith-ai add --all --ui <library>
+
+  <component>   data-table | autocomplete | file-uploader | date-picker
+  --ui          mui | shadcn | chakra | antd | radix
+                (ant-design is accepted for antd, radix-themes for radix)
+  --out         where to write. Default: src/components/slotsmith when src/ exists,
+                else components/slotsmith
+  --force       overwrite a file that differs from what would be written
+  --dry-run     print what would happen, write nothing
+```
+
+- Each component becomes `<out>/<component>.tsx`, starting with a one-line comment naming the library and the `slotsmith-ai` version it came from.
+- After writing, it prints the import and usage (`<DatePicker components={muiDatePicker} />`), one `npm install …` line with the packages the project's `package.json` does not list yet, and, for shadcn/ui, one `npx shadcn@latest add …` line with the shadcn/ui components the adapter uses. It never installs anything itself.
+- Running it again is safe. A file that already matches is reported `unchanged`. A file you have edited is left alone: the command names it, says how many lines differ, and exits with code `1`; pass `--force` to replace it.
+- `--out` must be inside the project.
+- `radix` is Radix Themes (`@radix-ui/themes`), the styled library. An app built on the bare Radix primitives uses `shadcn`.
+
 ## Versions
 
 `slotsmith-ai` shares its major and minor version with `slotsmith`: `slotsmith-ai@1.4.x` describes `slotsmith@1.4.x`. On start, the server looks for `node_modules/slotsmith` in the directory the client runs it from (and its parents). When the installed major or minor differs, every tool result starts with a one-line warning, so the agent knows to double-check against the installed types.

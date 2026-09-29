@@ -7,15 +7,21 @@
  * @packageDocumentation
  */
 
+import { runAdd } from "./cli/add";
 import { runMcpServer } from "./mcp";
 
 const USAGE = `Usage: slotsmith-ai <command>
 
 Commands:
   mcp    Start the slotsmith MCP server on stdio
+  add    Copy a ready-made adapter into the project, as source you own
 
 Add it to an MCP client, e.g. Claude Code:
-  claude mcp add slotsmith -- npx -y slotsmith-ai mcp`;
+  claude mcp add slotsmith -- npx -y slotsmith-ai mcp
+
+Add an adapter:
+  npx slotsmith-ai add date-picker --ui mui
+  npx slotsmith-ai add --help`;
 
 /**
  * Main
@@ -31,6 +37,12 @@ async function main(argv: string[]): Promise<number | undefined> {
     case "mcp":
       await runMcpServer();
       return undefined;
+    case "add":
+      return runAdd(argv.slice(1), {
+        cwd: process.cwd(),
+        out: (text) => process.stdout.write(`${text}\n`),
+        err: (text) => process.stderr.write(`${text}\n`),
+      });
     case "--help":
     case "-h":
     case "help":
