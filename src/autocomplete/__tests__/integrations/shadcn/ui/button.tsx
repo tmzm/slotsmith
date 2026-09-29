@@ -41,12 +41,14 @@ export type ButtonProps = ComponentProps<"button"> & {
  *
  * shadcn's `components/ui/button.tsx`.
  *
+ * Like upstream, it sets no `type`, so a `<button>` inside a form submits
+ * it unless the slot passes `type="button"`.
+ *
  * @param props - See {@link ButtonProps}.
  */
 function Button({ className, variant = "default", size = "default", ...props }: ButtonProps) {
   return (
     <button
-      type="button"
       data-slot="button"
       className={cn(
         "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50",

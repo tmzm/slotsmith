@@ -1,5 +1,6 @@
 import { act, screen, within } from "@testing-library/react";
-import { beforeAll, describe, expect, it } from "vitest";
+import type { ReactNode } from "react";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { FileUploaderProps } from "../../index";
 import { deferredUpload, dropzone, fileInput, itemNamed, items, makeFile } from "../builders";
 import { shadcnComponents } from "./shadcn/components";
@@ -68,5 +69,21 @@ describe("shadcn/ui", () => {
 
     await user.click(within(alert).getByRole("button", { name: "Dismiss" }));
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("never submits a surrounding form from its buttons", async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    const Form = ({ children }: { children: ReactNode }) => (
+      <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
+    );
+    const user = renderIntegration(shadcnComponents, { maxSize: 20 }, Form);
+
+    await user.click(screen.getByRole("button", { name: "Browse" }));
+    await user.upload(fileInput(), makeFile("kept.png"));
+    await user.click(within(itemNamed("kept.png")).getByRole("button", { name: "Remove file" }));
+    await user.upload(fileInput(), makeFile("heavy.png", "image/png", 50));
+    await user.click(within(screen.getByRole("status")).getByRole("button", { name: "Dismiss" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

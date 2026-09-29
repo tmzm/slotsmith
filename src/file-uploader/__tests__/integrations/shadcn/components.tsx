@@ -26,6 +26,9 @@ import { cn } from "./ui/utils";
  * Built from shadcn/ui primitives — `Button`, `Avatar`, `Progress`, `Alert` —
  * not from a shadcn upload block, which is a copy-in recipe rather than a
  * shared primitive.
+ *
+ * shadcn's `Button` sets no `type`, so inside a form it would submit it;
+ * every `Button` here passes `type="button"`.
  */
 
 /** Stands in for `lucide-react`'s Upload icon. */
@@ -153,6 +156,7 @@ const ShadcnProgress = ({ value, active, ...aria }: UploaderProgressSlotProps) =
  */
 const ShadcnAction = ({ action, onClick, disabled, ...aria }: UploaderActionSlotProps) => (
   <Button
+    type="button"
     variant="ghost"
     size="icon"
     disabled={disabled}
@@ -187,6 +191,7 @@ export const shadcnComponents: Partial<FileUploaderComponents> = {
   ),
   Trigger: ({ onClick, disabled, children }: UploaderTriggerSlotProps) => (
     <Button
+      type="button"
       variant="outline"
       size="sm"
       disabled={disabled}
@@ -213,7 +218,7 @@ export const shadcnComponents: Partial<FileUploaderComponents> = {
           <p key={`${rejection.file.name}-${index}`}>{rejection.message}</p>
         ))}
       </div>
-      <Button variant="ghost" size="icon" aria-label={dismissLabel} onClick={onDismiss}>
+      <Button type="button" variant="ghost" size="icon" aria-label={dismissLabel} onClick={onDismiss}>
         <X />
       </Button>
     </Alert>

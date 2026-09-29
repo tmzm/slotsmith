@@ -59,10 +59,13 @@ const ShadcnRow = ({ className, ...props }: RowSlotProps) => (
  *
  * A ghost icon `Button` with lucide's `GripVertical`. Every slot prop goes
  * to its `<button>`: the ref, the pointer and key handlers, the `aria-*`
- * attributes and `disabled`.
+ * attributes and `disabled`. shadcn's `Button` sets no `type`, so inside a
+ * form it would submit it; `type="button"` comes first, so a slot prop can
+ * still override it.
  */
 const ShadcnDragHandle = ({ className, ...props }: DragHandleSlotProps) => (
   <Button
+    type="button"
     variant="ghost"
     size="icon"
     className={cn("size-7 cursor-grab touch-none text-muted-foreground data-dragging:cursor-grabbing", className)}

@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { AutocompleteProps } from "../../index";
 import {
@@ -122,3 +123,17 @@ describe("shadcn/ui", () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 });
+  it("never submits a surrounding form from its buttons", async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    const Form = ({ children }: { children: ReactNode }) => (
+      <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
+    );
+    const user = renderIntegration(shadcnComponents, { error: "Could not load brands", onRetry: () => {}, defaultValue: "b2" }, Form);
+
+    await open(user);
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    await user.click(screen.getByRole("button", { name: "Clear selection" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+

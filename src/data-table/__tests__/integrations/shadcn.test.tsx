@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
@@ -126,5 +126,16 @@ describe("shadcn/ui (editorial layout)", () => {
     expect(handle.querySelector("svg.lucide-grip-vertical")).not.toBeNull();
     expect(bodyRows()[0]!.className).toContain("data-dragging:");
     await keyboardReorder(user, onMove);
+  });
+
+  it("never submits a surrounding form from its drag handle", () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    render(
+      <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>
+        <ReorderableEmployees components={shadcnComponents} initial={employees(3)} />
+      </form>,
+    );
+    fireEvent.click(dragHandles()[0]!);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });
