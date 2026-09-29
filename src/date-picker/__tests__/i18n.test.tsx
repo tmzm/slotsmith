@@ -56,7 +56,7 @@ describe("translating every string", () => {
       element.getAttribute("aria-label"),
     );
 
-    for (const english of ["Pick a date", "Clear date", "Previous month", "Next month", "Today", "Month", "Year"]) {
+    for (const english of ["Pick a date", "Clear date", "Previous month", "Next month", "Go to today", "Month", "Year"]) {
       expect(rendered).not.toContain(english);
       expect(named).not.toContain(english);
     }

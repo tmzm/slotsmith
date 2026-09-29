@@ -72,7 +72,7 @@ export const ko = defineLocale({
       clear: "날짜 지우기",
       previous: "이전 달",
       next: "다음 달",
-      today: "오늘",
+      today: "오늘로 이동",
       month: "월",
       year: "연도",
       dialog: "날짜 선택기",

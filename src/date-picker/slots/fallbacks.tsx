@@ -54,6 +54,21 @@ const CrossIcon = () => (
 );
 
 /**
+ * Today icon
+ *
+ * The today control's leading glyph: an arrow dropping onto a baseline, read
+ * as "jump here" rather than as a shortcut chip, so the control beside it
+ * reads as navigation rather than a preset.
+ */
+const TodayIcon = () => (
+  <svg className="sdp__today-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3v10" />
+    <path d="m7 9 5 5 5-5" />
+    <path d="M5 21h14" />
+  </svg>
+);
+
+/**
  * Date picker fallbacks
  *
  * The built-in parts: plain, accessible HTML that is already finished, so the
@@ -149,7 +164,8 @@ export const datePickerFallbacks: DatePickerComponents = {
           {preset.label}
         </button>
       ))}
-      <button type="button" className="sdp__preset sdp__preset--today" onClick={onToday}>
+      <button type="button" className="sdp__preset--today sdp__today" onClick={onToday}>
+        <TodayIcon />
         {todayLabel}
       </button>
     </div>
@@ -172,7 +188,7 @@ export const defaultDatePickerLabels: DatePickerLabels = {
   clear: "Clear date",
   previous: "Previous month",
   next: "Next month",
-  today: "Today",
+  today: "Go to today",
   month: "Month",
   year: "Year",
   dialog: "Choose a date",

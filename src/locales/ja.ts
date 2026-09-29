@@ -73,7 +73,7 @@ export const ja = defineLocale({
       clear: "日付をクリア",
       previous: "前の月",
       next: "次の月",
-      today: "今日",
+      today: "今日へ移動",
       month: "月",
       year: "年",
       dialog: "日付の選択",

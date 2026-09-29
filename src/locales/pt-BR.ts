@@ -80,7 +80,7 @@ export const ptBR = defineLocale({
       clear: "Limpar data",
       previous: "Mês anterior",
       next: "Próximo mês",
-      today: "Hoje",
+      today: "Ir para hoje",
       month: "Mês",
       year: "Ano",
       dialog: "Escolher uma data",

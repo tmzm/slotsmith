@@ -84,7 +84,7 @@ export const ru = defineLocale({
       clear: "Очистить дату",
       previous: "Предыдущий месяц",
       next: "Следующий месяц",
-      today: "Сегодня",
+      today: "Перейти к сегодняшнему дню",
       month: "Месяц",
       year: "Год",
       dialog: "Выбор даты",

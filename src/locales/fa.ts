@@ -81,7 +81,7 @@ export const fa = defineLocale({
       clear: "پاک کردن تاریخ",
       previous: "ماه قبل",
       next: "ماه بعد",
-      today: "امروز",
+      today: "رفتن به امروز",
       month: "ماه",
       year: "سال",
       dialog: "انتخاب‌گر تاریخ",

@@ -73,7 +73,7 @@ export const tr = defineLocale({
       clear: "Tarihi temizle",
       previous: "Önceki ay",
       next: "Sonraki ay",
-      today: "Bugün",
+      today: "Bugüne git",
       month: "Ay",
       year: "Yıl",
       dialog: "Tarih seçici",

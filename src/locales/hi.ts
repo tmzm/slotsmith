@@ -80,7 +80,7 @@ export const hi = defineLocale({
       clear: "तारीख हटाएँ",
       previous: "पिछला महीना",
       next: "अगला महीना",
-      today: "आज",
+      today: "आज पर जाएं",
       month: "महीना",
       year: "साल",
       dialog: "तारीख का चयन",

@@ -211,7 +211,7 @@ export interface DpFooterProps {
   onPreset: (value: ISODate | DateRange) => void;
   /** Jumps to today without picking it. */
   onToday: () => void;
-  /** The label for that control. */
+  /** The label for that control — navigation, so it should read and look apart from the presets rather than like one of them. */
   todayLabel: string;
 }
 
@@ -283,7 +283,7 @@ export interface DatePickerLabels {
   previous: string;
   /** Accessible name for the next-month control. */
   next: string;
-  /** Label for the control that shows today's month. */
+  /** Label for the control that jumps to today's month without picking it — a navigation verb, not the bare word "today", so it reads apart from the presets. */
   today: string;
   /** Accessible name for the month dropdown. */
   month: string;

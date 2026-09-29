@@ -1,5 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { defaultDatePickerLabels } from "../slots/fallbacks";
 import type { DatePickerComponents } from "../slots/types";
 import { DatePicker } from "../DatePicker";
 import {
@@ -194,17 +195,43 @@ describe("presets", () => {
     expect(onChange).toHaveBeenCalledWith(["2026-03-13", "2026-03-14", "2026-03-15"]);
   });
 
-  it("shows today's month without picking it", async () => {
-    const onChange = vi.fn();
-    const { user } = renderDatePicker({ defaultValue: "2025-01-10", onChange });
+  /** The initial value that puts each mode's calendar on January 2025 without picking today. */
+  const startInJanuary2025 = {
+    single: "2025-01-10",
+    range: { from: "2025-01-10", to: "2025-01-12" },
+    multiple: ["2025-01-10"],
+  } as const;
+
+  it.each(["single", "range", "multiple"] as const)(
+    "shows today's month without picking it, in %s mode",
+    async (mode) => {
+      const onChange = vi.fn();
+      const { user } = renderDatePicker({ mode, defaultValue: startInJanuary2025[mode], onChange } as never);
+      await open(user);
+      expect(shownMonth()).toBe("January 2025");
+
+      await user.click(screen.getByRole("button", { name: "Go to today" }));
+
+      expect(shownMonth()).toBe("March 2026");
+      expect(day("2026-03-12")).toHaveAttribute("tabindex", "0");
+      expect(onChange).not.toHaveBeenCalled();
+    },
+  );
+
+  it("reads and looks like navigation: default label, icon, and its own class apart from the preset pills", async () => {
+    expect(defaultDatePickerLabels.today).toBe("Go to today");
+
+    const { user } = renderDatePicker({ presets: [{ label: "Tomorrow", value: "2026-03-13" }] });
     await open(user);
-    expect(shownMonth()).toBe("January 2025");
 
-    await user.click(screen.getByRole("button", { name: "Today" }));
+    const todayButton = screen.getByRole("button", { name: "Go to today" });
+    expect(todayButton).toHaveClass("sdp__preset--today", "sdp__today");
+    expect(todayButton).not.toHaveClass("sdp__preset");
+    expect(todayButton.querySelector("svg[aria-hidden='true']")).not.toBeNull();
 
-    expect(shownMonth()).toBe("March 2026");
-    expect(day("2026-03-12")).toHaveAttribute("tabindex", "0");
-    expect(onChange).not.toHaveBeenCalled();
+    const presetButton = screen.getByRole("button", { name: "Tomorrow" });
+    expect(presetButton).toHaveClass("sdp__preset");
+    expect(presetButton).not.toHaveClass("sdp__preset--today", "sdp__today");
   });
 });
 

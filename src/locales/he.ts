@@ -83,7 +83,7 @@ export const he = defineLocale({
       clear: "ניקוי התאריך",
       previous: "החודש הקודם",
       next: "החודש הבא",
-      today: "היום",
+      today: "מעבר להיום",
       month: "חודש",
       year: "שנה",
       dialog: "בורר תאריכים",

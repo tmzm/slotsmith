@@ -72,7 +72,7 @@ export const zhCN = defineLocale({
       clear: "清除日期",
       previous: "上个月",
       next: "下个月",
-      today: "今天",
+      today: "跳转到今天",
       month: "月份",
       year: "年份",
       dialog: "日期选择器",

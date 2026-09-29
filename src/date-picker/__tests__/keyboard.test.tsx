@@ -204,7 +204,7 @@ describe("picking and leaving", () => {
     await open(user);
 
     await user.tab();
-    expect(screen.getByRole("button", { name: "Today" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Go to today" })).toHaveFocus();
 
     await user.tab({ shift: true });
     await user.tab({ shift: true });

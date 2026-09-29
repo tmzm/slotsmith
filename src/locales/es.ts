@@ -80,7 +80,7 @@ export const es = defineLocale({
       clear: "Borrar fecha",
       previous: "Mes anterior",
       next: "Mes siguiente",
-      today: "Hoy",
+      today: "Ir a hoy",
       month: "Mes",
       year: "Año",
       dialog: "Elegir una fecha",

@@ -72,7 +72,7 @@ export const id = defineLocale({
       clear: "Hapus tanggal",
       previous: "Bulan sebelumnya",
       next: "Bulan berikutnya",
-      today: "Hari ini",
+      today: "Ke hari ini",
       month: "Bulan",
       year: "Tahun",
       dialog: "Pemilih tanggal",

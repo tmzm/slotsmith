@@ -81,7 +81,7 @@ export const fr = defineLocale({
       clear: "Effacer la date",
       previous: "Mois précédent",
       next: "Mois suivant",
-      today: "Aujourd’hui",
+      today: "Aller à aujourd’hui",
       month: "Mois",
       year: "Année",
       dialog: "Sélection de la date",

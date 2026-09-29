@@ -87,7 +87,7 @@ export const ar = defineLocale({
       clear: "مسح التاريخ",
       previous: "الشهر السابق",
       next: "الشهر التالي",
-      today: "اليوم",
+      today: "الانتقال إلى اليوم",
       month: "الشهر",
       year: "السنة",
       dialog: "اختيار التاريخ",
