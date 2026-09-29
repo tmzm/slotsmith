@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -124,6 +124,83 @@ describe("slotsmith-ai add", () => {
     expect(result.code).toBe(0);
     expect(result.out).toMatch(/overwritten/);
     expect(readFileSync(file, "utf8")).toBe(original);
+  });
+
+  it("treats an untouched file from an older slotsmith-ai as unchanged", async () => {
+    const cwd = project();
+    const file = join(cwd, "src/components/slotsmith/date-picker.tsx");
+    await add(cwd, "date-picker", "--ui", "mui");
+    const older = readFileSync(file, "utf8").replace(`slotsmith-ai ${packageJson.version}.`, "slotsmith-ai 1.0.0.");
+    writeFileSync(file, older);
+
+    const result = await add(cwd, "date-picker", "--ui", "mui");
+    expect(result.code).toBe(0);
+    expect(result.out).toMatch(/unchanged/);
+    expect(readFileSync(file, "utf8")).toBe(older);
+  });
+
+  it("still refuses an edited file from an older slotsmith-ai", async () => {
+    const cwd = project();
+    const file = join(cwd, "src/components/slotsmith/date-picker.tsx");
+    await add(cwd, "date-picker", "--ui", "mui");
+    const older = `${readFileSync(file, "utf8").replace(`slotsmith-ai ${packageJson.version}.`, "slotsmith-ai 1.0.0.")}// edited\n`;
+    writeFileSync(file, older);
+
+    const result = await add(cwd, "date-picker", "--ui", "mui");
+    expect(result.code).toBe(1);
+    expect(result.all).toContain(`differs from the adapter slotsmith-ai ${packageJson.version} would write (1 line differs; pass --force to replace)`);
+    expect(readFileSync(file, "utf8")).toBe(older);
+  });
+
+  it("predicts the refusal on --dry-run", async () => {
+    const cwd = project();
+    const file = join(cwd, "src/components/slotsmith/date-picker.tsx");
+    await add(cwd, "date-picker", "--ui", "mui");
+    appendFileSync(file, "// edited\n");
+    const edited = readFileSync(file, "utf8");
+
+    const result = await add(cwd, "date-picker", "--ui", "mui", "--dry-run");
+    expect(result.code).toBe(1);
+    expect(result.all).toMatch(/would refuse src\/components\/slotsmith\/date-picker\.tsx/);
+    expect(result.all).toContain("--force");
+    expect(readFileSync(file, "utf8")).toBe(edited);
+
+    const forced = await add(cwd, "date-picker", "--ui", "mui", "--dry-run", "--force");
+    expect(forced.code).toBe(0);
+    expect(forced.out).toMatch(/would overwrite src\/components\/slotsmith\/date-picker\.tsx \(1 line differs\)/);
+    expect(forced.all).not.toContain("left as is");
+    expect(readFileSync(file, "utf8")).toBe(edited);
+  });
+
+  it("refuses an --out that leads outside through a junction", async (context) => {
+    const cwd = project();
+    const outside = project({ src: false });
+    try {
+      symlinkSync(outside, join(cwd, "src", "link"), "junction");
+    } catch {
+      context.skip();
+    }
+    const result = await add(cwd, "date-picker", "--ui", "mui", "--out", "src/link/slotsmith");
+    expect(result.code).toBe(1);
+    expect(result.all).toMatch(/outside the project/);
+    expect(filesUnder(outside)).toEqual([]);
+  });
+
+  it("refuses to write through a file that is a symbolic link", async (context) => {
+    const cwd = project();
+    const outside = project({ src: false });
+    const target = join(outside, "target.tsx");
+    writeFileSync(target, "// someone else's file\n");
+    mkdirSync(join(cwd, "src/components/slotsmith"), { recursive: true });
+    try {
+      symlinkSync(target, join(cwd, "src/components/slotsmith/date-picker.tsx"), "file");
+    } catch {
+      context.skip();
+    }
+    const result = await add(cwd, "date-picker", "--ui", "mui", "--force");
+    expect(result.code).toBe(1);
+    expect(result.all).toMatch(/refused src\/components\/slotsmith\/date-picker\.tsx: it is a link/);
+    expect(readFileSync(target, "utf8")).toBe("// someone else's file\n");
   });
 
   it("writes nothing on --dry-run", async () => {

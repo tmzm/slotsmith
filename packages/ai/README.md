@@ -114,8 +114,8 @@ slotsmith-ai add --all --ui <library>
 
 - Each component becomes `<out>/<component>.tsx`, starting with a one-line comment naming the library and the `slotsmith-ai` version it came from.
 - After writing, it prints the import and usage (`<DatePicker components={muiDatePicker} />`), one `npm install …` line with the packages the project's `package.json` does not list yet, and, for shadcn/ui, one `npx shadcn@latest add …` line with the shadcn/ui components the adapter uses. It never installs anything itself.
-- Running it again is safe. A file that already matches is reported `unchanged`. A file you have edited is left alone: the command names it, says how many lines differ, and exits with code `1`; pass `--force` to replace it.
-- `--out` must be inside the project.
+- Running it again is safe. A file that already matches is reported `unchanged`; the header line is not compared, so a file from an older `slotsmith-ai` whose body is untouched is left as it is. A file you have edited is left alone: the command names it, says how many lines differ, and exits with code `1`; pass `--force` to replace it. `--dry-run` reports the same outcome, and exits with code `1` when the real run would refuse.
+- `--out` must be inside the project, also after following symbolic links and junctions, and a file that is itself a symbolic link is never written through.
 - `radix` is Radix Themes (`@radix-ui/themes`), the styled library. An app built on the bare Radix primitives uses `shadcn`.
 
 ## Versions
