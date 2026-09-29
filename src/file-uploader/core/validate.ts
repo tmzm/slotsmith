@@ -1,3 +1,4 @@
+import { safeTag } from "../../locale/plural";
 import type { Rejection, RejectionReason } from "./types";
 
 /**
@@ -23,7 +24,7 @@ import type { Rejection, RejectionReason } from "./types";
 export function formatBytes(bytes: number, locale?: string): string {
   /** No grouping, so `1023 B` does not turn into `1,023 B` once a tag is given. */
   const write = (value: number) =>
-    locale ? new Intl.NumberFormat(locale, { useGrouping: false }).format(value) : String(value);
+    locale ? new Intl.NumberFormat(safeTag(locale), { useGrouping: false }).format(value) : String(value);
   if (!Number.isFinite(bytes) || bytes < 0) return `${write(0)} B`;
   const units = ["B", "KB", "MB", "GB", "TB"];
   let value = bytes;

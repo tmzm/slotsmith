@@ -13,7 +13,7 @@ export type PluralForms = Partial<Record<Intl.LDMLPluralRule, string>> & { other
  * @returns The tag when `Intl` accepts it, `en` otherwise, so a bad tag
  *   degrades to English formatting instead of throwing during render.
  */
-function safeTag(code: string): string {
+export function safeTag(code: string): string {
   try {
     return Intl.getCanonicalLocales(code)[0] ?? "en";
   } catch {

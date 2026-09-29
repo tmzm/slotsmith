@@ -24,6 +24,15 @@ describe("formatBytes", () => {
     expect(formatBytes(1_610_612_736)).toBe("1.5 GB");
   });
 
+  it("formats like English when the locale tag is malformed", () => {
+    expect(() => formatBytes(1536, "en_US")).not.toThrow();
+    expect(formatBytes(1536, "en_US")).toBe(formatBytes(1536, "en"));
+  });
+
+  it("writes the digits the locale uses", () => {
+    expect(formatBytes(1536, "ar-EG")).toMatch(/^[٠-٩]+[٫.٬]?[٠-٩]* /);
+  });
+
   it("survives nonsense", () => {
     expect(formatBytes(0)).toBe("0 B");
     expect(formatBytes(-5)).toBe("0 B");
