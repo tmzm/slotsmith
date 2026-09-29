@@ -119,19 +119,22 @@ describe("knowledge drift", () => {
     expect(kinds("file-uploader")).toMatchObject({ Dropzone: "element", List: "element", Thumbnail: "widget" });
   });
 
-  it("generates an adapter from the tested skin for every component and every library", () => {
+  // The global setup leaves `knowledge/adapters/` alone, so these are the committed files.
+  it("commits an adapter equal to its tested skin for every component and every library, and nothing else", () => {
+    const expected: string[] = [];
     for (const component of componentFolders(srcDir)) {
       for (const library of LIBRARIES) {
+        const file = `${component}.${library}.tsx`;
+        expected.push(file);
         const skinPath = join(srcDir, component, "__tests__", "integrations", library, "components.tsx");
-        const adapterPath = join(knowledgeDir, "adapters", `${component}.${library}.tsx`);
+        const adapterPath = join(knowledgeDir, "adapters", file);
         expect(existsSync(skinPath), `${component} has no ${library} skin`).toBe(true);
-        expect(existsSync(adapterPath), `${component}.${library}.tsx is missing`).toBe(true);
-        const expected = toAdapterSource(readFileSync(skinPath, "utf8"), component);
-        expect(lf(readFileSync(adapterPath, "utf8")), `${component}.${library}.tsx drifted from its skin`).toBe(lf(expected));
+        expect(existsSync(adapterPath), `${file} is missing; run pnpm build:ai`).toBe(true);
+        const fromSkin = toAdapterSource(readFileSync(skinPath, "utf8"), component);
+        expect(lf(readFileSync(adapterPath, "utf8")), `${file} differs from its skin; edit the skin and run pnpm build:ai`).toBe(lf(fromSkin));
       }
     }
-    const files = readdirSync(join(knowledgeDir, "adapters"));
-    expect(files).toHaveLength(componentFolders(srcDir).length * LIBRARIES.length);
+    expect(readdirSync(join(knowledgeDir, "adapters")).sort()).toEqual(expected.sort());
   });
 
   it("indexes every adapter with the packages it imports", () => {

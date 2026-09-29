@@ -63,6 +63,11 @@ describe("toAdapterSource", () => {
     expect(() => toAdapterSource('import { GripVertical } from "./ui/icons";', "data-table")).toThrow(/not a shadcn\/ui component/);
   });
 
+  it("refuses a relative side-effect import too", () => {
+    expect(() => toAdapterSource('import { Button } from "antd";\nimport "./table.css";', "data-table")).toThrow(/\.\/table\.css/);
+    expect(() => toAdapterSource('import "../../../styles.css";', "data-table")).toThrow(/styles\.css/);
+  });
+
   it("leaves no relative import in any real skin", () => {
     const adapter = toAdapterSource(skin("data-table", "shadcn"), "data-table");
     expect(adapter).not.toMatch(/from "\.\.?\//);
@@ -85,6 +90,11 @@ describe("peersOf", () => {
       'import { cn } from "@/lib/utils";',
     ].join("\n");
     expect(peersOf(source)).toEqual(["@mui/icons-material", "@mui/material"]);
+  });
+
+  it("counts a side-effect import as a peer", () => {
+    const source = ['import "@radix-ui/themes/styles.css";', 'import "react-day-picker/style.css";', 'import "./local.css";'].join("\n");
+    expect(peersOf(source)).toEqual(["@radix-ui/themes", "react-day-picker"]);
   });
 
   it("reads the peers of the generated adapters", () => {

@@ -882,10 +882,14 @@ export function generateKnowledge(options: GenerateOptions): GeneratedKnowledge 
  * Markdown file per component, and every adapter. Both folders are emptied
  * first, so nothing stale survives a removed component or skin.
  *
+ * The test setup leaves the adapters out: the adapters are committed files,
+ * and the drift test must see them as committed, not as just regenerated.
+ *
  * @param options - Where the library and the hand-written knowledge live.
- * @returns What was written.
+ * @param write - What to write. `adapters: false` leaves `knowledge/adapters/` untouched.
+ * @returns What was generated.
  */
-export function writeKnowledge(options: GenerateOptions): GeneratedKnowledge {
+export function writeKnowledge(options: GenerateOptions, write: { adapters?: boolean } = {}): GeneratedKnowledge {
   const generated = generateKnowledge(options);
   const componentsDir = join(options.knowledgeDir, "components");
   rmSync(componentsDir, { recursive: true, force: true });
@@ -894,10 +898,12 @@ export function writeKnowledge(options: GenerateOptions): GeneratedKnowledge {
     writeFileSync(join(componentsDir, `${component.name}.json`), `${JSON.stringify(component, null, 2)}\n`);
     writeFileSync(join(componentsDir, `${component.name}.md`), `${renderComponentReference(component)}\n`);
   }
-  const adaptersDir = join(options.knowledgeDir, "adapters");
-  rmSync(adaptersDir, { recursive: true, force: true });
-  mkdirSync(adaptersDir, { recursive: true });
-  for (const [file, source] of generated.adapters) writeFileSync(join(adaptersDir, file), source);
+  if (write.adapters !== false) {
+    const adaptersDir = join(options.knowledgeDir, "adapters");
+    rmSync(adaptersDir, { recursive: true, force: true });
+    mkdirSync(adaptersDir, { recursive: true });
+    for (const [file, source] of generated.adapters) writeFileSync(join(adaptersDir, file), source);
+  }
   writeFileSync(join(options.knowledgeDir, "index.json"), `${JSON.stringify(generated.index, null, 2)}\n`);
   return generated;
 }

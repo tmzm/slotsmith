@@ -31,8 +31,9 @@ export const SHADCN_UI = new Set([
  * differences are the import paths: inside the repository a skin imports the
  * component's entry (`../../../index`) and its test-local shadcn/ui copies
  * (`./ui/*`); an app imports the published entry point and its own
- * components. Any other relative import is something only the repository
- * has, so it throws, and the skin is fixed instead.
+ * components. Any other relative import, side-effect imports included, is
+ * something only the repository has, so it throws, and the skin is fixed
+ * instead.
  *
  * @param source - The skin's source text.
  * @param component - The component's folder name, e.g. `date-picker`.
@@ -47,7 +48,7 @@ export function toAdapterSource(source: string, component: string): string {
       if (!SHADCN_UI.has(name)) throw new Error(`${component}: "./ui/${name}" is not a shadcn/ui component; inline it in the skin`);
       return `from "@/components/ui/${name}"`;
     });
-  const relative = /from "(\.\.?\/[^"]*)"/.exec(adapter);
+  const relative = /(?:\bfrom|^\s*import)\s+"(\.\.?\/[^"]*)"/m.exec(adapter);
   if (relative) throw new Error(`${component}: the skin imports "${relative[1]}", which an app does not have; inline it in the skin`);
   return adapter;
 }
@@ -55,11 +56,13 @@ export function toAdapterSource(source: string, component: string): string {
 /**
  * Adapter peers
  *
+ * Side-effect imports (`import "@radix-ui/themes/styles.css"`) count too.
+ *
  * @param source - The adapter's source text.
  * @returns The packages it imports, other than React, slotsmith and the app's own aliases, sorted.
  */
 export function peersOf(source: string): string[] {
-  const packages = [...source.matchAll(/from "([^"./@][^"]*|@[^"/]+\/[^"/]+)/g)].map(([, name]) => {
+  const packages = [...source.matchAll(/(?:\bfrom|^\s*import)\s+"([^"./@][^"]*|@[^"/]+\/[^"/]+)/gm)].map(([, name]) => {
     const parts = name!.split("/");
     return name!.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0]!;
   });
