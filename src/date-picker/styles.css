@@ -473,8 +473,11 @@
   cursor: pointer;
 }
 
+/** Overrides .sdp__preset:hover's border-color and color, kept from leaking through by the shared class. */
 .sdp__preset--today:hover,
 .sdp__today:hover {
+  border-color: transparent;
+  color: var(--sdp-accent);
   background: var(--sdp-hover);
 }
 

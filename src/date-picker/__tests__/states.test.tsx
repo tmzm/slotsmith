@@ -225,8 +225,7 @@ describe("presets", () => {
     await open(user);
 
     const todayButton = screen.getByRole("button", { name: "Go to today" });
-    expect(todayButton).toHaveClass("sdp__preset--today", "sdp__today");
-    expect(todayButton).not.toHaveClass("sdp__preset");
+    expect(todayButton).toHaveClass("sdp__preset", "sdp__preset--today", "sdp__today");
     expect(todayButton.querySelector("svg[aria-hidden='true']")).not.toBeNull();
 
     const presetButton = screen.getByRole("button", { name: "Tomorrow" });

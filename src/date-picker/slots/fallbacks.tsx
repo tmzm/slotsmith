@@ -164,7 +164,7 @@ export const datePickerFallbacks: DatePickerComponents = {
           {preset.label}
         </button>
       ))}
-      <button type="button" className="sdp__preset--today sdp__today" onClick={onToday}>
+      <button type="button" className="sdp__preset sdp__preset--today sdp__today" onClick={onToday}>
         <TodayIcon />
         {todayLabel}
       </button>
