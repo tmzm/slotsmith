@@ -36,6 +36,33 @@ const SAME_AS_ENGLISH: Record<string, string[]> = {
   fr: ["table.pagination"],
 };
 
+/**
+ * The old `datePicker.today`, by pack code, from before it became a
+ * navigation verb (`slotsmith@1.6.0`, commit `01fef7f`, where it was still
+ * the bare word for "today"). `ar-EG`, `ar-IQ` and `ar-SA` spread `ar`, so
+ * they carried the same bare word.
+ */
+const OLD_BARE_TODAY: Record<string, string> = {
+  ar: "اليوم",
+  "ar-EG": "اليوم",
+  "ar-IQ": "اليوم",
+  "ar-SA": "اليوم",
+  de: "Heute",
+  es: "Hoy",
+  fa: "امروز",
+  fr: "Aujourd’hui",
+  he: "היום",
+  hi: "आज",
+  id: "Hari ini",
+  it: "Oggi",
+  ja: "今日",
+  ko: "오늘",
+  "pt-BR": "Hoje",
+  ru: "Сегодня",
+  tr: "Bugün",
+  "zh-CN": "今天",
+};
+
 it("finds the packs", () => {
   expect(PACKS.map((pack) => pack.code).sort()).toEqual(
     ["ar", "ar-EG", "ar-IQ", "ar-SA", "de", "es", "fa", "fr", "he", "hi", "id", "it", "ja", "ko", "pt-BR", "ru", "tr", "zh-CN"].sort(),
@@ -94,6 +121,12 @@ describe.each(PACKS.map((pack) => [pack.code, pack] as const))("%s pack", (_code
         }
       }
     }
+  });
+
+  it("moved datePicker.today away from the old bare word for \"today\"", () => {
+    const oldWord = OLD_BARE_TODAY[pack.code];
+    if (oldWord === undefined) return;
+    expect(build(pack, "datePicker").today, `${pack.code} datePicker.today`).not.toBe(oldWord);
   });
 });
 
