@@ -30,7 +30,8 @@ import { cn } from "@/lib/utils";
  * Shadcn checkbox adapter
  *
  * Maps the slot's `indeterminate` flag onto radix's tri-state `checked`, and
- * stops the click from reaching `onRowClick`, like an editorial layout's header row.
+ * stops the click from reaching `onRowClick`, so ticking a box never opens
+ * the row.
  */
 const ShadcnCheckbox = ({ checked, indeterminate, onCheckedChange, ...props }: CheckboxSlotProps) => (
   <Checkbox
@@ -120,7 +121,7 @@ const ShadcnDragHandle = ({ className, ...props }: DragHandleSlotProps) => (
 /**
  * Visible pages
  *
- * an editorial layout's page list: every page up to 4, otherwise the first, the last,
+ * A compact page list: every page up to 4, otherwise the first, the last,
  * and the neighbours of the current page with ellipses between.
  *
  * @param page - The current page, 1-based.
@@ -136,9 +137,9 @@ function visiblePages(page: number, total: number): (number | "ellipsis")[] {
 /**
  * Shadcn pagination
  *
- * Modeled on an editorial layout's pagination component: a "Showing …"
- * summary, a radix rows-per-page select, and numbered page buttons whose
- * previous / next buttons disappear at either end.
+ * A compact pagination bar: a "Showing …" summary, a radix rows-per-page
+ * select, and numbered page buttons whose previous / next buttons disappear
+ * at either end.
  */
 function ShadcnPagination({
   pageIndex,
@@ -221,7 +222,7 @@ function ShadcnPagination({
 /**
  * Shadcn empty state
  *
- * Title and subtitle, like an editorial layout's placeholder block.
+ * A centred title and a muted subtitle.
  */
 const ShadcnEmpty = ({ message }: EmptySlotProps) => (
   <div data-slot="empty" className="flex flex-col items-center gap-1 py-10">
@@ -233,7 +234,7 @@ const ShadcnEmpty = ({ message }: EmptySlotProps) => (
 /**
  * Shadcn error state
  *
- * Message and a Retry button, like an editorial layout's error state.
+ * A centred message and a Retry button.
  */
 const ShadcnError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
   <div data-slot="error" className="flex flex-col items-center gap-2 py-10">
@@ -249,7 +250,7 @@ const ShadcnError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
 /**
  * Shadcn components
  *
- * The slot map a shadcn project styled as an editorial layout would pass as `components`.
+ * The slot map a shadcn/ui project would pass as `components`.
  */
 export const shadcnDataTable: Partial<DataTableComponents> = {
   Table,

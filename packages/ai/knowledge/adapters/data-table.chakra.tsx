@@ -73,9 +73,9 @@ const rowDragCss = {
 /**
  * Chakra row
  *
- * `Table.Row` with a transparent background, like a dense admin table, the
- * selected state mapped onto Chakra's `bg` prop, and the drag styles for
- * row reordering.
+ * `Table.Row` with a transparent background for a dense table, the selected
+ * state mapped onto Chakra's `bg` prop, and the drag styles for row
+ * reordering.
  */
 const ChakraRow = (props: RowSlotProps) => (
   <Table.Row
@@ -141,8 +141,8 @@ const ChakraCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...
 /**
  * Chakra pagination
  *
- * a dense admin table's `Pagination.Root` (with `count` as the total row count),
- * plus a `NativeSelect` for the page size, which that project doesn't have.
+ * A compact pagination bar: Chakra's `Pagination.Root` (with `count` as the
+ * total row count) for the pages, and a `NativeSelect` for the page size.
  */
 function ChakraPagination({ pageIndex, pageSize, pageSizeOptions, rowCount, setPageIndex, setPageSize, labels }: PaginationSlotProps) {
   return (
@@ -188,7 +188,7 @@ function ChakraPagination({ pageIndex, pageSize, pageSizeOptions, rowCount, setP
 /**
  * Chakra empty state
  *
- * a dense admin table's `EmptyState` block.
+ * Chakra's `EmptyState` block, centred in the table body.
  */
 const ChakraEmpty = ({ message }: EmptySlotProps) => (
   <EmptyState.Root>
@@ -222,7 +222,8 @@ const ChakraError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
 /**
  * Chakra components
  *
- * The slot map a Chakra UI v3 project styled as a dense admin table would pass as `components`.
+ * The slot map a Chakra UI v3 project would pass as `components`, styled as
+ * a dense table.
  */
 export const chakraDataTable: Partial<DataTableComponents> = {
   Table: ChakraTable,
@@ -243,8 +244,8 @@ export const chakraDataTable: Partial<DataTableComponents> = {
 /**
  * Chakra loading
  *
- * a dense admin table shows one centered spinner instead of skeleton rows; this
- * `Skeleton` slot does the same in the first cell only.
+ * One centred spinner instead of skeleton rows, which suits a dense table:
+ * this `Skeleton` slot draws it in the first cell only.
  */
 export const ChakraSpinnerSkeleton = ({ rowIndex, columnIndex }: { rowIndex: number; columnIndex: number }) =>
   rowIndex === 0 && columnIndex === 0 ? (

@@ -53,7 +53,7 @@ const rootSx: SxProps<Theme> = (theme) => ({
 /**
  * MUI root
  *
- * a CMS admin panel's `Stack` with hidden overflow around the table.
+ * A `Stack` with hidden overflow around the table.
  */
 const MuiRoot = (props: RootSlotProps) => <Stack overflow="hidden" sx={rootSx} {...props} />;
 
@@ -151,8 +151,8 @@ const MuiSortIcon = ({ direction }: SortIconSlotProps) => (
 /**
  * MUI loading
  *
- * a CMS admin panel shows one `CircularProgress` instead of skeleton rows; this
- * `Skeleton` slot does the same in the first cell only.
+ * One `CircularProgress` instead of skeleton rows: this `Skeleton` slot
+ * draws it in the first cell only.
  */
 const MuiLoading = ({ rowIndex, columnIndex }: SkeletonSlotProps) =>
   rowIndex === 0 && columnIndex === 0 ? <CircularProgress size={24} /> : null;
@@ -160,7 +160,7 @@ const MuiLoading = ({ rowIndex, columnIndex }: SkeletonSlotProps) =>
 /**
  * MUI empty state
  *
- * a CMS admin panel's centered secondary `Typography`.
+ * The message in centred secondary `Typography`.
  */
 const MuiEmpty = ({ message }: EmptySlotProps) => (
   <Stack alignItems="center" justifyContent="center" spacing={1}>
@@ -189,8 +189,8 @@ const MuiError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
 /**
  * MUI pagination
  *
- * a CMS admin panel's pair: `Pagination` for the page numbers and a `TablePagination`
- * with its actions blanked out for rows-per-page and the "x–y of n" label.
+ * A pair: `Pagination` for the page numbers, and a `TablePagination` with
+ * its actions blanked out for rows-per-page and the "x–y of n" label.
  */
 function MuiPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, rowCount, setPageIndex, setPageSize }: PaginationSlotProps) {
   return (
@@ -213,7 +213,7 @@ function MuiPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, rowCou
 /**
  * MUI components
  *
- * The slot map an MUI v7 project styled as a CMS admin panel would pass as `components`.
+ * The slot map an MUI v7 project would pass as `components`.
  */
 export const muiDataTable: Partial<DataTableComponents> = {
   Root: MuiRoot,
