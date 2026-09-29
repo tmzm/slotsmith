@@ -5,11 +5,11 @@
   "scripts": {
     "dev": "astro dev",
     "redirects": "node scripts/redirects.ts",
-    "build": "node scripts/redirects.ts && astro build",
+    "build": "node scripts/redirects.ts && node scripts/reference.ts && astro build",
     "check": "astro check && tsc --noEmit",
     "test": "vitest run",
     "verify": "echo \"verify: filled by a later task\"",
-    "reference": "echo \"reference: filled by a later task\""
+    "reference": "node scripts/reference.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.2",
