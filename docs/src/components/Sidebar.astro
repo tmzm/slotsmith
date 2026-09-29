@@ -37,23 +37,29 @@ const isSingle = (group: (typeof NAV)[number]) => group.items.length === 1 && gr
           <ul>
             {group.items.map((item) => (
               <li>
-                <a
-                  class:list={["nav-link", { "sidebar__group-name": isSingle(group) }]}
-                  href={localePath(lang, item.path)}
-                  aria-current={isCurrent(item) ? "page" : undefined}
-                >
-                  <span class="nav-tag" dir="ltr"><span class="nav-tag__bracket" aria-hidden="true">&lt;</span>{t(lang, item.label)}<span class="nav-tag__bracket" aria-hidden="true"> /&gt;</span></span>
-                </a>
-                {item.children && (
-                  <ul class="sidebar__children">
-                    {item.children.map((child) => (
-                      <li>
-                        <a class="nav-link" href={localePath(lang, child.path)} aria-current={isCurrent(child) ? "page" : undefined}>
-                          <span class="nav-tag" dir="ltr"><span class="nav-tag__bracket" aria-hidden="true">&lt;</span>{t(lang, child.label)}<span class="nav-tag__bracket" aria-hidden="true"> /&gt;</span></span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                {item.children ? (
+                  <details class="sidebar__disclosure" open={path.startsWith(item.path)}>
+                    <summary class="nav-link sidebar__summary">
+                      <span class="nav-tag" dir="ltr"><span class="nav-tag__bracket" aria-hidden="true">&lt;</span>{t(lang, item.label)}<span class="nav-tag__bracket" aria-hidden="true"> /&gt;</span></span>
+                    </summary>
+                    <ul class="sidebar__children">
+                      {[{ path: item.path, label: "component.overview" as const }, ...item.children].map((child) => (
+                        <li>
+                          <a class="nav-link" href={localePath(lang, child.path)} aria-current={isCurrent(child) ? "page" : undefined}>
+                            <span class="nav-tag" dir="ltr"><span class="nav-tag__bracket" aria-hidden="true">&lt;</span>{t(lang, child.label)}<span class="nav-tag__bracket" aria-hidden="true"> /&gt;</span></span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : (
+                  <a
+                    class:list={["nav-link", { "sidebar__group-name": isSingle(group) }]}
+                    href={localePath(lang, item.path)}
+                    aria-current={isCurrent(item) ? "page" : undefined}
+                  >
+                    <span class="nav-tag" dir="ltr"><span class="nav-tag__bracket" aria-hidden="true">&lt;</span>{t(lang, item.label)}<span class="nav-tag__bracket" aria-hidden="true"> /&gt;</span></span>
+                  </a>
                 )}
               </li>
             ))}

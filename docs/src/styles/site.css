@@ -218,6 +218,32 @@ main:focus {
   border-inline-start: 1px solid var(--line);
 }
 
+.sidebar__summary {
+  cursor: pointer;
+  list-style: none;
+  justify-content: space-between;
+  color: var(--ink);
+}
+
+.sidebar__summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar__summary::after {
+  content: "";
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  margin-inline-end: 0.25rem;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 200ms var(--ease-out);
+}
+
+details[open] > .sidebar__summary::after {
+  transform: rotate(-135deg);
+}
+
 .nav-link {
   display: flex;
   align-items: center;
