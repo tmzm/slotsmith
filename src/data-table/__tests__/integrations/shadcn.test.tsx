@@ -79,18 +79,19 @@ describe("shadcn/ui (editorial layout)", () => {
 
   it("paginates with editorial-style numbered pages", async () => {
     const user = renderShadcnTable();
-    expect(screen.getByText("Showing 1 to 10 of 23 records")).toBeInTheDocument();
+    expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Previous page" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "3" }));
-    expect(screen.getByText("Showing 21 to 23 of 23 records")).toBeInTheDocument();
+    expect(screen.getByText("Page 3 of 3")).toBeInTheDocument();
     expect(names()).toEqual(["Employee 21", "Employee 22", "Employee 23"]);
     expect(screen.queryByRole("button", { name: "Next page" })).not.toBeInTheDocument();
   });
 
   it("changes the page size with the radix select (keyboard)", async () => {
     const user = renderShadcnTable();
-    screen.getByRole("combobox", { name: "Rows per page:" }).focus();
+    screen.getByRole("combobox", { name: "Rows per page" }).focus();
     await user.keyboard("{Enter}");
     await user.click(await screen.findByRole("option", { name: "25" }));
     expect(bodyRows()).toHaveLength(23);
@@ -106,6 +107,29 @@ describe("shadcn/ui (editorial layout)", () => {
     const cell = within(bodyRows()[0]!).getByRole("cell");
     expect(cell).toHaveAttribute("colspan", "3");
     expect(within(cell).getByText("No data found")).toBeInTheDocument();
+    expect(cell).toHaveTextContent(/^No data found$/);
+  });
+
+  it("takes every word from the labels", async () => {
+    const labels = {
+      empty: "لا توجد بيانات",
+      rowsPerPage: "صفوف في الصفحة",
+      pageInfo: (page: number, pageCount: number) => `الصفحة ${page} من ${pageCount}`,
+      pagination: "ترقيم الصفحات",
+      previousPage: "الصفحة السابقة",
+      nextPage: "الصفحة التالية",
+    };
+    const user = renderShadcnTable({ labels });
+    expect(screen.getByText("الصفحة 1 من 3")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "صفوف في الصفحة" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "ترقيم الصفحات" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "الصفحة التالية" }));
+    expect(screen.getByRole("button", { name: "الصفحة السابقة" })).toBeInTheDocument();
+  });
+
+  it("shows a custom empty label, and nothing else, in the empty state", () => {
+    renderShadcnTable({ data: [], labels: { empty: "Nothing here yet" } });
+    expect(within(bodyRows()[0]!).getByRole("cell")).toHaveTextContent(/^Nothing here yet$/);
   });
 
   it("retries from the error state", async () => {

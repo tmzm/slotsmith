@@ -109,6 +109,12 @@ describe("Chakra UI v3 (dense admin table)", () => {
     expect(screen.getByText("No data found")).toBeInTheDocument();
   });
 
+  it("takes the empty message and the page-size name from the labels", () => {
+    renderChakraTable({ data: [], labels: { empty: "Nothing here yet", rowsPerPage: "صفوف في الصفحة" } });
+    expect(document.querySelector(".chakra-empty-state__root")).toHaveTextContent(/^Nothing here yet$/);
+    expect(screen.getByRole("combobox", { name: "صفوف في الصفحة" })).toBeInTheDocument();
+  });
+
   it("retries from the error state", async () => {
     const onRetry = vi.fn();
     const user = renderChakraTable({ error: new Error("500"), onRetry });

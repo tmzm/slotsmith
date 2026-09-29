@@ -10,7 +10,7 @@
  * shadcn/ui files.
  */
 import { Select as SelectPrimitive } from "radix-ui";
-import type { ComponentProps } from "react";
+import { useId, type ComponentProps } from "react";
 import type {
   CheckboxSlotProps,
   DataTableComponents,
@@ -137,34 +137,24 @@ function visiblePages(page: number, total: number): (number | "ellipsis")[] {
 /**
  * Shadcn pagination
  *
- * A compact pagination bar: a "Showing …" summary, a radix rows-per-page
- * select, and numbered page buttons whose previous / next buttons disappear
- * at either end.
+ * A compact pagination bar: the page summary, a radix rows-per-page select,
+ * and numbered page buttons whose previous / next buttons disappear at
+ * either end. Every word on it comes from `labels`, so a locale or a custom
+ * label reaches it.
  */
-function ShadcnPagination({
-  pageIndex,
-  pageCount,
-  pageSize,
-  pageSizeOptions,
-  rowCount,
-  setPageIndex,
-  setPageSize,
-}: PaginationSlotProps) {
+function ShadcnPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, setPageIndex, setPageSize, labels }: PaginationSlotProps) {
   const page = pageIndex + 1;
-  const from = rowCount === 0 ? 0 : pageIndex * pageSize + 1;
-  const to = Math.min(rowCount, page * pageSize);
+  const rowsPerPageId = useId();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-6 px-6 py-4">
-      <div className="text-sm text-font-body">
-        Showing {from} to {to} of {rowCount} records
-      </div>
+      <div className="text-sm text-font-body">{labels.pageInfo(page, pageCount)}</div>
       <div className="flex items-center gap-2">
-        <span id="rows-per-page" className="text-sm text-font-body">
-          Rows per page:
+        <span id={rowsPerPageId} className="text-sm text-font-body">
+          {labels.rowsPerPage}
         </span>
         <SelectPrimitive.Root value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
-          <SelectPrimitive.Trigger aria-labelledby="rows-per-page" className="h-8 min-w-14">
+          <SelectPrimitive.Trigger aria-labelledby={rowsPerPageId} className="h-8 min-w-14">
             <SelectPrimitive.Value />
           </SelectPrimitive.Trigger>
           <SelectPrimitive.Portal>
@@ -180,11 +170,11 @@ function ShadcnPagination({
           </SelectPrimitive.Portal>
         </SelectPrimitive.Root>
       </div>
-      <nav role="navigation" aria-label="pagination">
+      <nav role="navigation" aria-label={labels.pagination}>
         <ul className="flex items-center gap-2">
           {page > 1 && (
             <li>
-              <button type="button" aria-label="Previous page" onClick={() => setPageIndex(pageIndex - 1)}>
+              <button type="button" aria-label={labels.previousPage} onClick={() => setPageIndex(pageIndex - 1)}>
                 ‹
               </button>
             </li>
@@ -208,7 +198,7 @@ function ShadcnPagination({
           ))}
           {page < pageCount && (
             <li>
-              <button type="button" aria-label="Next page" onClick={() => setPageIndex(pageIndex + 1)}>
+              <button type="button" aria-label={labels.nextPage} onClick={() => setPageIndex(pageIndex + 1)}>
                 ›
               </button>
             </li>
@@ -222,12 +212,11 @@ function ShadcnPagination({
 /**
  * Shadcn empty state
  *
- * A centred title and a muted subtitle.
+ * The `labels.empty` message as a centred title.
  */
 const ShadcnEmpty = ({ message }: EmptySlotProps) => (
   <div data-slot="empty" className="flex flex-col items-center gap-1 py-10">
     <p className="font-semibold">{message}</p>
-    <p className="text-sm text-muted-foreground">There&apos;s no data to show</p>
   </div>
 );
 

@@ -12,14 +12,17 @@ import {
   Center,
   Checkbox,
   EmptyState,
+  HStack,
   IconButton,
   NativeSelect,
   Pagination,
   Skeleton,
   Spinner,
   Table,
+  Text,
   VStack,
 } from "@chakra-ui/react";
+import { useId } from "react";
 import type {
   CellSlotProps,
   CheckboxSlotProps,
@@ -142,9 +145,11 @@ const ChakraCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...
  * Chakra pagination
  *
  * A compact pagination bar: Chakra's `Pagination.Root` (with `count` as the
- * total row count) for the pages, and a `NativeSelect` for the page size.
+ * total row count) for the pages, and a `NativeSelect` for the page size,
+ * named by the `labels.rowsPerPage` text beside it.
  */
 function ChakraPagination({ pageIndex, pageSize, pageSizeOptions, rowCount, setPageIndex, setPageSize, labels }: PaginationSlotProps) {
+  const rowsPerPageId = useId();
   return (
     <Pagination.Root
       mb="2"
@@ -167,20 +172,25 @@ function ChakraPagination({ pageIndex, pageSize, pageSizeOptions, rowCount, setP
           <IconButton aria-label={labels.nextPage}>›</IconButton>
         </Pagination.NextTrigger>
       </ButtonGroup>
-      <NativeSelect.Root size="sm" width="auto">
-        <NativeSelect.Field
-          aria-label="Rows per page"
-          value={pageSize}
-          onChange={(event) => setPageSize(Number(event.currentTarget.value))}
-        >
-          {pageSizeOptions.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </NativeSelect.Field>
-        <NativeSelect.Indicator />
-      </NativeSelect.Root>
+      <HStack gap="2">
+        <Text id={rowsPerPageId} textStyle="sm">
+          {labels.rowsPerPage}
+        </Text>
+        <NativeSelect.Root size="sm" width="auto">
+          <NativeSelect.Field
+            aria-labelledby={rowsPerPageId}
+            value={pageSize}
+            onChange={(event) => setPageSize(Number(event.currentTarget.value))}
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+      </HStack>
     </Pagination.Root>
   );
 }
@@ -195,7 +205,6 @@ const ChakraEmpty = ({ message }: EmptySlotProps) => (
     <EmptyState.Content>
       <VStack textAlign="center">
         <EmptyState.Title>{message}</EmptyState.Title>
-        <EmptyState.Description>Try changing your filters</EmptyState.Description>
       </VStack>
     </EmptyState.Content>
   </EmptyState.Root>
