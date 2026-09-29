@@ -10,8 +10,13 @@ import type { MessageKey } from "./index";
 export const ar: Record<MessageKey, string> = {
   "site.name": "slotsmith",
   "site.tagline": "مكوّنات React يمكنك تفكيكها",
+  "site.positioning":
+    "جدول بيانات ومربع تحرير وسرد ومنتقي تاريخ ورافع ملفات جاهزة لـ React، تندمج في shadcn/ui أو MUI أو Chakra أو في نظام التصميم الخاص بك.",
 
   "common.skip": "تخطَّ إلى المحتوى",
+  "common.home": "الصفحة الرئيسية لـ slotsmith",
+  "common.githubLabel": "slotsmith على GitHub",
+  "common.npmLabel": "slotsmith على npm",
   "common.menu": "القائمة",
   "common.close": "إغلاق",
   "common.version": "الإصدار {version}",
@@ -29,10 +34,13 @@ export const ar: Record<MessageKey, string> = {
   "switch.theme": "سمة الألوان",
   "switch.light": "فاتح",
   "switch.dark": "داكن",
+  "switch.toLight": "التبديل إلى السمة الفاتحة",
+  "switch.toDark": "التبديل إلى السمة الداكنة",
   "switch.language": "تبديل لغة الموقع إلى الإنجليزية",
   "switch.otherLanguage": "English",
 
   "nav.sidebar": "التوثيق",
+  "nav.dock": "إجراءات سريعة",
   "nav.gettingStarted": "البداية",
   "nav.guides": "الأدلة",
   "nav.components": "المكوّنات",

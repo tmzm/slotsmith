@@ -1,9 +1,14 @@
 ---
+import Base from "@/layouts/Base.astro";
+import { langFromParam, langPaths, t } from "@/i18n";
+
 export function getStaticPaths() {
-  return [{ params: { lang: undefined } }, { params: { lang: "ar" } }];
+  return langPaths();
 }
+
+const lang = langFromParam(Astro.params.lang);
 ---
-<html lang="en">
-  <head><meta charset="utf-8" /><title>slotsmith</title></head>
-  <body><h1>Hello</h1></body>
-</html>
+<Base lang={lang} title={null} description={t(lang, "site.positioning")} path="/">
+  <h1 class="display" lang="en" style="font-size: clamp(3rem, 1rem + 10vw, 6rem)">slotsmith</h1>
+  <p style="max-inline-size: 60ch; font-size: 1.25rem; color: var(--ink-2)">{t(lang, "site.positioning")}</p>
+</Base>

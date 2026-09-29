@@ -8,8 +8,13 @@
 export const en = {
   "site.name": "slotsmith",
   "site.tagline": "React components you can take apart",
+  "site.positioning":
+    "Finished data table, combobox, date picker and file uploader for React that drop into shadcn/ui, MUI, Chakra or your own design system.",
 
   "common.skip": "Skip to content",
+  "common.home": "slotsmith home",
+  "common.githubLabel": "slotsmith on GitHub",
+  "common.npmLabel": "slotsmith on npm",
   "common.menu": "Menu",
   "common.close": "Close",
   "common.version": "v{version}",
@@ -27,10 +32,13 @@ export const en = {
   "switch.theme": "Color theme",
   "switch.light": "Light",
   "switch.dark": "Dark",
+  "switch.toLight": "Switch to the light theme",
+  "switch.toDark": "Switch to the dark theme",
   "switch.language": "Switch the site language to Arabic",
   "switch.otherLanguage": "العربية",
 
   "nav.sidebar": "Documentation",
+  "nav.dock": "Quick actions",
   "nav.gettingStarted": "Getting started",
   "nav.guides": "Guides",
   "nav.components": "Components",

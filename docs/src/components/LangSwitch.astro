@@ -1,0 +1,21 @@
+---
+/** Links to the same page in the other language. A full page load, so lang, dir and fonts apply cleanly. */
+import { localePath, t, type Lang } from "@/i18n";
+
+interface Props {
+  lang: Lang;
+  path: string;
+}
+
+const { lang, path } = Astro.props;
+const other: Lang = lang === "en" ? "ar" : "en";
+---
+<a
+  class="icon-button lang-switch"
+  href={localePath(other, path)}
+  hreflang={other}
+  lang={other}
+  aria-label={t(lang, "switch.language")}
+>
+  {t(lang, "switch.otherLanguage")}
+</a>

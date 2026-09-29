@@ -1,0 +1,65 @@
+---
+/**
+ * The docs index. Group names in Geist 600; the current page is a gold mono
+ * tag, `<Theming />`; other items show faint brackets on hover and focus.
+ * A column from 1024px on docs pages, a sheet everywhere else.
+ */
+import { NAV, type NavItem } from "@/nav";
+import { localePath, t, type Lang } from "@/i18n";
+
+interface Props {
+  lang: Lang;
+  path: string;
+  /** Render as a sheet at every width (pages without a sidebar column). */
+  sheetOnly?: boolean;
+}
+
+const { lang, path, sheetOnly = false } = Astro.props;
+
+const isCurrent = (item: NavItem) => item.path === path;
+const isSingle = (group: (typeof NAV)[number]) => group.items.length === 1 && group.items[0]?.label === group.label;
+---
+<button type="button" class="sheet-backdrop" data-menu-close tabindex="-1" aria-hidden="true"></button>
+<nav id="site-nav" class="sidebar" data-sheet-only={sheetOnly || undefined} aria-label={t(lang, "nav.sidebar")}>
+  <div class="sidebar__head">
+    <span class="sidebar__title">{t(lang, "nav.sidebar")}</span>
+    <button type="button" class="icon-button" data-menu-close aria-label={t(lang, "common.close")}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18" />
+      </svg>
+    </button>
+  </div>
+  <ul>
+    {
+      NAV.map((group) => (
+        <li class="sidebar__group">
+          {!isSingle(group) && <span class="sidebar__group-name">{t(lang, group.label)}</span>}
+          <ul>
+            {group.items.map((item) => (
+              <li>
+                <a
+                  class:list={["nav-link", { "sidebar__group-name": isSingle(group) }]}
+                  href={localePath(lang, item.path)}
+                  aria-current={isCurrent(item) ? "page" : undefined}
+                >
+                  <span class="nav-tag" dir="ltr"><span class="nav-tag__bracket" aria-hidden="true">&lt;</span>{t(lang, item.label)}<span class="nav-tag__bracket" aria-hidden="true"> /&gt;</span></span>
+                </a>
+                {item.children && (
+                  <ul class="sidebar__children">
+                    {item.children.map((child) => (
+                      <li>
+                        <a class="nav-link" href={localePath(lang, child.path)} aria-current={isCurrent(child) ? "page" : undefined}>
+                          <span class="nav-tag" dir="ltr"><span class="nav-tag__bracket" aria-hidden="true">&lt;</span>{t(lang, child.label)}<span class="nav-tag__bracket" aria-hidden="true"> /&gt;</span></span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

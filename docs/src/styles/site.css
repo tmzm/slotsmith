@@ -1,0 +1,569 @@
+/* Panels, layout grid, header, sidebar, dock (docs/DESIGN.md sections 4 and 5).
+   Logical properties throughout, so /ar/ mirrors without extra rules. */
+
+/* The panel: the unit of the system. Flat, hairline, no radius above 6px. */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  transition:
+    border-color 320ms var(--ease-out),
+    background-color 320ms var(--ease-out);
+}
+
+a.panel:hover,
+.panel[data-interactive]:hover,
+.panel[data-interactive]:focus-within {
+  border-color: var(--gold);
+}
+
+.skip-link {
+  position: fixed;
+  inset-block-start: 0.5rem;
+  inset-inline-start: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 0.875rem;
+  background: var(--gold);
+  color: var(--on-gold);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 160ms var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* Buttons shared by the header and the sidebar sheet. */
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding-inline: 0.625rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
+}
+
+.icon-button:hover {
+  border-color: var(--gold);
+}
+
+.icon-button svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+/* Theme icons: each button shows the theme it switches to. */
+[data-theme="dark"] .theme-icon-to-dark,
+[data-theme="light"] .theme-icon-to-light {
+  display: none;
+}
+
+/* ---------- Header ---------- */
+
+.site-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 40;
+  background: var(--bg);
+  border-block-end: 1px solid var(--line);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  block-size: var(--header-h);
+  max-inline-size: 90rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wordmark__mark {
+  color: var(--gold-text);
+}
+
+.version-tag {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  padding-inline: 0.25rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.version-tag:hover {
+  color: var(--gold-text);
+}
+
+.site-header__spacer {
+  flex: 1;
+}
+
+#search-slot:empty {
+  display: none;
+}
+
+.site-header .menu-button,
+.site-header .theme-button,
+.site-header .ext-link {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .site-header .theme-button,
+  .site-header .ext-link,
+  .site-header .menu-button {
+    display: inline-grid;
+  }
+}
+
+@media (min-width: 1024px) {
+  .site-header .menu-button:not([data-sheet-only]) {
+    display: none;
+  }
+}
+
+/* ---------- Shell: sidebar + content ---------- */
+
+.shell {
+  max-inline-size: 90rem;
+  margin-inline: auto;
+}
+
+.shell > main {
+  min-inline-size: 0;
+  padding-inline: var(--gutter);
+  padding-block: 2.5rem 4rem;
+}
+
+main:focus {
+  outline: none;
+}
+
+@media (min-width: 1024px) {
+  .shell[data-has-sidebar] {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+
+  .shell[data-has-sidebar] > main {
+    padding-inline: 3rem var(--gutter);
+  }
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.sidebar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block-end: 0.75rem;
+  margin-block-end: 0.5rem;
+  border-block-end: 1px solid var(--line);
+}
+
+.sidebar__title {
+  font-weight: 600;
+}
+
+.sidebar ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sidebar__group-name {
+  display: block;
+  padding-block: 0.875rem 0.25rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.sidebar__children {
+  margin-inline-start: 0.75rem !important;
+  padding-inline-start: 0.5rem !important;
+  border-inline-start: 1px solid var(--line);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  min-block-size: 2.25rem;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+.sidebar__children .nav-link {
+  min-block-size: 2rem;
+  padding-inline-start: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Faint brackets on hover and focus; the current page wears them in gold.
+   The tag is isolated left-to-right so the brackets read as markup in Arabic too. */
+.nav-tag {
+  unicode-bidi: isolate;
+}
+
+.nav-tag__bracket {
+  color: var(--gold-text);
+  font-family: var(--font-mono);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.nav-link:hover .nav-tag__bracket,
+.nav-link:focus-visible .nav-tag__bracket {
+  opacity: 0.5;
+}
+
+.nav-link[aria-current="page"] {
+  color: var(--gold-text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nav-link[aria-current="page"] .nav-tag__bracket {
+  opacity: 1;
+}
+
+.sheet-backdrop {
+  display: none;
+}
+
+/* Below 1024px (and on pages without a sidebar column) the sidebar is a sheet. */
+.sidebar {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 60;
+  inline-size: min(20rem, 88vw);
+  padding: 0.75rem var(--gutter) calc(var(--dock-h) + 2rem + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--panel);
+  border-inline-end: 1px solid var(--line-strong);
+  visibility: hidden;
+  transform: translateX(-100%);
+  transition:
+    transform 320ms var(--ease-out),
+    visibility 0s linear 320ms;
+}
+
+[dir="rtl"] .sidebar {
+  transform: translateX(100%);
+}
+
+html[data-nav-open] .sidebar {
+  visibility: visible;
+  transform: none;
+  transition: transform 320ms var(--ease-out);
+}
+
+html[data-nav-open] .sheet-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: color-mix(in oklab, var(--bg) 72%, transparent);
+}
+
+html[data-nav-open] {
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .sidebar:not([data-sheet-only]) {
+    position: sticky;
+    inset-block-start: var(--header-h);
+    z-index: auto;
+    align-self: start;
+    inline-size: auto;
+    max-block-size: calc(100dvh - var(--header-h));
+    padding: 1.25rem 1rem 3rem var(--gutter);
+    background: transparent;
+    border-inline-end: 1px solid var(--line);
+    visibility: visible;
+    transform: none;
+    transition: none;
+  }
+
+  .sidebar:not([data-sheet-only]) .sidebar__head {
+    display: none;
+  }
+}
+
+/* ---------- Docs page: article + "On this page" ---------- */
+
+.docs {
+  display: grid;
+  gap: 3rem;
+}
+
+.docs__article {
+  min-inline-size: 0;
+  max-inline-size: var(--prose-w);
+}
+
+.docs__edit {
+  display: inline-block;
+  margin-block-start: 3rem;
+  font-size: 0.9375rem;
+}
+
+.toc {
+  display: none;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.toc__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-inline-start: 1px solid var(--line);
+}
+
+.toc a {
+  display: block;
+  padding-block: 0.3rem;
+  padding-inline: 0.875rem 0;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.toc a:hover {
+  color: var(--ink);
+}
+
+.toc [data-depth="3"] a {
+  padding-inline-start: 1.5rem;
+}
+
+@media (min-width: 1280px) {
+  .docs[data-toc] {
+    grid-template-columns: minmax(0, var(--prose-w)) var(--toc-w);
+    gap: 4rem;
+  }
+
+  .toc {
+    display: block;
+    position: sticky;
+    inset-block-start: calc(var(--header-h) + 2.5rem);
+    align-self: start;
+  }
+}
+
+/* ---------- Page header ---------- */
+
+.page-header {
+  margin-block-end: 2.5rem;
+}
+
+.page-header__title {
+  font-size: clamp(2.5rem, 1.5rem + 4.2vw, 4.5rem);
+}
+
+html[lang="ar"] .page-header__title {
+  font-size: clamp(2rem, 1.35rem + 3vw, 3.5rem);
+}
+
+.page-header__lead {
+  margin: 1.25rem 0 0;
+  max-inline-size: var(--prose-w);
+  color: var(--ink-2);
+  font-size: 1.25rem;
+  line-height: 1.55;
+}
+
+.page-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.page-header__meta-key {
+  color: var(--muted);
+}
+
+.brace {
+  color: var(--gold-text);
+}
+
+/* ---------- Note ---------- */
+
+.note {
+  margin-block: 1.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.note__kind {
+  display: inline-block;
+  margin-block-end: 0.375rem;
+  unicode-bidi: isolate;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.note__body > :first-child {
+  margin-block-start: 0;
+}
+
+.note__body > :last-child {
+  margin-block-end: 0;
+}
+
+.note[data-kind="warning"] {
+  background: color-mix(in oklab, var(--danger) 9%, var(--panel));
+  border-color: color-mix(in oklab, var(--danger) 35%, var(--line));
+}
+
+.note[data-kind="warning"] .note__kind {
+  color: var(--danger);
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  border-block-start: 1px solid var(--line);
+  padding-block: 2rem calc(var(--dock-h) + 2.5rem + env(safe-area-inset-bottom));
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  max-inline-size: 90rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.site-footer a {
+  color: var(--ink-2);
+}
+
+.site-footer a:hover {
+  color: var(--gold-text);
+}
+
+.site-footer .wordmark {
+  min-block-size: 0;
+  font-size: 0.875rem;
+}
+
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .site-footer {
+    padding-block-end: 2.5rem;
+  }
+}
+
+/* ---------- Mobile dock ---------- */
+
+.dock {
+  position: fixed;
+  inset-inline: calc(0.75rem + env(safe-area-inset-left)) calc(0.75rem + env(safe-area-inset-right));
+  inset-block-end: calc(0.75rem + env(safe-area-inset-bottom));
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  block-size: var(--dock-h);
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+}
+
+.dock__button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: color 160ms var(--ease-out);
+}
+
+.dock__button + .dock__button {
+  border-inline-start: 1px solid var(--line);
+}
+
+.dock__button:hover {
+  color: var(--gold-text);
+}
+
+.dock__button svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+@media (min-width: 768px) {
+  .dock {
+    display: none;
+  }
+}

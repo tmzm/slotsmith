@@ -1,0 +1,109 @@
+---
+/**
+ * The page shell every route uses: <html lang dir data-theme>, head, skip
+ * link, header, content, footer and the mobile dock. Pass a `sidebar` slot to
+ * get the docs column; without one, the sidebar is a sheet behind the menu.
+ */
+import "@/styles/tokens.css";
+import "@/styles/base.css";
+import "@/styles/site.css";
+import "@/styles/library.css";
+import Head from "@/components/Head.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Sidebar from "@/components/Sidebar.astro";
+import MobileDock from "@/components/MobileDock.astro";
+import { dirOf, t, type Lang } from "@/i18n";
+
+export interface Props {
+  lang: Lang;
+  title: string | null;
+  description: string;
+  path: string;
+  ogImage?: string;
+}
+
+const { lang, title, description, path, ogImage } = Astro.props;
+const hasSidebar = Astro.slots.has("sidebar");
+---
+<!doctype html>
+<html lang={lang} dir={dirOf(lang)} data-theme="dark">
+  <head>
+    <Head lang={lang} title={title} description={description} path={path} ogImage={ogImage} />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">{t(lang, "common.skip")}</a>
+    <Header lang={lang} path={path} sheetOnly={!hasSidebar} />
+    <div class="shell" data-has-sidebar={hasSidebar || undefined}>
+      {hasSidebar ? <slot name="sidebar" /> : <Sidebar lang={lang} path={path} sheetOnly />}
+      <main id="content" tabindex="-1">
+        <slot />
+      </main>
+    </div>
+    <Footer lang={lang} />
+    <MobileDock lang={lang} />
+    <script>
+      const root = document.documentElement;
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      // Theme: dark by default, stored under "slotsmith-theme". The head script
+      // already applied it before paint; this keeps the buttons in step.
+      const themeButtons = document.querySelectorAll<HTMLElement>("[data-theme-toggle]");
+      const labelThemeButtons = () => {
+        const toLight = root.dataset.theme !== "light";
+        for (const button of themeButtons) {
+          const label = toLight ? button.dataset.labelToLight : button.dataset.labelToDark;
+          if (label) button.setAttribute("aria-label", label);
+        }
+      };
+      const applyTheme = (theme: "light" | "dark") => {
+        root.dataset.theme = theme;
+        try {
+          localStorage.setItem("slotsmith-theme", theme);
+        } catch {}
+        document.querySelector("meta[name=theme-color]")?.setAttribute("content", theme === "light" ? "#f4f3ef" : "#0f0e0b");
+        labelThemeButtons();
+      };
+      labelThemeButtons();
+      for (const button of themeButtons) {
+        button.addEventListener("click", () => {
+          const next = root.dataset.theme === "light" ? "dark" : "light";
+          if (document.startViewTransition && !reduceMotion.matches) document.startViewTransition(() => applyTheme(next));
+          else applyTheme(next);
+        });
+      }
+
+      // Sidebar sheet: opened by the header or dock menu button, closed by the
+      // close button, the backdrop, Escape, or following a link.
+      const sheet = document.getElementById("site-nav");
+      const menuButtons = document.querySelectorAll<HTMLElement>("[data-menu-toggle]");
+      const outside = () => document.querySelectorAll<HTMLElement>(".site-header, main, .site-footer, .dock");
+      let opener: HTMLElement | null = null;
+      const setOpen = (open: boolean, restoreFocus = true) => {
+        root.toggleAttribute("data-nav-open", open);
+        for (const button of menuButtons) button.setAttribute("aria-expanded", String(open));
+        for (const element of outside()) element.inert = open;
+        if (open) sheet?.querySelector<HTMLElement>("[data-menu-close], a")?.focus();
+        else if (restoreFocus) opener?.focus();
+      };
+      for (const button of menuButtons) {
+        button.addEventListener("click", () => {
+          opener = button;
+          setOpen(!root.hasAttribute("data-nav-open"));
+        });
+      }
+      for (const button of document.querySelectorAll("[data-menu-close]")) button.addEventListener("click", () => setOpen(false));
+      sheet?.addEventListener("click", (event) => {
+        if (event.target instanceof Element && event.target.closest("a")) setOpen(false, false);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && root.hasAttribute("data-nav-open")) setOpen(false);
+      });
+
+      // Search: the search island (plan 08) listens for this event.
+      for (const button of document.querySelectorAll("[data-search-open]")) {
+        button.addEventListener("click", () => window.dispatchEvent(new Event("open-search")));
+      }
+    </script>
+  </body>
+</html>

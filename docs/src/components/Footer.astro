@@ -1,0 +1,25 @@
+---
+/** Footer: wordmark, license, author, and the project links. */
+import Wordmark from "./Wordmark.astro";
+import { localePath, t, type Lang } from "@/i18n";
+import { SITE } from "../../site.config.ts";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <Wordmark lang={lang} />
+    <ul class="site-footer__links">
+      <li><a href={localePath(lang, "/about/")}>{t(lang, "nav.about")}</a></li>
+      <li><a href={localePath(lang, "/changelog/")}>{t(lang, "nav.changelog")}</a></li>
+      <li><a href={SITE.repo}>{t(lang, "common.github")}</a></li>
+      <li><a href={`https://www.npmjs.com/package/${SITE.npm}`}>{t(lang, "common.npm")}</a></li>
+      <li>{t(lang, "common.footerLicense")}</li>
+    </ul>
+    <span>{t(lang, "common.footerAuthor")}</span>
+  </div>
+</footer>

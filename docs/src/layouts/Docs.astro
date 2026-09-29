@@ -1,0 +1,41 @@
+---
+/**
+ * Docs page layout: Base plus the sidebar column, the "On this page" list and
+ * the "Edit this page" link.
+ */
+import Base, { type Props as BaseProps } from "./Base.astro";
+import Sidebar from "@/components/Sidebar.astro";
+import { t } from "@/i18n";
+import { editUrl } from "@/lib/page";
+
+interface Props extends BaseProps {
+  sourcePath: string;
+  toc?: { id: string; text: string; depth: 2 | 3 }[];
+}
+
+const { sourcePath, toc = [], ...base } = Astro.props;
+const { lang, path } = base;
+---
+<Base {...base}>
+  <Sidebar slot="sidebar" lang={lang} path={path} />
+  <div class="docs" data-toc={toc.length > 0 || undefined}>
+    <article class="docs__article">
+      <slot />
+      <a class="docs__edit" href={editUrl(sourcePath)}>{t(lang, "common.editPage")}</a>
+    </article>
+    {
+      toc.length > 0 && (
+        <nav class="toc" aria-labelledby="toc-title">
+          <p class="toc__title" id="toc-title">{t(lang, "common.onThisPage")}</p>
+          <ul>
+            {toc.map((heading) => (
+              <li data-depth={heading.depth}>
+                <a href={`#${heading.id}`}>{heading.text}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+  </div>
+</Base>

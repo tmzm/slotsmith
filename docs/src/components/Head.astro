@@ -1,0 +1,91 @@
+---
+/**
+ * Everything inside <head>: title, description, canonical and hreflang links,
+ * social cards, the pre-paint theme script and the self-hosted fonts.
+ *
+ * Fonts are declared here rather than through the @fontsource stylesheets so
+ * the preload links and the @font-face rules share one hashed URL, and so the
+ * Arabic faces are only emitted on Arabic pages.
+ */
+import ThemeScript from "./ThemeScript.astro";
+import { alternates, canonicalUrl, pageTitle } from "@/lib/page";
+import type { Lang } from "@/i18n";
+
+import bigShoulders900 from "@fontsource/big-shoulders/files/big-shoulders-latin-900-normal.woff2?url";
+import geist400 from "@fontsource/geist/files/geist-latin-400-normal.woff2?url";
+import geist500 from "@fontsource/geist/files/geist-latin-500-normal.woff2?url";
+import geist600 from "@fontsource/geist/files/geist-latin-600-normal.woff2?url";
+import jetbrains400 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url";
+import jetbrains500 from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2?url";
+import alexandria800 from "@fontsource/alexandria/files/alexandria-arabic-800-normal.woff2?url";
+import notoArabic400 from "@fontsource/noto-sans-arabic/files/noto-sans-arabic-arabic-400-normal.woff2?url";
+import notoArabic500 from "@fontsource/noto-sans-arabic/files/noto-sans-arabic-arabic-500-normal.woff2?url";
+import notoArabic700 from "@fontsource/noto-sans-arabic/files/noto-sans-arabic-arabic-700-normal.woff2?url";
+
+interface Props {
+  lang: Lang;
+  title: string | null;
+  description: string;
+  path: string;
+  ogImage?: string;
+}
+
+const { lang, title, description, path, ogImage } = Astro.props;
+
+const LATIN =
+  "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD";
+const ARABIC =
+  "U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC";
+
+const face = (family: string, weight: number, url: string, range: string) =>
+  `@font-face{font-family:"${family}";font-style:normal;font-weight:${weight};font-display:swap;src:url(${url}) format("woff2");unicode-range:${range}}`;
+
+const faces = [
+  face("Big Shoulders", 900, bigShoulders900, LATIN),
+  face("Geist", 400, geist400, LATIN),
+  face("Geist", 500, geist500, LATIN),
+  face("Geist", 600, geist600, LATIN),
+  face("JetBrains Mono", 400, jetbrains400, LATIN),
+  face("JetBrains Mono", 500, jetbrains500, LATIN),
+];
+if (lang === "ar") {
+  faces.push(
+    face("Alexandria", 800, alexandria800, ARABIC),
+    face("Noto Sans Arabic", 400, notoArabic400, ARABIC),
+    face("Noto Sans Arabic", 500, notoArabic500, ARABIC),
+    face("Noto Sans Arabic", 700, notoArabic700, ARABIC),
+  );
+}
+// Preload the body and display faces the first screen uses. On Arabic pages
+// those are the Arabic twins; preloading unused Latin files would only waste
+// bandwidth and log "preloaded but not used" warnings.
+const preloads = lang === "ar" ? [notoArabic400, alexandria800] : [geist400, bigShoulders900];
+
+const fullTitle = pageTitle(lang, title);
+const canonical = canonicalUrl(lang, path);
+const ogImageUrl = ogImage ? new URL(ogImage, canonical).href : undefined;
+const favicon =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#0f0e0b"/><path d="M12 9 5 16l7 7M20 9l7 7-7 7" fill="none" stroke="#c9a14a" stroke-width="3"/></svg>',
+  );
+---
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f0e0b" />
+<ThemeScript />
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{alternates(path).map((link) => <link rel="alternate" hreflang={link.hreflang} href={link.href} />)}
+<link rel="icon" href={favicon} type="image/svg+xml" />
+{preloads.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+<style is:inline set:html={faces.join("")}></style>
+<meta property="og:type" content={title === null ? "website" : "article"} />
+<meta property="og:site_name" content="slotsmith" />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={lang === "ar" ? "ar" : "en_US"} />
+{ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+<meta name="twitter:card" content={ogImageUrl ? "summary_large_image" : "summary"} />

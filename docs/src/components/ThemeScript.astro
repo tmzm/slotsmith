@@ -1,0 +1,17 @@
+---
+/**
+ * Sets `data-theme` on <html> before first paint from the stored choice.
+ * Dark is the default. Must stay inline in <head>, ahead of the stylesheets.
+ */
+---
+<script is:inline>
+  (function () {
+    var theme = "dark";
+    try {
+      if (localStorage.getItem("slotsmith-theme") === "light") theme = "light";
+    } catch (e) {}
+    document.documentElement.dataset.theme = theme;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && theme === "light") meta.setAttribute("content", "#f4f3ef");
+  })();
+</script>

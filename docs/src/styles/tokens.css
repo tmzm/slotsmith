@@ -1,0 +1,71 @@
+/*
+ * Design tokens, verbatim from the portfolio (docs/DESIGN.md section 2).
+ * Dark is the default; the head script sets data-theme before paint.
+ */
+:root,
+[data-theme="dark"] {
+  --bg: #0f0e0b;
+  --panel: #1a1813;
+  --panel-2: #25221b;
+  --line: #2e2a22;
+  --line-strong: #4a443a;
+  --ink: #ece9e2;
+  --ink-2: #cfcac0;
+  --muted: #a29c90;
+  --gold: #c9a14a;
+  --gold-text: #d2ab57;
+  --on-gold: #0f0e0b;
+  --ok: #6fcf7f;
+  --danger: #f0a08f;
+  --body-leading: 1.75;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f4f3ef;
+  --panel: #fbfaf7;
+  --panel-2: #efece4;
+  --line: #dcd6c8;
+  --line-strong: #bdb5a3;
+  --ink: #16140f;
+  --ink-2: #3b372e;
+  --muted: #625c50;
+  --gold: #c9a14a;
+  --gold-text: #7d5f1c;
+  --on-gold: #0f0e0b;
+  --ok: #2f8a44;
+  --danger: #b3412c;
+  --body-leading: 1.65;
+  color-scheme: light;
+}
+
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font-display: "Big Shoulders", "Arial Narrow", sans-serif;
+  --font-body: "Geist", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-latin-display: var(--font-display);
+
+  --header-h: 4rem;
+  --dock-h: 4rem;
+  --gutter: 1rem;
+  --sidebar-w: 16rem;
+  --toc-w: 13rem;
+  --prose-w: 68ch;
+}
+
+/* Arabic pages: Alexandria for display, Noto Sans Arabic for body. Both faces
+   carry an Arabic unicode-range, so Latin runs fall through to the Latin face. */
+html[lang="ar"] {
+  --font-display: "Alexandria", "Big Shoulders", sans-serif;
+  --font-body: "Noto Sans Arabic", "Geist", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Noto Sans Arabic", ui-monospace, monospace;
+  --font-latin-display: "Big Shoulders", "Arial Narrow", sans-serif;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 1.5rem;
+  }
+}

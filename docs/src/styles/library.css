@@ -1,0 +1,16 @@
+/*
+ * slotsmith demos wear the site palette through the library's own --ss-*
+ * tokens, a live proof of theming. Scoped to .site-demo so a demo can opt out
+ * and show the stock look (the swap demo's Fallback state does).
+ */
+.site-demo {
+  --ss-surface: var(--panel);
+  --ss-text: var(--ink);
+  --ss-muted: var(--muted);
+  --ss-border: var(--line);
+  --ss-accent: var(--gold);
+  --ss-on-accent: var(--on-gold);
+  --ss-hover: var(--panel-2);
+  --ss-selected: color-mix(in oklab, var(--gold) 16%, var(--panel));
+  --ss-danger: var(--danger);
+}

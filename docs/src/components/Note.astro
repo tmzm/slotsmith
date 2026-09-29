@@ -1,0 +1,12 @@
+---
+/** A note panel. Its first line names the kind in mono, `{ warning }`; warnings get a tinted background. */
+interface Props {
+  kind: "note" | "limitation" | "warning";
+}
+
+const { kind } = Astro.props;
+---
+<aside class="panel note" data-kind={kind}>
+  <span class="note__kind" dir="ltr"><span class="brace">{"{"}</span> {kind} <span class="brace">{"}"}</span></span>
+  <div class="note__body"><slot /></div>
+</aside>

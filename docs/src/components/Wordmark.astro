@@ -1,0 +1,13 @@
+---
+/** The `<slot>{smith}` wordmark: gold brackets and braces, letters in ink. Always left-to-right. */
+import { localePath, t, type Lang } from "@/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+<a class="wordmark" href={localePath(lang, "/")} aria-label={t(lang, "common.home")} dir="ltr">
+  <span class="wordmark__mark">&lt;</span>slot<span class="wordmark__mark">&gt;{"{"}</span>smith<span class="wordmark__mark">{"}"}</span>
+</a>

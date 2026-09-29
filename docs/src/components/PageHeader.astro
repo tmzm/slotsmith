@@ -1,0 +1,30 @@
+---
+/** Docs page header: display title, the answer-first lead, and a mono `{key} value` meta row. */
+interface Props {
+  title: string;
+  lead?: string;
+  meta?: { key: string; value: string }[];
+}
+
+const { title, lead, meta } = Astro.props;
+---
+<header class="page-header">
+  <h1 class="display page-header__title">{title}</h1>
+  {lead && <p class="page-header__lead">{lead}</p>}
+  {
+    meta && meta.length > 0 && (
+      <ul class="page-header__meta">
+        {meta.map((item) => (
+          <li dir="ltr">
+            <span class="page-header__meta-key">
+              <span class="brace">{"{"}</span>
+              {item.key}
+              <span class="brace">{"}"}</span>
+            </span>{" "}
+            {item.value}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</header>
