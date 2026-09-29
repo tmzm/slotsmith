@@ -77,7 +77,7 @@ const hasSidebar = Astro.slots.has("sidebar");
       // close button, the backdrop, Escape, or following a link.
       const sheet = document.getElementById("site-nav");
       const menuButtons = document.querySelectorAll<HTMLElement>("[data-menu-toggle]");
-      const outside = () => document.querySelectorAll<HTMLElement>(".site-header, main, .site-footer, .dock");
+      const outside = () => document.querySelectorAll<HTMLElement>(".skip-link, .site-header, main, .site-footer, .dock");
       let opener: HTMLElement | null = null;
       const setOpen = (open: boolean, restoreFocus = true) => {
         root.toggleAttribute("data-nav-open", open);
@@ -98,6 +98,11 @@ const hasSidebar = Astro.slots.has("sidebar");
       });
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && root.hasAttribute("data-nav-open")) setOpen(false);
+      });
+      // Growing past 1024px turns the sheet back into a column (docs pages) or
+      // hides the dock button that opened it, so an open sheet closes.
+      window.matchMedia("(min-width: 1024px)").addEventListener("change", (event) => {
+        if (event.matches && root.hasAttribute("data-nav-open")) setOpen(false, false);
       });
 
       // Search: the search island (plan 08) listens for this event.

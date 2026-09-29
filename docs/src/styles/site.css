@@ -276,7 +276,8 @@ main:focus {
   inset-inline-start: 0;
   z-index: 60;
   inline-size: min(20rem, 88vw);
-  padding: 0.75rem var(--gutter) calc(var(--dock-h) + 2rem + env(safe-area-inset-bottom));
+  padding-block: 0.75rem calc(var(--dock-h) + 2rem + env(safe-area-inset-bottom));
+  padding-inline: var(--gutter);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--panel);
@@ -318,7 +319,8 @@ html[data-nav-open] {
     align-self: start;
     inline-size: auto;
     max-block-size: calc(100dvh - var(--header-h));
-    padding: 1.25rem 1rem 3rem var(--gutter);
+    padding-block: 1.25rem 3rem;
+    padding-inline: var(--gutter) 1rem;
     background: transparent;
     border-inline-end: 1px solid var(--line);
     visibility: visible;
@@ -356,7 +358,8 @@ html[data-nav-open] {
 }
 
 .toc__title {
-  margin: 0 0 0.5rem;
+  margin: 0;
+  margin-block-end: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -413,7 +416,8 @@ html[lang="ar"] .page-header__title {
 }
 
 .page-header__lead {
-  margin: 1.25rem 0 0;
+  margin: 0;
+  margin-block-start: 1.25rem;
   max-inline-size: var(--prose-w);
   color: var(--ink-2);
   font-size: 1.25rem;
@@ -424,7 +428,8 @@ html[lang="ar"] .page-header__title {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1.5rem;
-  margin: 1.25rem 0 0;
+  margin: 0;
+  margin-block-start: 1.25rem;
   padding: 0;
   list-style: none;
   color: var(--ink-2);

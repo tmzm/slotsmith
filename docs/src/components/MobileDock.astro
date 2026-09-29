@@ -7,6 +7,9 @@ interface Props {
 }
 
 const { lang } = Astro.props;
+// The accessible name starts with the visible label (WCAG 2.5.3), then says where the button goes.
+const toLight = `${t(lang, "switch.theme")}: ${t(lang, "switch.toLight")}`;
+const toDark = `${t(lang, "switch.theme")}: ${t(lang, "switch.toDark")}`;
 ---
 <nav class="dock" aria-label={t(lang, "nav.dock")}>
   <button type="button" class="dock__button" data-menu-toggle aria-controls="site-nav" aria-expanded="false">
@@ -26,9 +29,9 @@ const { lang } = Astro.props;
     type="button"
     class="dock__button"
     data-theme-toggle
-    data-label-to-light={t(lang, "switch.toLight")}
-    data-label-to-dark={t(lang, "switch.toDark")}
-    aria-label={t(lang, "switch.toLight")}
+    data-label-to-light={toLight}
+    data-label-to-dark={toDark}
+    aria-label={toLight}
   >
     <svg class="theme-icon-to-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
       <circle cx="12" cy="12" r="4" />
@@ -37,6 +40,6 @@ const { lang } = Astro.props;
     <svg class="theme-icon-to-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
       <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
     </svg>
-    <span aria-hidden="true">{t(lang, "switch.theme")}</span>
+    <span>{t(lang, "switch.theme")}</span>
   </button>
 </nav>

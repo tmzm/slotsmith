@@ -56,10 +56,10 @@ if (lang === "ar") {
     face("Noto Sans Arabic", 700, notoArabic700, ARABIC),
   );
 }
-// Preload the body and display faces the first screen uses. On Arabic pages
-// those are the Arabic twins; preloading unused Latin files would only waste
-// bandwidth and log "preloaded but not used" warnings.
-const preloads = lang === "ar" ? [notoArabic400, alexandria800] : [geist400, bigShoulders900];
+// Preload the body and display faces the first screen uses. Arabic pages use
+// the Arabic twins plus Big Shoulders, which sets Latin display text such as
+// the landing name; Geist is left out there, as Latin body runs are rare.
+const preloads = lang === "ar" ? [notoArabic400, alexandria800, bigShoulders900] : [geist400, bigShoulders900];
 
 const fullTitle = pageTitle(lang, title);
 const canonical = canonicalUrl(lang, path);
