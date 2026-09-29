@@ -158,7 +158,7 @@ Hand-written inputs live next to the generated output: `knowledge/guides/*.md` a
 
 - **1.7.0** — `1.5.0` and `1.6.0` were version bumps in git only and were never published; this release describes everything an upgrading agent gains since the last published version, `1.4.0`:
   - `list_components` names the locale packs available for each component's `locale` prop.
-  - Three new guides — `i18n` (locale packs, the provider, `defineLocale`), `theming` (the shared `--ss-*` tokens and the six ready-made themes) and `adapters` (the `add` command, the libraries, the registry) — plus reordering knowledge folded into the `data-table` guide.
+  - The `i18n` and `theming` guides now cover locale packs, the shared tokens and the six themes; a new `adapters` guide covers the `add` command, the libraries and the registry. Reordering knowledge is folded into the `data-table` guide.
   - Twenty ready-made adapters, generated from tested integration suites: every component times `mui`, `shadcn`, `chakra`, `antd` and `radix`. `get_adapter_example` takes `antd` and `radix` alongside the three libraries it already had.
   - A new `add` command that copies any of those adapters into the project as source to own; see [Adding an adapter](#adding-an-adapter).
   - A [shadcn/ui registry](#the-shadcn-registry) built from the same adapters, for installing one with shadcn's own CLI instead.
