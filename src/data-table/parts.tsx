@@ -65,7 +65,7 @@ const alignStyle = (meta?: DataTableColumnMeta): CSSProperties | undefined =>
 /**
  * Visually hidden
  *
- * Inline as well as in the stylesheet (`sdt__sr`), so hidden text stays out
+ * Inline as well as in the stylesheet (`sdt__sr-only`), so hidden text stays out
  * of sight in an app that styles the table with its own components and no
  * `styles.css`.
  */

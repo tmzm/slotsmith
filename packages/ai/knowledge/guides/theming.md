@@ -62,11 +62,11 @@ A light island inside a dark page (`[data-theme="light"]` nested under `.dark`) 
 
 ## Class prefixes
 
-Fallback classes follow one scheme in every component: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, so they never collide with an application's classes. Target state with the `data-*` attributes rather than modifier classes: the attributes are part of the public contract, the class names are not.
+Fallback classes follow one scheme in every component: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, so they never collide with an application's classes. A part with the same role has the same name in every component: `__popup`, `__trigger`, `__value` (`--empty` when it shows the placeholder), `__clear`, `__list`, `__message` for an empty state, `__error` for an error state, `__sr-only` for text read only by screen readers. Target state with the `data-*` attributes rather than modifier classes: the attributes are part of the public contract, the class names are not.
 
 ## Deprecated names
 
-Before 1.6.0 the data table's prefix was `rdt`. Until 2.0 its elements still carry the old `rdt__*` classes beside the new ones, and every `--sdt-*` token reads its `--rdt-*` twin first, so an app's `.rdt__row { … }` rule or a `--rdt-accent` set on `:root` or under `.dark, [data-theme="dark"]` keeps working. The stylesheet uses only the new names. Write new code against `sdt__*` and `--sdt-*`; a `--rdt-*` value set on a single table's element no longer reaches it, so set the `--sdt-*` token there instead.
+Before 1.6.0 the data table's prefix was `rdt`. Until 2.0 its elements still carry the old `rdt__*` classes beside the new ones, and every `--sdt-*` token reads its `--rdt-*` twin first, so an app's `.rdt__row { … }` rule or a `--rdt-accent` set on `:root` or under `.dark, [data-theme="dark"]` keeps working. Three parts were also renamed to match the other components: `rdt__placeholder` is `sdt__message` (and `sdt__error` in the error state), `rdt__sr` is `sdt__sr-only`. The stylesheet uses only the new names. Write new code against `sdt__*` and `--sdt-*`; a `--rdt-*` value set on a single table's element no longer reaches it, so set the `--sdt-*` token there instead.
 
 ## Without the stylesheet
 

@@ -11,8 +11,8 @@ const tree: User[] = [user(1, { children: [user(11)] }), user(2)];
  */
 const pairs = () =>
   Object.values(classes).map((value) => {
-    const [name, old] = value.split(" ");
-    return { name: name!, old: old! };
+    const [name, ...old] = value.split(" ");
+    return { name: name!, old };
   });
 
 /**
@@ -25,8 +25,9 @@ const pairs = () =>
 describe("class names", () => {
   it("names every part sdt and keeps its deprecated rdt name", () => {
     for (const { name, old } of pairs()) {
-      expect(name, old).toMatch(/^sdt(__|$)/);
-      expect(old, name).toMatch(/^rdt(__|$)/);
+      expect(name).toMatch(/^sdt(__|$)/);
+      expect(old.length, name).toBeGreaterThan(0);
+      for (const legacy of old) expect(legacy, name).toMatch(/^rdt(__|$)/);
     }
   });
 
@@ -51,7 +52,7 @@ describe("class names", () => {
     let seen = 0;
     for (const { name, old } of pairs()) {
       for (const element of container.querySelectorAll(`.${CSS.escape(name)}`)) {
-        expect(element, name).toHaveClass(old);
+        expect(element, name).toHaveClass(...old);
         seen += 1;
       }
     }
@@ -63,9 +64,31 @@ describe("class names", () => {
     expect(loading.container.querySelector(".sdt__skeleton")).toHaveClass("rdt__skeleton");
     loading.unmount();
 
+    const empty = renderTable({ data: [] });
+    expect(empty.container.querySelector(".sdt__message")).toHaveClass("rdt__placeholder");
+    empty.unmount();
+
     const failed = renderTable({ error: new Error("Down"), onRetry: () => {} });
-    const placeholder = failed.container.querySelector(".sdt__placeholder--error");
-    expect(placeholder).toHaveClass("sdt__placeholder", "rdt__placeholder", "rdt__placeholder--error");
-    expect(placeholder!.querySelector(".sdt__button")).toHaveClass("rdt__button");
+    const error = failed.container.querySelector(".sdt__error");
+    expect(error).toHaveClass("rdt__placeholder", "rdt__placeholder--error");
+    expect(error).not.toHaveClass("sdt__message");
+    expect(error!.querySelector(".sdt__button")).toHaveClass("rdt__button");
+  });
+
+  /**
+   * Same role, same name
+   *
+   * A part that does the same job as one in another component carries the
+   * same name, so one rule or one query reaches both.
+   */
+  it("names parts after the autocomplete's parts with the same role", () => {
+    const { container } = renderTable({ enableRowReorder: true });
+    expect(container.querySelector("[role=status].sdt__sr-only")).toHaveClass("rdt__sr");
+
+    const failed = renderTable({ error: new Error("Down") });
+    expect(failed.container.querySelector(".sdt__error")).toBeInTheDocument();
+    failed.unmount();
+    const empty = renderTable({ data: [] });
+    expect(empty.container.querySelector(".sdt__message")).toBeInTheDocument();
   });
 });

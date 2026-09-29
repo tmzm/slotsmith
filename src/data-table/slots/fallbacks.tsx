@@ -213,7 +213,7 @@ const Skeleton = (_: SkeletonSlotProps) => <div className={classes.skeleton} />;
  *
  * A centered, muted message.
  */
-const Empty = ({ message }: EmptySlotProps) => <div className={classes.placeholder}>{message}</div>;
+const Empty = ({ message }: EmptySlotProps) => <div className={classes.message}>{message}</div>;
 
 /**
  * Error fallback
@@ -221,7 +221,7 @@ const Empty = ({ message }: EmptySlotProps) => <div className={classes.placehold
  * The message with a retry button, announced with `role="alert"`.
  */
 const ErrorState = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
-  <div className={cx(classes.placeholder, classes.placeholderError)} role="alert">
+  <div className={classes.error} role="alert">
     <span>{message}</span>
     {onRetry && (
       <button type="button" className={classes.button} onClick={onRetry}>

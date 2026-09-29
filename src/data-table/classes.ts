@@ -6,7 +6,7 @@
  * app's own rules written against it keep matching.
  *
  * @param name - The current class name.
- * @param old - The deprecated class name, removed in 2.0.
+ * @param old - The deprecated class name (or names), removed in 2.0.
  * @returns Both names, current first.
  */
 const renamed = (name: string, old: string) => `${name} ${old}`;
@@ -17,8 +17,10 @@ const renamed = (name: string, old: string) => `${name} ${old}`;
  * Every class the data table's own markup and fallbacks put on an element, in
  * one place. The prefix is `sdt` ("s" and the component's initials, like
  * `sac`, `sdp` and `sfu`); the second name in each entry is the `rdt` name the
- * part had until 1.6.0. The stylesheet selects only the `sdt` names, and the
- * old ones are dropped in 2.0 by deleting the second argument of each entry.
+ * part had until 1.6.0. A part that plays the same role as one in another
+ * component has the same name as it (`__message`, `__error`, `__sr-only`).
+ * The stylesheet selects only the `sdt` names, and the old ones are dropped
+ * in 2.0 by deleting the second argument of each entry.
  */
 export const classes = {
   root: renamed("sdt", "rdt"),
@@ -38,8 +40,10 @@ export const classes = {
   treeSpacer: renamed("sdt__tree-spacer", "rdt__tree-spacer"),
   expand: renamed("sdt__expand", "rdt__expand"),
   skeleton: renamed("sdt__skeleton", "rdt__skeleton"),
-  placeholder: renamed("sdt__placeholder", "rdt__placeholder"),
-  placeholderError: renamed("sdt__placeholder--error", "rdt__placeholder--error"),
+  /** The empty state, named like the autocomplete's `sac__message`. */
+  message: renamed("sdt__message", "rdt__placeholder"),
+  /** The error state, named like the autocomplete's `sac__error`. It had both old names. */
+  error: renamed("sdt__error", "rdt__placeholder rdt__placeholder--error"),
   button: renamed("sdt__button", "rdt__button"),
   buttonIcon: renamed("sdt__button--icon", "rdt__button--icon"),
   pagination: renamed("sdt__pagination", "rdt__pagination"),
@@ -48,5 +52,6 @@ export const classes = {
   pageSize: renamed("sdt__page-size", "rdt__page-size"),
   pageSizeSelect: renamed("sdt__page-size-select", "rdt__page-size-select"),
   drag: renamed("sdt__drag", "rdt__drag"),
-  srOnly: renamed("sdt__sr", "rdt__sr"),
+  /** Visually hidden text, named like the autocomplete's `sac__sr-only`. */
+  srOnly: renamed("sdt__sr-only", "rdt__sr"),
 } as const;

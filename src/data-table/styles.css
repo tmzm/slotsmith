@@ -335,7 +335,9 @@
   }
 }
 
-.sdt__placeholder {
+/** Named like the autocomplete's message and error, which play the same role in its list. */
+.sdt__message,
+.sdt__error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -345,7 +347,7 @@
   color: var(--sdt-muted);
 }
 
-.sdt__placeholder--error {
+.sdt__error {
   color: var(--sdt-danger);
 }
 
@@ -456,7 +458,7 @@
 }
 
 /** Visually hidden, still read by assistive technology: the reorder announcements. */
-.sdt__sr {
+.sdt__sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
