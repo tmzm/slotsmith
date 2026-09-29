@@ -20,7 +20,8 @@
   },
   "scripts": {
     "generate": "node scripts/generate.ts",
-    "build": "node scripts/generate.ts && tsup",
+    "registry": "node scripts/registry.ts",
+    "build": "node scripts/generate.ts && tsup && node scripts/registry.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build"
