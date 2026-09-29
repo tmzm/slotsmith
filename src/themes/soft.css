@@ -1,0 +1,33 @@
+/**
+ * Soft theme
+ *
+ * Warm surfaces, a violet accent and generous corners. Tokens only: import it
+ * after `slotsmith/styles.css`, or after the stylesheet of the one component
+ * an app uses.
+ */
+
+:root {
+  --ss-surface: #fffdfa;
+  --ss-text: #292524;
+  --ss-muted: #78716c;
+  --ss-border: #e7e5e4;
+  --ss-accent: #7c3aed;
+  --ss-on-accent: #ffffff;
+  --ss-danger: #e11d48;
+  --ss-hover: rgb(124 58 237 / 6%);
+  --ss-selected: rgb(124 58 237 / 10%);
+  --ss-radius: 14px;
+}
+
+.dark,
+[data-theme="dark"] {
+  --ss-surface: #1c1917;
+  --ss-text: #f5f5f4;
+  --ss-muted: #a8a29e;
+  --ss-border: #44403c;
+  --ss-accent: #a78bfa;
+  --ss-on-accent: #1c1917;
+  --ss-danger: #fb7185;
+  --ss-hover: rgb(167 139 250 / 10%);
+  --ss-selected: rgb(167 139 250 / 16%);
+}

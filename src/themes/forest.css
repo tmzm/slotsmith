@@ -1,0 +1,33 @@
+/**
+ * Forest theme
+ *
+ * Cool-neutral surfaces with a green accent. Tokens only: import it after
+ * `slotsmith/styles.css`, or after the stylesheet of the one component an
+ * app uses.
+ */
+
+:root {
+  --ss-surface: #fbfdfb;
+  --ss-text: #14231a;
+  --ss-muted: #55655b;
+  --ss-border: #dbe7de;
+  --ss-accent: #15803d;
+  --ss-on-accent: #ffffff;
+  --ss-danger: #b91c1c;
+  --ss-hover: rgb(21 128 61 / 6%);
+  --ss-selected: rgb(21 128 61 / 10%);
+  --ss-radius: 10px;
+}
+
+.dark,
+[data-theme="dark"] {
+  --ss-surface: #0c1410;
+  --ss-text: #e8f3ec;
+  --ss-muted: #9db3a5;
+  --ss-border: #22332a;
+  --ss-accent: #4ade80;
+  --ss-on-accent: #052e16;
+  --ss-danger: #f87171;
+  --ss-hover: rgb(74 222 128 / 10%);
+  --ss-selected: rgb(74 222 128 / 16%);
+}

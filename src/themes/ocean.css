@@ -1,0 +1,33 @@
+/**
+ * Ocean theme
+ *
+ * Cool surfaces with a blue accent. Tokens only: import it after
+ * `slotsmith/styles.css`, or after the stylesheet of the one component an
+ * app uses.
+ */
+
+:root {
+  --ss-surface: #f8fbff;
+  --ss-text: #0f172a;
+  --ss-muted: #526077;
+  --ss-border: #d6e2f0;
+  --ss-accent: #0369a1;
+  --ss-on-accent: #ffffff;
+  --ss-danger: #be123c;
+  --ss-hover: rgb(3 105 161 / 6%);
+  --ss-selected: rgb(3 105 161 / 10%);
+  --ss-radius: 8px;
+}
+
+.dark,
+[data-theme="dark"] {
+  --ss-surface: #0b1220;
+  --ss-text: #e6edf7;
+  --ss-muted: #9fb0c8;
+  --ss-border: #1f2b3d;
+  --ss-accent: #38bdf8;
+  --ss-on-accent: #082f49;
+  --ss-danger: #fb7185;
+  --ss-hover: rgb(56 189 248 / 10%);
+  --ss-selected: rgb(56 189 248 / 16%);
+}

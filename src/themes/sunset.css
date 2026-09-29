@@ -1,0 +1,33 @@
+/**
+ * Sunset theme
+ *
+ * Warm surfaces with an orange accent. Tokens only: import it after
+ * `slotsmith/styles.css`, or after the stylesheet of the one component an
+ * app uses.
+ */
+
+:root {
+  --ss-surface: #fffaf5;
+  --ss-text: #2a1a12;
+  --ss-muted: #7a5f52;
+  --ss-border: #f1e1d3;
+  --ss-accent: #c2410c;
+  --ss-on-accent: #ffffff;
+  --ss-danger: #be123c;
+  --ss-hover: rgb(194 65 12 / 6%);
+  --ss-selected: rgb(194 65 12 / 10%);
+  --ss-radius: 12px;
+}
+
+.dark,
+[data-theme="dark"] {
+  --ss-surface: #17100c;
+  --ss-text: #fbeee4;
+  --ss-muted: #c4a898;
+  --ss-border: #3a2a21;
+  --ss-accent: #fb923c;
+  --ss-on-accent: #431407;
+  --ss-danger: #fda4af;
+  --ss-hover: rgb(251 146 60 / 10%);
+  --ss-selected: rgb(251 146 60 / 16%);
+}

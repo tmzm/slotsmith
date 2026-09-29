@@ -226,6 +226,13 @@ The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, 
 
 Every component names its classes the same way: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state as `data-*` attributes. A part that plays the same role in several components has the same name in each: the popups are `__popup`, the triggers `__trigger`, an empty state `__message`, an error state `__error`, text for screen readers only `__sr-only`. Select `.sdt__message, .sdt__error` to style both states of the data table at once.
 
+Six ready-made themes set only the shared `--ss-*` tokens, each with a light and a dark palette: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast` (a high-contrast palette for accessibility). Import one after the stylesheet:
+
+```ts
+import "slotsmith/styles.css";
+import "slotsmith/themes/soft.css";
+```
+
 ## You ship only what you import
 
 Each component is independent, and the build is arranged so your bundler can prove it.
@@ -314,6 +321,8 @@ pnpm test:ai     # the MCP server in packages/ai
 ```
 
 ## Changelog
+
+- **Unreleased** — Six ready-made themes, each with a light and a dark palette, setting only the shared `--ss-*` tokens: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast`; see [Theming](#theming).
 
 - **1.6.0** — Drag-to-reorder rows in the data table, by pointer, touch or keyboard; see [Reordering rows](#reordering-rows). New props `enableRowReorder`, `onRowOrderChange` and `reorderHandleColumn`; a new `DragHandle` slot, `DataTable.DragHandle` for placing the handle in a cell of your own, and `slotProps.dragHandle`, whose handlers run alongside the table's own; six new labels (`reorderRow`, `reorderInstructions`, `reorderLifted`, `reorderMoved`, `reorderDropped`, `reorderCancelled`) in every locale pack; and `moveItem`. The order is controlled: `onRowOrderChange` receives `row`, `rowId`, `target`, `targetId`, `position` and the new `data`, and the table does not reorder until you store it. The dragged row follows the pointer while the others slide out of its way; with reduced motion nothing slides, the row is dimmed and a line marks where it will land. Every step is announced to screen readers.
 - Tree tables reorder too: a row moves among its siblings only, together with its expanded sub-rows. `RowOrderChange` also carries `parentId`, `parent` and `siblings`; for a sub-row `data` is the unchanged top level, and `siblings` is the parent's new list of children to store.

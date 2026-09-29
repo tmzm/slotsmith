@@ -1,0 +1,33 @@
+/**
+ * Minimal theme
+ *
+ * Neutral surfaces with a near-black accent and square corners. Tokens only:
+ * import it after `slotsmith/styles.css`, or after the stylesheet of the one
+ * component an app uses.
+ */
+
+:root {
+  --ss-surface: #ffffff;
+  --ss-text: #0a0a0a;
+  --ss-muted: #737373;
+  --ss-border: #e5e5e5;
+  --ss-accent: #171717;
+  --ss-on-accent: #ffffff;
+  --ss-danger: #b91c1c;
+  --ss-hover: rgb(0 0 0 / 4%);
+  --ss-selected: rgb(0 0 0 / 6%);
+  --ss-radius: 4px;
+}
+
+.dark,
+[data-theme="dark"] {
+  --ss-surface: #0a0a0a;
+  --ss-text: #fafafa;
+  --ss-muted: #a3a3a3;
+  --ss-border: #262626;
+  --ss-accent: #fafafa;
+  --ss-on-accent: #0a0a0a;
+  --ss-danger: #f87171;
+  --ss-hover: rgb(255 255 255 / 6%);
+  --ss-selected: rgb(255 255 255 / 10%);
+}

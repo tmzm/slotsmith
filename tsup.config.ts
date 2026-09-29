@@ -22,6 +22,13 @@ const locales = Object.fromEntries(
     .map((file) => [`locales/${file.slice(0, -3)}`, `src/locales/${file}`]),
 );
 
+/** One entry per file in `src/themes`, so a new theme is built the moment it is added. */
+const themes = Object.fromEntries(
+  readdirSync("src/themes")
+    .filter((file) => file.endsWith(".css"))
+    .map((file) => [`themes/${file.slice(0, -4)}`, `src/themes/${file}`]),
+);
+
 export default defineConfig([
   {
     entry: {
@@ -42,6 +49,8 @@ export default defineConfig([
       "data-table.styles": "src/data-table/styles.css",
       "date-picker.styles": "src/date-picker/styles.css",
       "file-uploader.styles": "src/file-uploader/styles.css",
+      // Token-only theme stylesheets, one per file in `src/themes`.
+      ...themes,
     },
     format: ["esm", "cjs"],
     external,

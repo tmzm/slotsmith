@@ -1,0 +1,34 @@
+/**
+ * Contrast theme
+ *
+ * High-contrast surfaces for accessibility: pure black and white, square
+ * corners and stronger borders. Tokens only: import it after
+ * `slotsmith/styles.css`, or after the stylesheet of the one component an
+ * app uses.
+ */
+
+:root {
+  --ss-surface: #ffffff;
+  --ss-text: #000000;
+  --ss-muted: #3f3f46;
+  --ss-border: #000000;
+  --ss-accent: #0000c2;
+  --ss-on-accent: #ffffff;
+  --ss-danger: #a30000;
+  --ss-hover: rgb(0 0 0 / 10%);
+  --ss-selected: rgb(0 0 194 / 14%);
+  --ss-radius: 2px;
+}
+
+.dark,
+[data-theme="dark"] {
+  --ss-surface: #000000;
+  --ss-text: #ffffff;
+  --ss-muted: #d4d4d8;
+  --ss-border: #ffffff;
+  --ss-accent: #ffe600;
+  --ss-on-accent: #000000;
+  --ss-danger: #ff8a8a;
+  --ss-hover: rgb(255 255 255 / 16%);
+  --ss-selected: rgb(255 230 0 / 22%);
+}
