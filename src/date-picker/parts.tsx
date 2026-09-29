@@ -3,6 +3,7 @@
 import { mergeProps, mergeRefs } from "../shared/mergeProps";
 import type { CalendarDay } from "./core/types";
 import { useDatePickerContext } from "./slots/context";
+import { classes } from "./classes";
 
 export { mergeProps };
 
@@ -97,7 +98,7 @@ export function DatePickerHeader() {
   } = useDatePickerContext();
 
   return (
-    <div className="sdp__header">
+    <div className={classes.header}>
       <C.Nav
         direction={rtl ? "next" : "previous"}
         aria-label={labels.previous}
@@ -138,7 +139,7 @@ export function DatePickerDayView({ day }: { day: CalendarDay }) {
   const state = getDayState(day.date);
 
   return (
-    <div className="sdp__cell" {...getCellProps(day)}>
+    <div className={classes.cell} {...getCellProps(day)}>
       <C.Day {...mergeProps(getDayProps(day), slotProps.day?.(day))}>
         <C.DayContent
           day={day}
@@ -166,16 +167,16 @@ export function DatePickerCalendar(props: Record<string, unknown> = {}) {
 
   return (
     <C.Calendar {...mergeProps(mergeProps(getGridProps(), slotProps.calendar), props)}>
-      <div className="sdp__weekdays" role="row">
+      <div className={classes.weekdays} role="row">
         {weekdays.map((label, index) => (
-          <div key={index} className="sdp__columnheader" role="columnheader" aria-label={weekdayNames[index]}>
+          <div key={index} className={classes.columnheader} role="columnheader" aria-label={weekdayNames[index]}>
             <C.Weekday label={label} name={weekdayNames[index]!} index={index} />
           </div>
         ))}
       </div>
 
       {weeks.map((week) => (
-        <div className="sdp__week" role="row" key={week[0]!.date}>
+        <div className={classes.week} role="row" key={week[0]!.date}>
           {week.map((day) => (
             <DatePickerDayView key={day.date} day={day} />
           ))}

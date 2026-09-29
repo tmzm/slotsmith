@@ -97,6 +97,16 @@ describe("knowledge drift", () => {
     }
   });
 
+  it("shows real class names in the fallbacks, not the class map's keys", () => {
+    for (const component of generated.components) {
+      for (const slot of component.slots) {
+        expect(slot.fallback, `${component.name}.${slot.name} fallback`).not.toMatch(/\bclasses\./);
+      }
+    }
+    const table = generated.components.find((component) => component.name === "data-table")!;
+    expect(table.slots.find((slot) => slot.name === "Row")!.fallback).toContain('cx("sdt__row", className)');
+  });
+
   it("classifies element and widget slots the way the library does", () => {
     const kinds = (name: string) =>
       Object.fromEntries(byName.get(name)!.slots.map((slot) => [slot.name, slot.kind]));

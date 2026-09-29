@@ -1,5 +1,6 @@
 import { useId } from "react";
 import type { DatePickerComponents, DatePickerLabels } from "./types";
+import { classes } from "../classes";
 
 /**
  * Class names
@@ -21,7 +22,7 @@ const cx = (...values: (string | false | null | undefined)[]): string | undefine
  */
 const ChevronIcon = ({ flip }: { flip?: boolean }) => (
   <svg
-    className="sdp__chevron"
+    className={classes.chevron}
     viewBox="0 0 24 24"
     aria-hidden="true"
     style={flip ? { transform: "rotate(180deg)" } : undefined}
@@ -36,7 +37,7 @@ const ChevronIcon = ({ flip }: { flip?: boolean }) => (
  * The trigger's affordance.
  */
 const CalendarIcon = () => (
-  <svg className="sdp__icon" viewBox="0 0 24 24" aria-hidden="true">
+  <svg className={classes.icon} viewBox="0 0 24 24" aria-hidden="true">
     <rect x="3" y="5" width="18" height="16" rx="2" />
     <path d="M8 3v4M16 3v4M3 11h18" />
   </svg>
@@ -61,7 +62,7 @@ const CrossIcon = () => (
  * reads as navigation rather than a preset.
  */
 const TodayIcon = () => (
-  <svg className="sdp__today-icon" viewBox="0 0 24 24" aria-hidden="true">
+  <svg className={classes.todayIcon} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M12 3v10" />
     <path d="m7 9 5 5 5-5" />
     <path d="M5 21h14" />
@@ -82,12 +83,12 @@ const TodayIcon = () => (
  * ```
  */
 export const datePickerFallbacks: DatePickerComponents = {
-  Root: ({ className, ...props }) => <div className={cx("sdp", className)} {...props} />,
+  Root: ({ className, ...props }) => <div className={cx(classes.root, className)} {...props} />,
 
-  Trigger: ({ className, ...props }) => <div className={cx("sdp__trigger", className)} {...props} />,
+  Trigger: ({ className, ...props }) => <div className={cx(classes.trigger, className)} {...props} />,
 
   Value: ({ text, placeholder, empty }) => (
-    <span className={cx("sdp__value", empty && "sdp__value--empty")}>{empty ? placeholder : text}</span>
+    <span className={cx(classes.value, empty && classes.valueEmpty)}>{empty ? placeholder : text}</span>
   ),
 
   Icon: () => <CalendarIcon />,
@@ -95,7 +96,7 @@ export const datePickerFallbacks: DatePickerComponents = {
   Clear: ({ onClick, ...aria }) => (
     <button
       type="button"
-      className="sdp__clear"
+      className={classes.clear}
       onClick={(event) => {
         event.stopPropagation();
         onClick();
@@ -106,18 +107,18 @@ export const datePickerFallbacks: DatePickerComponents = {
     </button>
   ),
 
-  Popup: ({ className, ...props }) => <div className={cx("sdp__popup", className)} {...props} />,
+  Popup: ({ className, ...props }) => <div className={cx(classes.popup, className)} {...props} />,
 
-  Calendar: ({ className, ...props }) => <div className={cx("sdp__calendar", className)} {...props} />,
+  Calendar: ({ className, ...props }) => <div className={cx(classes.calendar, className)} {...props} />,
 
   Caption: function Caption({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) {
     // An id rather than a name keeps the selects out of an enclosing form's submission.
     const id = useId();
     return (
-      <span className="sdp__caption">
+      <span className={classes.caption}>
         <select
           id={`${id}-month`}
-          className="sdp__select"
+          className={classes.select}
           aria-label={labels.month}
           value={monthIndex}
           onChange={(event) => onMonthChange(Number(event.target.value))}
@@ -130,7 +131,7 @@ export const datePickerFallbacks: DatePickerComponents = {
         </select>
         <select
           id={`${id}-year`}
-          className="sdp__select"
+          className={classes.select}
           aria-label={labels.year}
           value={year}
           onChange={(event) => onYearChange(Number(event.target.value))}
@@ -146,25 +147,25 @@ export const datePickerFallbacks: DatePickerComponents = {
   },
 
   Nav: ({ direction, onClick, disabled, ...aria }) => (
-    <button type="button" className="sdp__nav" onClick={onClick} disabled={disabled} {...aria}>
+    <button type="button" className={classes.nav} onClick={onClick} disabled={disabled} {...aria}>
       <ChevronIcon flip={direction === "next"} />
     </button>
   ),
 
-  Weekday: ({ label }) => <span className="sdp__weekday">{label}</span>,
+  Weekday: ({ label }) => <span className={classes.weekday}>{label}</span>,
 
-  Day: ({ className, ...props }) => <button type="button" className={cx("sdp__day", className)} {...props} />,
+  Day: ({ className, ...props }) => <button type="button" className={cx(classes.day, className)} {...props} />,
 
   DayContent: ({ day }) => <span>{day.day}</span>,
 
   Footer: ({ presets, onPreset, onToday, todayLabel }) => (
-    <div className="sdp__footer">
+    <div className={classes.footer}>
       {presets.map((preset) => (
-        <button key={preset.label} type="button" className="sdp__preset" onClick={() => onPreset(preset.value)}>
+        <button key={preset.label} type="button" className={classes.preset} onClick={() => onPreset(preset.value)}>
           {preset.label}
         </button>
       ))}
-      <button type="button" className="sdp__preset sdp__preset--today sdp__today" onClick={onToday}>
+      <button type="button" className={cx(classes.preset, classes.presetToday, classes.today)} onClick={onToday}>
         <TodayIcon />
         {todayLabel}
       </button>

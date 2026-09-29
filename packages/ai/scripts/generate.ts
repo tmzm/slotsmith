@@ -317,6 +317,48 @@ function objectEntries(object: ts.ObjectLiteralExpression, declarations: Map<str
 }
 
 /**
+ * Class map
+ *
+ * A component's `classes.ts`, the one object holding every class name its
+ * markup uses.
+ *
+ * @param folder - The component folder.
+ * @returns Key to class name, empty when the component has no map.
+ */
+function readClasses(folder: string): Map<string, string> {
+  const path = join(folder, "classes.ts");
+  if (!existsSync(path)) return new Map();
+  const text = readFileSync(path, "utf8");
+  return new Map([...text.matchAll(/^\s*(\w+): "([^"]+)",?\r?$/gm)].map((match) => [match[1]!, match[2]!]));
+}
+
+/**
+ * Resolve classes
+ *
+ * Writes a fallback's `classes.x` references as the class names they hold,
+ * so the generated source shows real class names (`className="sdt__row"`)
+ * rather than identifiers an agent cannot see.
+ *
+ * @param text - Fallback source.
+ * @param classes - The component's class map.
+ * @returns The source with every known reference replaced.
+ */
+function resolveClasses(text: string, classes: Map<string, string>): string {
+  if (classes.size === 0) return text;
+  const name = (key: string) => {
+    const value = classes.get(key);
+    if (value === undefined) throw new Error(`classes.${key} is not in the class map`);
+    return value;
+  };
+  return text
+    .replace(/className=\{classes\.(\w+)\}/g, (_, key: string) => `className="${name(key)}"`)
+    .replace(/className=\{cx\(((?:classes\.\w+(?:, )?)+)\)\}/g, (_, keys: string) =>
+      `className="${keys.split(", ").map((key) => name(key.slice("classes.".length))).join(" ")}"`,
+    )
+    .replace(/\bclasses\.(\w+)/g, (_, key: string) => JSON.stringify(name(key)));
+}
+
+/**
  * Value of entry
  *
  * The right-hand side of an object property, as written.
@@ -343,12 +385,14 @@ function objectValues(object: ts.ObjectLiteralExpression): Map<string, string> {
  * @param typesFile - `slots/types.ts`.
  * @param fallbacksFile - `slots/fallbacks.tsx`.
  * @param componentsType - The interface name, e.g. `DatePickerComponents`.
+ * @param classes - The component's class map, resolved into the fallback source.
  * @returns The slots and the name of the exported fallbacks object.
  */
 function readSlots(
   typesFile: ts.SourceFile,
   fallbacksFile: ts.SourceFile,
   componentsType: string,
+  classes: Map<string, string> = new Map(),
 ): { slots: SlotInfo[]; fallbacksExport: string } {
   const declarations = topLevel(typesFile);
   const components = declarations.get(componentsType);
@@ -404,8 +448,9 @@ function readSlots(
     const doc = declaration ? parseDoc(leadingDoc(declaration) ?? "") : { title: "", description: "", tags: [] };
     const summary = doc.description.replace(/\s*\n\s*/g, " ").replace(/\{@link\s+([^}\s]+)\}/g, "$1");
     const dataAttributes = [...new Set([...summary.matchAll(/`(data-[a-z-]+)`/g)].map((match) => match[1]!))];
-    const fallback = fallbackSources.get(name);
-    if (fallback === undefined) throw new Error(`${fallbacks.name} has no fallback for ${name}`);
+    const source = fallbackSources.get(name);
+    if (source === undefined) throw new Error(`${fallbacks.name} has no fallback for ${name}`);
+    const fallback = resolveClasses(source, classes);
 
     return { name, kind, propsType, domType, title: doc.title, summary, dataAttributes, props, fallback };
   });
@@ -745,7 +790,7 @@ export function generateKnowledge(options: GenerateOptions): GeneratedKnowledge 
 
     const componentsType = `${Name}Components`;
     const labelsType = `${Name}Labels`;
-    const { slots, fallbacksExport } = readSlots(typesFile, fallbacksFile, componentsType);
+    const { slots, fallbacksExport } = readSlots(typesFile, fallbacksFile, componentsType, readClasses(folder));
     const { labels, labelsExport } = readLabels(typesFile, fallbacksFile, labelsType);
     const componentGroups = groups[name] ?? {};
     const props = readProps(checker, moduleSymbol, `${Name}Props`, componentGroups);

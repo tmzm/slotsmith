@@ -5,6 +5,7 @@ import type { UploadItem } from "./core/types";
 import { isImage } from "./core/validate";
 import { UploadItemContext, useFileUploaderContext } from "./slots/context";
 import { formatItemSize } from "./slots/fallbacks";
+import { classes } from "./classes";
 
 /**
  * Merge props
@@ -87,7 +88,7 @@ export function FileUploaderActions<TData = unknown>({ item }: FileUploaderActio
   const { components: C, labels, disabled, cancel, retry, remove } = useFileUploaderContext<TData>();
 
   return (
-    <span className="sfu__actions">
+    <span className={classes.actions}>
       {item.status === "uploading" && (
         <C.Action action="cancel" onClick={() => cancel(item.id)} aria-label={labels.cancel} />
       )}
@@ -257,7 +258,7 @@ export function FileUploaderDropzone({ children }: FileUploaderDropzoneProps) {
           {tileItem.status === "uploading" && (
             <C.Progress value={tileItem.progress} active aria-label={labels.progress(tileItem.name)} />
           )}
-          {tileItem.status === "error" && <span className="sfu__error">{tileItem.error}</span>}
+          {tileItem.status === "error" && <span className={classes.error}>{tileItem.error}</span>}
           <FileUploaderActions item={tileItem} />
         </>
       ) : (
@@ -296,12 +297,12 @@ export function FileUploaderCompact() {
   if (variant !== "compact") return null;
 
   return (
-    <span className="sfu__compact">
+    <span className={classes.compact}>
       <C.Input {...inputProps} aria-label={labels.dropzone} />
       <C.Trigger onClick={open} disabled={disabled}>
         {labels.browse}
       </C.Trigger>
-      <span className="sfu__hint">{hint}</span>
+      <span className={classes.hint}>{hint}</span>
     </span>
   );
 }

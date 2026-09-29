@@ -18,6 +18,7 @@ import type {
   UploaderRootSlotProps,
   UploaderTriggerSlotProps,
 } from "./types";
+import { classes } from "../classes";
 
 /**
  * Icon
@@ -48,7 +49,7 @@ const Glyph = ({ children, size = 20 }: { children: React.ReactNode; size?: numb
  * `<div class="sfu">`.
  */
 const Root = ({ className, ...props }: UploaderRootSlotProps) => (
-  <div className={cx("sfu", className)} {...props} />
+  <div className={cx(classes.root, className)} {...props} />
 );
 
 /**
@@ -58,7 +59,7 @@ const Root = ({ className, ...props }: UploaderRootSlotProps) => (
  * handlers the hook provides.
  */
 const Dropzone = ({ className, ...props }: DropzoneSlotProps) => (
-  <div className={cx("sfu__zone", className)} {...props} />
+  <div className={cx(classes.zone, className)} {...props} />
 );
 
 /**
@@ -66,7 +67,7 @@ const Dropzone = ({ className, ...props }: DropzoneSlotProps) => (
  *
  * The real file input, visually hidden but still focusable and announced.
  */
-const Input = (props: UploaderInputSlotProps) => <input className="sfu__input" {...props} />;
+const Input = (props: UploaderInputSlotProps) => <input className={classes.input} {...props} />;
 
 /**
  * Icon fallback
@@ -74,7 +75,7 @@ const Input = (props: UploaderInputSlotProps) => <input className="sfu__input" {
  * An upload tray that lifts while a file is over the zone.
  */
 const Icon = ({ dragging }: UploaderIconSlotProps) => (
-  <span className="sfu__icon" data-dragging={dragging || undefined}>
+  <span className={classes.icon} data-dragging={dragging || undefined}>
     <Glyph size={24}>
       <path d="M12 16V4" />
       <path d="m7 9 5-5 5 5" />
@@ -89,9 +90,9 @@ const Icon = ({ dragging }: UploaderIconSlotProps) => (
  * The zone's resting copy: a title, and a hint naming the limits.
  */
 const Empty = ({ title, hint, dragging }: UploaderEmptySlotProps) => (
-  <span className="sfu__copy">
-    <span className="sfu__title">{title}</span>
-    {!dragging && <span className="sfu__hint">{hint}</span>}
+  <span className={classes.copy}>
+    <span className={classes.title}>{title}</span>
+    {!dragging && <span className={classes.hint}>{hint}</span>}
   </span>
 );
 
@@ -103,7 +104,7 @@ const Empty = ({ title, hint, dragging }: UploaderEmptySlotProps) => (
 const Trigger = ({ onClick, disabled, children }: UploaderTriggerSlotProps) => (
   <button
     type="button"
-    className="sfu__browse"
+    className={classes.browse}
     disabled={disabled}
     onClick={(event) => {
       /** The zone itself opens the dialog; without this it would open twice. */
@@ -121,7 +122,7 @@ const Trigger = ({ onClick, disabled, children }: UploaderTriggerSlotProps) => (
  * `<ul class="sfu__list">`.
  */
 const List = ({ className, ...props }: UploaderListSlotProps) => (
-  <ul className={cx("sfu__list", className)} {...props} />
+  <ul className={cx(classes.list, className)} {...props} />
 );
 
 /**
@@ -130,7 +131,7 @@ const List = ({ className, ...props }: UploaderListSlotProps) => (
  * `<li class="sfu__item">`.
  */
 const Item = ({ className, ...props }: UploaderItemSlotProps) => (
-  <li className={cx("sfu__item", className)} {...props} />
+  <li className={cx(classes.item, className)} {...props} />
 );
 
 /**
@@ -141,9 +142,9 @@ const Item = ({ className, ...props }: UploaderItemSlotProps) => (
 const Thumbnail = ({ src, isImage, alt }: ThumbnailSlotProps) => {
   const [broken, setBroken] = useState(false);
   return (
-  <span className="sfu__thumb">
+  <span className={classes.thumb}>
     {isImage && src && !broken ? (
-      <img className="sfu__thumb-img" src={src} alt={alt} onError={() => setBroken(true)} />
+      <img className={classes.thumbImg} src={src} alt={alt} onError={() => setBroken(true)} />
     ) : (
       <Glyph>
         <path d="M14 3v4a1 1 0 0 0 1 1h4" />
@@ -160,13 +161,13 @@ const Thumbnail = ({ src, isImage, alt }: ThumbnailSlotProps) => {
  * The name, then the size and status — or the error when there is one.
  */
 const ItemMeta = ({ item, size, status }: ItemMetaSlotProps) => (
-  <span className="sfu__meta">
-    <span className="sfu__name" title={item.name}>
+  <span className={classes.meta}>
+    <span className={classes.name} title={item.name}>
       {item.name}
     </span>
-    <span className="sfu__sub">
+    <span className={classes.sub}>
       {item.status === "error" ? (
-        <span className="sfu__error">{item.error}</span>
+        <span className={classes.error}>{item.error}</span>
       ) : (
         <>
           {size && <span>{size}</span>}
@@ -185,7 +186,7 @@ const ItemMeta = ({ item, size, status }: ItemMetaSlotProps) => (
  */
 const Progress = ({ value, active, ...aria }: UploaderProgressSlotProps) => (
   <span
-    className="sfu__progress"
+    className={classes.progress}
     role="progressbar"
     aria-valuenow={Math.round(value)}
     aria-valuemin={0}
@@ -193,7 +194,7 @@ const Progress = ({ value, active, ...aria }: UploaderProgressSlotProps) => (
     data-active={active || undefined}
     {...aria}
   >
-    <span className="sfu__progress-bar" style={{ inlineSize: `${Math.max(0, Math.min(100, value))}%` }} />
+    <span className={classes.progressBar} style={{ inlineSize: `${Math.max(0, Math.min(100, value))}%` }} />
   </span>
 );
 
@@ -205,7 +206,7 @@ const Progress = ({ value, active, ...aria }: UploaderProgressSlotProps) => (
 const Action = ({ action, onClick, disabled, ...aria }: UploaderActionSlotProps) => (
   <button
     type="button"
-    className="sfu__action"
+    className={classes.action}
     data-action={action}
     disabled={disabled}
     onClick={(event) => {
@@ -244,13 +245,13 @@ const Action = ({ action, onClick, disabled, ...aria }: UploaderActionSlotProps)
  * the host app decides how loud errors are.
  */
 const Rejections = ({ rejections, onDismiss, dismissLabel }: RejectionsSlotProps) => (
-  <div className="sfu__rejections" role="status" aria-live="polite">
+  <div className={classes.rejections} role="status" aria-live="polite">
     <ul>
       {rejections.map((rejection, index) => (
         <li key={`${rejection.file.name}-${index}`}>{rejection.message}</li>
       ))}
     </ul>
-    <button type="button" className="sfu__action" onClick={onDismiss} aria-label={dismissLabel}>
+    <button type="button" className={classes.action} onClick={onDismiss} aria-label={dismissLabel}>
       <Glyph size={16}>
         <path d="M18 6 6 18" />
         <path d="m6 6 12 12" />

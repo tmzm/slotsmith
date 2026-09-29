@@ -3,6 +3,7 @@
 import type { Ref } from "react";
 import { mergeProps, mergeRefs } from "../shared/mergeProps";
 import { useAutocompleteContext } from "./slots/context";
+import { classes } from "./classes";
 
 export { mergeProps, mergeRefs };
 
@@ -58,7 +59,7 @@ export function AutocompleteTrigger(props: Record<string, unknown> = {}) {
         { ...props, ref: mergeRefs(triggerRef, position.setTrigger) },
       )}
     >
-      <span className="sac__body">
+      <span className={classes.body}>
         {multiple ? (
           values.length === 0 ? (
             <C.Value placeholder={placeholder} empty />
@@ -78,7 +79,7 @@ export function AutocompleteTrigger(props: Record<string, unknown> = {}) {
                   />
                 );
               })}
-              {overflow > 0 ? <span className="sac__overflow">{labels.more(overflow)}</span> : null}
+              {overflow > 0 ? <span className={classes.overflow}>{labels.more(overflow)}</span> : null}
             </>
           )
         ) : (
@@ -287,7 +288,7 @@ export function AutocompleteLiveRegion() {
   const message = !open || status !== "ready" ? "" : labels.results(options.length);
 
   return (
-    <span className="sac__sr-only" role="status" aria-live="polite">
+    <span className={classes.srOnly} role="status" aria-live="polite">
       {message}
     </span>
   );

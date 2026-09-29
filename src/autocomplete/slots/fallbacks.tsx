@@ -1,4 +1,5 @@
 import type { AutocompleteComponents, AutocompleteLabels } from "./types";
+import { classes } from "../classes";
 
 /**
  * Class names
@@ -18,7 +19,7 @@ const cx = (...values: (string | false | null | undefined)[]): string | undefine
  * The closed / open affordance on the trigger.
  */
 const ChevronIcon = () => (
-  <svg className="sac__chevron" viewBox="0 0 24 24" aria-hidden="true">
+  <svg className={classes.chevron} viewBox="0 0 24 24" aria-hidden="true">
     <path d="m6 9 6 6 6-6" />
   </svg>
 );
@@ -29,7 +30,7 @@ const ChevronIcon = () => (
  * The mark on a selected option.
  */
 const CheckIcon = () => (
-  <svg className="sac__tick" viewBox="0 0 24 24" aria-hidden="true">
+  <svg className={classes.tick} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M20 6 9 17l-5-5" />
   </svg>
 );
@@ -40,7 +41,7 @@ const CheckIcon = () => (
  * Shared by the clear control and each tag's remove control.
  */
 const CrossIcon = () => (
-  <svg className="sac__cross" viewBox="0 0 24 24" aria-hidden="true">
+  <svg className={classes.cross} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M18 6 6 18M6 6l12 12" />
   </svg>
 );
@@ -51,7 +52,7 @@ const CrossIcon = () => (
  * The create row's affordance.
  */
 const PlusIcon = () => (
-  <svg className="sac__plus" viewBox="0 0 24 24" aria-hidden="true">
+  <svg className={classes.plus} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M12 5v14M5 12h14" />
   </svg>
 );
@@ -70,21 +71,21 @@ const PlusIcon = () => (
  * ```
  */
 export const autocompleteFallbacks: AutocompleteComponents = {
-  Root: ({ className, ...props }) => <div className={cx("sac", className)} {...props} />,
+  Root: ({ className, ...props }) => <div className={cx(classes.root, className)} {...props} />,
 
-  Trigger: ({ className, ...props }) => <div className={cx("sac__trigger", className)} {...props} />,
+  Trigger: ({ className, ...props }) => <div className={cx(classes.trigger, className)} {...props} />,
 
   Value: ({ label, placeholder, empty }) => (
-    <span className={cx("sac__value", empty && "sac__value--empty")}>{empty ? placeholder : label}</span>
+    <span className={cx(classes.value, empty && classes.valueEmpty)}>{empty ? placeholder : label}</span>
   ),
 
   Tag: ({ label, onRemove, removeLabel, disabled }) => (
-    <span className="sac__tag">
-      <span className="sac__tag-label">{label}</span>
+    <span className={classes.tag}>
+      <span className={classes.tagLabel}>{label}</span>
       {!disabled && (
         <button
           type="button"
-          className="sac__tag-remove"
+          className={classes.tagRemove}
           aria-label={removeLabel}
           onClick={(event) => {
             event.stopPropagation();
@@ -100,7 +101,7 @@ export const autocompleteFallbacks: AutocompleteComponents = {
   Clear: ({ onClick, ...aria }) => (
     <button
       type="button"
-      className="sac__clear"
+      className={classes.clear}
       onClick={(event) => {
         event.stopPropagation();
         onClick();
@@ -112,34 +113,34 @@ export const autocompleteFallbacks: AutocompleteComponents = {
   ),
 
   Indicator: ({ loading }) =>
-    loading ? <span className="sac__spinner" aria-hidden="true" /> : <ChevronIcon />,
+    loading ? <span className={classes.spinner} aria-hidden="true" /> : <ChevronIcon />,
 
-  Popup: ({ className, ...props }) => <div className={cx("sac__popup", className)} {...props} />,
+  Popup: ({ className, ...props }) => <div className={cx(classes.popup, className)} {...props} />,
 
-  Search: ({ className, ...props }) => <input className={cx("sac__search", className)} {...props} />,
+  Search: ({ className, ...props }) => <input className={cx(classes.search, className)} {...props} />,
 
-  List: ({ className, ...props }) => <ul className={cx("sac__list", className)} {...props} />,
+  List: ({ className, ...props }) => <ul className={cx(classes.list, className)} {...props} />,
 
-  Option: ({ className, ...props }) => <li className={cx("sac__option", className)} {...props} />,
+  Option: ({ className, ...props }) => <li className={cx(classes.option, className)} {...props} />,
 
-  OptionLabel: ({ label }) => <span className="sac__label">{label}</span>,
+  OptionLabel: ({ label }) => <span className={classes.label}>{label}</span>,
 
   Check: ({ selected }) => (selected ? <CheckIcon /> : null),
 
-  Empty: ({ message }) => <li className="sac__message">{message}</li>,
+  Empty: ({ message }) => <li className={classes.message}>{message}</li>,
 
   Loading: ({ message }) => (
-    <li className="sac__message">
-      <span className="sac__spinner" aria-hidden="true" />
+    <li className={classes.message}>
+      <span className={classes.spinner} aria-hidden="true" />
       {message}
     </li>
   ),
 
   Error: ({ error, onRetry, retryLabel }) => (
-    <li className="sac__error">
+    <li className={classes.error}>
       <span>{error}</span>
       {onRetry ? (
-        <button type="button" className="sac__button" onClick={onRetry}>
+        <button type="button" className={classes.button} onClick={onRetry}>
           {retryLabel}
         </button>
       ) : null}
@@ -147,8 +148,8 @@ export const autocompleteFallbacks: AutocompleteComponents = {
   ),
 
   Create: ({ onCreate, loading, label }) => (
-    <li className="sac__create">
-      <button type="button" className="sac__create-button" onClick={onCreate} disabled={loading}>
+    <li className={classes.create}>
+      <button type="button" className={classes.createButton} onClick={onCreate} disabled={loading}>
         <PlusIcon />
         {label}
       </button>
@@ -156,9 +157,9 @@ export const autocompleteFallbacks: AutocompleteComponents = {
   ),
 
   LoadMore: ({ ref, onLoadMore, loading, label }) => (
-    <li ref={ref} className="sac__more">
-      <button type="button" className="sac__more-button" onClick={onLoadMore} disabled={loading}>
-        {loading ? <span className="sac__spinner" aria-hidden="true" /> : null}
+    <li ref={ref} className={classes.more}>
+      <button type="button" className={classes.moreButton} onClick={onLoadMore} disabled={loading}>
+        {loading ? <span className={classes.spinner} aria-hidden="true" /> : null}
         {label}
       </button>
     </li>
