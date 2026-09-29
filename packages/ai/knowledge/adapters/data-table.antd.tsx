@@ -29,7 +29,7 @@ import {
   type SortIconSlotProps,
   type SortTriggerSlotProps,
   type TableSlotProps,
-} from "../../../index";
+} from "slotsmith/data-table";
 
 /**
  * Ant Design table parts

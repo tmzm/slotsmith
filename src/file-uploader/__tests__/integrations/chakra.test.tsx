@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { FileUploaderProps } from "../../index";
 import { deferredUpload, dropzone, fileInput, itemNamed, items, makeFile } from "../builders";
-import { chakraComponents } from "./chakra/components";
+import { chakraFileUploader } from "./chakra/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -25,7 +25,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => (
  * @returns A user-event instance.
  */
 const renderChakraUploader = (props: Partial<FileUploaderProps> = {}) =>
-  renderIntegration(chakraComponents, props, Wrapper);
+  renderIntegration(chakraFileUploader, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 

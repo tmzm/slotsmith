@@ -19,10 +19,12 @@ export type ComponentName = "data-table" | "autocomplete" | "file-uploader" | "d
 /**
  * Supported libraries
  *
- * The component libraries an adapter can be asked for. Not every component
- * has an adapter for every library; the index records which exist.
+ * The component libraries an adapter is generated for, one per integration
+ * skin the library tests against. `radix` is Radix Themes, the styled
+ * library; the bare Radix primitives are what shadcn/ui is built on, so an
+ * app using them is served by `shadcn`.
  */
-export const LIBRARIES = ["mui", "shadcn", "chakra", "radix"] as const;
+export const LIBRARIES = ["mui", "shadcn", "chakra", "antd", "radix"] as const;
 
 /**
  * Library
@@ -225,7 +227,8 @@ export interface GuideSummary {
 /**
  * Adapter reference
  *
- * One ready-made slot map for a component library.
+ * One ready-made slot map for a component library, generated from the
+ * integration skin the library is tested with.
  */
 export interface AdapterRef {
   /** The component it adapts. */
@@ -234,6 +237,8 @@ export interface AdapterRef {
   library: Library;
   /** Its file name under `knowledge/adapters/`. */
   file: string;
+  /** The packages it imports, other than `react` and `slotsmith`, e.g. `["@mui/material"]`. */
+  peers: string[];
 }
 
 /**

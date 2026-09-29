@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
-import { shadcnComponents } from "./shadcn/components";
+import { shadcnDatePicker } from "./shadcn/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -14,7 +14,7 @@ import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./share
  * @returns A user-event instance.
  */
 const renderShadcnDatePicker = (props: Partial<DatePickerProps> = {}) =>
-  renderIntegration(shadcnComponents, props);
+  renderIntegration(shadcnDatePicker, props);
 
 beforeAll(stubBrowserApis);
 freezeToday();

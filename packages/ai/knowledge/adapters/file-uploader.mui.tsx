@@ -1,9 +1,10 @@
 /**
- * FileUploader for MUI v7
+ * FileUploader for MUI
  *
- * A complete `components` map for the slotsmith file uploader, built from
- * MUI v7 primitives. Copy the file, keep the parts you want, and pass
- * the map as `components={muiUploader}`; every slot left out keeps its fallback.
+ * A `components` map that renders the slotsmith file uploader with MUI
+ * primitives, tested against MUI v7. Copy the file, keep the parts you want,
+ * and pass the map as `components={muiFileUploader}`; every slot left out
+ * keeps its fallback.
  */
 import Alert from "@mui/material/Alert";
 import Avatar from "@mui/material/Avatar";
@@ -16,6 +17,7 @@ import ListItem from "@mui/material/ListItem";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
 import type {
   DropzoneSlotProps,
   FileUploaderComponents,
@@ -33,22 +35,31 @@ import type {
 } from "slotsmith/file-uploader";
 
 /**
- * Glyph
+ * MUI file uploader parts
  *
- * A small inline icon, so the adapter doesn't pull in @mui/icons-material.
+ * Built from MUI v7 primitives — `Paper`, `IconButton`, `Avatar`, `List`,
+ * `ListItem`, `LinearProgress`, `Chip`-adjacent `Alert` — not from MUI's own
+ * upload component, which does not exist as a shared primitive in the library.
  */
-const Glyph = ({ path, size = 20 }: { path: React.ReactNode; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+
+/** A small inline icon, so the skin doesn't pull in `@mui/icons-material`. */
+const Glyph = ({ path, size = 20 }: { path: ReactNode; size?: number }) => (
+  <Box
+    component="svg"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    sx={{ width: size, height: size, fill: "none", stroke: "currentColor", strokeWidth: 1.8 }}
+  >
     {path}
-  </svg>
+  </Box>
 );
 
 /**
  * MUI dropzone
  *
- * An outlined Paper that switches to a solid, tinted border while dragging.
+ * An outlined `Paper` that switches to a solid, tinted border while dragging.
  */
-const MuiDropzone = ({ style, ...props }: DropzoneSlotProps) => (
+const MuiDropzone = (props: DropzoneSlotProps) => (
   <Paper
     variant="outlined"
     sx={{
@@ -65,7 +76,6 @@ const MuiDropzone = ({ style, ...props }: DropzoneSlotProps) => (
       "&[data-dragging]": { borderStyle: "solid", borderColor: "primary.main", bgcolor: "action.selected" },
       "&[data-disabled]": { cursor: "not-allowed", opacity: 0.55 },
     }}
-    style={style}
     {...props}
   />
 );
@@ -73,7 +83,7 @@ const MuiDropzone = ({ style, ...props }: DropzoneSlotProps) => (
 /**
  * MUI item
  *
- * A ListItem laid out as a grid so the progress bar can span it.
+ * A `ListItem` laid out as a grid so the progress bar can span it.
  */
 const MuiItem = (props: UploaderItemSlotProps) => (
   <ListItem
@@ -93,11 +103,13 @@ const MuiItem = (props: UploaderItemSlotProps) => (
 /**
  * MUI thumbnail
  *
- * A rounded Avatar holding the preview, or a file glyph.
+ * A rounded `Avatar` holding the preview, or a file glyph.
  */
 const MuiThumbnail = ({ src, isImage, alt }: ThumbnailSlotProps) => (
   <Avatar variant="rounded" src={isImage && src ? src : undefined} alt={alt} sx={{ width: 40, height: 40 }}>
-    {(!isImage || !src) && <Glyph path={<path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" />} />}
+    {(!isImage || !src) && (
+      <Glyph path={<path d="M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" />} />
+    )}
   </Avatar>
 );
 
@@ -111,7 +123,12 @@ const MuiItemMeta = ({ item, size, status }: ItemMetaSlotProps) => (
     <Typography variant="body2" noWrap>
       {item.name}
     </Typography>
-    <Typography variant="caption" color={item.status === "error" ? "error" : "text.secondary"} noWrap component="p">
+    <Typography
+      variant="caption"
+      color={item.status === "error" ? "error" : "text.secondary"}
+      noWrap
+      component="p"
+    >
       {item.status === "error" ? item.error : [size, status].filter(Boolean).join(" · ")}
     </Typography>
   </Box>
@@ -122,10 +139,11 @@ const MuiItemMeta = ({ item, size, status }: ItemMetaSlotProps) => (
  *
  * `LinearProgress` in determinate mode, spanning the row.
  */
-const MuiProgress = ({ value, ...aria }: UploaderProgressSlotProps) => (
+const MuiProgress = ({ value, active, ...aria }: UploaderProgressSlotProps) => (
   <LinearProgress
     variant="determinate"
     value={Math.max(0, Math.min(100, value))}
+    data-active={active || undefined}
     sx={{ gridColumn: "1 / -1", borderRadius: 999 }}
     {...aria}
   />
@@ -163,16 +181,25 @@ const MuiAction = ({ action, onClick, disabled, ...aria }: UploaderActionSlotPro
 );
 
 /**
- * MUI uploader components
+ * MUI components
  *
- * The slot map an MUI project would pass to `<FileUploader>`.
+ * The slot map an MUI v7 project would pass as `components`.
  */
-export const muiUploader: Partial<FileUploaderComponents> = {
+export const muiFileUploader: Partial<FileUploaderComponents> = {
   Root: (props: UploaderRootSlotProps) => <Stack spacing={1.5} {...props} />,
   Dropzone: MuiDropzone,
   Icon: ({ dragging }: UploaderIconSlotProps) => (
     <Box sx={{ color: dragging ? "primary.main" : "text.secondary", display: "flex" }}>
-      <Glyph size={24} path={<><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></>} />
+      <Glyph
+        size={24}
+        path={
+          <>
+            <path d="M12 16V4" />
+            <path d="m7 9 5-5 5 5" />
+            <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+          </>
+        }
+      />
     </Box>
   ),
   Empty: ({ title, hint }: UploaderEmptySlotProps) => (
@@ -207,7 +234,7 @@ export const muiUploader: Partial<FileUploaderComponents> = {
   Rejections: ({ rejections, onDismiss, dismissLabel }: RejectionsSlotProps) => (
     <Alert severity="error" onClose={onDismiss} closeText={dismissLabel} role="status">
       {rejections.map((rejection, index) => (
-        <div key={index}>{rejection.message}</div>
+        <div key={`${rejection.file.name}-${index}`}>{rejection.message}</div>
       ))}
     </Alert>
   ),

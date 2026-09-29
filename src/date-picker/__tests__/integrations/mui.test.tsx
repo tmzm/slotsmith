@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
-import { muiComponents } from "./mui/components";
+import { muiDatePicker } from "./mui/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -24,7 +24,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <ThemeProvider theme=
  * @returns A user-event instance.
  */
 const renderMuiDatePicker = (props: Partial<DatePickerProps> = {}) =>
-  renderIntegration(muiComponents, props, Wrapper);
+  renderIntegration(muiDatePicker, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 freezeToday();

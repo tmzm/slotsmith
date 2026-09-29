@@ -1,3 +1,14 @@
+/**
+ * Autocomplete for shadcn/ui
+ *
+ * A `components` map that renders the slotsmith autocomplete with shadcn/ui
+ * primitives, written for shadcn/ui on Tailwind CSS v4. Copy the file, keep
+ * the parts you want, and pass the map as `components={shadcnAutocomplete}`;
+ * every slot left out keeps its fallback.
+ *
+ * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
+ * shadcn/ui files.
+ */
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -307,7 +318,7 @@ const ShadcnLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMor
  * primitives where it has them, and the popover and command class sets for
  * the parts it styles by hand.
  */
-export const shadcnComponents: Partial<AutocompleteComponents> = {
+export const shadcnAutocomplete: Partial<AutocompleteComponents> = {
   Root: ShadcnRoot,
   Trigger: ShadcnTrigger,
   Value: ShadcnValue,

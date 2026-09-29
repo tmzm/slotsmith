@@ -1,3 +1,11 @@
+/**
+ * Autocomplete for MUI
+ *
+ * A `components` map that renders the slotsmith autocomplete with MUI
+ * primitives, tested against MUI v7. Copy the file, keep the parts you want,
+ * and pass the map as `components={muiAutocomplete}`; every slot left out
+ * keeps its fallback.
+ */
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -295,7 +303,7 @@ const MuiLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMoreSl
  * primitives — `Paper`, `MenuItem`, `Chip`, `InputBase` — rather than from
  * MUI's own `Autocomplete`, which is a competing engine.
  */
-export const muiComponents: Partial<AutocompleteComponents> = {
+export const muiAutocomplete: Partial<AutocompleteComponents> = {
   Root: MuiRoot,
   Trigger: MuiTrigger,
   Value: MuiValue,

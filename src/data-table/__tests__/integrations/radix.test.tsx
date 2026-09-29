@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
-import { radixComponents } from "./radix/components";
+import { radixDataTable } from "./radix/components";
 import {
   bodyRows,
   dragHandles,
@@ -49,7 +49,7 @@ const RtlWrapper = ({ children }: { children: ReactNode }) => (
 function renderRadixTable(props: Partial<DataTableProps<Employee>> = {}, wrapper = Wrapper) {
   const user = userEvent.setup();
   render(
-    <DataTable<Employee> data={employees(23)} columns={employeeColumns} components={radixComponents} {...props} />,
+    <DataTable<Employee> data={employees(23)} columns={employeeColumns} components={radixDataTable} {...props} />,
     { wrapper },
   );
   return user;
@@ -179,7 +179,7 @@ describe("Radix Themes v3", () => {
   it("expands a tree row from an IconButton", async () => {
     const user = userEvent.setup();
     const lead = { ...employees(1)[0]!, reports: employees(3).slice(1) };
-    render(<DataTable<Employee> data={[lead]} columns={employeeColumns} components={radixComponents} getSubRows={(row) => row.reports} />, {
+    render(<DataTable<Employee> data={[lead]} columns={employeeColumns} components={radixDataTable} getSubRows={(row) => row.reports} />, {
       wrapper: Wrapper,
     });
     const toggle = screen.getByRole("button", { name: "Expand row" });
@@ -192,7 +192,7 @@ describe("Radix Themes v3", () => {
   it("reorders rows by keyboard with a DragHandleDots2Icon drag handle", async () => {
     const onMove = vi.fn();
     const user = userEvent.setup();
-    render(<ReorderableEmployees components={radixComponents} initial={employees(3)} onMove={onMove} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={radixDataTable} initial={employees(3)} onMove={onMove} />, { wrapper: Wrapper });
     expect(dragHandles()[0]).toHaveClass("rt-IconButton", "rt-variant-ghost");
     expect(dragHandles()[0]!.querySelector("svg")).not.toBeNull();
     await keyboardReorder(user, onMove);
@@ -200,7 +200,7 @@ describe("Radix Themes v3", () => {
   });
 
   it("lifts a row on pointer down and disables a lone row’s handle", () => {
-    render(<ReorderableEmployees components={radixComponents} initial={employees(3)} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={radixDataTable} initial={employees(3)} />, { wrapper: Wrapper });
     fireEvent.pointerDown(dragHandles()[1]!, { button: 0, pointerId: 1, clientY: 0 });
     expect(bodyRows()[1]).toHaveAttribute("data-dragging", "");
     expect(dragHandles()[1]!.style.cursor).toBe("grabbing");
@@ -208,7 +208,7 @@ describe("Radix Themes v3", () => {
     expect(bodyRows()[1]).not.toHaveAttribute("data-dragging");
 
     const lone = { ...employees(1)[0]!, reports: employees(3).slice(1, 2) };
-    render(<ReorderableEmployees components={radixComponents} initial={[lone, ...employees(3).slice(2)]} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={radixDataTable} initial={[lone, ...employees(3).slice(2)]} />, { wrapper: Wrapper });
     expect(within(screen.getAllByRole("table")[1]!).getAllByRole("button", { name: "Reorder row" })[1]).toBeDisabled();
   });
 
@@ -217,7 +217,7 @@ describe("Radix Themes v3", () => {
     const user = userEvent.setup();
     const [lead, first, second, other] = employees(4);
     const tree = [{ ...lead!, reports: [first!, second!] }, other!];
-    render(<ReorderableEmployees components={radixComponents} initial={tree} onMove={onMove} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={radixDataTable} initial={tree} onMove={onMove} />, { wrapper: Wrapper });
     // Rows: Employee 01, its reports 02 and 03, then Employee 04.
 
     act(() => dragHandles()[0]!.focus());
@@ -256,7 +256,7 @@ describe("Radix Themes v3", () => {
         <DataTable<Employee>
           data={[lead, ...employees(23).slice(2)]}
           columns={employeeColumns}
-          components={radixComponents}
+          components={radixDataTable}
           getRowId={(row) => row.id}
           getSubRows={(row) => row.reports}
           enableRowReorder

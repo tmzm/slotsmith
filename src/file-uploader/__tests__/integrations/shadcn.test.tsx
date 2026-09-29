@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { FileUploaderProps } from "../../index";
 import { deferredUpload, dropzone, fileInput, itemNamed, items, makeFile } from "../builders";
-import { shadcnComponents } from "./shadcn/components";
+import { shadcnFileUploader } from "./shadcn/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -14,7 +14,7 @@ import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./share
  * @param props - The component's props.
  * @returns A user-event instance.
  */
-const renderShadcnUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(shadcnComponents, props);
+const renderShadcnUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(shadcnFileUploader, props);
 
 beforeAll(stubBrowserApis);
 
@@ -76,7 +76,7 @@ describe("shadcn/ui", () => {
     const Form = ({ children }: { children: ReactNode }) => (
       <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
     );
-    const user = renderIntegration(shadcnComponents, { maxSize: 20 }, Form);
+    const user = renderIntegration(shadcnFileUploader, { maxSize: 20 }, Form);
 
     await user.click(screen.getByRole("button", { name: "Browse" }));
     await user.upload(fileInput(), makeFile("kept.png"));

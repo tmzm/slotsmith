@@ -1,3 +1,11 @@
+/**
+ * Autocomplete for Chakra UI
+ *
+ * A `components` map that renders the slotsmith autocomplete with Chakra UI
+ * primitives, tested against Chakra UI v3. Copy the file, keep the parts you
+ * want, and pass the map as `components={chakraAutocomplete}`; every slot left
+ * out keeps its fallback.
+ */
 import { Box, Button, EmptyState, IconButton, Input, List, Span, Spinner, Tag, Text } from "@chakra-ui/react";
 import type {
   AutocompleteCheckSlotProps,
@@ -269,7 +277,7 @@ const ChakraLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMor
  *
  * The slot map a Chakra UI v3 project would pass as `components`.
  */
-export const chakraComponents: Partial<AutocompleteComponents> = {
+export const chakraAutocomplete: Partial<AutocompleteComponents> = {
   Root: ChakraRoot,
   Trigger: ChakraTrigger,
   Value: ChakraValue,

@@ -29,7 +29,7 @@ import type {
   AutocompleteTagSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
-} from "../../../index";
+} from "slotsmith/autocomplete";
 
 /**
  * Ant Design autocomplete parts

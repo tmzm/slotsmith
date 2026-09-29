@@ -70,7 +70,7 @@ export function failOnReactWarnings() {
  * @example
  * ```tsx
  * const renderMuiAutocomplete = (props: Partial<AutocompleteProps<Brand>> = {}) =>
- *   renderIntegration(muiComponents, props, Wrapper);
+ *   renderIntegration(muiAutocomplete, props, Wrapper);
  * ```
  */
 export function renderIntegration(

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
-import { antdComponents } from "./antd/components";
+import { antdDatePicker } from "./antd/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -50,7 +50,7 @@ function cssColor(color: string) {
  * @returns A user-event instance.
  */
 const renderAntdDatePicker = (props: Partial<DatePickerProps> = {}, wrapper = Wrapper) =>
-  renderIntegration(antdComponents, props, wrapper);
+  renderIntegration(antdDatePicker, props, wrapper);
 
 beforeAll(stubBrowserApis);
 freezeToday();

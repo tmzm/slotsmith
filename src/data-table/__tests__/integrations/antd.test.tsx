@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
-import { antdComponents } from "./antd/components";
+import { antdDataTable } from "./antd/components";
 import {
   bodyRows,
   dragHandles,
@@ -65,7 +65,7 @@ function cssColor(color: string) {
 function renderAntdTable(props: Partial<DataTableProps<Employee>> = {}, wrapper = Wrapper) {
   const user = userEvent.setup();
   render(
-    <DataTable<Employee> data={employees(23)} columns={employeeColumns} components={antdComponents} {...props} />,
+    <DataTable<Employee> data={employees(23)} columns={employeeColumns} components={antdDataTable} {...props} />,
     { wrapper },
   );
   return user;
@@ -198,7 +198,7 @@ describe("Ant Design v6 (admin panel)", () => {
   it("expands a tree row from an Ant Button", async () => {
     const user = userEvent.setup();
     const lead = { ...employees(1)[0]!, reports: employees(3).slice(1) };
-    render(<DataTable<Employee> data={[lead]} columns={employeeColumns} components={antdComponents} getSubRows={(row) => row.reports} />, {
+    render(<DataTable<Employee> data={[lead]} columns={employeeColumns} components={antdDataTable} getSubRows={(row) => row.reports} />, {
       wrapper: Wrapper,
     });
     const toggle = screen.getByRole("button", { name: "Expand row" });
@@ -211,7 +211,7 @@ describe("Ant Design v6 (admin panel)", () => {
   it("reorders rows by keyboard with a HolderOutlined drag handle", async () => {
     const onMove = vi.fn();
     const user = userEvent.setup();
-    render(<ReorderableEmployees components={antdComponents} initial={employees(3)} onMove={onMove} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={antdDataTable} initial={employees(3)} onMove={onMove} />, { wrapper: Wrapper });
     expect(dragHandles()[0]).toHaveClass("ant-btn");
     expect(within(dragHandles()[0]!).getByRole("img", { name: "holder" })).toBeInTheDocument();
     await keyboardReorder(user, onMove);
@@ -219,14 +219,14 @@ describe("Ant Design v6 (admin panel)", () => {
   });
 
   it("lifts a row on pointer down and disables a lone row’s handle", () => {
-    render(<ReorderableEmployees components={antdComponents} initial={employees(3)} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={antdDataTable} initial={employees(3)} />, { wrapper: Wrapper });
     fireEvent.pointerDown(dragHandles()[1]!, { button: 0, pointerId: 1, clientY: 0 });
     expect(bodyRows()[1]).toHaveAttribute("data-dragging", "");
     fireEvent.pointerCancel(window, { pointerId: 1 });
     expect(bodyRows()[1]).not.toHaveAttribute("data-dragging");
 
     const lone = { ...employees(1)[0]!, reports: employees(3).slice(1, 2) };
-    render(<ReorderableEmployees components={antdComponents} initial={[lone, ...employees(3).slice(2)]} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={antdDataTable} initial={[lone, ...employees(3).slice(2)]} />, { wrapper: Wrapper });
     expect(within(screen.getAllByRole("table")[1]!).getAllByRole("button", { name: "Reorder row" })[1]).toBeDisabled();
   });
 
@@ -235,7 +235,7 @@ describe("Ant Design v6 (admin panel)", () => {
     const user = userEvent.setup();
     const [lead, first, second, other] = employees(4);
     const tree = [{ ...lead!, reports: [first!, second!] }, other!];
-    render(<ReorderableEmployees components={antdComponents} initial={tree} onMove={onMove} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={antdDataTable} initial={tree} onMove={onMove} />, { wrapper: Wrapper });
     // Rows: Employee 01, its reports 02 and 03, then Employee 04.
 
     act(() => dragHandles()[0]!.focus());

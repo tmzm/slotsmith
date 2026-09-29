@@ -24,12 +24,12 @@ import type {
   UploaderProgressSlotProps,
   UploaderRootSlotProps,
   UploaderTriggerSlotProps,
-} from "../../../index";
-import { Alert } from "./ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
-import { Progress } from "./ui/progress";
-import { cn } from "./ui/utils";
+} from "slotsmith/file-uploader";
+import { Alert } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 /**
  * Shadcn file uploader parts

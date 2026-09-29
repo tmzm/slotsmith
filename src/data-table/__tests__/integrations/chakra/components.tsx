@@ -1,3 +1,11 @@
+/**
+ * DataTable for Chakra UI
+ *
+ * A `components` map that renders the slotsmith data table with Chakra UI
+ * primitives, tested against Chakra UI v3. Copy the file, keep the parts you
+ * want, and pass the map as `components={chakraDataTable}`; every slot left
+ * out keeps its fallback.
+ */
 import {
   Button,
   ButtonGroup,
@@ -216,7 +224,7 @@ const ChakraError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
  *
  * The slot map a Chakra UI v3 project styled as a dense admin table would pass as `components`.
  */
-export const chakraComponents: Partial<DataTableComponents> = {
+export const chakraDataTable: Partial<DataTableComponents> = {
   Table: ChakraTable,
   Head: ChakraHead,
   Body: ChakraBody,

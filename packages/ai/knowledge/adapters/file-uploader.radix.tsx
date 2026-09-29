@@ -25,7 +25,7 @@ import type {
   UploaderProgressSlotProps,
   UploaderRootSlotProps,
   UploaderTriggerSlotProps,
-} from "../../../index";
+} from "slotsmith/file-uploader";
 
 /**
  * Radix Themes file uploader parts

@@ -12,7 +12,7 @@
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, CrossCircledIcon } from "@radix-ui/react-icons";
 import { Button, Flex, IconButton, Text } from "@radix-ui/themes";
 import type { CSSProperties } from "react";
-import type { DatePickerComponents } from "../../../index";
+import type { DatePickerComponents } from "slotsmith/date-picker";
 
 /**
  * Radix Themes date picker parts

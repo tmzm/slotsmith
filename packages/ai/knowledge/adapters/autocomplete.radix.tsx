@@ -31,7 +31,7 @@ import type {
   AutocompleteTagSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
-} from "../../../index";
+} from "slotsmith/autocomplete";
 
 /**
  * Radix Themes autocomplete parts

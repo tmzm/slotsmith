@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
-import { chakraComponents } from "./chakra/components";
+import { chakraDatePicker } from "./chakra/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -25,7 +25,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => (
  * @returns A user-event instance.
  */
 const renderChakraDatePicker = (props: Partial<DatePickerProps> = {}) =>
-  renderIntegration(chakraComponents, props, Wrapper);
+  renderIntegration(chakraDatePicker, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 freezeToday();

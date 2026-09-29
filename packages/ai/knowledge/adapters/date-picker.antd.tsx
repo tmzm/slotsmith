@@ -10,7 +10,7 @@ import { CalendarOutlined, CloseCircleFilled, LeftOutlined, RightOutlined } from
 import { Button, Flex, Typography, theme } from "antd";
 import type { GlobalToken } from "antd";
 import type { CSSProperties } from "react";
-import type { DatePickerComponents } from "../../../index";
+import type { DatePickerComponents } from "slotsmith/date-picker";
 
 /**
  * Ant Design date picker parts

@@ -69,7 +69,7 @@ export function failOnReactWarnings() {
  * @example
  * ```tsx
  * const renderMuiDatePicker = (props: Partial<DatePickerProps> = {}) =>
- *   renderIntegration(muiComponents, props, Wrapper);
+ *   renderIntegration(muiDatePicker, props, Wrapper);
  * ```
  */
 export function renderIntegration(

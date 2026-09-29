@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
-import { chakraComponents, ChakraSpinnerSkeleton } from "./chakra/components";
+import { chakraDataTable, ChakraSpinnerSkeleton } from "./chakra/components";
 import {
   bodyRows,
   dragHandles,
@@ -39,7 +39,7 @@ function renderChakraTable(props: Partial<DataTableProps<Employee>> = {}) {
     <DataTable<Employee>
       data={employees(23)}
       columns={employeeColumns}
-      components={chakraComponents}
+      components={chakraDataTable}
       {...props}
     />,
     { wrapper: Wrapper },
@@ -98,7 +98,7 @@ describe("Chakra UI v3 (dense admin table)", () => {
   it("can show one spinner while loading, like a dense admin table", () => {
     renderChakraTable({
       loading: true,
-      components: { ...chakraComponents, Skeleton: ChakraSpinnerSkeleton },
+      components: { ...chakraDataTable, Skeleton: ChakraSpinnerSkeleton },
     });
     expect(document.querySelectorAll(".chakra-spinner")).toHaveLength(1);
   });
@@ -119,7 +119,7 @@ describe("Chakra UI v3 (dense admin table)", () => {
   it("reorders rows by keyboard with an IconButton drag handle", async () => {
     const onMove = vi.fn();
     const user = userEvent.setup();
-    render(<ReorderableEmployees components={chakraComponents} initial={employees(3)} onMove={onMove} />, {
+    render(<ReorderableEmployees components={chakraDataTable} initial={employees(3)} onMove={onMove} />, {
       wrapper: Wrapper,
     });
     expect(dragHandles()[0]).toHaveClass("chakra-button");

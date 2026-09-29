@@ -1,3 +1,11 @@
+/**
+ * DatePicker for Chakra UI
+ *
+ * A `components` map that renders the slotsmith date picker with Chakra UI
+ * primitives, tested against Chakra UI v3. Copy the file, keep the parts you
+ * want, and pass the map as `components={chakraDatePicker}`; every slot left
+ * out keeps its fallback.
+ */
 import { Box, Button, chakra, IconButton, NativeSelect, Text } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 import type { DatePickerComponents } from "../../../index";
@@ -78,7 +86,7 @@ const CaptionSelect = ({
   </NativeSelect.Root>
 );
 
-export const chakraComponents: Partial<DatePickerComponents> = {
+export const chakraDatePicker: Partial<DatePickerComponents> = {
   /** `colorPalette` is set once here; every part below inherits it. */
   Root: ({ className, ...props }) => (
     <Box className={className} colorPalette="blue" position="relative" width="full" maxWidth="18rem" {...props} />

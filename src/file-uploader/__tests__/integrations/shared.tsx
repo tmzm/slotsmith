@@ -69,7 +69,7 @@ export function failOnReactWarnings() {
  * @example
  * ```tsx
  * const renderMuiUploader = (props: Partial<FileUploaderProps> = {}) =>
- *   renderIntegration(muiComponents, props, Wrapper);
+ *   renderIntegration(muiFileUploader, props, Wrapper);
  * ```
  */
 export function renderIntegration(

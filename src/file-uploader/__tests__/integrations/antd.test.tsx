@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { FileUploaderProps } from "../../index";
 import { deferredUpload, dropzone, fileInput, itemNamed, items, makeFile } from "../builders";
-import { antdComponents } from "./antd/components";
+import { antdFileUploader } from "./antd/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -37,7 +37,7 @@ function cssColor(color: string) {
  * @param props - The component's props.
  * @returns A user-event instance.
  */
-const renderAntdUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(antdComponents, props, Wrapper);
+const renderAntdUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(antdFileUploader, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 

@@ -1,20 +1,23 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { ComponentKnowledge } from "../../src/knowledge/types.ts";
+import { LIBRARIES, type ComponentKnowledge } from "../../src/knowledge/types.ts";
+import { peersOf, toAdapterSource } from "../adapters.ts";
 import { componentFolders, DEFAULT_OPTIONS, generateKnowledge, type GeneratedKnowledge } from "../generate.ts";
 
 /**
  * Knowledge drift
  *
- * The knowledge is generated, but three things around it are written by
- * hand: the guides, the adapters and the prop groups. These tests fail as
- * soon as the library source moves away from any of them.
+ * The knowledge is generated, but two things around it are written by hand:
+ * the guides and the prop groups. The adapters are generated from the tested
+ * integration skins. These tests fail as soon as the library source moves
+ * away from any of them.
  */
 
 const srcDir = join(DEFAULT_OPTIONS.libraryRoot, "src");
 const knowledgeDir = DEFAULT_OPTIONS.knowledgeDir;
+const lf = (text: string) => text.replace(/\r\n/g, "\n");
 const pascal = (name: string) => name.replace(/(^|-)([a-z])/g, (_, __, letter: string) => letter.toUpperCase());
 
 /**
@@ -114,6 +117,41 @@ describe("knowledge drift", () => {
     expect(kinds("data-table")).toMatchObject({ Row: "element", Cell: "element", Checkbox: "widget", Pagination: "widget", DragHandle: "element" });
     expect(kinds("autocomplete")).toMatchObject({ Option: "element", OptionLabel: "widget" });
     expect(kinds("file-uploader")).toMatchObject({ Dropzone: "element", List: "element", Thumbnail: "widget" });
+  });
+
+  it("generates an adapter from the tested skin for every component and every library", () => {
+    for (const component of componentFolders(srcDir)) {
+      for (const library of LIBRARIES) {
+        const skinPath = join(srcDir, component, "__tests__", "integrations", library, "components.tsx");
+        const adapterPath = join(knowledgeDir, "adapters", `${component}.${library}.tsx`);
+        expect(existsSync(skinPath), `${component} has no ${library} skin`).toBe(true);
+        expect(existsSync(adapterPath), `${component}.${library}.tsx is missing`).toBe(true);
+        const expected = toAdapterSource(readFileSync(skinPath, "utf8"), component);
+        expect(lf(readFileSync(adapterPath, "utf8")), `${component}.${library}.tsx drifted from its skin`).toBe(lf(expected));
+      }
+    }
+    const files = readdirSync(join(knowledgeDir, "adapters"));
+    expect(files).toHaveLength(componentFolders(srcDir).length * LIBRARIES.length);
+  });
+
+  it("indexes every adapter with the packages it imports", () => {
+    expect(generated.index.adapters).toHaveLength(componentFolders(srcDir).length * LIBRARIES.length);
+    for (const adapter of generated.index.adapters) {
+      const source = readFileSync(join(knowledgeDir, "adapters", adapter.file), "utf8");
+      expect(adapter.peers, adapter.file).toEqual(peersOf(source));
+    }
+    const peers = (component: string, library: string) =>
+      generated.index.adapters.find((adapter) => adapter.component === component && adapter.library === library)!.peers;
+    expect(peers("data-table", "mui")).toEqual(["@mui/material"]);
+    expect(peers("date-picker", "shadcn")).toEqual([]);
+  });
+
+  it("names each adapter's map after its library and component", () => {
+    for (const adapter of generated.index.adapters) {
+      const source = readFileSync(join(knowledgeDir, "adapters", adapter.file), "utf8");
+      const name = `${adapter.library}${pascal(adapter.component)}`;
+      expect(source, adapter.file).toMatch(new RegExp(`^export const ${name}: Partial<${pascal(adapter.component)}Components> = \\{`, "m"));
+    }
   });
 
   it("only references slots that exist in every adapter", () => {

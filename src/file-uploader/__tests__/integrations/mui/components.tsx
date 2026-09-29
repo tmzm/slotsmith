@@ -1,3 +1,11 @@
+/**
+ * FileUploader for MUI
+ *
+ * A `components` map that renders the slotsmith file uploader with MUI
+ * primitives, tested against MUI v7. Copy the file, keep the parts you want,
+ * and pass the map as `components={muiFileUploader}`; every slot left out
+ * keeps its fallback.
+ */
 import Alert from "@mui/material/Alert";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
@@ -177,7 +185,7 @@ const MuiAction = ({ action, onClick, disabled, ...aria }: UploaderActionSlotPro
  *
  * The slot map an MUI v7 project would pass as `components`.
  */
-export const muiComponents: Partial<FileUploaderComponents> = {
+export const muiFileUploader: Partial<FileUploaderComponents> = {
   Root: (props: UploaderRootSlotProps) => <Stack spacing={1.5} {...props} />,
   Dropzone: MuiDropzone,
   Icon: ({ dragging }: UploaderIconSlotProps) => (

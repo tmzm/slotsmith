@@ -1,6 +1,6 @@
 # slotsmith-ai
 
-An [MCP](https://modelcontextprotocol.io) server that teaches AI coding agents the [slotsmith](https://www.npmjs.com/package/slotsmith) React components: every prop with its type and default, every slot with its props and fallback, ready-made adapters for MUI, shadcn/ui and Chakra UI, and setup notes per framework.
+An [MCP](https://modelcontextprotocol.io) server that teaches AI coding agents the [slotsmith](https://www.npmjs.com/package/slotsmith) React components: every prop with its type and default, every slot with its props and fallback, ready-made adapters for MUI, shadcn/ui, Chakra UI, Ant Design and Radix Themes, and setup notes per framework.
 
 Everything it knows is generated from the library's source, so the agent reads the real API instead of guessing prop names.
 
@@ -74,7 +74,7 @@ On Windows, if the client cannot start `npx` directly, use `"command": "cmd"` wi
 | `get_component_api` | `component` | Props grouped as in the docs, with types and defaults; controlled / uncontrolled pairs; labels |
 | `list_slots` | `component` | Every slot's name, kind (element or widget) and summary |
 | `get_slot` | `component`, `slot` | The props a slot receives, its fallback markup, and a snippet that replaces it |
-| `get_adapter_example` | `component`, `library` (`mui` \| `shadcn` \| `chakra` \| `radix`) | A ready-made `components` map, or the adapters that exist when there is none yet |
+| `get_adapter_example` | `component`, `library` (`mui` \| `shadcn` \| `chakra` \| `antd` \| `radix`) | A ready-made `components` map. `radix` is Radix Themes; an app on the bare Radix primitives uses `shadcn` |
 | `get_setup` | `component`, `framework?` (`next` \| `vite` \| `remix`), `virtual?` | The install command, imports, CSS import and framework notes |
 | `search_docs` | `query`, `limit?` | Ranked matches across props, slots, labels, guides and adapters, with anchors |
 
@@ -103,7 +103,7 @@ pnpm --filter slotsmith-ai test       # regenerates, then runs the tool and drif
 pnpm --filter slotsmith-ai build      # regenerates, then bundles dist/cli.js
 ```
 
-Hand-written inputs live next to the generated output: `knowledge/guides/*.md`, `knowledge/adapters/<component>.<library>.tsx` and `knowledge/groups.json`. The drift tests fail when a component has no guide, when a slot in the source is missing from the knowledge, when an adapter uses a slot that no longer exists, or when a prop is not placed in a group.
+Hand-written inputs live next to the generated output: `knowledge/guides/*.md` and `knowledge/groups.json`. The adapters in `knowledge/adapters/<component>.<library>.tsx` are generated from the integration skins the library is tested with (`src/<component>/__tests__/integrations/<library>/components.tsx`); edit the skin, never the adapter. The drift tests fail when a component has no guide, when a slot in the source is missing from the knowledge, when an adapter is missing or differs from its skin, when an adapter uses a slot that no longer exists, or when a prop is not placed in a group.
 
 ## License
 

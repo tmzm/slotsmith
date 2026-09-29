@@ -4,7 +4,8 @@
  * Reads the library source with the TypeScript compiler API and writes what
  * an agent needs to use each component: props with their types and defaults,
  * every slot with its props and fallback, and every label. The output lands
- * in `knowledge/components/` next to the hand-written guides and adapters,
+ * in `knowledge/components/` next to the hand-written guides, the adapters
+ * are generated from the tested integration skins into `knowledge/adapters/`,
  * and `knowledge/index.json` ties them together.
  *
  * Everything is derived from the source, so the knowledge cannot describe a
@@ -22,6 +23,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { renderComponentReference } from "../src/knowledge/markdown.ts";
+import { LIBRARIES } from "../src/knowledge/types.ts";
 import type {
   AdapterRef,
   ComponentKnowledge,
@@ -36,6 +38,7 @@ import type {
   PropInfo,
   SlotInfo,
 } from "../src/knowledge/types.ts";
+import { peersOf, toAdapterSource } from "./adapters.ts";
 
 /**
  * Generator options
@@ -43,7 +46,7 @@ import type {
 export interface GenerateOptions {
   /** The slotsmith package root: the folder holding `package.json` and `src/`. */
   libraryRoot: string;
-  /** The folder holding `guides/`, `adapters/` and `groups.json`. */
+  /** The folder holding `guides/` and `groups.json`, and receiving `adapters/`. */
   knowledgeDir: string;
 }
 
@@ -55,6 +58,8 @@ export interface GeneratedKnowledge {
   index: KnowledgeIndex;
   /** Every component, in full. */
   components: ComponentKnowledge[];
+  /** Every adapter's source, by file name under `knowledge/adapters/`. */
+  adapters: Map<string, string>;
 }
 
 /**
@@ -687,20 +692,32 @@ function listGuides(dir: string): GuideSummary[] {
 }
 
 /**
- * List adapters
+ * Generate adapters
  *
- * @param dir - `knowledge/adapters`.
- * @returns One entry per `<component>.<library>.tsx` file.
+ * One adapter per component and library, from the integration skin at
+ * `src/<component>/__tests__/integrations/<library>/components.tsx`. A
+ * missing skin is an error: every library in `LIBRARIES` covers every
+ * component.
+ *
+ * @param srcDir - The library's `src/`.
+ * @param names - The component folders.
+ * @returns The index entries, and each adapter's source by file name.
  */
-function listAdapters(dir: string): AdapterRef[] {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((file) => /^[a-z-]+\.[a-z]+\.tsx$/.test(file))
-    .sort()
-    .map((file) => {
-      const [component, library] = file.split(".") as [ComponentName, Library];
-      return { component, library, file };
-    });
+function generateAdapters(srcDir: string, names: string[]): { refs: AdapterRef[]; sources: Map<string, string> } {
+  const refs: AdapterRef[] = [];
+  const sources = new Map<string, string>();
+  for (const component of names) {
+    for (const library of LIBRARIES) {
+      const skin = join(srcDir, component, "__tests__", "integrations", library, "components.tsx");
+      if (!existsSync(skin)) throw new Error(`${component} has no ${library} skin at ${skin}`);
+      const file = `${component}.${library}.tsx`;
+      const source = toAdapterSource(readFileSync(skin, "utf8"), component);
+      sources.set(file, source);
+      refs.push({ component: component as ComponentName, library: library as Library, file, peers: peersOf(source) });
+    }
+  }
+  refs.sort((a, b) => (a.file < b.file ? -1 : 1));
+  return { refs, sources };
 }
 
 /**
@@ -770,6 +787,8 @@ export function generateKnowledge(options: GenerateOptions): GeneratedKnowledge 
     if (!file) throw new Error(`not in the program: ${path}`);
     return file;
   };
+
+  const adapters = generateAdapters(srcDir, names);
 
   const virtualFile = existsSync(join(srcDir, "virtual.ts"))
     ? ts.createSourceFile("virtual.ts", readFileSync(join(srcDir, "virtual.ts"), "utf8"), ts.ScriptTarget.ES2022, true)
@@ -849,18 +868,19 @@ export function generateKnowledge(options: GenerateOptions): GeneratedKnowledge 
       }),
     ),
     guides: listGuides(join(options.knowledgeDir, "guides")),
-    adapters: listAdapters(join(options.knowledgeDir, "adapters")),
+    adapters: adapters.refs,
     locales: listLocales(srcDir),
   };
 
-  return { index, components };
+  return { index, components, adapters: adapters.sources };
 }
 
 /**
  * Write knowledge
  *
- * Generates the knowledge and writes `index.json` plus one JSON and one
- * Markdown file per component.
+ * Generates the knowledge and writes `index.json`, one JSON and one
+ * Markdown file per component, and every adapter. Both folders are emptied
+ * first, so nothing stale survives a removed component or skin.
  *
  * @param options - Where the library and the hand-written knowledge live.
  * @returns What was written.
@@ -874,6 +894,10 @@ export function writeKnowledge(options: GenerateOptions): GeneratedKnowledge {
     writeFileSync(join(componentsDir, `${component.name}.json`), `${JSON.stringify(component, null, 2)}\n`);
     writeFileSync(join(componentsDir, `${component.name}.md`), `${renderComponentReference(component)}\n`);
   }
+  const adaptersDir = join(options.knowledgeDir, "adapters");
+  rmSync(adaptersDir, { recursive: true, force: true });
+  mkdirSync(adaptersDir, { recursive: true });
+  for (const [file, source] of generated.adapters) writeFileSync(join(adaptersDir, file), source);
   writeFileSync(join(options.knowledgeDir, "index.json"), `${JSON.stringify(generated.index, null, 2)}\n`);
   return generated;
 }
@@ -890,6 +914,6 @@ export const DEFAULT_OPTIONS: GenerateOptions = {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { index } = writeKnowledge(DEFAULT_OPTIONS);
   process.stdout.write(
-    `Generated knowledge for slotsmith ${index.version}: ${index.components.map((component) => `${component.name} (${component.slotCount} slots)`).join(", ")}.\n`,
+    `Generated knowledge for slotsmith ${index.version}: ${index.components.map((component) => `${component.name} (${component.slotCount} slots)`).join(", ")}, and ${index.adapters.length} adapters.\n`,
   );
 }

@@ -13,7 +13,7 @@ import {
   trigger,
   type Brand,
 } from "../builders";
-import { muiComponents } from "./mui/components";
+import { muiAutocomplete } from "./mui/components";
 import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
@@ -33,7 +33,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <ThemeProvider theme=
  * @returns A user-event instance.
  */
 const renderMuiAutocomplete = (props: Partial<AutocompleteProps<Brand>> = {}) =>
-  renderIntegration(muiComponents, props, Wrapper);
+  renderIntegration(muiAutocomplete, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 

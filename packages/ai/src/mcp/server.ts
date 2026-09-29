@@ -33,7 +33,8 @@ const LIBRARY_NAMES: Record<(typeof LIBRARIES)[number], string> = {
   mui: "MUI",
   shadcn: "shadcn/ui",
   chakra: "Chakra UI",
-  radix: "Radix UI",
+  antd: "Ant Design",
+  radix: "Radix Themes",
 };
 
 /**
@@ -89,7 +90,7 @@ export function createSlotsmithServer(options: SlotsmithServerOptions = {}): Mcp
         `slotsmith ${knowledge.index.version} is a headless React component library (${names.join(", ")}): every part is a replaceable slot with a finished, accessible fallback.`,
         "Before writing slotsmith code, call get_component_api for props and list_slots / get_slot for parts; do not guess prop names.",
         "Element slots receive DOM props (spread them onto a primitive); widget slots receive semantic props (write a small adapter).",
-        "Use get_adapter_example for ready-made MUI, shadcn/ui and Chakra UI slot maps, and get_setup for install and import lines.",
+        "Use get_adapter_example for ready-made MUI, shadcn/ui, Chakra UI, Ant Design and Radix Themes slot maps, and get_setup for install and import lines.",
       ].join(" "),
     },
   );
@@ -195,7 +196,7 @@ export function createSlotsmithServer(options: SlotsmithServerOptions = {}): Mcp
     {
       title: "Get adapter example",
       description:
-        "Get a ready-made `components` map that renders a slotsmith component with a component library's primitives (mui, shadcn, chakra or radix).",
+        "Get a ready-made `components` map that renders a slotsmith component with a component library's primitives (mui, shadcn, chakra, antd or radix). `radix` is Radix Themes (`@radix-ui/themes`); an app on the bare Radix primitives is served by `shadcn`, which is built on them.",
       inputSchema: { component: componentInput, library: libraryInput },
       annotations: { readOnlyHint: true, openWorldHint: false },
     },

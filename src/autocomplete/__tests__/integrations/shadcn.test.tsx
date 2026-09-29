@@ -12,7 +12,7 @@ import {
   trigger,
   type Brand,
 } from "../builders";
-import { shadcnComponents } from "./shadcn/components";
+import { shadcnAutocomplete } from "./shadcn/components";
 import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
@@ -24,7 +24,7 @@ import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis,
  * @returns A user-event instance.
  */
 const renderShadcnAutocomplete = (props: Partial<AutocompleteProps<Brand>> = {}) =>
-  renderIntegration(shadcnComponents, props);
+  renderIntegration(shadcnAutocomplete, props);
 
 beforeAll(stubBrowserApis);
 
@@ -128,7 +128,7 @@ describe("shadcn/ui", () => {
     const Form = ({ children }: { children: ReactNode }) => (
       <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
     );
-    const user = renderIntegration(shadcnComponents, { error: "Could not load brands", onRetry: () => {}, defaultValue: "b2" }, Form);
+    const user = renderIntegration(shadcnAutocomplete, { error: "Could not load brands", onRetry: () => {}, defaultValue: "b2" }, Form);
 
     await open(user);
     await user.click(screen.getByRole("button", { name: "Retry" }));

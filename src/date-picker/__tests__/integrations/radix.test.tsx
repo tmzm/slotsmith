@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
-import { radixComponents } from "./radix/components";
+import { radixDatePicker } from "./radix/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -37,7 +37,7 @@ const RtlWrapper = ({ children }: { children: ReactNode }) => (
  * @returns A user-event instance.
  */
 const renderRadixDatePicker = (props: Partial<DatePickerProps> = {}, wrapper = Wrapper) =>
-  renderIntegration(radixComponents, props, wrapper);
+  renderIntegration(radixDatePicker, props, wrapper);
 
 beforeAll(stubBrowserApis);
 freezeToday();

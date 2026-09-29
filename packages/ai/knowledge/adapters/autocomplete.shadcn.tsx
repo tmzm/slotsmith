@@ -1,11 +1,13 @@
 /**
  * Autocomplete for shadcn/ui
  *
- * A complete `components` map for the slotsmith autocomplete, built from
- * shadcn/ui primitives. Copy the file, keep the parts you want, and pass
- * the map as `components={shadcnComponents}`; every slot left out keeps its fallback.
+ * A `components` map that renders the slotsmith autocomplete with shadcn/ui
+ * primitives, written for shadcn/ui on Tailwind CSS v4. Copy the file, keep
+ * the parts you want, and pass the map as `components={shadcnAutocomplete}`;
+ * every slot left out keeps its fallback.
  *
- * It uses these shadcn/ui components: `npx shadcn@latest add badge button input`.
+ * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
+ * shadcn/ui files.
  */
 import type {
   AutocompleteCheckSlotProps,
@@ -135,9 +137,13 @@ const ShadcnTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSl
  *
  * A ghost icon `Button`. The click is stopped so it does not also reach the
  * trigger and reopen the popup.
+ *
+ * shadcn's `Button` sets no `type`, so inside a form it would submit it;
+ * this and every other `Button` here passes `type="button"`.
  */
 const ShadcnClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
   <Button
+    type="button"
     variant="ghost"
     size="icon"
     className="ms-auto"
@@ -271,7 +277,7 @@ const ShadcnError = ({ error, onRetry, retryLabel }: AutocompleteErrorSlotProps)
   <li data-slot="command-error" className="flex items-center gap-2 px-2 py-3 text-sm">
     <span className="text-destructive">{error}</span>
     {onRetry ? (
-      <Button variant="outline" size="sm" className="ms-auto" onClick={onRetry}>
+      <Button type="button" variant="outline" size="sm" className="ms-auto" onClick={onRetry}>
         {retryLabel}
       </Button>
     ) : null}
@@ -285,7 +291,7 @@ const ShadcnError = ({ error, onRetry, retryLabel }: AutocompleteErrorSlotProps)
  */
 const ShadcnCreate = ({ onCreate, loading, label }: AutocompleteCreateSlotProps) => (
   <li data-slot="command-create">
-    <Button variant="ghost" size="sm" className="w-full justify-start" disabled={loading} onClick={onCreate}>
+    <Button type="button" variant="ghost" size="sm" className="w-full justify-start" disabled={loading} onClick={onCreate}>
       {label}
     </Button>
   </li>
@@ -299,7 +305,7 @@ const ShadcnCreate = ({ onCreate, loading, label }: AutocompleteCreateSlotProps)
  */
 const ShadcnLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMoreSlotProps) => (
   <li ref={ref} data-slot="command-more">
-    <Button variant="ghost" size="sm" className="w-full" disabled={loading} onClick={onLoadMore}>
+    <Button type="button" variant="ghost" size="sm" className="w-full" disabled={loading} onClick={onLoadMore}>
       {label}
     </Button>
   </li>
@@ -312,7 +318,7 @@ const ShadcnLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMor
  * primitives where it has them, and the popover and command class sets for
  * the parts it styles by hand.
  */
-export const shadcnComponents: Partial<AutocompleteComponents> = {
+export const shadcnAutocomplete: Partial<AutocompleteComponents> = {
   Root: ShadcnRoot,
   Trigger: ShadcnTrigger,
   Value: ShadcnValue,

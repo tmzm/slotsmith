@@ -1,9 +1,10 @@
 /**
- * DatePicker for MUI v7
+ * DatePicker for MUI
  *
- * A complete `components` map for the slotsmith date picker, built from
- * MUI v7 primitives. Copy the file, keep the parts you want, and pass
- * the map as `components={muiComponents}`; every slot left out keeps its fallback.
+ * A `components` map that renders the slotsmith date picker with MUI
+ * primitives, tested against MUI v7. Copy the file, keep the parts you want,
+ * and pass the map as `components={muiDatePicker}`; every slot left out keeps
+ * its fallback.
  */
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
@@ -67,7 +68,7 @@ const captionSx: SxProps<Theme> = {
   "&::before, &::after": { display: "none" },
 };
 
-export const muiComponents: Partial<DatePickerComponents> = {
+export const muiDatePicker: Partial<DatePickerComponents> = {
   Root: ({ className, ...props }) => (
     <Box className={className} sx={{ position: "relative", width: 1, maxWidth: 288 }} {...props} />
   ),

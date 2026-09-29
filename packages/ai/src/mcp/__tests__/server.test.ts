@@ -17,10 +17,11 @@ let knowledge: Knowledge;
  * Starts a server and a client joined by an in-memory transport.
  *
  * @param installedVersion - The project's slotsmith version to simulate.
+ * @param served - The knowledge the server answers from. Defaults to the generated one.
  * @returns The connected client.
  */
-async function connect(installedVersion?: string): Promise<Client> {
-  const server = createSlotsmithServer({ knowledge, installedVersion, cwd: tmpdir() });
+async function connect(installedVersion?: string, served: Knowledge = knowledge): Promise<Client> {
+  const server = createSlotsmithServer({ knowledge: served, installedVersion, cwd: tmpdir() });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test", version: "1.0.0" });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
@@ -139,15 +140,49 @@ describe("slotsmith MCP server", () => {
     const { text, data } = await call(client, "get_adapter_example", { component: "date-picker", library: "shadcn" });
     expect(data!.found).toBe(true);
     expect(data!.source).toContain('from "slotsmith/date-picker"');
-    expect(text).toContain("components={shadcnComponents}");
+    expect(text).toContain("components={shadcnDatePicker}");
+  });
+
+  it("get_adapter_example has an adapter for every component in all five libraries", async () => {
+    for (const component of ["autocomplete", "data-table", "date-picker", "file-uploader"]) {
+      for (const library of ["mui", "shadcn", "chakra", "antd", "radix"]) {
+        const { result, data } = await call(client, "get_adapter_example", { component, library });
+        expect(result.isError, `${component} ${library}`).toBeFalsy();
+        expect(data!.found, `${component} ${library}`).toBe(true);
+        expect(data!.file).toBe(`${component}.${library}.tsx`);
+        expect(data!.source).toContain(`from "slotsmith/${component}"`);
+      }
+    }
+    const { text } = await call(client, "get_adapter_example", { component: "data-table", library: "antd" });
+    expect(text).toContain("DataTable adapter for Ant Design");
+    expect(text).toContain("components={antdDataTable}");
+  });
+
+  it("get_adapter_example says radix means Radix Themes, and that the primitives are served by shadcn", async () => {
+    const { tools } = await client.listTools();
+    const description = tools.find((tool) => tool.name === "get_adapter_example")!.description!;
+    expect(description).toContain("mui, shadcn, chakra, antd or radix");
+    expect(description).toContain("`radix` is Radix Themes");
+    expect(description).toMatch(/primitives.*`shadcn`/);
+    const { text } = await call(client, "get_adapter_example", { component: "date-picker", library: "radix" });
+    expect(text).toContain("DatePicker adapter for Radix Themes");
   });
 
   it("get_adapter_example says when no adapter exists yet, and lists the ones that do", async () => {
-    const { result, text, data } = await call(client, "get_adapter_example", { component: "file-uploader", library: "radix" });
+    const partial: Knowledge = {
+      ...knowledge,
+      index: {
+        ...knowledge.index,
+        adapters: knowledge.index.adapters.filter((adapter) => adapter.component !== "file-uploader" || adapter.library === "mui"),
+      },
+    };
+    const partialClient = await connect(knowledge.index.version, partial);
+    const { result, text, data } = await call(partialClient, "get_adapter_example", { component: "file-uploader", library: "radix" });
+    await partialClient.close();
     expect(result.isError).toBeFalsy();
     expect(data!.found).toBe(false);
     expect(data!.available).toEqual(["mui"]);
-    expect(text).toContain("No Radix UI adapter yet for File uploader");
+    expect(text).toContain("No Radix Themes adapter yet for File uploader");
     expect(text).toContain("mui (MUI)");
   });
 
@@ -226,7 +261,8 @@ describe("slotsmith MCP server", () => {
     const adapt = await client.getPrompt({ name: "adapt-slots-to-library", arguments: { component: "file-uploader", library: "chakra" } });
     const adaptText = (adapt.messages[0]!.content as { text: string }).text;
     expect(adaptText).toContain("Partial<FileUploaderComponents>");
-    expect(adaptText).toContain("There is no Chakra UI adapter yet");
+    expect(adaptText).toContain("A ready-made Chakra UI adapter exists");
+    expect(adaptText).toContain("export const chakraFileUploader");
   });
 });
 

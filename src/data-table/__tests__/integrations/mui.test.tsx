@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
-import { muiComponents } from "./mui/components";
+import { muiDataTable } from "./mui/components";
 import {
   bodyRows,
   dragHandles,
@@ -48,7 +48,7 @@ const RtlWrapper = ({ children }: { children: ReactNode }) => (
 function renderMuiTable(props: Partial<DataTableProps<Employee>> = {}, wrapper = Wrapper) {
   const user = userEvent.setup();
   render(
-    <DataTable<Employee> data={employees(23)} columns={employeeColumns} components={muiComponents} {...props} />,
+    <DataTable<Employee> data={employees(23)} columns={employeeColumns} components={muiDataTable} {...props} />,
     { wrapper },
   );
   return user;
@@ -185,7 +185,7 @@ describe("MUI v7 (CMS admin panel)", () => {
   it("reorders rows by keyboard with an IconButton drag handle", async () => {
     const onMove = vi.fn();
     const user = userEvent.setup();
-    render(<ReorderableEmployees components={muiComponents} initial={employees(3)} onMove={onMove} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={muiDataTable} initial={employees(3)} onMove={onMove} />, { wrapper: Wrapper });
     expect(dragHandles()[0]).toHaveClass("MuiIconButton-root");
     expect(within(dragHandles()[0]!).getByTestId("DragIndicatorIcon")).toBeInTheDocument();
     await keyboardReorder(user, onMove);
@@ -193,14 +193,14 @@ describe("MUI v7 (CMS admin panel)", () => {
   });
 
   it("lifts a row on pointer down and disables a lone row’s handle", () => {
-    render(<ReorderableEmployees components={muiComponents} initial={employees(3)} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={muiDataTable} initial={employees(3)} />, { wrapper: Wrapper });
     fireEvent.pointerDown(dragHandles()[1]!, { button: 0, pointerId: 1, clientY: 0 });
     expect(bodyRows()[1]).toHaveAttribute("data-dragging", "");
     fireEvent.pointerCancel(window, { pointerId: 1 });
     expect(bodyRows()[1]).not.toHaveAttribute("data-dragging");
 
     const lone = { ...employees(1)[0]!, reports: employees(3).slice(1, 2) };
-    render(<ReorderableEmployees components={muiComponents} initial={[lone, ...employees(3).slice(2)]} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={muiDataTable} initial={[lone, ...employees(3).slice(2)]} />, { wrapper: Wrapper });
     expect(within(screen.getAllByRole("table")[1]!).getAllByRole("button", { name: "Reorder row" })[1]).toBeDisabled();
   });
 
@@ -209,7 +209,7 @@ describe("MUI v7 (CMS admin panel)", () => {
     const user = userEvent.setup();
     const [lead, first, second, other] = employees(4);
     const tree = [{ ...lead!, reports: [first!, second!] }, other!];
-    render(<ReorderableEmployees components={muiComponents} initial={tree} onMove={onMove} />, { wrapper: Wrapper });
+    render(<ReorderableEmployees components={muiDataTable} initial={tree} onMove={onMove} />, { wrapper: Wrapper });
     // Rows: Employee 01, its reports 02 and 03, then Employee 04.
 
     act(() => dragHandles()[0]!.focus());

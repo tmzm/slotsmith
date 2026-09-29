@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
-import { shadcnComponents } from "./shadcn/components";
+import { shadcnDataTable } from "./shadcn/components";
 import {
   bodyRows,
   dragHandles,
@@ -27,7 +27,7 @@ function renderShadcnTable(props: Partial<DataTableProps<Employee>> = {}) {
     <DataTable<Employee>
       data={employees(23)}
       columns={employeeColumns}
-      components={shadcnComponents}
+      components={shadcnDataTable}
       {...props}
     />,
   );
@@ -118,7 +118,7 @@ describe("shadcn/ui (editorial layout)", () => {
   it("reorders rows by keyboard with a ghost icon Button drag handle", async () => {
     const onMove = vi.fn();
     const user = userEvent.setup();
-    render(<ReorderableEmployees components={shadcnComponents} initial={employees(3)} onMove={onMove} />);
+    render(<ReorderableEmployees components={shadcnDataTable} initial={employees(3)} onMove={onMove} />);
     const handle = dragHandles()[0]!;
     expect(handle).toHaveAttribute("data-slot", "button");
     expect(handle).toHaveAttribute("data-variant", "ghost");
@@ -132,7 +132,7 @@ describe("shadcn/ui (editorial layout)", () => {
     const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
     render(
       <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>
-        <ReorderableEmployees components={shadcnComponents} initial={employees(3)} />
+        <ReorderableEmployees components={shadcnDataTable} initial={employees(3)} />
       </form>,
     );
     fireEvent.click(dragHandles()[0]!);

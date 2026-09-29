@@ -13,7 +13,7 @@ import {
   trigger,
   type Brand,
 } from "../builders";
-import { chakraComponents } from "./chakra/components";
+import { chakraAutocomplete } from "./chakra/components";
 import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
@@ -34,7 +34,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => (
  * @returns A user-event instance.
  */
 const renderChakraAutocomplete = (props: Partial<AutocompleteProps<Brand>> = {}) =>
-  renderIntegration(chakraComponents, props, Wrapper);
+  renderIntegration(chakraAutocomplete, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 

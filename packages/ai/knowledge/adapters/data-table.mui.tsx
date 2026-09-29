@@ -1,9 +1,10 @@
 /**
- * DataTable for MUI v7
+ * DataTable for MUI
  *
- * A complete `components` map for the slotsmith data table, built from
- * MUI v7 primitives. Copy the file, keep the parts you want, and pass
- * the map as `components={muiComponents}`; every slot left out keeps its fallback.
+ * A `components` map that renders the slotsmith data table with MUI
+ * primitives, tested against MUI v7. Copy the file, keep the parts you want,
+ * and pass the map as `components={muiDataTable}`; every slot left out keeps
+ * its fallback.
  */
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -35,11 +36,26 @@ import type {
 } from "slotsmith/data-table";
 
 /**
+ * Root density and stripes
+ *
+ * The root carries the table's `data-size` and `data-striped`. `sm`, the data
+ * table's default, gives the cells the block padding of MUI's small table,
+ * and `default` leaves MUI's own; `striped` tints every other body row with
+ * the theme's hover colour. The stripe is written with `:where()` so it
+ * weighs less than `TableRow`'s own hover and selected styles, which still
+ * win over it.
+ */
+const rootSx: SxProps<Theme> = (theme) => ({
+  "&[data-size=sm] :is(th, td)": { py: 0.75 },
+  "&:where([data-striped]) tbody > tr:where(:nth-of-type(even))": { backgroundColor: theme.palette.action.hover },
+});
+
+/**
  * MUI root
  *
  * a CMS admin panel's `Stack` with hidden overflow around the table.
  */
-const MuiRoot = (props: RootSlotProps) => <Stack overflow="hidden" {...props} />;
+const MuiRoot = (props: RootSlotProps) => <Stack overflow="hidden" sx={rootSx} {...props} />;
 
 /**
  * Row drag styles
@@ -199,7 +215,7 @@ function MuiPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, rowCou
  *
  * The slot map an MUI v7 project styled as a CMS admin panel would pass as `components`.
  */
-export const muiComponents: Partial<DataTableComponents> = {
+export const muiDataTable: Partial<DataTableComponents> = {
   Root: MuiRoot,
   Table,
   Head: TableHead,

@@ -13,7 +13,7 @@ import {
   trigger,
   type Brand,
 } from "../builders";
-import { antdComponents } from "./antd/components";
+import { antdAutocomplete } from "./antd/components";
 import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
@@ -47,7 +47,7 @@ function cssColor(color: string) {
  * @returns A user-event instance.
  */
 const renderAntdAutocomplete = (props: Partial<AutocompleteProps<Brand>> = {}) =>
-  renderIntegration(antdComponents, props, Wrapper);
+  renderIntegration(antdAutocomplete, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 

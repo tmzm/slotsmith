@@ -22,7 +22,7 @@ import type {
   UploaderProgressSlotProps,
   UploaderRootSlotProps,
   UploaderTriggerSlotProps,
-} from "../../../index";
+} from "slotsmith/file-uploader";
 
 /**
  * Ant Design file uploader parts

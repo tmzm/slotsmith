@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { FileUploaderProps } from "../../index";
 import { deferredUpload, dropzone, fileInput, itemNamed, items, makeFile } from "../builders";
-import { radixComponents } from "./radix/components";
+import { radixFileUploader } from "./radix/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -24,7 +24,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <Theme>{children}</Th
  * @param props - The component's props.
  * @returns A user-event instance.
  */
-const renderRadixUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(radixComponents, props, Wrapper);
+const renderRadixUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(radixFileUploader, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 
@@ -108,7 +108,7 @@ describe("Radix Themes v3", () => {
         <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
       </Theme>
     );
-    const user = renderIntegration(radixComponents, { maxSize: 20 }, Form);
+    const user = renderIntegration(radixFileUploader, { maxSize: 20 }, Form);
 
     await user.click(screen.getByRole("button", { name: "Browse" }));
     await user.upload(fileInput(), makeFile("kept.png"));

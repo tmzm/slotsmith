@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { FileUploaderProps } from "../../index";
 import { deferredUpload, dropzone, fileInput, itemNamed, items, makeFile } from "../builders";
-import { muiComponents } from "./mui/components";
+import { muiFileUploader } from "./mui/components";
 import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
@@ -23,7 +23,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <ThemeProvider theme=
  * @param props - The component's props.
  * @returns A user-event instance.
  */
-const renderMuiUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(muiComponents, props, Wrapper);
+const renderMuiUploader = (props: Partial<FileUploaderProps> = {}) => renderIntegration(muiFileUploader, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 

@@ -1,4 +1,16 @@
+/**
+ * DataTable for shadcn/ui
+ *
+ * A `components` map that renders the slotsmith data table with shadcn/ui
+ * primitives, written for shadcn/ui on Tailwind CSS v4. Copy the file, keep
+ * the parts you want, and pass the map as `components={shadcnDataTable}`;
+ * every slot left out keeps its fallback.
+ *
+ * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
+ * shadcn/ui files.
+ */
 import { Select as SelectPrimitive } from "radix-ui";
+import type { ComponentProps } from "react";
 import type {
   CheckboxSlotProps,
   DataTableComponents,
@@ -10,7 +22,6 @@ import type {
 } from "../../../index";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
-import { GripVertical } from "./ui/icons";
 import { Skeleton } from "./ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { cn } from "./ui/utils";
@@ -52,6 +63,37 @@ const ShadcnRow = ({ className, ...props }: RowSlotProps) => (
     )}
     {...props}
   />
+);
+
+/**
+ * Grip icon
+ *
+ * lucide's `GripVertical`, drawn inline with the same six dots and the same
+ * `lucide lucide-grip-vertical` classes, so the file needs no icon package.
+ * A project with `lucide-react` can import `GripVertical` from it instead.
+ */
+const GripVertical = ({ className, ...props }: ComponentProps<"svg">) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={cn("lucide lucide-grip-vertical", className)}
+    {...props}
+  >
+    <circle cx="9" cy="12" r="1" />
+    <circle cx="9" cy="5" r="1" />
+    <circle cx="9" cy="19" r="1" />
+    <circle cx="15" cy="12" r="1" />
+    <circle cx="15" cy="5" r="1" />
+    <circle cx="15" cy="19" r="1" />
+  </svg>
 );
 
 /**
@@ -209,7 +251,7 @@ const ShadcnError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
  *
  * The slot map a shadcn project styled as an editorial layout would pass as `components`.
  */
-export const shadcnComponents: Partial<DataTableComponents> = {
+export const shadcnDataTable: Partial<DataTableComponents> = {
   Table,
   Head: TableHeader,
   Body: TableBody,

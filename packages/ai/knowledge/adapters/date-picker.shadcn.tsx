@@ -1,9 +1,13 @@
 /**
  * DatePicker for shadcn/ui
  *
- * A complete `components` map for the slotsmith date picker, built from
- * shadcn/ui primitives. Copy the file, keep the parts you want, and pass
- * the map as `components={shadcnComponents}`; every slot left out keeps its fallback.
+ * A `components` map that renders the slotsmith date picker with shadcn/ui
+ * primitives, written for shadcn/ui on Tailwind CSS v4. Copy the file, keep
+ * the parts you want, and pass the map as `components={shadcnDatePicker}`;
+ * every slot left out keeps its fallback.
+ *
+ * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
+ * shadcn/ui files.
  */
 import type { DatePickerComponents } from "slotsmith/date-picker";
 import { cn } from "@/lib/utils";
@@ -42,7 +46,7 @@ const selectClass = cn(
   "text-foreground outline-none hover:border-input focus-visible:ring-2 focus-visible:ring-ring",
 );
 
-export const shadcnComponents: Partial<DatePickerComponents> = {
+export const shadcnDatePicker: Partial<DatePickerComponents> = {
   Root: ({ className, ...props }) => (
     <div data-slot="date-picker" className={cn("relative w-full max-w-72", className)} {...props} />
   ),

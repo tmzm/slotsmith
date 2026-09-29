@@ -1,3 +1,11 @@
+/**
+ * DataTable for MUI
+ *
+ * A `components` map that renders the slotsmith data table with MUI
+ * primitives, tested against MUI v7. Copy the file, keep the parts you want,
+ * and pass the map as `components={muiDataTable}`; every slot left out keeps
+ * its fallback.
+ */
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -207,7 +215,7 @@ function MuiPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, rowCou
  *
  * The slot map an MUI v7 project styled as a CMS admin panel would pass as `components`.
  */
-export const muiComponents: Partial<DataTableComponents> = {
+export const muiDataTable: Partial<DataTableComponents> = {
   Root: MuiRoot,
   Table,
   Head: TableHead,

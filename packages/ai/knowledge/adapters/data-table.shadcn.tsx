@@ -1,13 +1,16 @@
 /**
  * DataTable for shadcn/ui
  *
- * A complete `components` map for the slotsmith data table, built from
- * shadcn/ui primitives. Copy the file, keep the parts you want, and pass
- * the map as `components={shadcnComponents}`; every slot left out keeps its fallback.
+ * A `components` map that renders the slotsmith data table with shadcn/ui
+ * primitives, written for shadcn/ui on Tailwind CSS v4. Copy the file, keep
+ * the parts you want, and pass the map as `components={shadcnDataTable}`;
+ * every slot left out keeps its fallback.
  *
- * It uses these shadcn/ui components: `npx shadcn@latest add button checkbox skeleton table`.
+ * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
+ * shadcn/ui files.
  */
 import { Select as SelectPrimitive } from "radix-ui";
+import type { ComponentProps } from "react";
 import type {
   CheckboxSlotProps,
   DataTableComponents,
@@ -19,7 +22,6 @@ import type {
 } from "slotsmith/data-table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { GripVertical } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -64,14 +66,48 @@ const ShadcnRow = ({ className, ...props }: RowSlotProps) => (
 );
 
 /**
+ * Grip icon
+ *
+ * lucide's `GripVertical`, drawn inline with the same six dots and the same
+ * `lucide lucide-grip-vertical` classes, so the file needs no icon package.
+ * A project with `lucide-react` can import `GripVertical` from it instead.
+ */
+const GripVertical = ({ className, ...props }: ComponentProps<"svg">) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={cn("lucide lucide-grip-vertical", className)}
+    {...props}
+  >
+    <circle cx="9" cy="12" r="1" />
+    <circle cx="9" cy="5" r="1" />
+    <circle cx="9" cy="19" r="1" />
+    <circle cx="15" cy="12" r="1" />
+    <circle cx="15" cy="5" r="1" />
+    <circle cx="15" cy="19" r="1" />
+  </svg>
+);
+
+/**
  * Shadcn drag handle
  *
  * A ghost icon `Button` with lucide's `GripVertical`. Every slot prop goes
  * to its `<button>`: the ref, the pointer and key handlers, the `aria-*`
- * attributes and `disabled`.
+ * attributes and `disabled`. shadcn's `Button` sets no `type`, so inside a
+ * form it would submit it; `type="button"` comes first, so a slot prop can
+ * still override it.
  */
 const ShadcnDragHandle = ({ className, ...props }: DragHandleSlotProps) => (
   <Button
+    type="button"
     variant="ghost"
     size="icon"
     className={cn("size-7 cursor-grab touch-none text-muted-foreground data-dragging:cursor-grabbing", className)}
@@ -215,7 +251,7 @@ const ShadcnError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
  *
  * The slot map a shadcn project styled as an editorial layout would pass as `components`.
  */
-export const shadcnComponents: Partial<DataTableComponents> = {
+export const shadcnDataTable: Partial<DataTableComponents> = {
   Table,
   Head: TableHeader,
   Body: TableBody,

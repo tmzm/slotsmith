@@ -13,7 +13,7 @@ import {
   trigger,
   type Brand,
 } from "../builders";
-import { radixComponents } from "./radix/components";
+import { radixAutocomplete } from "./radix/components";
 import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
@@ -34,7 +34,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <Theme>{children}</Th
  * @returns A user-event instance.
  */
 const renderRadixAutocomplete = (props: Partial<AutocompleteProps<Brand>> = {}) =>
-  renderIntegration(radixComponents, props, Wrapper);
+  renderIntegration(radixAutocomplete, props, Wrapper);
 
 beforeAll(stubBrowserApis);
 
@@ -163,7 +163,7 @@ describe("Radix Themes v3", () => {
         <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{children}</form>
       </Theme>
     );
-    const user = renderIntegration(radixComponents, { multiple: true, defaultValue: ["b1", "b2"] }, Form);
+    const user = renderIntegration(radixAutocomplete, { multiple: true, defaultValue: ["b1", "b2"] }, Form);
 
     await user.click(removeControl("Aalto"));
     await user.click(screen.getByRole("button", { name: "Clear selection" }));
