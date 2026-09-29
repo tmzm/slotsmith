@@ -42,6 +42,12 @@ import {
  * the theme's tokens. It is scoped to one table, so two tables under
  * different `ConfigProvider` themes keep their own colours.
  *
+ * The root's `data-size` picks the cell padding of Ant's own tables: `sm`,
+ * the data table's default, matches Ant's small table and `default` its
+ * default one. `data-striped` tints every other body row. The stripe is
+ * written with `:where()` so it weighs no more than the hover rule, and the
+ * hover and selected tints that follow it still win.
+ *
  * While a row is lifted (`data-dragging`), it and its visible sub-rows
  * (`data-dragging-child`) are drawn above the rows they pass, with opaque
  * cells so those rows never show through, and one shadow under the block.
@@ -62,11 +68,14 @@ ${s} { width: 100%; overflow: hidden; color: ${token.colorText}; font-size: ${to
 ${s} > div { overflow: auto; }
 ${s} table { width: 100%; border-collapse: separate; border-spacing: 0; }
 ${s} th, ${s} td { padding: ${token.paddingXS + 2}px ${token.paddingSM}px; text-align: start; vertical-align: middle; border-bottom: ${rule}; }
+${s}[data-size=sm] :is(th, td) { padding: ${token.paddingXS}px; }
+${s}[data-size=default] :is(th, td) { padding: ${token.padding}px; }
 ${s} th { position: sticky; top: 0; z-index: 2; background-color: ${token.colorBgContainer}; font-weight: ${token.fontWeightStrong}; white-space: nowrap; }
 ${s} :is(th, td):is([data-slot=drag], [data-slot=select]) { width: 1%; padding-inline-end: 0; }
 ${s} tbody > tr:last-child > td { border-bottom: none; }
 ${s} tfoot td { font-weight: ${token.fontWeightStrong}; border-top: ${rule}; border-bottom: none; }
 ${s} tbody > tr > td { transition: background-color ${token.motionDurationMid}; }
+${s}:where([data-striped]) tbody > tr:where(:nth-child(even)) > td { background-color: ${token.colorFillAlter}; }
 ${s} tbody > tr:hover > td { background-color: ${token.controlItemBgHover}; }
 ${s} tbody > tr[data-state=selected] > td { background-color: ${token.controlItemBgActive}; }
 ${s} tbody > tr[data-clickable] { cursor: pointer; }
@@ -88,14 +97,17 @@ ${child}:not(:has(+ tr[data-dragging-child])) { box-shadow: ${token.boxShadowSec
  *
  * The bordered surface around the table and its pagination, carrying the
  * scoped sheet. `useId` gives each table its own scope; the characters React
- * wraps it in are not valid in a class name, so they are dropped.
+ * wraps it in are not valid in a class name, so they are dropped. The sheet
+ * carries the nonce from `ConfigProvider`'s `csp`, as Ant's own styles do,
+ * so a strict Content Security Policy lets it through.
  */
 function AntRoot({ className, children, ...props }: RootSlotProps) {
   const { token } = theme.useToken();
+  const { csp } = useContext(ConfigProvider.ConfigContext);
   const scope = `ss-antd-table-${useId().replace(/[^\w-]/g, "")}`;
   return (
     <div className={className ? `${scope} ${className}` : scope} {...props}>
-      <style>{tableSheet(scope, token)}</style>
+      <style nonce={csp?.nonce}>{tableSheet(scope, token)}</style>
       {children}
     </div>
   );

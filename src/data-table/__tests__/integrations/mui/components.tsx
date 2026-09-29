@@ -28,11 +28,26 @@ import type {
 } from "../../../index";
 
 /**
+ * Root density and stripes
+ *
+ * The root carries the table's `data-size` and `data-striped`. `sm`, the data
+ * table's default, gives the cells the block padding of MUI's small table,
+ * and `default` leaves MUI's own; `striped` tints every other body row with
+ * the theme's hover colour. The stripe is written with `:where()` so it
+ * weighs less than `TableRow`'s own hover and selected styles, which still
+ * win over it.
+ */
+const rootSx: SxProps<Theme> = (theme) => ({
+  "&[data-size=sm] :is(th, td)": { py: 0.75 },
+  "&:where([data-striped]) tbody > tr:where(:nth-of-type(even))": { backgroundColor: theme.palette.action.hover },
+});
+
+/**
  * MUI root
  *
  * a CMS admin panel's `Stack` with hidden overflow around the table.
  */
-const MuiRoot = (props: RootSlotProps) => <Stack overflow="hidden" {...props} />;
+const MuiRoot = (props: RootSlotProps) => <Stack overflow="hidden" sx={rootSx} {...props} />;
 
 /**
  * Row drag styles

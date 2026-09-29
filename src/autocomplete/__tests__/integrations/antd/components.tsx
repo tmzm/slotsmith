@@ -210,9 +210,9 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
  * handed `input` from it. Everything else — the `role`, the aria wiring,
  * the key handler — Ant passes to the `<input>`. Its `size` is a variant
  * rather than the HTML attribute, which is why the slot's props leave `size`
- * out.
+ * out. A caller's `style` is merged over the skin's rather than replacing it.
  */
-function AntSearch({ ref, ...props }: AutocompleteSearchSlotProps) {
+function AntSearch({ ref, style, ...props }: AutocompleteSearchSlotProps) {
   const { token } = theme.useToken();
   const inputRef = useCallback((instance: InputRef | null) => assignRef(ref, instance?.input ?? null), [ref]);
   return (
@@ -220,7 +220,7 @@ function AntSearch({ ref, ...props }: AutocompleteSearchSlotProps) {
       ref={inputRef}
       variant="borderless"
       prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-      style={{ borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`, borderRadius: 0 }}
+      style={{ borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`, borderRadius: 0, ...style }}
       {...props}
     />
   );

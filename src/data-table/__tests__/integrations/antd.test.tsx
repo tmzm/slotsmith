@@ -84,6 +84,30 @@ describe("Ant Design v6 (admin panel)", () => {
     );
   });
 
+  it("pads the cells like Ant's small table at the small size, and stripes every other row", () => {
+    renderAntdTable({ size: "sm", striped: true });
+    const cells = bodyRows().map((row) => within(row).getAllByRole("cell")[0]!);
+    expect(getComputedStyle(cells[0]!).paddingTop).toBe(`${token.paddingXS}px`);
+    expect(getComputedStyle(screen.getAllByRole("columnheader")[0]!).paddingTop).toBe(`${token.paddingXS}px`);
+    expect(getComputedStyle(cells[0]!).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(getComputedStyle(cells[1]!).backgroundColor).toBe(cssColor(token.colorFillAlter));
+  });
+
+  it("pads the cells like Ant's default table at the default size, with no stripes unless asked", () => {
+    renderAntdTable({ size: "default" });
+    const cells = bodyRows().map((row) => within(row).getAllByRole("cell")[0]!);
+    expect(getComputedStyle(cells[0]!).paddingTop).toBe(`${token.padding}px`);
+    expect(getComputedStyle(cells[1]!).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  });
+
+  it("puts the ConfigProvider's CSP nonce on its sheet", () => {
+    renderAntdTable({}, ({ children }: { children: ReactNode }) => (
+      <ConfigProvider csp={{ nonce: "abc123" }}>{children}</ConfigProvider>
+    ));
+    const sheet = screen.getByRole("table").closest("[data-size]")!.querySelector("style")!;
+    expect(sheet.nonce).toBe("abc123");
+  });
+
   it("sorts from an Ant Button in the header", async () => {
     const user = renderAntdTable({ data: employees(3).reverse() });
     const sort = screen.getByRole("button", { name: /Name/ });

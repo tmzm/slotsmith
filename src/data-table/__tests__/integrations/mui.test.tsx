@@ -54,6 +54,43 @@ function renderMuiTable(props: Partial<DataTableProps<Employee>> = {}, wrapper =
   return user;
 }
 
+/**
+ * CSS colour
+ *
+ * @param color - A theme colour, in any CSS syntax.
+ * @returns The same colour as `getComputedStyle` reports it.
+ */
+function cssColor(color: string) {
+  const probe = document.createElement("i");
+  probe.style.backgroundColor = color;
+  document.body.append(probe);
+  const value = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return value;
+}
+
+/**
+ * Root rule value
+ *
+ * jsdom's `getComputedStyle` settles the cascade by source order rather than
+ * by specificity, so a root rule that emotion injects before MUI's own cell
+ * styles loses there while it wins in a browser. This reads the root's rules
+ * directly instead.
+ *
+ * @param element - An element inside the table.
+ * @param property - A CSS property, e.g. `padding-top`.
+ * @returns The value a matching `data-size` rule on the root sets, if any.
+ */
+function rootRuleValue(element: Element, property: string) {
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      if (!(rule instanceof CSSStyleRule) || !rule.selectorText.includes("[data-size")) continue;
+      if (element.matches(rule.selectorText) && rule.style.getPropertyValue(property)) return rule.style.getPropertyValue(property);
+    }
+  }
+  return undefined;
+}
+
 beforeAll(stubBrowserApis);
 
 describe("MUI v7 (CMS admin panel)", () => {
@@ -65,6 +102,22 @@ describe("MUI v7 (CMS admin panel)", () => {
     expect(screen.getAllByRole("columnheader")[0]).toHaveClass("MuiTableCell-head");
     expect(bodyRows()[0]).toHaveClass("MuiTableRow-root");
     expect(within(bodyRows()[0]!).getAllByRole("cell")[0]).toHaveClass("MuiTableCell-body");
+  });
+
+  it("pads the cells like MUI's small table at the small size, and stripes every other row", () => {
+    renderMuiTable({ size: "sm", striped: true });
+    const rows = screen.getAllByRole("row").slice(1);
+    const cell = within(rows[0]!).getAllByRole("cell")[0]!;
+    expect(rootRuleValue(cell, "padding-top")).toBe(theme.spacing(0.75));
+    expect(getComputedStyle(rows[0]!).backgroundColor).not.toBe(getComputedStyle(rows[1]!).backgroundColor);
+    expect(getComputedStyle(rows[1]!).backgroundColor).toBe(cssColor(theme.palette.action.hover));
+  });
+
+  it("keeps MUI's own padding at the default size, with no stripes unless asked", () => {
+    renderMuiTable({ size: "default" });
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(rootRuleValue(within(rows[0]!).getAllByRole("cell")[0]!, "padding-top")).toBeUndefined();
+    expect(getComputedStyle(rows[1]!).backgroundColor).toBe(getComputedStyle(rows[0]!).backgroundColor);
   });
 
   it("sorts from the header", async () => {

@@ -64,6 +64,16 @@ describe("Ant Design v6", () => {
     expect(options()).toHaveLength(BRANDS.length);
   });
 
+  it("merges a caller's style into the search box instead of replacing it", async () => {
+    const user = renderAntdAutocomplete({ slotProps: { search: { style: { minWidth: 120 } } } });
+    await open(user);
+
+    const field = searchBox().closest<HTMLElement>(".ant-input-affix-wrapper")!;
+    expect(field.style.minWidth).toBe("120px");
+    expect(field.style.borderRadius).toBe("0px");
+    expect(field.style.borderBottomColor).toBe(cssColor(token.colorSplit));
+  });
+
   it("picks a value and shows it on the trigger", async () => {
     const onChange = vi.fn();
     const user = renderAntdAutocomplete({ onChange });

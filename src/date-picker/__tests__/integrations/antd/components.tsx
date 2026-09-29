@@ -54,7 +54,15 @@ const captionStyle = (token: GlobalToken): CSSProperties => ({
   cursor: "pointer",
 });
 
+/**
+ * Ant Design components
+ *
+ * The slot map an Ant Design v6 project would pass as `components`. Every
+ * part reads the theme's tokens, so a `ConfigProvider` theme, dark included,
+ * reaches the calendar without extra wiring.
+ */
 export const antdComponents: Partial<DatePickerComponents> = {
+  /** The box the popup is placed against, at the width of Ant's pickers. */
   Root: ({ style, ...props }) => <div style={{ position: "relative", width: "100%", maxWidth: 288, ...style }} {...props} />,
 
   /** The outlined field of Ant's pickers: the primary border and focus ring while open. */
@@ -89,6 +97,7 @@ export const antdComponents: Partial<DatePickerComponents> = {
     );
   },
 
+  /** The trigger text on one ellipsised line, in the placeholder colour while empty. */
   Value: function AntValue({ text, placeholder, empty }) {
     const { token } = theme.useToken();
     return (
@@ -107,6 +116,7 @@ export const antdComponents: Partial<DatePickerComponents> = {
     );
   },
 
+  /** The calendar glyph, in the primary colour while the popup is open. */
   Icon: function AntIcon({ open }) {
     const { token } = theme.useToken();
     return (
@@ -116,6 +126,7 @@ export const antdComponents: Partial<DatePickerComponents> = {
     );
   },
 
+  /** A text `Button` with the filled close glyph; the click stops here so it does not also open the popup. */
   Clear: ({ onClick, ...aria }) => (
     <Button
       type="text"
@@ -148,8 +159,10 @@ export const antdComponents: Partial<DatePickerComponents> = {
     );
   },
 
+  /** The grid of weeks, with a small gap between rows. */
   Calendar: ({ style, ...props }) => <div style={{ display: "grid", rowGap: 2, ...style }} {...props} />,
 
+  /** Native month and year selects side by side, borderless like the header of Ant's picker. */
   Caption: function AntCaption({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) {
     const { token } = theme.useToken();
     return (
@@ -278,8 +291,10 @@ export const antdComponents: Partial<DatePickerComponents> = {
     );
   },
 
+  /** The day number alone; the `Day` button around it carries every state. */
   DayContent: ({ day }) => <span>{day.day}</span>,
 
+  /** The preset `Button`s under a hairline, and a link `Button` for today at the far end. */
   Footer: function AntFooter({ presets, onPreset, onToday, todayLabel }) {
     const { token } = theme.useToken();
     return (
