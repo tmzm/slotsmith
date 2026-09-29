@@ -72,7 +72,7 @@ const rowDragCss = {
 /**
  * Chakra row
  *
- * `Table.Row` with a transparent background, like anes-track-new, the
+ * `Table.Row` with a transparent background, like a dense admin table, the
  * selected state mapped onto Chakra's `bg` prop, and the drag styles for
  * row reordering.
  */
@@ -140,7 +140,7 @@ const ChakraCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...
 /**
  * Chakra pagination
  *
- * anes-track-new's `Pagination.Root` (with `count` as the total row count),
+ * a dense admin table's `Pagination.Root` (with `count` as the total row count),
  * plus a `NativeSelect` for the page size, which that project doesn't have.
  */
 function ChakraPagination({ pageIndex, pageSize, pageSizeOptions, rowCount, setPageIndex, setPageSize, labels }: PaginationSlotProps) {
@@ -187,7 +187,7 @@ function ChakraPagination({ pageIndex, pageSize, pageSizeOptions, rowCount, setP
 /**
  * Chakra empty state
  *
- * anes-track-new's `EmptyState` block.
+ * a dense admin table's `EmptyState` block.
  */
 const ChakraEmpty = ({ message }: EmptySlotProps) => (
   <EmptyState.Root>
@@ -221,7 +221,7 @@ const ChakraError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
 /**
  * Chakra components
  *
- * The slot map a Chakra UI v3 project (anes-track-new) would pass as `components`.
+ * The slot map a Chakra UI v3 project styled as a dense admin table would pass as `components`.
  */
 export const chakraComponents: Partial<DataTableComponents> = {
   Table: ChakraTable,
@@ -242,7 +242,7 @@ export const chakraComponents: Partial<DataTableComponents> = {
 /**
  * Chakra loading
  *
- * anes-track-new shows one centered spinner instead of skeleton rows; this
+ * a dense admin table shows one centered spinner instead of skeleton rows; this
  * `Skeleton` slot does the same in the first cell only.
  */
 export const ChakraSpinnerSkeleton = ({ rowIndex, columnIndex }: { rowIndex: number; columnIndex: number }) =>

@@ -31,7 +31,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <ThemeProvider theme=
 /**
  * RTL wrapper
  *
- * root-cms's setup: an RTL theme with the `arSA` locale, under `dir="rtl"`.
+ * a CMS admin panel's setup: an RTL theme with the `arSA` locale, under `dir="rtl"`.
  */
 const rtlTheme = createTheme({ direction: "rtl" }, arSA);
 const RtlWrapper = ({ children }: { children: ReactNode }) => (
@@ -56,7 +56,7 @@ function renderMuiTable(props: Partial<DataTableProps<Employee>> = {}, wrapper =
 
 beforeAll(stubBrowserApis);
 
-describe("MUI v7 (root-cms)", () => {
+describe("MUI v7 (CMS admin panel)", () => {
   failOnReactWarnings();
 
   it("renders with MUI's table components", () => {
@@ -101,7 +101,7 @@ describe("MUI v7 (root-cms)", () => {
     expect(bodyRows()).toHaveLength(23);
   });
 
-  it("shows one CircularProgress while loading, like root-cms", () => {
+  it("shows one CircularProgress while loading, like a CMS admin panel", () => {
     renderMuiTable({ loading: true });
     /** Loading rows are aria-hidden; the root announces aria-busy instead. */
     expect(screen.getAllByRole("progressbar", { hidden: true })).toHaveLength(1);
@@ -122,7 +122,7 @@ describe("MUI v7 (root-cms)", () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
-  it("works in RTL with the arSA locale, like root-cms", () => {
+  it("works in RTL with the arSA locale, like a CMS admin panel", () => {
     const labelRowsPerPage = arSA.components?.MuiTablePagination?.defaultProps?.labelRowsPerPage;
     renderMuiTable({ labels: { selectRow: "تحديد الصف" }, enableRowSelection: true }, RtlWrapper);
     expect(screen.getByText(String(labelRowsPerPage))).toBeInTheDocument();

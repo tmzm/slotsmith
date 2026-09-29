@@ -37,7 +37,7 @@ import type {
 /**
  * MUI root
  *
- * root-cms's `Stack` with hidden overflow around the table.
+ * a CMS admin panel's `Stack` with hidden overflow around the table.
  */
 const MuiRoot = (props: RootSlotProps) => <Stack overflow="hidden" {...props} />;
 
@@ -135,7 +135,7 @@ const MuiSortIcon = ({ direction }: SortIconSlotProps) => (
 /**
  * MUI loading
  *
- * root-cms shows one `CircularProgress` instead of skeleton rows; this
+ * a CMS admin panel shows one `CircularProgress` instead of skeleton rows; this
  * `Skeleton` slot does the same in the first cell only.
  */
 const MuiLoading = ({ rowIndex, columnIndex }: SkeletonSlotProps) =>
@@ -144,7 +144,7 @@ const MuiLoading = ({ rowIndex, columnIndex }: SkeletonSlotProps) =>
 /**
  * MUI empty state
  *
- * root-cms's centered secondary `Typography`.
+ * a CMS admin panel's centered secondary `Typography`.
  */
 const MuiEmpty = ({ message }: EmptySlotProps) => (
   <Stack alignItems="center" justifyContent="center" spacing={1}>
@@ -173,7 +173,7 @@ const MuiError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
 /**
  * MUI pagination
  *
- * root-cms's pair: `Pagination` for the page numbers and a `TablePagination`
+ * a CMS admin panel's pair: `Pagination` for the page numbers and a `TablePagination`
  * with its actions blanked out for rows-per-page and the "x–y of n" label.
  */
 function MuiPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, rowCount, setPageIndex, setPageSize }: PaginationSlotProps) {
@@ -197,7 +197,7 @@ function MuiPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, rowCou
 /**
  * MUI components
  *
- * The slot map an MUI v7 project (root-cms) would pass as `components`.
+ * The slot map an MUI v7 project styled as a CMS admin panel would pass as `components`.
  */
 export const muiComponents: Partial<DataTableComponents> = {
   Root: MuiRoot,

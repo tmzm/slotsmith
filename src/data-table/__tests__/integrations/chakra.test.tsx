@@ -21,7 +21,7 @@ import {
 /**
  * Chakra wrapper
  *
- * `ChakraProvider` with the default system, as anes-track-new's provider does
+ * `ChakraProvider` with the default system, as a dense admin table's provider does
  * (its custom system only adds tokens and recipes).
  */
 const Wrapper = ({ children }: { children: ReactNode }) => (
@@ -49,7 +49,7 @@ function renderChakraTable(props: Partial<DataTableProps<Employee>> = {}) {
 
 beforeAll(stubBrowserApis);
 
-describe("Chakra UI v3 (anes-track-new)", () => {
+describe("Chakra UI v3 (dense admin table)", () => {
   failOnReactWarnings();
 
   it("renders with Chakra's table parts", () => {
@@ -95,7 +95,7 @@ describe("Chakra UI v3 (anes-track-new)", () => {
     expect(bodyRows()).toHaveLength(23);
   });
 
-  it("can show one spinner while loading, like anes-track-new", () => {
+  it("can show one spinner while loading, like a dense admin table", () => {
     renderChakraTable({
       loading: true,
       components: { ...chakraComponents, Skeleton: ChakraSpinnerSkeleton },

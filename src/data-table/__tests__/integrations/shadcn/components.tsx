@@ -19,7 +19,7 @@ import { cn } from "./ui/utils";
  * Shadcn checkbox adapter
  *
  * Maps the slot's `indeterminate` flag onto radix's tri-state `checked`, and
- * stops the click from reaching `onRowClick`, like meliving's header.tsx.
+ * stops the click from reaching `onRowClick`, like an editorial layout's header row.
  */
 const ShadcnCheckbox = ({ checked, indeterminate, onCheckedChange, ...props }: CheckboxSlotProps) => (
   <Checkbox
@@ -75,7 +75,7 @@ const ShadcnDragHandle = ({ className, ...props }: DragHandleSlotProps) => (
 /**
  * Visible pages
  *
- * meliving's page list: every page up to 4, otherwise the first, the last,
+ * an editorial layout's page list: every page up to 4, otherwise the first, the last,
  * and the neighbours of the current page with ellipses between.
  *
  * @param page - The current page, 1-based.
@@ -91,7 +91,7 @@ function visiblePages(page: number, total: number): (number | "ellipsis")[] {
 /**
  * Shadcn pagination
  *
- * Modeled on meliving's components/shared/pagination.tsx: a "Showing …"
+ * Modeled on an editorial layout's pagination component: a "Showing …"
  * summary, a radix rows-per-page select, and numbered page buttons whose
  * previous / next buttons disappear at either end.
  */
@@ -176,7 +176,7 @@ function ShadcnPagination({
 /**
  * Shadcn empty state
  *
- * Title and subtitle, like meliving's `Placeholder`.
+ * Title and subtitle, like an editorial layout's placeholder block.
  */
 const ShadcnEmpty = ({ message }: EmptySlotProps) => (
   <div data-slot="empty" className="flex flex-col items-center gap-1 py-10">
@@ -188,7 +188,7 @@ const ShadcnEmpty = ({ message }: EmptySlotProps) => (
 /**
  * Shadcn error state
  *
- * Message and a Retry button, like meliving's error-body.tsx.
+ * Message and a Retry button, like an editorial layout's error state.
  */
 const ShadcnError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
   <div data-slot="error" className="flex flex-col items-center gap-2 py-10">
@@ -204,7 +204,7 @@ const ShadcnError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
 /**
  * Shadcn components
  *
- * The slot map a shadcn project (meliving) would pass as `components`.
+ * The slot map a shadcn project styled as an editorial layout would pass as `components`.
  */
 export const shadcnComponents: Partial<DataTableComponents> = {
   Table,

@@ -19,7 +19,7 @@ import {
 /**
  * Render shadcn table
  *
- * `<DataTable>` with meliving's shadcn slots.
+ * `<DataTable>` with an editorial layout's shadcn slots.
  */
 function renderShadcnTable(props: Partial<DataTableProps<Employee>> = {}) {
   const user = userEvent.setup();
@@ -36,7 +36,7 @@ function renderShadcnTable(props: Partial<DataTableProps<Employee>> = {}) {
 
 beforeAll(stubBrowserApis);
 
-describe("shadcn/ui (meliving)", () => {
+describe("shadcn/ui (editorial layout)", () => {
   failOnReactWarnings();
 
   it("renders with shadcn's table primitives", () => {
@@ -77,7 +77,7 @@ describe("shadcn/ui (meliving)", () => {
     expect(selectAll).toHaveAttribute("aria-checked", "true");
   });
 
-  it("paginates with meliving-style numbered pages", async () => {
+  it("paginates with editorial-style numbered pages", async () => {
     const user = renderShadcnTable();
     expect(screen.getByText("Showing 1 to 10 of 23 records")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Previous page" })).not.toBeInTheDocument();
