@@ -234,9 +234,9 @@ Every component names its classes the same way: `s` plus the component's initial
 | `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
 | `.rdt__placeholder` (empty state) | `.sdt__message` |
 | `.rdt__placeholder--error` (error state) | `.sdt__error` |
+| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 In 1.5 the error state carried both `rdt__placeholder` and `rdt__placeholder--error`, so a `.rdt__placeholder` rule styled the empty and the error state alike. The error state is now only `sdt__error`: to keep styling both, select `.sdt__message, .sdt__error`.
-| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 ## You ship only what you import
 

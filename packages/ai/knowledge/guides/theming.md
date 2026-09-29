@@ -76,9 +76,9 @@ Before 1.6.0 the data table's prefix was `rdt`. 1.6.0 renamed it to `sdt` with n
 | `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
 | `.rdt__placeholder` (empty state) | `.sdt__message` |
 | `.rdt__placeholder--error` (error state) | `.sdt__error` |
+| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 In 1.5 the error state carried both `rdt__placeholder` and `rdt__placeholder--error`, so a `.rdt__placeholder` rule styled the empty and the error state alike. The error state is now only `sdt__error`: to keep styling both, select `.sdt__message, .sdt__error`.
-| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 ## Without the stylesheet
 
