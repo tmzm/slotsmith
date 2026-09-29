@@ -1,6 +1,7 @@
 ---
 import Base from "@/layouts/Base.astro";
 import HashRedirect from "@/components/HashRedirect.astro";
+import Demo from "@/components/Demo.astro";
 import { langFromParam, langPaths, t } from "@/i18n";
 
 export function getStaticPaths() {
@@ -13,4 +14,5 @@ const lang = langFromParam(Astro.params.lang);
   {lang === "en" && <HashRedirect />}
   <h1 class="display" lang="en" style="font-size: clamp(3rem, 1rem + 10vw, 6rem)">slotsmith</h1>
   <p style="max-inline-size: 60ch; font-size: 1.25rem; color: var(--ink-2)">{t(lang, "site.positioning")}</p>
+  <Demo name="smoke/hello-table" lang={lang} height="14rem" fallback />
 </Base>

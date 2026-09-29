@@ -1,0 +1,21 @@
+---
+/**
+ * The code of one sample, highlighted, with no live demo. Use it for samples
+ * that do not render (`.ts`, `.css`, `.json`, `.sh`) or when the demo is
+ * elsewhere on the page.
+ */
+import "@/styles/code.css";
+import { Code } from "astro:components";
+import { CODE_THEME, sampleSource } from "@/lib/samples";
+
+export interface Props {
+  /** The sample's path under `samples/` without extension. */
+  name: string;
+}
+
+const { name } = Astro.props;
+const { code, lang } = sampleSource(name);
+---
+<div class="panel sample-code" data-sample={name}>
+  <Code code={code} lang={lang} theme={CODE_THEME} dir="ltr" />
+</div>

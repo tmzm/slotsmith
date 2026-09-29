@@ -1,0 +1,59 @@
+/*
+ * Sample code: Shiki's css-variables theme, coloured from the site palette so
+ * it follows the light and dark themes (docs/DESIGN.md sections 2 and 4).
+ */
+:root {
+  --astro-code-foreground: var(--ink-2);
+  --astro-code-background: var(--panel);
+  --astro-code-token-keyword: var(--gold-text);
+  --astro-code-token-constant: color-mix(in oklab, var(--gold-text) 55%, var(--ink));
+  --astro-code-token-string: var(--ok);
+  --astro-code-token-string-expression: var(--ok);
+  --astro-code-token-comment: var(--muted);
+  --astro-code-token-function: var(--ink);
+  --astro-code-token-parameter: var(--ink-2);
+  --astro-code-token-punctuation: var(--muted);
+  --astro-code-token-link: var(--gold-text);
+}
+
+.sample-code {
+  position: relative;
+}
+
+.sample-code .astro-code {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+.copy-button {
+  position: absolute;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition:
+    border-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
+}
+
+.copy-button:hover,
+.copy-button:focus-visible {
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+.copy-button[data-copied] {
+  border-color: var(--gold);
+  color: var(--gold-text);
+}

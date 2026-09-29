@@ -1,0 +1,152 @@
+---
+/**
+ * A live demo and its code (docs/DESIGN.md "Demo panel"): a panel with a mono
+ * tab row, the sample rendered by SampleIsland, and the same sample's source.
+ * The demo is prerendered, so the HTML holds it before hydration; `height`
+ * reserves its space so hydrating causes no layout shift. An unknown `name`
+ * fails the build with the name in the message.
+ */
+import "slotsmith/styles.css";
+import "@/styles/code.css";
+import { Code } from "astro:components";
+import SampleIsland from "@/islands/SampleIsland";
+import { CODE_THEME, sampleSource } from "@/lib/samples";
+import { t, type Lang } from "@/i18n";
+
+export interface Props {
+  /** The sample's path under `samples/` without extension (`data-table/quick-start`). */
+  name: string;
+  lang: Lang;
+  /** The space the demo takes once rendered, as a CSS length. */
+  height: string;
+  /** Marks a demo that shows the library's built-in fallbacks. */
+  fallback?: boolean;
+  /** Shows the library's own tokens instead of the site palette. */
+  stock?: boolean;
+  /** When the island hydrates. */
+  hydrate?: "visible" | "idle" | "load";
+  /** The locale packs the demo may use. */
+  locales?: "site" | "all";
+}
+
+const { name, lang, height, fallback, stock, hydrate = "visible", locales } = Astro.props;
+const { code, lang: codeLang } = sampleSource(name);
+const id = `demo-${name.replace(/[^\w-]/g, "-")}`;
+---
+<figure
+  class:list={["panel", "sample-demo", { "site-demo": !stock }]}
+  data-sample={name}
+  data-fallback={fallback || undefined}
+  data-view="preview"
+  style={`--demo-h:${height}`}
+>
+  <div class="sample-demo__tabs mono" role="tablist" dir="ltr">
+    <button type="button" role="tab" id={`${id}-tab-preview`} aria-controls={`${id}-preview`} aria-selected="true" data-tab="preview">preview</button>
+    <button type="button" role="tab" id={`${id}-tab-code`} aria-controls={`${id}-code`} aria-selected="false" tabindex="-1" data-tab="code">code</button>
+  </div>
+  <div class="sample-demo__preview" id={`${id}-preview`} role="tabpanel" aria-labelledby={`${id}-tab-preview`} data-pane="preview">
+    {hydrate === "load" && <SampleIsland client:load name={name} lang={lang} locales={locales} />}
+    {hydrate === "idle" && <SampleIsland client:idle name={name} lang={lang} locales={locales} />}
+    {hydrate === "visible" && <SampleIsland client:visible name={name} lang={lang} locales={locales} />}
+  </div>
+  <div class="sample-code" id={`${id}-code`} role="tabpanel" aria-labelledby={`${id}-tab-code`} data-pane="code">
+    <Code code={code} lang={codeLang} theme={CODE_THEME} dir="ltr" />
+    <button type="button" class="copy-button" data-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
+      {t(lang, "common.copy")}
+    </button>
+  </div>
+</figure>
+<noscript><style is:inline>.sample-demo [data-pane] { display: block !important; } .sample-demo__tabs { display: none !important; }</style></noscript>
+
+<style>
+  .sample-demo {
+    margin: 1.5rem 0;
+    overflow: hidden;
+  }
+
+  .sample-demo__tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.375rem;
+    border-block-end: 1px solid var(--line);
+    font-size: 0.75rem;
+  }
+
+  .sample-demo__tabs button {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+
+  .sample-demo__tabs button:hover {
+    color: var(--ink);
+  }
+
+  .sample-demo__tabs button[aria-selected="true"] {
+    background: var(--gold);
+    color: var(--on-gold);
+  }
+
+  .sample-demo__preview {
+    min-block-size: var(--demo-h);
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .sample-demo[data-view="preview"] [data-pane="code"],
+  .sample-demo[data-view="code"] [data-pane="preview"] {
+    display: none;
+  }
+</style>
+
+<script>
+  const COPIED_MS = 1500;
+
+  for (const demo of document.querySelectorAll<HTMLElement>(".sample-demo")) {
+    const tabs = [...demo.querySelectorAll<HTMLButtonElement>("[data-tab]")];
+    const select = (tab: HTMLButtonElement) => {
+      demo.dataset.view = tab.dataset.tab;
+      for (const other of tabs) {
+        const selected = other === tab;
+        other.setAttribute("aria-selected", String(selected));
+        other.tabIndex = selected ? 0 : -1;
+      }
+    };
+    for (const tab of tabs) {
+      tab.addEventListener("click", () => select(tab));
+      tab.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        const next = tabs[(tabs.indexOf(tab) + 1) % tabs.length];
+        if (next) {
+          select(next);
+          next.focus();
+        }
+      });
+    }
+  }
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-copy]")) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    button.addEventListener("click", async () => {
+      const code = button.parentElement?.querySelector("pre")?.textContent ?? "";
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch {
+        return;
+      }
+      button.textContent = button.dataset.labelCopied ?? "";
+      button.toggleAttribute("data-copied", true);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        button.textContent = button.dataset.label ?? "";
+        button.removeAttribute("data-copied");
+      }, COPIED_MS);
+    });
+  }
+</script>

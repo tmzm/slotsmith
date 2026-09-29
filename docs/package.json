@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "redirects": "node scripts/redirects.ts",
     "build": "node scripts/redirects.ts && node scripts/reference.ts && astro build",
-    "check": "astro check && tsc --noEmit",
+    "check": "astro check && tsc --noEmit && tsc --noEmit -p samples && node scripts/check-snippets.ts",
     "test": "vitest run",
     "verify": "echo \"verify: filled by a later task\"",
     "reference": "node scripts/reference.ts"
