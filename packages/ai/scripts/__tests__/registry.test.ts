@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -197,6 +197,12 @@ describe("writeRegistry", () => {
   it("empties the folder first, so a removed item leaves no stale file", () => {
     writeRegistry({ knowledgeDir: DEFAULT_OPTIONS.knowledgeDir, outDir: dir, registryName: "slotsmith", homepage: "https://slotsmith-docs.netlify.app" });
     const before = readdirSync(dir).sort();
+
+    // Plants a file no current component would produce, standing in for an
+    // item a past run wrote and the source no longer has (a removed
+    // component, or a renamed adapter file).
+    writeFileSync(join(dir, "removed-component.json"), "{}");
+
     writeRegistry({ knowledgeDir: DEFAULT_OPTIONS.knowledgeDir, outDir: dir, registryName: "slotsmith", homepage: "https://slotsmith-docs.netlify.app" });
     expect(readdirSync(dir).sort()).toEqual(before);
   });
