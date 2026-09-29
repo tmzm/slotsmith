@@ -224,19 +224,7 @@ Not using a component library? Every fallback also exposes `data-*` state, so Ta
 
 The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others; the date picker and the uploader also still follow a theme written against the data table's `--sdt-*`. A value set on `:root` applies to both themes, so set its dark value under `.dark, [data-theme="dark"]` too. The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, on `:root`, a wrapper or the table, and then yours win at every size. `--sdt-font-size` otherwise follows `--ss-font-size` (one pixel smaller at the default `sm` size).
 
-Every component names its classes the same way: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state as `data-*` attributes. A part that plays the same role in several components has the same name in each: the popups are `__popup`, the triggers `__trigger`, an empty state `__message`, an error state `__error`, text for screen readers only `__sr-only`.
-
-> **Breaking in 1.6.0:** the data table's classes and tokens were renamed from `rdt` to `sdt`, with no aliases. Rename your overrides and themes:
-
-| Before 1.6.0 | 1.6.0 |
-| --- | --- |
-| `.rdt`, `.rdt__*` (every class, e.g. `.rdt__row`, `.rdt__cell--drag`) | `.sdt`, `.sdt__*` (`.sdt__row`, `.sdt__cell--drag`) |
-| `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
-| `.rdt__placeholder` (empty state) | `.sdt__message` |
-| `.rdt__placeholder--error` (error state) | `.sdt__error` |
-| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
-
-In 1.5 the error state carried both `rdt__placeholder` and `rdt__placeholder--error`, so a `.rdt__placeholder` rule styled the empty and the error state alike. The error state is now only `sdt__error`: to keep styling both, select `.sdt__message, .sdt__error`.
+Every component names its classes the same way: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state as `data-*` attributes. A part that plays the same role in several components has the same name in each: the popups are `__popup`, the triggers `__trigger`, an empty state `__message`, an error state `__error`, text for screen readers only `__sr-only`. Select `.sdt__message, .sdt__error` to style both states of the data table at once.
 
 ## You ship only what you import
 
@@ -334,7 +322,6 @@ pnpm test:ai     # the MCP server in packages/ai
 - The headless `useDataTable` returns `reorder` (the drag state, and the props for rows and handles), `reorderable` and `reorderHandleColumn`, and takes `labels` for the handle's name and the announcements.
 - The shadcn/ui, MUI and Chakra UI adapters gain a drag handle, and style a lifted row themselves (an opaque background and a shadow), because the built-in drag styles apply to the fallback row only.
 - `SlotsmithProvider` and `useSlotsmithLocale` now come from `slotsmith/provider`, which will also carry shared settings beyond the language. `slotsmith/locale` still exports them, marked deprecated.
-- **Breaking:** the data table's class prefix is now `sdt` and its tokens are `--sdt-*`, like the other components' `sac`, `sdp` and `sfu`; the old `rdt` classes and `--rdt-*` tokens are gone. Parts with the same role now have the same name in every component: the table's empty and error states are `sdt__message` and `sdt__error` (was `rdt__placeholder` / `rdt__placeholder--error`) and its screen-reader text is `sdt__sr-only` (was `rdt__sr`), like the autocomplete's. See the migration table under [Theming](#theming).
 - All four components now share one default palette and shape, read from the new shared `--ss-*` tokens; see [Theming](#theming). Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once. The per-component tokens still work, and the date picker and the uploader still follow a theme written against the data table's tokens.
 - The date picker's month and year selects now use the component's colours in dark mode.
 - The data table's page-size control is now the slotsmith autocomplete, so it matches the other components. The data table's bundle includes the autocomplete, and `slotsmith/data-table.css` includes the autocomplete's styles.

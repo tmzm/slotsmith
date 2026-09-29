@@ -1,9 +1,9 @@
 /**
  * @vitest-environment node
  *
- * The data table's prefix was `rdt` before 1.6.0 and is `sdt` now, with no
- * aliases. This guard fails if an old class or token name comes back into the
- * source or the built stylesheets.
+ * `rdt` is not a name this library uses. This guard fails if it comes back
+ * into the source, the shipped docs or the built stylesheets — anywhere but
+ * this file, which has to name it to guard against it.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -15,19 +15,26 @@ const OLD_NAME = /(?<![\w-])rdt(?![a-zA-Z0-9])|--rdt-/;
 /**
  * Files
  *
- * @param folder - A folder to walk.
- * @returns Every file below it, this guard excepted.
+ * @param root - A file or a folder to walk.
+ * @returns Every file at or below it, this guard excepted.
  */
-const files = (folder: string): string[] =>
-  readdirSync(folder).flatMap((entry) => {
-    const path = join(folder, entry);
-    if (statSync(path).isDirectory()) return files(path);
-    return path.endsWith("names.test.ts") ? [] : [path];
-  });
+const files = (root: string): string[] => {
+  if (root.endsWith("names.test.ts")) return [];
+  if (!statSync(root).isDirectory()) return [root];
+  return readdirSync(root).flatMap((entry) => files(join(root, entry)));
+};
 
-describe("the old rdt names", () => {
-  it("appear nowhere in the source", () => {
-    const offenders = files(resolve(process.cwd(), "src")).filter((path) => OLD_NAME.test(readFileSync(path, "utf8")));
+/** Every place the old name must not appear: the source, and every shipped doc. */
+const GUARDED_ROOTS = [
+  resolve(process.cwd(), "src"),
+  resolve(process.cwd(), "README.md"),
+  resolve(process.cwd(), "packages/ai/knowledge"),
+  resolve(process.cwd(), "packages/ai/README.md"),
+];
+
+describe("the old rdt name", () => {
+  it("appears nowhere outside this guard", () => {
+    const offenders = GUARDED_ROOTS.flatMap(files).filter((path) => OLD_NAME.test(readFileSync(path, "utf8")));
     expect(offenders).toEqual([]);
   });
 

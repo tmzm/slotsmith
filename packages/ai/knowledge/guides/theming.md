@@ -64,21 +64,7 @@ A light island inside a dark page (`[data-theme="light"]` nested under `.dark`) 
 
 ## Class prefixes
 
-Fallback classes follow one scheme in every component: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, so they never collide with an application's classes. A part with the same role has the same name in every component: `__popup`, `__trigger`, `__value` (`--empty` when it shows the placeholder), `__clear`, `__list`, `__message` for an empty state, `__error` for an error state, `__sr-only` for text read only by screen readers. Target state with the `data-*` attributes rather than modifier classes: the attributes are part of the public contract, the class names are not.
-
-## Renamed in 1.6.0
-
-Before 1.6.0 the data table's prefix was `rdt`. 1.6.0 renamed it to `sdt` with no aliases, so an app upgrading must rename its overrides and themes:
-
-| Before 1.6.0 | 1.6.0 |
-| --- | --- |
-| `.rdt`, `.rdt__*` (every class, e.g. `.rdt__row`, `.rdt__cell--drag`) | `.sdt`, `.sdt__*` (`.sdt__row`, `.sdt__cell--drag`) |
-| `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
-| `.rdt__placeholder` (empty state) | `.sdt__message` |
-| `.rdt__placeholder--error` (error state) | `.sdt__error` |
-| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
-
-In 1.5 the error state carried both `rdt__placeholder` and `rdt__placeholder--error`, so a `.rdt__placeholder` rule styled the empty and the error state alike. The error state is now only `sdt__error`: to keep styling both, select `.sdt__message, .sdt__error`.
+Fallback classes follow one scheme in every component: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, so they never collide with an application's classes. A part with the same role has the same name in every component: `__popup`, `__trigger`, `__value` (`--empty` when it shows the placeholder), `__clear`, `__list`, `__message` for an empty state, `__error` for an error state, `__sr-only` for text read only by screen readers. Target state with the `data-*` attributes rather than modifier classes: the attributes are part of the public contract, the class names are not. Select `.sdt__message, .sdt__error` to style both states of the data table at once.
 
 ## Without the stylesheet
 
