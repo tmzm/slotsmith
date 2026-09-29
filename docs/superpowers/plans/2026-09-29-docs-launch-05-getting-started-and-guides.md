@@ -80,11 +80,11 @@
 ### Task 4: The slot model (`/guides/`)
 
 **Files:**
-- Create: `docs/src/content/docs/en/guides.mdx`, `docs/src/islands/XRay.tsx` (ported from the old site's `XRay.tsx`, reading slot names and kinds from `getReference("data-table")` passed as props), samples `docs/samples/guides/{element-part,widget-part,wrap-fallback,data-state.css,compound-parts,headless-hooks}.tsx`
+- Create: `docs/src/content/docs/en/guides.mdx`, `docs/src/islands/XRay.tsx` (the old site's X-ray idea rebuilt on plan 02's `ExplodedView` and `explodeParts`, reading slot names and kinds from `getReference("data-table")` passed as props, so `/guides/` and the landing share one visual language), samples `docs/samples/guides/{element-part,widget-part,wrap-fallback,data-state.css,compound-parts,headless-hooks}.tsx`
 - Test: `docs/src/islands/__tests__/XRay.test.tsx`
 
 **Interfaces:**
-- `XRay.tsx` props `{ slots: { name: string; kind: "element" | "widget" }[]; lang: Lang }`: a live table with a "Show parts" toggle outlining each slot with its name and kind; picking a slot links to `/components/data-table/api/#slot-<Name>`. Every slot in the table's reference must be reachable from the list (fixes the old site's 21-of-22 and hidden-slot problems).
+- `XRay.tsx` props `{ slots: { name: string; kind: "element" | "widget" }[]; lang: Lang }`: a live table with a "Show parts" toggle that sets `--explode` to 1 (CSS transition 320ms, instant under reduced motion; no GSAP on docs pages) and labels each slot with `bracketLabel` (`<Name>` element, `{Name}` widget); picking a slot links to `/components/data-table/api/#slot-<Name>`. Every slot in the table's reference must be reachable from the list (fixes the old site's 21-of-22 and hidden-slot problems).
 - `guides.mdx` sections with ids: `two-kinds`, `data-state`, `wrap-fallbacks`, `compound-parts`, `headless-hooks`, `rules` (a custom `Row` keeps a stable identity; widget parts get told what is true, not what to render).
 
 - [ ] **Step 1: Write the failing test:** XRay with the data-table reference lists 22 slots, 12 marked element and 10 widget, and each item links to `#slot-<Name>`.

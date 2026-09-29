@@ -16,8 +16,8 @@
 - Languages: English at `/…`, Arabic at `/ar/…`. One template per page; no per-language page files or components.
 - `trailingSlash: "always"`, `build.format: "directory"`, `output: "static"`.
 - Arabic catalog must be typed `Record<MessageKey, string>` so a missing key fails `tsc`.
-- Theme: navy + gold per the old site's `DESIGN.md`; dark default; stored under `localStorage["slotsmith-theme"]`.
-- Fonts self-hosted: Inter 400/500/700 and JetBrains Mono 400/500 (Latin), IBM Plex Sans Arabic 400/500/700 (Arabic subset, `/ar/` pages only).
+- Design source of truth: `docs/DESIGN.md`, copied in Task 3 from the handoff folder's `2026-09-29-docs-launch-design-system.md` ("The Illuminated Assembly"). Tokens are the portfolio's, verbatim (DESIGN.md section 2); dark default; stored under `localStorage["slotsmith-theme"]`.
+- Fonts self-hosted: Big Shoulders 900, Geist 400/500/600, JetBrains Mono 400/500 (Latin); Alexandria 800 and Noto Sans Arabic 400/500/700 (Arabic subset, `/ar/` pages only). No Inter, no IBM Plex.
 - No browser API in render paths: `window`, `document`, `localStorage`, `today()` only inside effects or the inline head script.
 - Library source is read-only. Commits: one line, conventional, no AI attribution.
 
@@ -87,7 +87,7 @@
 ### Task 3: Layout, header, sidebar, theme, fonts
 
 **Files:**
-- Create: `docs/src/layouts/Base.astro`, `docs/src/layouts/Docs.astro`, `docs/src/components/Head.astro`, `Header.astro`, `Sidebar.astro`, `Footer.astro`, `ThemeScript.astro`, `LangSwitch.astro`, `docs/src/nav.ts`, `docs/src/lib/page.ts`, `docs/src/styles/{tokens,base,site}.css`
+- Create: `docs/DESIGN.md` (copy of the handoff folder's design system file), `docs/src/layouts/Base.astro`, `docs/src/layouts/Docs.astro`, `docs/src/components/Head.astro`, `Header.astro`, `Wordmark.astro`, `Sidebar.astro`, `MobileDock.astro`, `PageHeader.astro`, `Note.astro`, `Footer.astro`, `ThemeScript.astro`, `LangSwitch.astro`, `docs/src/nav.ts`, `docs/src/lib/page.ts`, `docs/src/styles/{tokens,base,site,library}.css`
 - Test: `docs/src/lib/__tests__/page.test.ts`, `docs/src/__tests__/nav.test.ts`
 
 **Interfaces:**
@@ -108,12 +108,17 @@
 - Produces layouts:
   - `Base.astro` props `{ lang: Lang; title: string | null; description: string; path: string; ogImage?: string }` — `<html lang dir data-theme>`, `Head`, skip link to `#content`, `Header`, `<slot />`, `Footer`.
   - `Docs.astro` props = Base props + `{ sourcePath: string; toc?: { id: string; text: string; depth: 2 | 3 }[] }` — adds `Sidebar`, "On this page" from `toc`, and the "Edit this page" link.
-- `Header`: wordmark, version badge (`v<major>.<minor>` from the root `package.json` `version`), an empty `<div id="search-slot">` (plan 08 fills it), GitHub, npm, `LangSwitch` (links to the same path in the other language), theme button.
+- `Header`: `Wordmark` (`<slot>{smith}` in JetBrains Mono, brackets and braces in `--gold`, letters in `--ink`; links home), version tag (`{v<major>.<minor>}` in mono, from the root `package.json` `version`), an empty `<div id="search-slot">` (plan 08 fills it), GitHub, npm, `LangSwitch` (links to the same path in the other language), theme button.
+- `Sidebar`: group names in Geist 600; the current page renders as a gold mono tag `<Label />` (e.g. `<Theming />`) with `aria-current="page"`; hover and focus reveal faint brackets around other items.
+- `MobileDock` (below 768px): fixed bottom dock with Menu, Search, Theme buttons, safe-area insets.
+- `PageHeader.astro` props `{ title: string; lead?: string; meta?: { key: string; value: string }[] }`: display title (Big Shoulders, `clamp()` max 4.5rem), lead in Geist 1.25rem, meta row in mono as `{key} value` pairs.
+- `Note.astro` props `{ kind: "note" | "limitation" | "warning" }`: a panel whose first line is `{ <kind> }` in mono; warning gets a tinted background. No side-stripe border.
+- `library.css`: maps slotsmith's `--ss-*` tokens to the site palette (`--ss-surface: var(--panel)`, `--ss-text: var(--ink)`, `--ss-muted: var(--muted)`, `--ss-border: var(--line)`, `--ss-accent: var(--gold)`, `--ss-on-accent: var(--on-gold)`, `--ss-hover: var(--panel-2)`, `--ss-selected: color-mix(in oklab, var(--gold) 16%, var(--panel))`, `--ss-danger: var(--danger)`), scoped to `.site-demo` so a demo can opt out (the swap demo's Fallback state does).
 
 - [ ] **Step 1: Write the failing tests:** `pageTitle("en", "Theming")` → `"Theming · slotsmith"`; `pageTitle("en", null)` starts with `"Finished data table, combobox, date picker and file uploader for React"`; `canonicalUrl("ar", "/theming/")` → `"https://slotsmith-docs.netlify.app/ar/theming/"`; `editUrl("src/content/docs/en/theming.mdx")` → `"https://github.com/tmzm/slotsmith/edit/master/docs/src/content/docs/en/theming.mdx"`; `alternates("/")` has three entries with `x-default` equal to the English URL. Nav test: every `NavItem.path` starts and ends with `/`, and every `label` exists in `messages.en.ts`.
 - [ ] **Step 2: Run** → FAIL.
-- [ ] **Step 3: Implement.** Port `tokens.css` / `base.css` / `site.css` from the old site, converting physical properties (`left`, `margin-right`, …) to logical ones so `/ar/` mirrors. `ThemeScript` is an `is:inline` script in `<head>` that reads the stored theme (dark default) and sets `data-theme` before paint. Fonts: import the `@fontsource` CSS files for the weights and subsets in Global Constraints; preload Inter 400 and 700 woff2 via `?url` imports; the Arabic family is imported only when `lang === "ar"`. Sidebar marks the current page with `aria-current="page"` and collapses into a menu button below 1024px.
-- [ ] **Step 4: Run** tests → PASS. `astro build`, open `dist/index.html` and `dist/ar/index.html`: `lang`/`dir` correct, one `<title>`, no external font requests (grep `fonts.googleapis` → none).
+- [ ] **Step 3: Implement** following `docs/DESIGN.md` sections 2–5 and 7. Write `tokens.css` from DESIGN.md section 2 (both themes; `[data-theme="dark"]` and `[data-theme="light"]`), `base.css` (type scale, `.display` rules including the Arabic and `lang="en"`-inside-Arabic cases, focus ring, selection, scrollbar as in the portfolio's `app/globals.css`), `site.css` (panel, layout grid, sidebar, dock), all with logical properties so `/ar/` mirrors. `ThemeScript` is an `is:inline` script in `<head>` that reads the stored theme (dark default) and sets `data-theme` before paint; the theme button crossfades with `document.startViewTransition` when available and not reduced-motion. Fonts: `@fontsource` packages for the families in Global Constraints (use the `@fontsource` or `@fontsource-variable` package that exists for each; verify names on npm); preload Geist 400 and Big Shoulders 900 woff2 via `?url` imports; the Arabic families are imported only when `lang === "ar"`. Sidebar collapses into a sheet below 1024px.
+- [ ] **Step 4: Run** tests → PASS. `astro build`, open `dist/index.html` and `dist/ar/index.html`: `lang`/`dir` correct, one `<title>`, no external font requests (grep `fonts.googleapis` → none), no `Inter` or `IBM Plex` in the CSS output. Screenshot the stub landing and one docs page at 360px and 1440px in both themes and both languages; check them against DESIGN.md sections 2–5 (run `/impeccable audit` on the layout if the Impeccable skill is available).
 - [ ] **Step 5: Commit** `feat: add the docs layout, header, sidebar and theme`
 
 ### Task 4: Prose collection and every page of the site map
@@ -213,7 +218,7 @@
   export function sampleNames(): string[];
   ```
 - `SampleIsland.tsx` props `{ name: string; lang: Lang; locales?: "site" | "all" }`: a non-eager `import.meta.glob("../../samples/**/*.tsx")` map, `React.lazy` of the named loader, wrapped in `SlotsmithProvider` (`locale` `"en-US"` or `"ar"`, `locales={[ar]}` for `"site"`) and a `dir` wrapper. Throws `Unknown sample` for a bad name.
-- `Demo.astro` props `{ name: string; lang: Lang; height: string; fallback?: boolean; hydrate?: "visible" | "idle" | "load" }` (default `visible`): renders `<figure data-sample={name} data-fallback={fallback || undefined} style={`--demo-h:${height}`}>` containing `<SampleIsland client:… />` above the code (`astro:components` `<Code>` with `sampleSource(name)`), plus a copy button. `height` reserves space so hydration causes no layout shift.
+- `Demo.astro` props `{ name: string; lang: Lang; height: string; fallback?: boolean; stock?: boolean; hydrate?: "visible" | "idle" | "load" }` (default `visible`): renders `<figure class="panel site-demo" data-sample={name} data-fallback={fallback || undefined} style={`--demo-h:${height}`}>` (drop `site-demo` when `stock`, so the library's own tokens show) containing a mono tab row (`preview`, `code`, and shared files later), `<SampleIsland client:… />`, and the code (`astro:components` `<Code>` with `sampleSource(name)`, `dir="ltr"`, a theme matching DESIGN.md's palette), plus a copy button that shows `Copied` in mono for 1.5s. `height` reserves space so hydration causes no layout shift.
 - `SampleCode.astro` props `{ name: string }`: code only, same `data-sample` attribute.
 - Produces from `scripts/check-snippets.ts`:
   ```ts

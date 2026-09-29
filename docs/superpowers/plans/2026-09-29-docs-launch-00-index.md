@@ -3,7 +3,9 @@
 Read this file first, then the spec, then plan 01.
 
 This handoff folder is `E:\Projects\Personal\slotsmith-docs-plans\`. It holds
-the spec (`2026-09-29-docs-launch-site-design.md`) and plans 00–08. The library
+the spec (`2026-09-29-docs-launch-site-design.md`), the design system
+(`2026-09-29-docs-launch-design-system.md`, "The Illuminated Assembly", which
+plan 01 copies to `docs/DESIGN.md`) and plans 00–08. The library
 repo is `E:\Projects\Personal\React-data-table` (package `slotsmith`); all paths
 in the plans are relative to that repo.
 
@@ -66,6 +68,13 @@ spec says what to build; these plans say how, in order.
   pick the reversible default, keep going.
 - Copy rules: plain, specific, short sentences, no marketing adjectives. Every
   claim about a feature links to its live demo.
+- Design: every visual decision follows `docs/DESIGN.md`. It is a sibling of
+  the owner's portfolio (`E:\Projects\Personal\portfolio`; read its
+  `DESIGN.md`, `app/globals.css`, `components/boot.tsx` and
+  `components/command-palette.tsx` for reference), not a copy. When the
+  Impeccable skill is available, use `/impeccable craft` for new surfaces and
+  `/impeccable polish` / `audit` before closing a plan. Screenshot new pages at
+  360px and 1440px, both themes, both languages.
 - Answer first: every MDX page opens with one prose paragraph of at most 50
   words that names the page's subject and answers "what is this / how do I do
   it". Write pages this way from plan 03 on; plan 08 adds the check that

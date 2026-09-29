@@ -14,7 +14,8 @@
 
 - The overview page lists the brief's template in this order: Overview + live demo → Install → Quick start → Guides → Reference (Slots, Props, Labels & locales, Styling — links to `/api/`) → Adapters → Accessibility → Limitations.
 - Props, Slots, Labels and Styling tables come only from `getReference()`. No hand-written prop, slot or label names in `.astro` or `.mdx` files outside prose sentences.
-- Slots table columns, in order: Name · Kind (element / widget) · Props it receives · Default fallback (collapsed source) · `data-*` attributes.
+- Slots table columns, in order: Name · Kind (element / widget) · Props it receives · Default fallback (collapsed source) · `data-*` attributes. The Kind cell shows `<element>` in `--ink` or `{widget}` in `--gold` (JetBrains Mono), matching the landing's bracket meaning.
+- Visual treatment follows `docs/DESIGN.md` section 5: pages open with `PageHeader` (meta row `{entry} slotsmith/<c>`, `{css} slotsmith/<c>.css`), reference tables are dense hairline tables with `--panel-2` row hover and a sticky header, limitations and warnings use `Note` (`{ limitation }`, `{ warning }`), demos are panels. CSS-only motion on docs pages.
 - Quick-start samples are standalone: data inline, imports only from `slotsmith…`, `react` and the component's peers. No `../shared/` imports.
 - Every guide has at least one live `Demo` and shows its complete code.
 - Data-table limitations, exactly: `VirtualDataTable` ignores row reorder; a drop while sorted reorders `data` but the view stays sorted; no dragging between tables, no multi-row drag, no moving a row to another parent; a custom `Row` slot must keep a stable identity.

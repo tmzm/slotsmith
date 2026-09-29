@@ -36,7 +36,7 @@ name (`/components/autocomplete/`, "Autocomplete"); its one-line description is
 | Hosting | Netlify, building from this repo with base directory `docs/` | Already in use. Pointing the Netlify site at `tmzm/slotsmith` is done by the owner in the Netlify UI. |
 | Languages | English at `/…`, Arabic at `/ar/…`, from one set of templates | See "Languages". |
 | Search | Pagefind, one index per language | Static, no service, runs after the build. |
-| Theme | Keep DESIGN.md: navy + gold, dark default, light toggle | It already matches the author's brand. `DESIGN.md` and `PRODUCT.md` move into `docs/` and are updated to the new positioning and multi-page site. |
+| Design | "The Illuminated Assembly" (`2026-09-29-docs-launch-design-system.md`, copied to `docs/DESIGN.md`): the portfolio's gold-on-ink tokens, Big Shoulders / Geist / JetBrains Mono (Alexandria / Noto Sans Arabic), the bracket motif, panels; components shown as exploded assembly drawings; dark default; loud landing, calm docs | A sibling of the author's portfolio (`E:\Projects\Personal\portfolio`), not a copy. The old site's navy palette and Inter no longer match the portfolio. `PRODUCT.md` moves into `docs/`, updated. |
 
 ## Site map
 
@@ -170,7 +170,7 @@ new path URLs in the same change.
   translated.
 - **Generated tables** (props, slots, labels) come from English JSDoc and stay
   English on both.
-- `/ar/` pages set `<html lang="ar" dir="rtl">`, use IBM Plex Sans Arabic, and
+- `/ar/` pages set `<html lang="ar" dir="rtl">`, use Alexandria (display) and Noto Sans Arabic (body), and
   mirror the layout with logical CSS properties. Every page emits `hreflang`
   links for `en`, `ar` and `x-default`.
 - Demos inside `/ar/` pages render with the Arabic locale pack and RTL, as the
@@ -242,12 +242,20 @@ here.
 
 ### Landing (in this order)
 
-1. **Positioning + install.** The positioning text, a copyable
+Visual composition of every section is in the design system (section 6,
+"The landing"); this list fixes content and behaviour.
+
+1. **Positioning + install.** The positioning text (the four component names
+   stacked at poster scale inside the `<h1>`), a copyable
    `npm i slotsmith` (with a pnpm / yarn / bun switch), and links to Getting
-   started and GitHub.
-2. **Swap demo.** A live `DataTable` with a segmented control: Fallback,
-   shadcn, MUI, Chakra. Switching changes only the `components` prop. Beside
-   it, the code with the lines that change highlighted.
+   started and GitHub. First load plays the panel wave once per session.
+2. **Swap demo (the exploded view).** A live `DataTable` with a segmented
+   control: Fallback, shadcn, MUI, Chakra. Switching changes only the
+   `components` prop. Beside it, the code with the lines that change
+   highlighted. A pinned scroll sequence first separates the table into its
+   labelled parts (`<Element>` / `{Widget}`) and reassembles it; each switch
+   replays a short explode–swap–reassemble. Without JS or with reduced motion:
+   no pin, a static labelled diagram beside the table, instant swaps.
    - The fallback renders in the prerendered HTML.
    - Each design-system adapter is a separate dynamic import, prefetched on
      hover, focus or touchstart of its segment. Not on idle: evaluating MUI or
@@ -262,18 +270,24 @@ here.
      `samples/adapters/` so the site and the Adapters pages show the same code.
 3. **Two kinds of parts.** The README's element/widget table, with one short
    example of each.
-4. **The four components.** One card each: name, one line, a live mini demo
-   (`client:visible`), link.
+4. **The four components.** An asymmetric panel mosaic (not identical cards):
+   name, one line, a live mini demo (`client:visible`), link.
 5. **Works with what you have.** shadcn, MUI, Chakra, Tailwind, TanStack
-   Table, TanStack Query. Each links to the page or guide that shows it
-   working. Logos are inline SVGs, monochrome.
+   Table, TanStack Query, as a slow marquee. Each links to the page or guide
+   that shows it working. Logos are inline SVGs, monochrome.
 6. **Languages and RTL.** A `DataTable` with an en / ar / fa toggle; direction
-   flips live.
+   flips live with a short mirrored transition.
 7. **Use with AI agents.** `slotsmith-ai` setup for Claude Code, Cursor,
    VS Code, as tabs.
 8. **Trust strip.** Test count, integration suites, bundle size, license,
-   React versions. Every number comes from `generated/facts.json` and links to
-   `/trust/`.
+   React versions, as one `package.json`-style manifest line. Every number
+   comes from `generated/facts.json` and links to `/trust/`.
+9. **Close.** The one drenched gold section: `npm i slotsmith` at display
+   scale with a copy button.
+
+Motion: GSAP + ScrollTrigger on the landing only, dynamically imported after
+first paint and outside the initial JS budget. Docs pages use CSS
+transitions only.
 
 ### Component pages
 
@@ -386,11 +400,12 @@ Targets: Lighthouse mobile ≥ 95 (all four categories) on `/` and
 `/components/data-table/`, CLS 0 from demos (the Lighthouse CI gate is
 CLS ≤ 0.01, to absorb rounding).
 
-- Fonts self-hosted as woff2 subsets (Latin for Inter and JetBrains Mono,
-  Arabic for IBM Plex Sans Arabic on `/ar/` pages only); Inter 400 and 700
-  preloaded; `font-display: swap` with metric-matched fallbacks.
+- Fonts self-hosted as woff2 subsets (Latin for Big Shoulders, Geist and
+  JetBrains Mono; Arabic for Alexandria and Noto Sans Arabic on `/ar/` pages
+  only); Geist 400 and Big Shoulders 900 preloaded; `font-display: swap` with
+  metric-matched fallbacks.
 - Landing initial JS budget: 90 KB gzipped (React + the fallback DataTable +
-  segmented control). MUI, Chakra, the shadcn bundle, locale packs and
+  segmented control). MUI, Chakra, the shadcn bundle, GSAP, locale packs and
   TanStack Virtual are never in the initial load.
 - Demos reserve their height in CSS.
 - Lighthouse CI runs in the docs workflow and fails below 95.

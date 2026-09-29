@@ -47,7 +47,8 @@
   export function ogUrl(lang: Lang, path: string): string;             // SITE.url + "/og/" + ogSlug + ".png"
   export async function renderOg(input: { title: string; section: string | null; lang: Lang }): Promise<Uint8Array>; // 1200×630 PNG, site palette, satori + resvg
   ```
-- Fonts for satori: `woff` files from `@fontsource/inter` (400, 700) and `@fontsource/ibm-plex-sans-arabic` (700), read with `fs` at build.
+- Fonts for satori: `woff` files (satori does not read woff2) for Big Shoulders 900, Geist 400, JetBrains Mono 500 and Alexandria 800, from the same `@fontsource` packages the site uses, read with `fs` at build.
+- Image design (DESIGN.md palette): `--bg` ink background, the page title in Big Shoulders uppercase (Alexandria on Arabic pages, right-aligned), the section in JetBrains Mono as `{section}` in `--gold`, the `<slot>{smith}` wordmark in a corner, a 1px `--line` frame. No gradients.
 - The endpoint's `getStaticPaths` covers every page in both languages (reuse the page lists from plan 01: `langPaths`, `componentPaths`, `guidePaths`, plus the fixed pages). `Head` emits `og:image`, `og:image:width/height`, `twitter:card=summary_large_image`, `twitter:image` with `ogUrl`.
 
 - [ ] **Step 1: Write the failing tests:** the two `ogSlug` examples; `renderOg({ title: "Theming", section: null, lang: "en" })` returns bytes starting with the PNG signature `89 50 4E 47`; a 120-character title renders without throwing.
@@ -131,7 +132,7 @@
 - Modify: `docs/scripts/verify-site.ts` (search check)
 
 **Interfaces:**
-- `SearchDialog.tsx` props `{ lang: Lang }`: a button (rendered only after hydration) that opens a dialog; on first open it dynamically imports `/pagefind/pagefind.js` (`/ar/` pages use the same bundle; Pagefind picks the index by the page's `lang`); shortcut `/` and `Ctrl/Cmd+K`; results as links with excerpts; Escape closes and returns focus.
+- `SearchDialog.tsx` props `{ lang: Lang }`: a button showing `⌘K` (rendered only after hydration; the mobile dock's Search button opens the same dialog) that opens a command-palette `<dialog>` styled per DESIGN.md section 5 (like the portfolio's `components/command-palette.tsx`: results grouped by section, keyboard-first, active row on `--panel-2` with a gold `>` marker); on first open it dynamically imports `/pagefind/pagefind.js` (`/ar/` pages use the same bundle; Pagefind picks the index by the page's `lang`); shortcut `/` and `Ctrl/Cmd+K`; results as links with excerpts; Escape closes and returns focus.
 - `verify-site` search check: load `dist/pagefind/pagefind.js` through the served site in Playwright and search "reorder" → the first 5 results include `/components/data-table/guides/row-reorder/`; on `/ar/`, a search returns only `/ar/` URLs.
 
 - [ ] **Step 1:** Add the `verify-site` search check first; run `build` → FAIL (no index).
@@ -143,7 +144,7 @@
 
 **Files:**
 - Modify: `README.md`, `package.json` (`description`, `homepage`), `packages/ai/package.json` (`homepage`)
-- Create: `docs/DESIGN.md`, `docs/PRODUCT.md` (ported from the old repo and updated: multi-page site, four components, the new positioning, `/ar/`)
+- Create: `docs/PRODUCT.md` (ported from the old repo and updated: multi-page site, four components, the new positioning, `/ar/`, register brand for the landing and product for docs pages). `docs/DESIGN.md` already exists from plan 01; update it only if the build diverged, so it describes what shipped.
 - Test: `docs/src/__tests__/positioning.test.ts`
 
 **Interfaces:**
