@@ -4,24 +4,23 @@ import { fileURLToPath } from "node:url";
 import { DEFAULT_OPTIONS, generateKnowledge } from "../../packages/ai/scripts/generate.ts";
 import type { ComponentReference } from "../src/lib/reference.ts";
 import attributes from "../src/data/data-attributes.json" with { type: "json" };
-import { extractTokens } from "./lib/tokens.ts";
+import { extractTokens, ownTokens, TOKEN_PREFIX } from "./lib/tokens.ts";
 
 const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = resolve(docsRoot, "src/generated/reference");
-const extra = attributes as Record<string, Record<string, string[]>>;
 
 /**
  * Builds the reference for every component: the generator's record, the tokens
  * its stylesheet uses, and each slot's data attributes merged with the extras
- * kept in `src/data/data-attributes.json`.
+ * kept in `src/data/data-attributes.json` (or the `extra` given, for tests).
  */
-export function buildReference(): ComponentReference[] {
+export function buildReference(extra: Record<string, Record<string, string[]>> = attributes): ComponentReference[] {
   const { components } = generateKnowledge(DEFAULT_OPTIONS);
   return components.map((component) => {
     const css = readFileSync(resolve(DEFAULT_OPTIONS.libraryRoot, "src", component.name, "styles.css"), "utf8");
     return {
       ...component,
-      tokens: extractTokens(css),
+      tokens: ownTokens(extractTokens(css), TOKEN_PREFIX[component.name as keyof typeof TOKEN_PREFIX]),
       slots: component.slots.map((slot) => ({
         ...slot,
         dataAttributes: [...new Set([...slot.dataAttributes, ...(extra[component.name]?.[slot.name] ?? [])])].sort(),
