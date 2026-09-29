@@ -64,9 +64,17 @@ A light island inside a dark page (`[data-theme="light"]` nested under `.dark`) 
 
 Fallback classes follow one scheme in every component: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, so they never collide with an application's classes. A part with the same role has the same name in every component: `__popup`, `__trigger`, `__value` (`--empty` when it shows the placeholder), `__clear`, `__list`, `__message` for an empty state, `__error` for an error state, `__sr-only` for text read only by screen readers. Target state with the `data-*` attributes rather than modifier classes: the attributes are part of the public contract, the class names are not.
 
-## Deprecated names
+## Renamed in 1.6.0
 
-Before 1.6.0 the data table's prefix was `rdt`. Until 2.0 its elements still carry the old `rdt__*` classes beside the new ones, and every `--sdt-*` token reads its `--rdt-*` twin first, so an app's `.rdt__row { … }` rule or a `--rdt-accent` set on `:root` or under `.dark, [data-theme="dark"]` keeps working. Three parts were also renamed to match the other components: `rdt__placeholder` is `sdt__message` (and `sdt__error` in the error state), `rdt__sr` is `sdt__sr-only`. The stylesheet uses only the new names. Write new code against `sdt__*` and `--sdt-*`; a `--rdt-*` value set on a single table's element no longer reaches it, so set the `--sdt-*` token there instead.
+Before 1.6.0 the data table's prefix was `rdt`. 1.6.0 renamed it to `sdt` with no aliases, so an app upgrading must rename its overrides and themes:
+
+| Before 1.6.0 | 1.6.0 |
+| --- | --- |
+| `.rdt`, `.rdt__*` (every class, e.g. `.rdt__row`, `.rdt__cell--drag`) | `.sdt`, `.sdt__*` (`.sdt__row`, `.sdt__cell--drag`) |
+| `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
+| `.rdt__placeholder` (empty state) | `.sdt__message` |
+| `.rdt__placeholder--error` (error state) | `.sdt__error` |
+| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 ## Without the stylesheet
 

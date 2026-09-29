@@ -226,7 +226,15 @@ The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, 
 
 Every component names its classes the same way: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state as `data-*` attributes. A part that plays the same role in several components has the same name in each: the popups are `__popup`, the triggers `__trigger`, an empty state `__message`, an error state `__error`, text for screen readers only `__sr-only`.
 
-> **Deprecated:** before 1.6.0 the data table's prefix was `rdt`. The old `rdt__*` classes are still on every element and the `--rdt-*` tokens are still read (set on `:root` or under `.dark, [data-theme="dark"]`, they win over `--ss-*` as before), so a theme or an override written against them keeps working. The stylesheet itself uses only the new names. Both are removed in 2.0: rename `.rdt__row` to `.sdt__row` and `--rdt-accent` to `--sdt-accent`, and so on; three parts also took the name the other components give the same role: `rdt__placeholder` is now `sdt__message` (the error state `sdt__error`) and `rdt__sr` is `sdt__sr-only`. A `--rdt-*` value set on a single table's element rather than on `:root` no longer reaches it; set the `--sdt-*` token there instead.
+> **Breaking in 1.6.0:** the data table's classes and tokens were renamed from `rdt` to `sdt`, with no aliases. Rename your overrides and themes:
+
+| Before 1.6.0 | 1.6.0 |
+| --- | --- |
+| `.rdt`, `.rdt__*` (every class, e.g. `.rdt__row`, `.rdt__cell--drag`) | `.sdt`, `.sdt__*` (`.sdt__row`, `.sdt__cell--drag`) |
+| `--rdt-*` (every token, e.g. `--rdt-accent`, `--rdt-padding-x`) | `--sdt-*` (`--sdt-accent`, `--sdt-padding-x`) |
+| `.rdt__placeholder` (empty state) | `.sdt__message` |
+| `.rdt__placeholder--error` (error state) | `.sdt__error` |
+| `.rdt__sr` (screen-reader text) | `.sdt__sr-only` |
 
 ## You ship only what you import
 
@@ -324,7 +332,7 @@ pnpm test:ai     # the MCP server in packages/ai
 - The headless `useDataTable` returns `reorder` (the drag state, and the props for rows and handles), `reorderable` and `reorderHandleColumn`, and takes `labels` for the handle's name and the announcements.
 - The shadcn/ui, MUI and Chakra UI adapters gain a drag handle, and style a lifted row themselves (an opaque background and a shadow), because the built-in drag styles apply to the fallback row only.
 - `SlotsmithProvider` and `useSlotsmithLocale` now come from `slotsmith/provider`, which will also carry shared settings beyond the language. `slotsmith/locale` still exports them, marked deprecated.
-- The data table's class prefix is now `sdt` and its tokens are `--sdt-*`, like the other components' `sac`, `sdp` and `sfu`. The `rdt__*` classes stay on the elements and the `--rdt-*` tokens are still read, so existing overrides and themes keep working; both are deprecated and removed in 2.0. Parts with the same role now have the same name in every component: the table's empty and error states are `sdt__message` and `sdt__error` (was `rdt__placeholder`) and its screen-reader text is `sdt__sr-only` (was `rdt__sr`), like the autocomplete's. See [Theming](#theming).
+- **Breaking:** the data table's class prefix is now `sdt` and its tokens are `--sdt-*`, like the other components' `sac`, `sdp` and `sfu`; the old `rdt` classes and `--rdt-*` tokens are gone. Parts with the same role now have the same name in every component: the table's empty and error states are `sdt__message` and `sdt__error` (was `rdt__placeholder` / `rdt__placeholder--error`) and its screen-reader text is `sdt__sr-only` (was `rdt__sr`), like the autocomplete's. See the migration table under [Theming](#theming).
 - All four components now share one default palette and shape, read from the new shared `--ss-*` tokens; see [Theming](#theming). Set `--ss-accent` (and the other `--ss-*` tokens) to restyle every component at once. The per-component tokens still work, and the date picker and the uploader still follow a theme written against the data table's tokens.
 - The date picker's month and year selects now use the component's colours in dark mode.
 - The data table's page-size control is now the slotsmith autocomplete, so it matches the other components. The data table's bundle includes the autocomplete, and `slotsmith/data-table.css` includes the autocomplete's styles.

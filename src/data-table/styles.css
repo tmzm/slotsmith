@@ -6,12 +6,6 @@
  * The colour, radius and font-size tokens read the shared --ss-* layer, so one
  * --ss-* override restyles every component at once.
  * Custom slots are unaffected — style them however your UI library does.
- *
- * Only the `sdt` class names are selected. The elements still carry the old
- * `rdt` names, so an app's own `.rdt__…` rules keep matching, and each
- * --sdt-* token reads its deprecated --rdt-* twin first, so a theme written
- * against --rdt-* on :root or the dark block still applies. Both are removed
- * in 2.0.
  */
 
 /**
@@ -23,27 +17,27 @@
 @import "../autocomplete/styles.css";
 
 :root {
-  --sdt-surface: var(--rdt-surface, var(--ss-surface, #ffffff));
-  --sdt-bg: var(--rdt-bg, var(--sdt-surface));
+  --sdt-surface: var(--ss-surface, #ffffff);
+  --sdt-bg: var(--sdt-surface);
   /** Must stay opaque: the header is sticky and rows scroll underneath it. */
-  --sdt-header-bg: var(--rdt-header-bg, var(--sdt-surface));
-  --sdt-border: var(--rdt-border, var(--ss-border, #e5e7eb));
-  --sdt-text: var(--rdt-text, var(--ss-text, #111827));
-  --sdt-muted: var(--rdt-muted, var(--ss-muted, #6b7280));
-  --sdt-hover: var(--rdt-hover, var(--ss-hover, rgb(0 0 0 / 4%)));
-  --sdt-stripe: var(--rdt-stripe, rgba(0, 0, 0, 0.025));
-  --sdt-selected: var(--rdt-selected, var(--ss-selected, rgb(37 99 235 / 8%)));
-  --sdt-accent: var(--rdt-accent, var(--ss-accent, #2563eb));
-  --sdt-danger: var(--rdt-danger, var(--ss-danger, #dc2626));
-  --sdt-skeleton-bg: var(--rdt-skeleton-bg, #e5e7eb);
-  --sdt-skeleton-bg-2: var(--rdt-skeleton-bg-2, #f3f4f6);
+  --sdt-header-bg: var(--sdt-surface);
+  --sdt-border: var(--ss-border, #e5e7eb);
+  --sdt-text: var(--ss-text, #111827);
+  --sdt-muted: var(--ss-muted, #6b7280);
+  --sdt-hover: var(--ss-hover, rgb(0 0 0 / 4%));
+  --sdt-stripe: rgba(0, 0, 0, 0.025);
+  --sdt-selected: var(--ss-selected, rgb(37 99 235 / 8%));
+  --sdt-accent: var(--ss-accent, #2563eb);
+  --sdt-danger: var(--ss-danger, #dc2626);
+  --sdt-skeleton-bg: #e5e7eb;
+  --sdt-skeleton-bg-2: #f3f4f6;
 
-  --sdt-radius: var(--rdt-radius, var(--ss-radius, 8px));
-  --sdt-font-size: var(--rdt-font-size, var(--ss-font-size, 14px));
-  --sdt-padding-x: var(--rdt-padding-x, 12px);
-  --sdt-padding-y: var(--rdt-padding-y, 10px);
-  --sdt-checkbox-size: var(--rdt-checkbox-size, 16px);
-  --sdt-max-height: var(--rdt-max-height, none);
+  --sdt-radius: var(--ss-radius, 8px);
+  --sdt-font-size: var(--ss-font-size, 14px);
+  --sdt-padding-x: 12px;
+  --sdt-padding-y: 10px;
+  --sdt-checkbox-size: 16px;
+  --sdt-max-height: none;
 }
 
 /**
@@ -53,19 +47,19 @@
  */
 .dark,
 [data-theme="dark"] {
-  --sdt-surface: var(--rdt-surface, var(--ss-surface, #141416));
-  --sdt-bg: var(--rdt-bg, var(--sdt-surface));
-  --sdt-header-bg: var(--rdt-header-bg, var(--sdt-surface));
-  --sdt-border: var(--rdt-border, var(--ss-border, #2a2a2a));
-  --sdt-text: var(--rdt-text, var(--ss-text, #f5f5f5));
-  --sdt-muted: var(--rdt-muted, var(--ss-muted, #a3a3a3));
-  --sdt-hover: var(--rdt-hover, var(--ss-hover, rgb(255 255 255 / 6%)));
-  --sdt-stripe: var(--rdt-stripe, rgba(255, 255, 255, 0.025));
-  --sdt-selected: var(--rdt-selected, var(--ss-selected, rgb(96 165 250 / 12%)));
-  --sdt-accent: var(--rdt-accent, var(--ss-accent, #60a5fa));
-  --sdt-danger: var(--rdt-danger, var(--ss-danger, #f87171));
-  --sdt-skeleton-bg: var(--rdt-skeleton-bg, #262626);
-  --sdt-skeleton-bg-2: var(--rdt-skeleton-bg-2, #333333);
+  --sdt-surface: var(--ss-surface, #141416);
+  --sdt-bg: var(--sdt-surface);
+  --sdt-header-bg: var(--sdt-surface);
+  --sdt-border: var(--ss-border, #2a2a2a);
+  --sdt-text: var(--ss-text, #f5f5f5);
+  --sdt-muted: var(--ss-muted, #a3a3a3);
+  --sdt-hover: var(--ss-hover, rgb(255 255 255 / 6%));
+  --sdt-stripe: rgba(255, 255, 255, 0.025);
+  --sdt-selected: var(--ss-selected, rgb(96 165 250 / 12%));
+  --sdt-accent: var(--ss-accent, #60a5fa);
+  --sdt-danger: var(--ss-danger, #f87171);
+  --sdt-skeleton-bg: #262626;
+  --sdt-skeleton-bg-2: #333333;
 }
 
 /**
@@ -91,23 +85,18 @@
   overflow: hidden;
 }
 
-/**
- * The densities derive their font size from the shared one, so `--ss-font-size`
- * still reaches them. Each also reads the deprecated `--rdt-*` name first: the
- * old rules set those names here, so an app rule that overrode one on the
- * table (`.rdt[data-size="sm"] { --rdt-padding-x: … }`) still wins.
- */
+/** The densities derive their font size from the shared one, so `--ss-font-size` still reaches them. */
 .sdt[data-size="default"] {
-  --sdt-font-size: var(--rdt-font-size, var(--ss-font-size, 14px));
-  --sdt-padding-x: var(--rdt-padding-x, 14px);
-  --sdt-padding-y: var(--rdt-padding-y, 12px);
+  --sdt-font-size: var(--ss-font-size, 14px);
+  --sdt-padding-x: 14px;
+  --sdt-padding-y: 12px;
 }
 
 .sdt[data-size="sm"] {
-  --sdt-font-size: var(--rdt-font-size, calc(var(--ss-font-size, 14px) - 1px));
-  --sdt-padding-x: var(--rdt-padding-x, 10px);
-  --sdt-padding-y: var(--rdt-padding-y, 8px);
-  --sdt-checkbox-size: var(--rdt-checkbox-size, 14px);
+  --sdt-font-size: calc(var(--ss-font-size, 14px) - 1px);
+  --sdt-padding-x: 10px;
+  --sdt-padding-y: 8px;
+  --sdt-checkbox-size: 14px;
 }
 
 .sdt__scroll {

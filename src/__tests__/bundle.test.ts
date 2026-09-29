@@ -27,17 +27,6 @@ const MARKERS = {
 
 type Component = keyof typeof MARKERS;
 
-/**
- * Deprecated markers
- *
- * The data table's elements still carry their old `rdt` class names until
- * 2.0, so its JavaScript holds this prefix too; like the marker, it must never
- * reach another component's bundle.
- */
-const DEPRECATED_MARKERS: Partial<Record<Component, string>> = {
-  dataTable: "rdt__",
-};
-
 /** A string from the Arabic pack. Its presence proves a pack was bundled. */
 const ARABIC_MARKER = "لا توجد بيانات";
 
@@ -64,7 +53,7 @@ const BUNDLED_WITH: Partial<Record<Component, Component[]>> = {
 const othersThan = (component: Component) =>
   (Object.keys(MARKERS) as Component[])
     .filter((key) => key !== component && !BUNDLED_WITH[component]?.includes(key))
-    .flatMap((key) => [MARKERS[key], DEPRECATED_MARKERS[key] ?? []].flat());
+    .map((key) => MARKERS[key]);
 
 /**
  * Shipped markers
@@ -210,7 +199,6 @@ describe.skipIf(!built)("what an application actually bundles", () => {
     `);
     expect(code).toContain(MARKERS.autocomplete);
     expect(code).not.toContain("sdt__drag");
-    expect(code).not.toContain("rdt__drag");
     expect(readFileSync(dist("autocomplete.styles.css"), "utf8")).not.toContain("sdt__drag");
   });
 
