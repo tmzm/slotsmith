@@ -2,9 +2,8 @@
  * shadcn registry
  *
  * Publishes the shadcn adapters as a shadcn/ui registry: one item per
- * component, plus the top-level `registry.json` index the docs site serves
- * next to them. Both are read from the knowledge `generate.ts` already
- * wrote — `knowledge/index.json` for the adapter list and their peers,
+ * component, plus the top-level `registry.json` index next to them. Both are read from the knowledge `generate.ts`
+ * already wrote — `knowledge/index.json` for the adapter list and their peers,
  * `knowledge/adapters/*.tsx` for the source itself — so nothing here parses
  * the library a second time.
  *

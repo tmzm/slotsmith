@@ -121,7 +121,7 @@ slotsmith-ai add --all --ui <library>
 
 ## The shadcn registry
 
-The same shadcn/ui adapters are also published as a [shadcn/ui registry](https://ui.shadcn.com/docs/registry):
+The same shadcn/ui adapters are also built as a [shadcn/ui registry](https://ui.shadcn.com/docs/registry) (serve the files from any static host):
 
 ```bash
 pnpm build      # regenerates knowledge, bundles the CLI, then builds the registry

@@ -326,8 +326,8 @@ const Pagination = (props: PaginationSlotProps) => {
 /**
  * Drag handle fallback
  *
- * A `<button>` holding the grip icon. Everything the table passes, including
- * the ref it measures the row through, lands on the button.
+ * A `<button>` holding the grip icon. Everything the table passes lands on the
+ * button. The table finds rows from the drag events, so no ref is involved.
  */
 const DragHandle = ({ className, ...props }: DragHandleSlotProps) => (
   <button type="button" className={cx(classes.drag, className)} {...props}>
