@@ -1,0 +1,44 @@
+---
+/** A page under /components/<component>/: overview, API, adapters or one guide. */
+import DocPage from "@/components/DocPage.astro";
+import { componentMeta } from "@/data/components";
+import { t, type Lang } from "@/i18n";
+import { getOptionalProse } from "@/lib/prose";
+
+interface Props {
+  lang: Lang;
+  component: string;
+  /** "index", "api", "adapters", or a guide slug prefixed with "guides/". */
+  section: string;
+}
+
+const { lang, component, section } = Astro.props;
+const meta = componentMeta(component);
+const name = t(lang, meta.title);
+
+let title = name;
+let description = t(lang, meta.summary);
+let proseSlug = `components/${component}`;
+let path = `/components/${component}/`;
+let override: string | undefined;
+
+if (section === "api" || section === "adapters") {
+  const label = t(lang, section === "api" ? "component.api" : "component.adapters");
+  override = `${name} ${label}`;
+  proseSlug = `components/${component}/${section}`;
+  path = `/components/${component}/${section}/`;
+  title = override;
+} else if (section.startsWith("guides/")) {
+  const slug = section.slice("guides/".length);
+  const guide = meta.guides.find((g) => g.slug === slug);
+  if (!guide) throw new Error(`Unknown guide "${slug}" for ${component}.`);
+  title = t(lang, guide.title);
+  override = title;
+  proseSlug = `components/${component}/${section}`;
+  path = `/components/${component}/${section}/`;
+}
+
+const prose = await getOptionalProse(lang, proseSlug);
+const fallback = { title, description, sourcePath: `src/content/docs/en/${proseSlug}.mdx` };
+---
+<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override} />

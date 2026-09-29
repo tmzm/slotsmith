@@ -1,0 +1,31 @@
+---
+/**
+ * Renders a prose entry. An Arabic page with no Arabic twin shows the English
+ * text inside lang="en" dir="ltr", after the "not translated" note.
+ */
+import { render } from "astro:content";
+import { t } from "@/i18n";
+import type { Prose } from "@/lib/prose";
+
+interface Props {
+  prose: Prose;
+}
+
+const { prose } = Astro.props;
+const { Content } = await render(prose.entry);
+const fallback = prose.lang === "ar" && !prose.translated;
+---
+{
+  fallback ? (
+    <>
+      <p class="untranslated">{t("ar", "common.untranslated")}</p>
+      <div lang="en" dir="ltr" class="prose">
+        <Content />
+      </div>
+    </>
+  ) : (
+    <div class="prose">
+      <Content />
+    </div>
+  )
+}

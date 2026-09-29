@@ -1,0 +1,40 @@
+---
+/**
+ * One docs page: layout, header, prose (or the stub marker when there is none).
+ * Every page template except the landing renders through this, so the stub
+ * convention and the answer-first header live in one place.
+ */
+import Docs from "@/layouts/Docs.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import Prose from "@/components/Prose.astro";
+import { render } from "astro:content";
+import { t, type Lang } from "@/i18n";
+import type { Prose as ProseData } from "@/lib/prose";
+
+interface Props {
+  lang: Lang;
+  /** Language-neutral path with trailing slash. */
+  path: string;
+  /** Used when there is no prose yet. */
+  fallback?: { title: string; description: string; sourcePath: string };
+  prose?: ProseData;
+  /** The `{key} value` row under the title. */
+  meta?: { key: string; value: string }[];
+  /** Overrides the prose title (component API and adapters pages). */
+  title?: string;
+}
+
+const { lang, path, prose, fallback, meta, title: titleOverride } = Astro.props;
+const title = titleOverride ?? prose?.entry.data.title ?? fallback?.title ?? "";
+const description = prose?.entry.data.description ?? fallback?.description ?? "";
+const sourcePath = prose?.sourcePath ?? fallback?.sourcePath ?? "";
+const stub = prose ? prose.entry.data.draft === true : true;
+const headings = prose ? (await render(prose.entry)).headings : [];
+const toc = headings
+  .filter((h) => h.depth === 2 || h.depth === 3)
+  .map((h) => ({ id: h.slug, text: h.text, depth: h.depth as 2 | 3 }));
+---
+<Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub}>
+  <PageHeader title={title} lead={prose ? undefined : description} meta={meta} />
+  {prose ? <Prose prose={prose} /> : <p>{t(lang, "common.stub")}</p>}
+</Docs>

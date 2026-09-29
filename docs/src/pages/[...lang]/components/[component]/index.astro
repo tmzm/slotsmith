@@ -1,0 +1,12 @@
+---
+import ComponentPage from "@/components/ComponentPage.astro";
+import { componentPaths } from "@/data/components";
+import { langFromParam } from "@/i18n";
+
+export function getStaticPaths() {
+  return componentPaths();
+}
+
+const { lang: langParam, component } = Astro.params;
+---
+<ComponentPage lang={langFromParam(langParam)} component={component} section="index" />

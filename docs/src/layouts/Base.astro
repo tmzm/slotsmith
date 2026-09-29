@@ -21,9 +21,11 @@ export interface Props {
   description: string;
   path: string;
   ogImage?: string;
+  /** Marks a page whose prose is still a placeholder: renders `data-stub` on <main>. */
+  stub?: boolean;
 }
 
-const { lang, title, description, path, ogImage } = Astro.props;
+const { lang, title, description, path, ogImage, stub } = Astro.props;
 const hasSidebar = Astro.slots.has("sidebar");
 ---
 <!doctype html>
@@ -36,7 +38,7 @@ const hasSidebar = Astro.slots.has("sidebar");
     <Header lang={lang} path={path} sheetOnly={!hasSidebar} />
     <div class="shell" data-has-sidebar={hasSidebar || undefined}>
       {hasSidebar ? <slot name="sidebar" /> : <Sidebar lang={lang} path={path} sheetOnly />}
-      <main id="content" tabindex="-1">
+      <main id="content" tabindex="-1" data-stub={stub || undefined}>
         <slot />
       </main>
     </div>

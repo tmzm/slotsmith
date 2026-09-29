@@ -1,0 +1,12 @@
+---
+import ComponentPage from "@/components/ComponentPage.astro";
+import { guidePaths } from "@/data/components";
+import { langFromParam } from "@/i18n";
+
+export function getStaticPaths() {
+  return guidePaths();
+}
+
+const { lang: langParam, component, guide } = Astro.params;
+---
+<ComponentPage lang={langFromParam(langParam)} component={component} section={`guides/${guide}`} />
