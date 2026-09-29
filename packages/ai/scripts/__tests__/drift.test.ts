@@ -81,7 +81,7 @@ describe("knowledge drift", () => {
     for (const component of componentFolders(srcDir)) {
       expect(guides, `knowledge/guides/${component}.md is missing`).toContain(component);
     }
-    for (const general of ["setup", "slots", "theming", "i18n"]) expect(guides).toContain(general);
+    for (const general of ["setup", "slots", "theming", "i18n", "adapters"]) expect(guides).toContain(general);
   });
 
   it("generates every slot the source declares, in order", () => {

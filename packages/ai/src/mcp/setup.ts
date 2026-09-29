@@ -107,6 +107,7 @@ export function buildSetup(
   notes.push(
     'Every entry point starts with "use client". In a Server Components framework, render the component from a client component that owns its state.',
     `The stylesheet is optional: it styles only the built-in fallbacks. \`slotsmith/styles.css\` covers every component; \`${component.css}\` covers just this one.`,
+    `Building with MUI, shadcn/ui, Chakra UI, Ant Design or Radix Themes? \`npx slotsmith-ai add ${component.name} --ui <library>\` copies a ready-made adapter into the project as source to own.`,
   );
 
   const setupGuide = knowledge.guides.get("setup");

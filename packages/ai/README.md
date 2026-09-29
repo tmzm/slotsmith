@@ -85,7 +85,7 @@ Every result is Markdown for the model, with the same facts as structured JSON f
 ## Resources and prompts
 
 - `slotsmith://components/{name}`: a component's full reference (import, API, labels, slots), as Markdown.
-- `slotsmith://guides/{name}`: the hand-written guides: `setup`, `slots`, `theming`, `i18n`, and one per component.
+- `slotsmith://guides/{name}`: the hand-written guides: `setup`, `slots`, `theming`, `i18n`, `adapters`, and one per component.
 - Prompt `build-component` (`component`, `library?`): build a feature with a component, following its real API.
 - Prompt `adapt-slots-to-library` (`component`, `library`): write a slot map for a component library.
 
@@ -117,6 +117,26 @@ slotsmith-ai add --all --ui <library>
 - Running it again is safe. A file that already matches is reported `unchanged`; the header line is not compared, so a file from an older `slotsmith-ai` whose body is untouched is left as it is. A file you have edited is left alone: the command names it, says how many lines differ, and exits with code `1`; pass `--force` to replace it. `--dry-run` reports the same outcome, and exits with code `1` when the real run would refuse.
 - `--out` must be inside the project, also after following symbolic links and junctions, and a file that is itself a symbolic link is never written through.
 - `radix` is Radix Themes (`@radix-ui/themes`), the styled library. An app built on the bare Radix primitives uses `shadcn`.
+- Editing the file afterward is expected — from that point on it is the project's own code, not something `slotsmith-ai` still owns.
+
+## The shadcn registry
+
+The same shadcn/ui adapters are also published as a [shadcn/ui registry](https://ui.shadcn.com/docs/registry):
+
+```bash
+pnpm build      # regenerates knowledge, bundles the CLI, then builds the registry
+pnpm registry   # or just the registry, from knowledge already on disk
+```
+
+writes one `registry-item.json`-shaped file per component to `registry/<component>.json`, plus a `registry.json` index. Nothing under `registry/` is committed — it is gitignored and rebuilt from the generated knowledge on demand.
+
+Serve that folder from any static host and install a component with shadcn's own CLI:
+
+```bash
+npx shadcn@latest add https://<your-host>/date-picker.json
+```
+
+It writes the file to the same path `slotsmith-ai add --ui shadcn` uses, installs the adapter's peers automatically, and adds any shadcn/ui components the adapter depends on. One difference: shadcn's CLI strips a file's leading doc comment when it installs a `registry:component`, so a file placed this way is missing the adapter's short header comment — every slot and prop is otherwise the same file either way.
 
 ## Versions
 
@@ -133,6 +153,15 @@ pnpm --filter slotsmith-ai build      # regenerates, then bundles dist/cli.js
 ```
 
 Hand-written inputs live next to the generated output: `knowledge/guides/*.md` and `knowledge/groups.json`. The adapters in `knowledge/adapters/<component>.<library>.tsx` are generated from the integration skins the library is tested with (`src/<component>/__tests__/integrations/<library>/components.tsx`); edit the skin, never the adapter. The drift tests fail when a component has no guide, when a slot in the source is missing from the knowledge, when an adapter is missing or differs from its skin, when an adapter uses a slot that no longer exists, or when a prop is not placed in a group.
+
+## Changelog
+
+- **1.7.0** — `1.5.0` and `1.6.0` were version bumps in git only and were never published; this release describes everything an upgrading agent gains since the last published version, `1.4.0`:
+  - `list_components` names the locale packs available for each component's `locale` prop.
+  - Three new guides — `i18n` (locale packs, the provider, `defineLocale`), `theming` (the shared `--ss-*` tokens and the six ready-made themes) and `adapters` (the `add` command, the libraries, the registry) — plus reordering knowledge folded into the `data-table` guide.
+  - Twenty ready-made adapters, generated from tested integration suites: every component times `mui`, `shadcn`, `chakra`, `antd` and `radix`. `get_adapter_example` takes `antd` and `radix` alongside the three libraries it already had.
+  - A new `add` command that copies any of those adapters into the project as source to own; see [Adding an adapter](#adding-an-adapter).
+  - A [shadcn/ui registry](#the-shadcn-registry) built from the same adapters, for installing one with shadcn's own CLI instead.
 
 ## License
 

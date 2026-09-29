@@ -316,7 +316,7 @@ export function createSlotsmithServer(options: SlotsmithServerOptions = {}): Mcp
     }),
     {
       title: "Guide",
-      description: "A hand-written guide: setup, slots, theming, i18n, or one per component.",
+      description: "A hand-written guide: setup, slots, theming, i18n, adapters, or one per component.",
       mimeType: "text/markdown",
     },
     (uri, { name }) => {

@@ -195,6 +195,11 @@ describe("slotsmith MCP server", () => {
     expect(text).toContain("app/layout.tsx");
   });
 
+  it("get_setup mentions the add command for the chosen component", async () => {
+    const { data } = await call(client, "get_setup", { component: "date-picker" });
+    expect((data!.notes as string[]).some((note) => note.includes("npx slotsmith-ai add date-picker --ui"))).toBe(true);
+  });
+
   it("get_setup notes when a component has no virtual variant", async () => {
     const { data } = await call(client, "get_setup", { component: "date-picker", virtual: true });
     expect(data!.install).toBe("npm i slotsmith");
@@ -213,6 +218,12 @@ describe("slotsmith MCP server", () => {
     const anchors = (data!.results as { anchor: string }[]).map((result) => result.anchor);
     expect(anchors).toContain("slotsmith://guides/data-table#server-side-data");
     expect(anchors).toHaveLength(3);
+  });
+
+  it("search_docs finds the adapters guide", async () => {
+    const { data } = await call(client, "search_docs", { query: "slotsmith-ai add command adapter" });
+    const anchors = (data!.results as { anchor: string }[]).map((result) => result.anchor);
+    expect(anchors.some((anchor) => anchor.startsWith("slotsmith://guides/adapters"))).toBe(true);
   });
 
   it.each([

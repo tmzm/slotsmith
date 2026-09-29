@@ -66,6 +66,19 @@ A light island inside a dark page (`[data-theme="light"]` nested under `.dark`) 
 
 Fallback classes follow one scheme in every component: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, so they never collide with an application's classes. A part with the same role has the same name in every component: `__popup`, `__trigger`, `__value` (`--empty` when it shows the placeholder), `__clear`, `__list`, `__message` for an empty state, `__error` for an error state, `__sr-only` for text read only by screen readers. Target state with the `data-*` attributes rather than modifier classes: the attributes are part of the public contract, the class names are not. Select `.sdt__message, .sdt__error` to style both states of the data table at once.
 
+## Ready-made themes
+
+Six theme stylesheets set only the shared `--ss-*` tokens above, each with a light palette on `:root` and a dark one on `.dark, [data-theme="dark"]`: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast` (a high-contrast palette for accessibility). Import one after the main stylesheet:
+
+```ts
+import "slotsmith/styles.css";
+import "slotsmith/themes/soft.css";
+```
+
+A theme sets the same `--ss-*` tokens as an app's own overrides, so import order decides which wins: import the app's own overrides after the theme to keep them.
+
+Write a custom theme the same way: a stylesheet that sets only the shared `--ss-*` tokens above, nothing else, on `:root` and again under `.dark, [data-theme="dark"]`. No component-specific token (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) and no other selector belongs in a theme file — those stay for an app's own per-component overrides, applied on top.
+
 ## Without the stylesheet
 
 Skip the import and style the parts yourself, for example with Tailwind on element parts:

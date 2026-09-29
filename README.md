@@ -203,9 +203,47 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 />;
 ```
 
-Ready-made adapters for **shadcn/ui**, **MUI v7** and **Chakra UI v3** live in [`src/data-table/__tests__/integrations/`](src/data-table/__tests__/integrations/) — each one is exercised by an integration suite that fails on any React warning.
+Every component is also exercised, in every library, by an integration suite that fails on any React warning — the tested source lives in each component's `__tests__/integrations/` folder. Copy a finished adapter instead of writing one: see [Ready-made adapters](#ready-made-adapters).
 
 Not using a component library? Every fallback also exposes `data-*` state, so Tailwind alone is enough: `[&_tr[data-state=selected]]:bg-muted`.
+
+## Ready-made adapters
+
+Twenty adapters — every component times five component libraries — are generated from those tested integration suites and copied into your project as source you own, with [`slotsmith-ai`](#use-with-ai-agents):
+
+```bash
+npx slotsmith-ai add date-picker --ui mui
+npx slotsmith-ai add data-table --ui antd --out src/ui/slotsmith
+npx slotsmith-ai add --all --ui shadcn
+```
+
+```
+slotsmith-ai add <component...> --ui <library> [--out <dir>] [--force] [--dry-run]
+slotsmith-ai add --all --ui <library>
+```
+
+- `<component>` is `data-table`, `autocomplete`, `file-uploader` or `date-picker`; `--all` adds every one.
+- `--ui` is `mui`, `shadcn`, `chakra`, `antd` or `radix` (`ant-design` and `radix-themes` are accepted too). `radix` is **Radix Themes** (`@radix-ui/themes`), the styled library; an app built on the bare Radix primitives — shadcn/ui's own components are built on them — wants `shadcn` instead.
+- `--out` chooses where to write. Default: `src/components/slotsmith` when `src/` exists, else `components/slotsmith`.
+- Each file starts with a one-line comment naming the library and the `slotsmith-ai` version it came from — the file is yours to edit from there. Running the command again on an untouched file reports `unchanged` and leaves it alone. A file you have edited is left as is: the command names it, says how many lines differ, and exits with code `1`; pass `--force` to replace it anyway. `--dry-run` prints what would happen and writes nothing, exiting the same way the real run would.
+- After writing, it prints the import and a usage line, one `npm install …` line for whatever the project's `package.json` does not already list, and, for `shadcn`, one `npx shadcn@latest add …` line for the shadcn/ui components the adapter uses. It never installs anything itself.
+
+| Component | mui | shadcn | chakra | antd | radix |
+| --- | --- | --- | --- | --- | --- |
+| Data table | `muiDataTable` | `shadcnDataTable` | `chakraDataTable` | `antdDataTable` | `radixDataTable` |
+| Autocomplete | `muiAutocomplete` | `shadcnAutocomplete` | `chakraAutocomplete` | `antdAutocomplete` | `radixAutocomplete` |
+| Date picker | `muiDatePicker` | `shadcnDatePicker` | `chakraDatePicker` | `antdDatePicker` | `radixDatePicker` |
+| File uploader | `muiFileUploader` | `shadcnFileUploader` | `chakraFileUploader` | `antdFileUploader` | `radixFileUploader` |
+
+### The shadcn registry
+
+The four shadcn/ui adapters are also built into a [shadcn/ui registry](https://ui.shadcn.com/docs/registry) by `slotsmith-ai`'s own build (`packages/ai/registry/<component>.json`, plus a `registry.json` index; nothing is published from this repo — build it yourself and serve it from any static host you control):
+
+```bash
+npx shadcn@latest add https://<your-host>/date-picker.json
+```
+
+It lands at the same path `slotsmith-ai add --ui shadcn` writes to, installs its peers automatically, and pulls in any shadcn/ui components (`button`, `checkbox`, …) it depends on. One caveat: shadcn's CLI strips a file's leading doc comment when it installs a `registry:component`, so a file placed this way is missing the adapter's short "what this is" header comment that `slotsmith-ai add` keeps — every slot and prop is otherwise the same file either way.
 
 ## Theming
 
@@ -234,6 +272,8 @@ import "slotsmith/themes/soft.css";
 ```
 
 A theme sets the same `--ss-*` tokens on `:root` and `.dark, [data-theme="dark"]` as your own overrides, so import order decides: import your own overrides after the theme to keep them.
+
+Write your own the same way: a stylesheet that sets only the shared `--ss-*` tokens above — nothing else — on `:root` and again under `.dark, [data-theme="dark"]`.
 
 ## You ship only what you import
 
@@ -282,8 +322,10 @@ another.
 
 [`slotsmith-ai`](https://www.npmjs.com/package/slotsmith-ai) is an MCP server that gives coding agents the real API —
 every prop, slot, fallback and label, generated from this source — plus ready-made
-MUI, shadcn/ui and Chakra UI adapters. Nothing is installed in your project; the client
+MUI, shadcn/ui, Chakra UI, Ant Design and Radix Themes adapters. Nothing is installed in your project; the client
 runs it with `npx`.
+
+Its `add` command copies any of those adapters straight into your project as source you own — `npx slotsmith-ai add <component> --ui <library>`; see [Ready-made adapters](#ready-made-adapters).
 
 ```bash
 # Claude Code
@@ -324,7 +366,7 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ## Changelog
 
-- **Unreleased** — Six ready-made themes, each with a light and a dark palette, setting only the shared `--ss-*` tokens: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast`; see [Theming](#theming).
+- **1.7.0** — No runtime changes; adapters for Ant Design and Radix Themes are now available through `slotsmith-ai`, alongside the existing MUI, shadcn/ui and Chakra UI ones — twenty ready-made adapters in all, copied into a project with `npx slotsmith-ai add` or installed via a shadcn/ui registry; see [Ready-made adapters](#ready-made-adapters).
 
 - **1.6.0** — Drag-to-reorder rows in the data table, by pointer, touch or keyboard; see [Reordering rows](#reordering-rows). New props `enableRowReorder`, `onRowOrderChange` and `reorderHandleColumn`; a new `DragHandle` slot, `DataTable.DragHandle` for placing the handle in a cell of your own, and `slotProps.dragHandle`, whose handlers run alongside the table's own; six new labels (`reorderRow`, `reorderInstructions`, `reorderLifted`, `reorderMoved`, `reorderDropped`, `reorderCancelled`) in every locale pack; and `moveItem`. The order is controlled: `onRowOrderChange` receives `row`, `rowId`, `target`, `targetId`, `position` and the new `data`, and the table does not reorder until you store it. The dragged row follows the pointer while the others slide out of its way; with reduced motion nothing slides, the row is dimmed and a line marks where it will land. Every step is announced to screen readers.
 - Tree tables reorder too: a row moves among its siblings only, together with its expanded sub-rows. `RowOrderChange` also carries `parentId`, `parent` and `siblings`; for a sub-row `data` is the unchanged top level, and `siblings` is the parent's new list of children to store.
@@ -337,6 +379,7 @@ pnpm test:ai     # the MCP server in packages/ai
 - The date picker's month and year selects now use the component's colours in dark mode.
 - The data table's page-size control is now the slotsmith autocomplete, so it matches the other components. The data table's bundle includes the autocomplete, and `slotsmith/data-table.css` includes the autocomplete's styles.
 - The date picker's footer control now reads "Go to today" and looks like navigation, so it isn't mistaken for a preset.
+- Six ready-made themes, each with a light and a dark palette, setting only the shared `--ss-*` tokens: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast`; see [Theming](#theming).
 
 - **1.5.0** — Locale packs and a `SlotsmithProvider` for translating every component, formatting numbers and plurals, and right-to-left text; see [Languages](#languages). A string `locale` with no registered pack now logs one development-only warning instead of silently staying in English.
 - The autocomplete now turns dark with `.dark` or `[data-theme="dark"]` on the page, like the other components, instead of with the system setting.
