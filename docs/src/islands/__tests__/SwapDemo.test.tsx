@@ -1,0 +1,176 @@
+// @vitest-environment jsdom
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import type { ComponentType } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { t } from "@/i18n";
+import SwapDemo, { retryable, type Variant } from "@/islands/SwapDemo";
+import { swapMessages } from "@/lib/swap-messages";
+
+type Loaded = { default: ComponentType };
+
+const sources: Record<Variant, string> = {
+  fallback: "import a\n<DataTable />",
+  shadcn: "import a\nimport s\n<DataTable components={s} />",
+  mui: "import a\nimport m\n<DataTable components={m} />",
+  chakra: "import a\nimport c\n<DataTable components={c} />",
+};
+
+/** A loader whose promise the test settles by hand. */
+function deferred(name: string) {
+  const renders = vi.fn();
+  let resolve!: (value: Loaded) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<Loaded>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  const Variant = () => {
+    renders();
+    return <p data-testid={`variant-${name}`}>{name}</p>;
+  };
+  return { load: vi.fn(() => promise), renders, resolve: () => resolve({ default: Variant }), reject: () => reject(new Error("offline")) };
+}
+
+const resolved = (name: string) => vi.fn(async (): Promise<Loaded> => ({ default: () => <p data-testid={`variant-${name}`}>{name}</p> }));
+
+const radio = (name: string) => screen.getByRole("radio", { name });
+
+afterEach(cleanup);
+
+describe("SwapDemo", () => {
+  it("renders the fallback table first, with Fallback checked", () => {
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} />);
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(screen.getByRole("radiogroup")).toBeTruthy();
+    expect(screen.getAllByRole("radio")).toHaveLength(4);
+    expect(radio("Fallback").getAttribute("aria-checked")).toBe("true");
+    expect(radio("MUI").getAttribute("aria-checked")).toBe("false");
+  });
+
+  it("ends on the last choice when an earlier bundle is still loading, and never shows the earlier one", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const mui = deferred("mui");
+    const chakra = deferred("chakra");
+    render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: mui.load, chakra: chakra.load }} />);
+    fireEvent.click(radio("MUI"));
+    fireEvent.click(radio("Chakra"));
+    await act(async () => chakra.resolve());
+    await act(async () => mui.resolve());
+    expect(screen.getByTestId("variant-chakra")).toBeTruthy();
+    expect(screen.queryByTestId("variant-mui")).toBeNull();
+    expect(mui.renders).not.toHaveBeenCalled();
+    expect(radio("Chakra").getAttribute("aria-checked")).toBe("true");
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("keeps the previous variant and offers a retry when a bundle fails to load", async () => {
+    const shadcn = deferred("shadcn");
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ shadcn: shadcn.load }} />);
+    fireEvent.click(radio("shadcn"));
+    await act(async () => shadcn.reject());
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(screen.getByText(t("en", "swap.failed"), { exact: false })).toBeTruthy();
+    expect(screen.getByRole("button", { name: t("en", "swap.retry") })).toBeTruthy();
+  });
+
+  it("loads again when retry is pressed after a failure", async () => {
+    let fail = true;
+    const load = vi.fn(async (): Promise<Loaded> => {
+      if (fail) throw new Error("offline");
+      return { default: () => <p data-testid="variant-mui">mui</p> };
+    });
+    render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: load }} />);
+    await act(async () => fireEvent.click(radio("MUI")));
+    fail = false;
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: t("en", "swap.retry") })));
+    expect(screen.getByTestId("variant-mui")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: t("en", "swap.retry") })).toBeNull();
+  });
+
+  it("offers a page reload when the retry fails too", async () => {
+    const load = vi.fn(async (): Promise<Loaded> => {
+      throw new Error("offline");
+    });
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: load }} />);
+    await act(async () => fireEvent.click(radio("MUI")));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: t("en", "swap.retry") })));
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(screen.getByText(t("en", "swap.reload"))).toBeTruthy();
+    expect(screen.getByRole("button", { name: t("en", "swap.reloadButton") })).toBeTruthy();
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+  });
+
+  it("moves and selects with the arrow keys, as a radio group", async () => {
+    render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ shadcn: resolved("shadcn"), mui: resolved("mui"), chakra: resolved("chakra") }} />);
+    const fallback = radio("Fallback");
+    expect(fallback.tabIndex).toBe(0);
+    expect(radio("shadcn").tabIndex).toBe(-1);
+    fallback.focus();
+    await act(async () => fireEvent.keyDown(fallback, { key: "ArrowRight" }));
+    expect(radio("shadcn").getAttribute("aria-checked")).toBe("true");
+    expect(document.activeElement).toBe(radio("shadcn"));
+    expect(radio("shadcn").tabIndex).toBe(0);
+    expect(screen.getByTestId("variant-shadcn")).toBeTruthy();
+    await act(async () => fireEvent.keyDown(radio("shadcn"), { key: "ArrowLeft" }));
+    expect(radio("Fallback").getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("prefetches a variant once on hover", () => {
+    const shadcn = deferred("shadcn");
+    render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ shadcn: shadcn.load }} />);
+    fireEvent.pointerEnter(radio("shadcn"));
+    fireEvent.pointerEnter(radio("shadcn"));
+    fireEvent.focus(radio("shadcn"));
+    expect(shadcn.load).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks the lines the current variant changes", async () => {
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui") }} />);
+    // Every pane is rendered; CSS shows the one named by the root's data-current.
+    const shownPane = () => {
+      const current = container.querySelector(".swap")!.getAttribute("data-current");
+      return container.querySelector(`.swap__pane[data-code="${current}"]`)!;
+    };
+    expect(shownPane().querySelectorAll(".swap__line--added")).toHaveLength(0);
+    await act(async () => fireEvent.click(radio("MUI")));
+    expect(shownPane().getAttribute("data-code")).toBe("mui");
+    const marked = [...shownPane().querySelectorAll(".swap__line--added")].map((line) => line.textContent);
+    expect(marked).toEqual([`import m ${t("en", "swap.changedLine")}`, `<DataTable components={m} /> ${t("en", "swap.changedLine")}`]);
+  });
+
+  it("announces the swap to the page with swap:before and swap:after events", async () => {
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui") }} />);
+    const root = container.firstElementChild!;
+    const events: string[] = [];
+    root.addEventListener("swap:before", (event) => events.push(`before:${(event as CustomEvent).detail.to}`));
+    root.addEventListener("swap:after", (event) => events.push(`after:${(event as CustomEvent).detail.to}`));
+    await act(async () => fireEvent.click(radio("MUI")));
+    expect(events).toEqual(["before:mui", "after:mui"]);
+  });
+
+  it("labels the segments in Arabic on Arabic pages", async () => {
+    render(<SwapDemo lang="ar" messages={swapMessages("ar")} sources={sources} />);
+    // The Arabic locale pack loads lazily, so the first client render waits for it.
+    expect(await screen.findByRole("radio", { name: t("ar", "swap.fallback") })).toBeTruthy();
+    expect(screen.getByRole("radiogroup").getAttribute("aria-label")).toBe(t("ar", "swap.label"));
+  });
+
+  it("keeps design-system code and the message catalogs out of its first load", () => {
+    const source = readFileSync(resolve(process.cwd(), "src/islands/SwapDemo.tsx"), "utf8");
+    const staticImports = [...source.matchAll(/^import (?!type )[^;]*from ["']([^"']+)["']/gm)].map((match) => match[1]);
+    expect(staticImports.filter((path) => /@mui|@chakra-ui|swap-(shadcn|mui|chakra)|provider|^@\/i18n$/.test(path!))).toEqual([]);
+  });
+});
+
+describe("retryable", () => {
+  it("loads again after a failure that names no module URL", async () => {
+    const load = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce("loaded");
+    const again = retryable(load);
+    await expect(again()).rejects.toThrow("offline");
+    await expect(again()).resolves.toBe("loaded");
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+});

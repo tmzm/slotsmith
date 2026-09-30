@@ -78,6 +78,21 @@ export const en = {
   "hero.install": "Install with your package manager",
   "hero.getStarted": "Get started",
 
+  "swap.title": "Swap the design system, keep the table",
+  // {prop} is set in code type.
+  "swap.lede": "The same table in four design systems. Only the {prop} prop changes.",
+  "swap.label": "Design system",
+  "swap.fallback": "Fallback",
+  "swap.loading": "Loading {name}…",
+  "swap.failed": "This version did not load. Check your connection.",
+  "swap.retry": "Try again",
+  "swap.reload": "It still did not load. Reload the page to try again.",
+  "swap.reloadButton": "Reload",
+  "swap.changedLine": "changed line",
+  "swap.code": "Code for the {name} version",
+  // {element} and {widget} are shown as the bracketed kind names.
+  "swap.diagram": "The table's parts. {element} parts take DOM props; {widget} parts take semantic props.",
+
   "summary.dataTable": "A table with sorting, selection, pagination, server data, tree rows, virtual rows and row reorder.",
   "summary.autocomplete": "A select and combobox with multiple values, remote options, creatable options and virtual lists.",
   "summary.datePicker": "A date picker for single days, ranges and multiple dates, with bounds, blocked days and presets.",

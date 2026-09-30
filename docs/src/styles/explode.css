@@ -1,0 +1,376 @@
+/*
+ * The swap demo and its exploded view (docs/DESIGN.md section 6, item 2).
+ *
+ * `--explode` runs from 0 (assembled) to 1 (exploded). Only
+ * `landing-motion.ts` changes it; CSS turns it into each part's transform and
+ * each label's opacity, from the part's `--dx` / `--dy` (in rem, set by
+ * ExplodedView). Until the motion module takes over, `.explode` carries
+ * `data-static`: the table stays assembled and a static labelled figure sits
+ * beside it. Only transform and opacity animate.
+ */
+
+@property --explode {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* ---------- Exploded view ---------- */
+
+.explode {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.explode__stage {
+  position: relative;
+  min-inline-size: 0;
+}
+
+/* Room inside the demo box for the parts that move up and toward the start side. */
+.explode:not([data-static]) .swap__box {
+  padding-block-start: 3.75rem;
+  padding-inline-start: 3.75rem;
+}
+
+/* The box is the one scroller; the table's own wrappers (the fallback's
+   scroll area, an adapter's root) would clip the parts that move out. */
+.explode:not([data-static]) .swap__box * {
+  overflow: visible;
+}
+
+.explode:not([data-static]) .explode__stage [style*="--dx"] {
+  transform: translate(calc(var(--explode, 0) * var(--dx) * 1rem), calc(var(--explode, 0) * var(--dy) * 1rem));
+}
+
+/* Floating labels: bracketed, on a hairline leader down to their part. */
+.explode__label {
+  position: absolute;
+  z-index: 2;
+  translate: 0.5rem calc(-100% - 0.625rem);
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: var(--explode, 0);
+}
+
+[dir="rtl"] .explode__label {
+  translate: calc(-100% - 0.5rem) calc(-100% - 0.625rem);
+}
+
+.explode__label::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 0.5rem;
+  block-size: 0.625rem;
+  border-inline-start: 1px solid var(--line-strong);
+}
+
+.explode[data-static] .explode__label {
+  display: none;
+}
+
+/* Element parts in Vellum, widget parts in Gold (the gold used as text). */
+.explode__label--element,
+.explode__name--element {
+  color: var(--ink);
+}
+
+.explode__label--widget,
+.explode__name--widget {
+  color: var(--gold-text);
+}
+
+/* The static figure: the same parts as a small assembly drawing, each a
+   schematic of its shape on a leader to its label. */
+.explode:not([data-static]) .explode__diagram {
+  display: none;
+}
+
+.explode__diagram {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.explode__parts {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explode__part {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(1rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.explode__glyph {
+  display: block;
+  inline-size: 5.5rem;
+  block-size: 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--panel-2);
+}
+
+.explode__part:has(.explode__name--widget) .explode__glyph {
+  border-color: var(--gold);
+}
+
+.explode__part[data-slot="HeaderRow"] .explode__glyph {
+  block-size: 0.875rem;
+}
+
+.explode__part[data-slot="HeaderCell"] .explode__glyph,
+.explode__part[data-slot="Cell"] .explode__glyph {
+  inline-size: 1.75rem;
+  margin-inline-start: 1rem;
+}
+
+.explode__part[data-slot="SortIcon"] .explode__glyph {
+  inline-size: 0.75rem;
+  margin-inline-start: 2.25rem;
+}
+
+.explode__part[data-slot="Checkbox"] .explode__glyph {
+  inline-size: 0.75rem;
+}
+
+.explode__part[data-slot="Pagination"] .explode__glyph {
+  block-size: 1rem;
+}
+
+.explode__part[data-slot="PageSizeSelect"] .explode__glyph {
+  inline-size: 2rem;
+  block-size: 1rem;
+  margin-inline-start: 3.5rem;
+}
+
+.explode__leader {
+  block-size: 0;
+  border-block-start: 1px solid var(--line-strong);
+}
+
+.explode__name {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: none;
+  padding: 0;
+}
+
+.explode__caption {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.explode__caption code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+@media (min-width: 1024px) {
+  .explode[data-static] {
+    grid-template-columns: minmax(0, 1fr) 19.5rem;
+  }
+}
+
+/* ---------- Swap demo ---------- */
+
+.swap {
+  display: grid;
+  gap: 1rem;
+}
+
+/* The segmented control: mono labels, the chosen one a Gold panel. */
+.swap__control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-self: start;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.swap__segment {
+  min-block-size: 2.75rem;
+  padding: 0.375rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition:
+    background-color 200ms var(--ease-out),
+    color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
+}
+
+.swap__segment:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.swap__segment[aria-checked="true"] {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+/* A choice whose bundle is still on its way. */
+.swap__segment[data-pending] {
+  border-color: var(--gold);
+  border-style: dashed;
+}
+
+/* The demo box: fixed height per breakpoint (no layout shift); the table
+   scrolls inside it. The Fallback state wears the library's stock tokens. */
+.swap__frame {
+  position: relative;
+  block-size: 26rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.swap__box {
+  block-size: 100%;
+  padding: 1rem;
+  overflow: auto;
+  background: var(--sdt-surface, var(--panel));
+  overscroll-behavior: contain;
+}
+
+.swap__box > * {
+  transition: opacity 180ms var(--ease-out);
+}
+
+.swap[data-loading] .swap__box > * {
+  opacity: 0.6;
+}
+
+/* Status inside the box: loading, or a failed load with its retry button. */
+.swap__notice {
+  position: absolute;
+  inset-inline: 0.75rem;
+  inset-block-end: 0.75rem;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.875rem;
+}
+
+.swap__notice:empty {
+  display: none;
+}
+
+.swap__notice[data-tone="error"] {
+  border-color: var(--danger);
+}
+
+.swap__retry {
+  min-block-size: 2.75rem;
+  padding: 0.25rem 0.875rem;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  background: var(--gold);
+  color: var(--on-gold);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+/* The code panel: the current variant's sample, changed lines tinted Gold. */
+.swap__code {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.swap__file {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border-block-end: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.swap__pane pre {
+  margin: 0;
+  padding: 0.75rem 0;
+  overflow-x: auto;
+  background: var(--panel);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+.swap__pane .line {
+  display: inline-block;
+  min-inline-size: 100%;
+  padding-inline: 1rem;
+}
+
+.swap__line--added {
+  background: color-mix(in oklab, var(--gold) 16%, transparent);
+}
+
+/* Only the current variant's pane shows. */
+.swap[data-current="fallback"] .swap__pane:not([data-code="fallback"]),
+.swap[data-current="shadcn"] .swap__pane:not([data-code="shadcn"]),
+.swap[data-current="mui"] .swap__pane:not([data-code="mui"]),
+.swap[data-current="chakra"] .swap__pane:not([data-code="chakra"]) {
+  display: none;
+}
+
+/* Four segments on one row at 360px. */
+@media (max-width: 479px) {
+  .swap__segment {
+    padding-inline: 0.7rem;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .swap__frame {
+    block-size: 30rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap__segment,
+  .swap__box > * {
+    transition: none;
+  }
+}

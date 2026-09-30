@@ -2,7 +2,7 @@
 import Base from "@/layouts/Base.astro";
 import HashRedirect from "@/components/HashRedirect.astro";
 import Hero from "@/components/landing/Hero.astro";
-import Demo from "@/components/Demo.astro";
+import Swap from "@/components/landing/Swap.astro";
 import { langFromParam, langPaths, t } from "@/i18n";
 
 export function getStaticPaths() {
@@ -14,12 +14,5 @@ const lang = langFromParam(Astro.params.lang);
 <Base lang={lang} title={null} description={t(lang, "site.positioning")} path="/">
   {lang === "en" && <HashRedirect />}
   <Hero lang={lang} />
-  {/* Placeholder until plan 02 task 3 builds the swap section: the fallback table, with the three adapter variants it will switch to. */}
-  <Demo
-    name="landing/swap-fallback"
-    lang={lang}
-    height="42rem"
-    fallback
-    variants={["landing/swap-shadcn", "landing/swap-mui", "landing/swap-chakra", "adapters/providers"]}
-  />
+  <Swap lang={lang} />
 </Base>

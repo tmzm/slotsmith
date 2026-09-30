@@ -1,0 +1,144 @@
+---
+/**
+ * Landing swap section (docs/DESIGN.md section 6, item 2): the same table in
+ * four design systems, shown as an exploded view. The island prerenders the
+ * Fallback table; the other three variants load when asked for.
+ *
+ * The code panes are highlighted here at build time, with the lines each
+ * variant changes from the Fallback marked, and passed to the island as its
+ * children; the static figure's caption is its `caption` slot. The section is
+ * `data-motion="swap"`: `landing-motion.ts` pins it and drives `--explode`.
+ *
+ * The figure carries `data-sample` and `data-variants` like a Demo, so the
+ * verifier counts every swap sample and the providers as shown, and runs axe
+ * on the Fallback state.
+ */
+import "slotsmith/styles.css";
+import "@/styles/code.css";
+import { Code } from "astro:components";
+import SwapDemo, { VARIANTS, type Variant } from "@/islands/SwapDemo";
+import { t, type Lang } from "@/i18n";
+import { diffLines } from "@/lib/diff";
+import { explodeParts } from "@/lib/explode";
+import { getReference } from "@/lib/reference";
+import { swapMessages } from "@/lib/swap-messages";
+import { CODE_THEME, sampleSource } from "@/lib/samples";
+import { SLOT_SELECTORS } from "../../../scripts/slot-selectors.ts";
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+/** The parts the landing labels, in the order the drawing lists them. */
+const PICKS = ["HeaderRow", "HeaderCell", "SortIcon", "Row", "Cell", "Checkbox", "Pagination", "PageSizeSelect"];
+const parts = explodeParts(getReference("data-table"), SLOT_SELECTORS["data-table"], PICKS);
+
+const sources = Object.fromEntries(VARIANTS.map((variant) => [variant, sampleSource(`landing/swap-${variant}`).code])) as Record<Variant, string>;
+const added = (variant: Variant) => new Set(variant === "fallback" ? [] : diffLines(sources.fallback, sources[variant]).added);
+const changedLine = t(lang, "swap.changedLine");
+
+const [ledeBefore, ledeAfter] = t(lang, "swap.lede").split("{prop}");
+const caption = t(lang, "swap.diagram").split(/(\{element\}|\{widget\})/);
+---
+<section class="swap-section" aria-labelledby="swap-title" data-motion="swap">
+  <div class="swap-section__intro">
+    <h2 id="swap-title" class="display swap-section__title">{t(lang, "swap.title")}</h2>
+    <p class="swap-section__lede">{ledeBefore}<code dir="ltr">components</code>{ledeAfter}</p>
+  </div>
+  <figure
+    class="swap-section__demo"
+    data-sample="landing/swap-fallback"
+    data-fallback
+    data-variants="landing/swap-shadcn landing/swap-mui landing/swap-chakra adapters/providers"
+  >
+    <SwapDemo client:idle lang={lang} messages={swapMessages(lang)} sources={sources} parts={parts}>
+      <Fragment slot="caption">
+        {caption.map((run) =>
+          run === "{element}" ? (
+            <code class="explode__name--element" dir="ltr">{"<element>"}</code>
+          ) : run === "{widget}" ? (
+            <code class="explode__name--widget" dir="ltr">{"{widget}"}</code>
+          ) : (
+            run
+          ),
+        )}
+      </Fragment>
+      {VARIANTS.map((variant) => {
+        const lines = added(variant);
+        return (
+          <div class="swap__pane" data-code={variant}>
+            <Code
+              code={sources[variant]}
+              lang="tsx"
+              theme={CODE_THEME}
+              dir="ltr"
+              transformers={[
+                {
+                  name: "swap-changed-lines",
+                  line(node, line) {
+                    if (!lines.has(line)) return;
+                    node.properties.class = `${node.properties.class ?? ""} swap__line--added`.trim();
+                    node.children.push({
+                      type: "element",
+                      tagName: "span",
+                      properties: { class: "visually-hidden" },
+                      children: [{ type: "text", value: ` ${changedLine}` }],
+                    });
+                  },
+                },
+              ]}
+            />
+          </div>
+        );
+      })}
+    </SwapDemo>
+  </figure>
+</section>
+
+<style>
+  .swap-section {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: 3rem 4rem;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .swap-section__intro {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .swap-section__title {
+    margin: 0;
+    max-inline-size: 16ch;
+    color: var(--ink);
+    font-size: clamp(2.25rem, 1.2rem + 4.4vw, 4.5rem);
+    text-wrap: balance;
+  }
+
+  :global(html[lang="ar"]) .swap-section__title {
+    max-inline-size: 22ch;
+    font-size: clamp(1.875rem, 1.2rem + 3vw, 3.5rem);
+    line-height: 1.3;
+  }
+
+  .swap-section__lede {
+    margin: 0;
+    max-inline-size: 52ch;
+    color: var(--ink-2);
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+
+  .swap-section__lede code {
+    color: var(--gold-text);
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+  }
+
+  .swap-section__demo {
+    margin: 0;
+  }
+</style>

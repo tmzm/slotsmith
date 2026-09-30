@@ -1,5 +1,7 @@
 {
   "data-table": {
-    "Row": ["data-row-id"]
+    "Row": ["data-row-id"],
+    "HeaderCell": ["data-slot"],
+    "Cell": ["data-slot"]
   }
 }

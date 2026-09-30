@@ -2,37 +2,22 @@
  * Providers
  *
  * The wrapper each design system needs around its components. The swap demo
- * applies them; the swap samples themselves never do. Loaded lazily by the demo.
+ * applies them, one file per design system so each loads only with its own
+ * variant; the swap samples themselves never do.
  */
-import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useMemo, type ComponentType, type ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { ChakraUiProvider } from "./provider-chakra";
+import { MuiProvider } from "./provider-mui";
+import { ShadcnProvider } from "./provider-shadcn";
 
-interface ProviderProps {
+export interface ProviderProps {
   children: ReactNode;
   theme: "dark" | "light";
   dir: "ltr" | "rtl";
 }
 
-function Shadcn({ children }: ProviderProps) {
-  return <div className="shadcn-scope">{children}</div>;
-}
-
-function Mui({ children, theme, dir }: ProviderProps) {
-  const muiTheme = useMemo(() => createTheme({ palette: { mode: theme }, direction: dir }), [theme, dir]);
-  return <ThemeProvider theme={muiTheme}>{children}</ThemeProvider>;
-}
-
-function Chakra({ children, theme }: ProviderProps) {
-  return (
-    <ChakraProvider value={defaultSystem}>
-      <div className={theme === "dark" ? "dark" : undefined}>{children}</div>
-    </ChakraProvider>
-  );
-}
-
 export const PROVIDERS: Record<"shadcn" | "mui" | "chakra", ComponentType<ProviderProps>> = {
-  shadcn: Shadcn,
-  mui: Mui,
-  chakra: Chakra,
+  shadcn: ShadcnProvider,
+  mui: MuiProvider,
+  chakra: ChakraUiProvider,
 };
