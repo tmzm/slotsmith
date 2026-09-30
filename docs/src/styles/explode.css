@@ -346,12 +346,23 @@
   background: color-mix(in oklab, var(--gold) 16%, transparent);
 }
 
-/* Only the current variant's pane shows. */
+/* Every pane sits in one grid cell, so the panel is as tall as the longest
+   one whichever shows (no layout shift on a swap); only the current one is
+   visible. */
+.swap__panes {
+  display: grid;
+}
+
+.swap__pane {
+  grid-area: 1 / 1;
+  min-inline-size: 0;
+}
+
 .swap[data-current="fallback"] .swap__pane:not([data-code="fallback"]),
 .swap[data-current="shadcn"] .swap__pane:not([data-code="shadcn"]),
 .swap[data-current="mui"] .swap__pane:not([data-code="mui"]),
 .swap[data-current="chakra"] .swap__pane:not([data-code="chakra"]) {
-  display: none;
+  visibility: hidden;
 }
 
 /* Four segments on one row at 360px. */

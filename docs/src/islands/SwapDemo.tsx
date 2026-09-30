@@ -241,7 +241,9 @@ export default function SwapDemo({ lang, messages, sources, loaders, parts = [],
 
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const direction = getComputedStyle(event.currentTarget).direction === "rtl" ? "rtl" : "ltr";
-    const next = nextTabIndex(index, VARIANTS.length, event.key, direction);
+    // Up and Down go to the previous and next choice in any direction (WAI-ARIA radio group).
+    const vertical = { ArrowUp: VARIANTS.length - 1, ArrowDown: 1 }[event.key];
+    const next = vertical === undefined ? nextTabIndex(index, VARIANTS.length, event.key, direction) : (index + vertical) % VARIANTS.length;
     if (next === undefined) return;
     event.preventDefault();
     select(VARIANTS[next]!);
@@ -310,7 +312,7 @@ export default function SwapDemo({ lang, messages, sources, loaders, parts = [],
       </ExplodedView>
       <div className="swap__code" role="group" aria-label={fill(messages.code, variantName(messages, current))}>
         <p className="swap__file" dir="ltr">{`landing/swap-${current}.tsx`}</p>
-        {children ?? <PlainPanes messages={messages} sources={sources} />}
+        <div className="swap__panes">{children ?? <PlainPanes messages={messages} sources={sources} />}</div>
       </div>
     </div>
   );

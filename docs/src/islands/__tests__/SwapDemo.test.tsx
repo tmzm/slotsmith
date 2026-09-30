@@ -66,6 +66,23 @@ describe("SwapDemo", () => {
     error.mockRestore();
   });
 
+  it("stays on the previous variant when an earlier choice loads while the latest is pending", async () => {
+    const mui = deferred("mui");
+    const chakra = deferred("chakra");
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: mui.load, chakra: chakra.load }} />);
+    const shown = () => container.querySelector(".swap")!.getAttribute("data-current");
+    fireEvent.click(radio("MUI"));
+    fireEvent.click(radio("Chakra"));
+    await act(async () => mui.resolve());
+    expect(shown()).toBe("fallback");
+    expect(mui.renders).not.toHaveBeenCalled();
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    await act(async () => chakra.resolve());
+    expect(shown()).toBe("chakra");
+    expect(screen.getByTestId("variant-chakra")).toBeTruthy();
+    expect(mui.renders).not.toHaveBeenCalled();
+  });
+
   it("keeps the previous variant and offers a retry when a bundle fails to load", async () => {
     const shadcn = deferred("shadcn");
     const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ shadcn: shadcn.load }} />);
@@ -116,6 +133,13 @@ describe("SwapDemo", () => {
     expect(screen.getByTestId("variant-shadcn")).toBeTruthy();
     await act(async () => fireEvent.keyDown(radio("shadcn"), { key: "ArrowLeft" }));
     expect(radio("Fallback").getAttribute("aria-checked")).toBe("true");
+    // Up and Down move to the previous and next choice, wrapping, whatever the direction.
+    await act(async () => fireEvent.keyDown(radio("Fallback"), { key: "ArrowDown" }));
+    expect(radio("shadcn").getAttribute("aria-checked")).toBe("true");
+    expect(document.activeElement).toBe(radio("shadcn"));
+    await act(async () => fireEvent.keyDown(radio("shadcn"), { key: "ArrowUp" }));
+    await act(async () => fireEvent.keyDown(radio("Fallback"), { key: "ArrowUp" }));
+    expect(radio("Chakra").getAttribute("aria-checked")).toBe("true");
   });
 
   it("prefetches a variant once on hover", () => {
