@@ -3,7 +3,7 @@ import { sampleNames, sampleSource } from "@/lib/samples";
 
 describe("sampleSource", () => {
   it("reads a sample by its path under samples/, without extension", () => {
-    const sample = sampleSource("smoke/hello-table");
+    const sample = sampleSource("landing/hero-table");
     expect(sample.lang).toBe("tsx");
     expect(sample.code).toContain("DataTable");
   });
@@ -14,8 +14,8 @@ describe("sampleSource", () => {
 });
 
 describe("sampleNames", () => {
-  it("lists the smoke sample and no config files", () => {
-    expect(sampleNames()).toContain("smoke/hello-table");
+  it("lists a sample and no config files", () => {
+    expect(sampleNames()).toContain("landing/hero-table");
     expect(sampleNames()).not.toContain("tsconfig");
   });
 });

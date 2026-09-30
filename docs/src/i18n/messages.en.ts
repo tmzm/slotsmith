@@ -71,6 +71,13 @@ export const en = {
 
   "common.stub": "This page is being written.",
 
+  // The first positioning sentence; [brackets] mark the component names set at poster scale.
+  "hero.title":
+    "Finished [data table], [combobox], [date picker] and [file uploader] for React that drop into shadcn/ui, MUI, Chakra or your own design system.",
+  "hero.lede": "Every part is a slot; what you don't replace still looks finished.",
+  "hero.install": "Install with your package manager",
+  "hero.getStarted": "Get started",
+
   "summary.dataTable": "A table with sorting, selection, pagination, server data, tree rows, virtual rows and row reorder.",
   "summary.autocomplete": "A select and combobox with multiple values, remote options, creatable options and virtual lists.",
   "summary.datePicker": "A date picker for single days, ranges and multiple dates, with bounds, blocked days and presets.",

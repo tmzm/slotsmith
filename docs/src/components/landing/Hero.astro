@@ -1,0 +1,263 @@
+---
+/**
+ * Landing hero (docs/DESIGN.md section 6, item 1). The first positioning
+ * sentence is the page's only <h1>: the four component names stacked at
+ * poster scale, the rest of the sentence in the body face around them. The
+ * second sentence is the lede, then the install tabs and two links. On wide
+ * screens a live table peeks in from the end side; it hydrates only there.
+ *
+ * The sentence comes from `hero.title`, where [brackets] mark the names, so
+ * each language places its own joining words. Latin runs in Arabic text get
+ * `lang="en"` so they keep the Latin faces.
+ */
+import "slotsmith/styles.css";
+import Tabs from "@/components/Tabs.astro";
+import SampleIsland from "@/islands/SampleIsland";
+import { localePath, t, type Lang } from "@/i18n";
+import { SITE } from "../../../site.config.ts";
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+const [lead = "", ...rest] = t(lang, "hero.title").split(/\[([^\]]+)\]/);
+const tail = rest.pop() ?? "";
+// rest is now name, between, name, between, …, name.
+const names = rest.filter((_, index) => index % 2 === 0);
+const betweens = rest.filter((_, index) => index % 2 === 1);
+// Punctuation and spaces after a name end its line; the joining word ("and", "و") starts the next.
+const split = (between: string) => /^([^\p{L}]*)([\s\S]*)$/u.exec(between)?.slice(1) ?? ["", between];
+const lines = names.map((name, index) => ({
+  prefix: index === 0 ? "" : split(betweens[index - 1] ?? "")[1],
+  name,
+  suffix: split(betweens[index] ?? "")[0],
+}));
+
+/** Splits text into runs, marking Latin words on Arabic pages. */
+const runs = (text: string) =>
+  lang === "ar"
+    ? text.split(/([A-Za-z][A-Za-z0-9/.+-]*)/).map((run, index) => ({ text: run, latin: index % 2 === 1 }))
+    : [{ text, latin: false }];
+
+const installTabs = [
+  { label: "npm", sample: "install/npm" },
+  { label: "pnpm", sample: "install/pnpm" },
+  { label: "yarn", sample: "install/yarn" },
+  { label: "bun", sample: "install/bun" },
+];
+---
+<section class="hero" aria-labelledby="hero-title">
+  <h1 id="hero-title" class="hero__title">
+    {lead && <span class="hero__run">{runs(lead).map((run) => (run.latin ? <span lang="en">{run.text}</span> : run.text))}</span>}
+    <span class="hero__names">
+      {lines.map((line) => (
+        <span class="hero__name">{line.prefix && <span class="hero__join">{line.prefix}</span>}<span class="display">{line.name}</span>{line.suffix}</span>
+      ))}
+    </span>
+    <span class="hero__run">{runs(tail).map((run) => (run.latin ? <span lang="en">{run.text}</span> : run.text))}</span>
+  </h1>
+  <p class="hero__lede">{runs(t(lang, "hero.lede")).map((run) => (run.latin ? <span lang="en">{run.text}</span> : run.text))}</p>
+  <div class="hero__actions">
+    <div class="hero__install" data-panel>
+      <Tabs id="hero-install" tabs={installTabs} remember="pm" label={t(lang, "hero.install")} lang={lang} />
+    </div>
+    <p class="hero__links">
+      <a class="hero__link hero__link--primary" href={localePath(lang, "/getting-started/")}>
+        {t(lang, "hero.getStarted")}
+        <svg class="hero__arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" />
+        </svg>
+      </a>
+      <a class="hero__link" href={SITE.repo}>{t(lang, "common.github")}</a>
+    </p>
+  </div>
+  <div class="hero__peek panel site-demo" data-panel data-sample="landing/hero-table">
+    <SampleIsland client:media="(min-width: 1280px)" name="landing/hero-table" lang={lang} />
+  </div>
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: 1rem 3rem;
+  }
+
+  /* The sentence: body face around the poster-scale names. */
+  .hero__title {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem);
+    font-weight: 500;
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+
+  .hero__run {
+    max-inline-size: 34ch;
+    color: var(--ink);
+  }
+
+  .hero__names {
+    display: flex;
+    flex-direction: column;
+    gap: 0.06em;
+    font-family: var(--font-display);
+    font-size: clamp(2.75rem, 0.9rem + 8.4vw, 6rem);
+    color: var(--gold-text);
+  }
+
+  .hero__name {
+    display: block;
+    line-height: 0.9;
+  }
+
+  .hero__name .display {
+    line-height: inherit;
+  }
+
+  /* The joining word sits on the name's baseline at body size. */
+  .hero__join {
+    margin-inline-end: 0.35rem;
+    color: var(--ink-2);
+    font-family: var(--font-body);
+    font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem);
+    font-weight: 500;
+  }
+
+  html[lang="ar"] .hero__names {
+    gap: 0;
+    font-size: clamp(2.25rem, 1.2rem + 4.4vw, 4.5rem);
+  }
+
+  html[lang="ar"] .hero__name {
+    line-height: 1.4;
+  }
+
+  /* Arabic writes "و" joined to the next word, so it keeps the name's face and
+     size and steps back only in colour. */
+  html[lang="ar"] .hero__join {
+    margin-inline-end: 0;
+    font: inherit;
+    font-weight: 800;
+  }
+
+  .hero__lede {
+    margin: 0;
+    max-inline-size: 40ch;
+    color: var(--ink-2);
+    font-size: 1.25rem;
+    line-height: 1.55;
+  }
+
+  .hero__actions {
+    display: grid;
+    gap: 1rem;
+    max-inline-size: 34rem;
+  }
+
+  .hero__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .hero__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 3rem;
+    padding: 0.625rem 1.375rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      border-color 200ms var(--ease-out),
+      filter 200ms var(--ease-out);
+  }
+
+  .hero__link:hover {
+    border-color: var(--gold);
+  }
+
+  .hero__link--primary {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--on-gold);
+  }
+
+  .hero__link--primary:hover {
+    filter: brightness(1.08);
+  }
+
+  .hero__arrow {
+    inline-size: 1rem;
+    block-size: 1rem;
+    transition: transform 200ms var(--ease-out);
+  }
+
+  .hero__link--primary:hover .hero__arrow {
+    transform: translateX(2px);
+  }
+
+  html[dir="rtl"] .hero__arrow {
+    transform: scaleX(-1);
+  }
+
+  html[dir="rtl"] .hero__link--primary:hover .hero__arrow {
+    transform: scaleX(-1) translateX(2px);
+  }
+
+  .hero__peek {
+    display: none;
+  }
+
+  /* Wide screens: names on the start side, a live table peeking in from the
+     end side, running off the page edge. */
+  @media (min-width: 1280px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 30rem);
+      grid-template-areas:
+        "title peek"
+        "lede peek"
+        "actions peek";
+      column-gap: 4rem;
+      align-items: start;
+      padding-block: 0 4rem;
+    }
+
+    .hero__title {
+      grid-area: title;
+    }
+
+    .hero__lede {
+      grid-area: lede;
+    }
+
+    .hero__actions {
+      grid-area: actions;
+      grid-template-columns: minmax(0, 30rem) auto;
+      align-items: center;
+      gap: 1.5rem;
+      max-inline-size: none;
+    }
+
+    .hero__peek {
+      display: block;
+      grid-area: peek;
+      align-self: center;
+      margin-inline-end: calc(-1 * var(--gutter));
+      padding: 1rem;
+      border-inline-end: 0;
+      border-start-end-radius: 0;
+      border-end-end-radius: 0;
+    }
+  }
+</style>

@@ -12,19 +12,19 @@ async function render(name: string, lang: "en" | "ar" = "en"): Promise<string> {
 
 describe("SampleIsland", () => {
   it("server-renders the lazy sample in full, not a fallback", async () => {
-    const html = await render("smoke/hello-table");
+    const html = await render("landing/hero-table");
     expect(html.match(/sdt__row/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
     expect(html).toContain('dir="ltr"');
   });
 
   it("renders Arabic pages in Arabic, right to left", async () => {
-    const html = await render("smoke/hello-table", "ar");
+    const html = await render("landing/hero-table", "ar");
     expect(html).toContain('dir="rtl"');
     expect(html).toMatch(/[؀-ۿ]/);
   });
 
   it("keeps English demos in English", async () => {
-    expect(await render("smoke/hello-table")).not.toMatch(/[؀-ۿ]/);
+    expect(await render("landing/hero-table")).not.toMatch(/[؀-ۿ]/);
   });
 
   it("never imports a locale pack statically, so packs stay out of the first load", () => {

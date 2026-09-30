@@ -1,0 +1,200 @@
+---
+/**
+ * Code tabs (docs/DESIGN.md "Tabs / segmented controls"): a row of mono tabs
+ * over one sample each, shown by SampleCode. Arrow keys move and select, in
+ * the row's visual direction; Home and End jump to the ends. With `remember`,
+ * the choice is kept under `localStorage["slotsmith-tab-" + remember]` and
+ * shared by every Tabs on the page with the same key, so a package-manager
+ * choice carries across pages. Without JS every panel shows, stacked.
+ */
+import SampleCode from "./SampleCode.astro";
+import { t, type Lang } from "@/i18n";
+
+export interface Props {
+  /** A page-unique id; tab and panel ids derive from it. */
+  id: string;
+  tabs: { label: string; sample: string }[];
+  /** The storage key suffix for the chosen tab. */
+  remember?: string;
+  /** The tab row's accessible name. */
+  label?: string;
+  /** Adds a copy button for the shown panel, labelled in this language. */
+  lang?: Lang;
+}
+
+const { id, tabs, remember, label, lang } = Astro.props;
+const tabId = (index: number) => `${id}-tab-${index}`;
+const panelId = (index: number) => `${id}-panel-${index}`;
+---
+<div class="tabs panel" id={id} data-tabs data-remember={remember}>
+  <div class="tabs__bar">
+    <div class="tabs__list" role="tablist" aria-label={label}>
+      {tabs.map((tab, index) => (
+        <button
+          type="button"
+          role="tab"
+          id={tabId(index)}
+          aria-controls={panelId(index)}
+          aria-selected={index === 0 ? "true" : "false"}
+          tabindex={index === 0 ? "0" : "-1"}
+          data-value={tab.label}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+    {lang && (
+      <button type="button" class="tabs__copy" data-tabs-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
+        {t(lang, "common.copy")}
+      </button>
+    )}
+  </div>
+  {tabs.map((tab, index) => (
+    <div class="tabs__panel" role="tabpanel" id={panelId(index)} aria-labelledby={tabId(index)} hidden={index !== 0}>
+      <SampleCode name={tab.sample} />
+    </div>
+  ))}
+</div>
+<noscript><style is:inline>[data-tabs] [role="tabpanel"][hidden] { display: block !important; } [data-tabs] .tabs__bar { display: none !important; } [data-tabs] .tabs__panel + .tabs__panel { border-block-start: 1px solid var(--line); }</style></noscript>
+<script is:inline define:vars={{ id, remember }}>
+  (() => {
+    const root = document.getElementById(id);
+    if (!root) return;
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = tabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")));
+    const key = remember ? "slotsmith-tab-" + remember : "";
+    const select = (index) => {
+      tabs.forEach((tab, i) => {
+        tab.setAttribute("aria-selected", String(i === index));
+        tab.tabIndex = i === index ? 0 : -1;
+        if (panels[i]) panels[i].hidden = i !== index;
+      });
+    };
+    const choose = (index) => {
+      select(index);
+      if (!key) return;
+      const value = tabs[index].dataset.value;
+      try {
+        localStorage.setItem(key, value);
+      } catch {}
+      for (const other of document.querySelectorAll("[data-tabs]")) {
+        if (other !== root && other.dataset.remember === remember) other.dispatchEvent(new CustomEvent("tabs-sync", { detail: value }));
+      }
+    };
+    const indexOf = (value) => tabs.findIndex((tab) => tab.dataset.value === value);
+    root.addEventListener("tabs-sync", (event) => {
+      const index = indexOf(event.detail);
+      if (index >= 0) select(index);
+    });
+    if (key) {
+      let stored = null;
+      try {
+        stored = localStorage.getItem(key);
+      } catch {}
+      const index = indexOf(stored);
+      if (index > 0) select(index);
+    }
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => choose(index));
+      tab.addEventListener("keydown", (event) => {
+        const rtl = getComputedStyle(tab).direction === "rtl";
+        let next;
+        if (event.key === "Home") next = 0;
+        else if (event.key === "End") next = tabs.length - 1;
+        else if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+          const forward = (event.key === "ArrowRight") !== rtl;
+          next = (index + (forward ? 1 : tabs.length - 1)) % tabs.length;
+        } else return;
+        event.preventDefault();
+        choose(next);
+        tabs[next].focus();
+      });
+    });
+    const copy = root.querySelector("[data-tabs-copy]");
+    let timer;
+    copy?.addEventListener("click", async () => {
+      const shown = panels.find((panel) => panel && !panel.hidden);
+      try {
+        await navigator.clipboard.writeText((shown?.querySelector("pre")?.textContent ?? "").trim());
+      } catch {
+        return;
+      }
+      copy.textContent = copy.dataset.labelCopied;
+      copy.toggleAttribute("data-copied", true);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        copy.textContent = copy.dataset.label;
+        copy.removeAttribute("data-copied");
+      }, 1500);
+    });
+  })();
+</script>
+
+<style>
+  .tabs {
+    overflow: hidden;
+  }
+
+  .tabs__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.375rem;
+    border-block-end: 1px solid var(--line);
+  }
+
+  .tabs__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .tabs__list button,
+  .tabs__copy {
+    min-block-size: 2rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--ease-out),
+      border-color 200ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+
+  .tabs__list button:hover {
+    color: var(--ink);
+  }
+
+  .tabs__list button[aria-selected="true"] {
+    background: var(--gold);
+    color: var(--on-gold);
+  }
+
+  .tabs__copy {
+    flex: none;
+    border-color: var(--line);
+  }
+
+  .tabs__copy:hover {
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+
+  .tabs__copy[data-copied] {
+    border-color: var(--gold);
+    color: var(--gold-text);
+  }
+
+  /* SampleCode brings its own panel; inside the tabs it is the panel's body. */
+  .tabs__panel :global(.sample-code.panel) {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+</style>

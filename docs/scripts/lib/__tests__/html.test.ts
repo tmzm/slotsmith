@@ -170,7 +170,7 @@ describe("findDeadLinks", () => {
 
 describe("findUnusedSamples", () => {
   it("lists the names no page shows, sorted", () => {
-    const pages = [facts("/", { samples: ["smoke/hello-table"] }), facts("/ar/", { samples: ["smoke/hello-table"] })];
-    expect(findUnusedSamples(pages, ["z/unused", "smoke/hello-table", "a/unused"])).toEqual(["a/unused", "z/unused"]);
+    const pages = [facts("/", { samples: ["landing/hero-table"] }), facts("/ar/", { samples: ["landing/hero-table"] })];
+    expect(findUnusedSamples(pages, ["z/unused", "landing/hero-table", "a/unused"])).toEqual(["a/unused", "z/unused"]);
   });
 });
