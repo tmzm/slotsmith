@@ -324,7 +324,10 @@
   font-size: 0.75rem;
 }
 
+/* The containing block for the visually hidden "changed line" notes, so
+   they stay inside the scrolling pre instead of widening the page. */
 .swap__pane pre {
+  position: relative;
   margin: 0;
   padding: 0.75rem 0;
   overflow-x: auto;
