@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ar } from "slotsmith/locales/ar";
 import { fa } from "slotsmith/locales/fa";
+import { SlotsmithProvider } from "slotsmith/provider";
 import Languages from "../landing/languages";
 
 afterEach(cleanup);
@@ -39,6 +40,25 @@ describe("landing/languages", () => {
     expect(wrapper(container).getAttribute("dir")).toBe("rtl");
     expect(container.textContent).toContain(rowsPerPage(fa));
     expect(container.textContent).not.toContain(rowsPerPage(ar));
+  });
+
+  it("names the toggle in the page's language", () => {
+    render(<Languages />);
+    expect(screen.getByRole("group", { name: "Language" })).toBeTruthy();
+    cleanup();
+    render(
+      <SlotsmithProvider locale="ar" locales={[ar]}>
+        <Languages />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByRole("group", { name: "اللغة" })).toBeTruthy();
+    cleanup();
+    render(
+      <SlotsmithProvider locale="fa" locales={[fa]}>
+        <Languages />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByRole("group", { name: "زبان" })).toBeTruthy();
   });
 
   it("switches back to English", () => {

@@ -16,6 +16,9 @@ type Locale = (typeof LANGUAGES)[number]["locale"];
 
 const packs = [ar, fa];
 
+/** The toggle's name, in the page's language. */
+const GROUP_LABEL: Record<string, string> = { en: "Language", ar: "اللغة", fa: "زبان" };
+
 const copy: Record<Locale, { headers: Record<"customer" | "city" | "status", string>; rows: Order[] }> = {
   "en-US": {
     headers: { customer: "Customer", city: "City", status: "Status" },
@@ -71,11 +74,12 @@ function Orders({ locale }: { locale: Locale }) {
 export default function Languages() {
   // Starts in the page's language when an outer provider sets one.
   const page = useSlotsmithLocale().code;
+  const label = GROUP_LABEL[page.split("-")[0]!] ?? "Language";
   const [locale, setLocale] = useState<Locale>(page.startsWith("ar") ? "ar" : page.startsWith("fa") ? "fa" : "en-US");
 
   return (
     <div className="languages-demo">
-      <div role="group" aria-label="Language">
+      <div role="group" aria-label={label}>
         {LANGUAGES.map((language) => (
           <button
             key={language.locale}

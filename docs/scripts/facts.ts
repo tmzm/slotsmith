@@ -98,7 +98,7 @@ async function bundleSizes(pkg: RootPackage): Promise<Facts["bundle"]> {
  * Measures the facts the site states about the library.
  *
  * @param opts.skipTests - Reuses the last counts instead of running the suite
- *   (about four minutes). Defaults to `FACTS_SKIP_TESTS=1`; CI never sets it.
+ *   (about three minutes). Defaults to `FACTS_SKIP_TESTS=1`; CI never sets it.
  */
 export async function buildFacts(opts: { skipTests?: boolean } = {}): Promise<Facts> {
   const skipTests = opts.skipTests ?? process.env.FACTS_SKIP_TESTS === "1";
