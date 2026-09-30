@@ -1,11 +1,14 @@
 ---
 /**
  * Renders a prose entry. An Arabic page with no Arabic twin shows the English
- * text inside lang="en" dir="ltr", after the "not translated" note.
+ * text inside lang="en" dir="ltr", after the "not translated" note. Section
+ * headings link to themselves, so every one is an in-page anchor.
  */
 import { render } from "astro:content";
 import { t } from "@/i18n";
 import type { Prose } from "@/lib/prose";
+import H2 from "./prose/H2.astro";
+import H3 from "./prose/H3.astro";
 
 interface Props {
   prose: Prose;
@@ -13,6 +16,7 @@ interface Props {
 
 const { prose } = Astro.props;
 const { Content } = await render(prose.entry);
+const components = { h2: H2, h3: H3 };
 const fallback = prose.lang === "ar" && !prose.translated;
 ---
 {
@@ -20,12 +24,12 @@ const fallback = prose.lang === "ar" && !prose.translated;
     <>
       <p class="untranslated">{t("ar", "common.untranslated")}</p>
       <div lang="en" dir="ltr" class="prose">
-        <Content />
+        <Content components={components} />
       </div>
     </>
   ) : (
     <div class="prose">
-      <Content />
+      <Content components={components} />
     </div>
   )
 }

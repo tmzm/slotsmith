@@ -598,3 +598,16 @@ html[lang="ar"] .page-header__title {
     display: none;
   }
 }
+
+/* ---------- Prose heading anchors ---------- */
+
+.heading-anchor {
+  color: inherit;
+  text-decoration: none;
+}
+
+.heading-anchor:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 0.2em;
+}
