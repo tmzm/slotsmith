@@ -11,7 +11,7 @@ import "@/styles/code.css";
 import { Code } from "astro:components";
 import SampleIsland from "@/islands/SampleIsland";
 import { CODE_THEME, sampleSource } from "@/lib/samples";
-import { demoId } from "@/lib/demo";
+import { demoId, sharedImports } from "@/lib/demo";
 import { t, type Lang } from "@/i18n";
 
 export interface Props {
@@ -28,34 +28,50 @@ export interface Props {
   hydrate?: "visible" | "idle" | "load";
   /** The locale packs the demo may use. */
   locales?: "site" | "all";
+  /** Other samples the demo swaps in after load (the swap demo's variants); they count as shown. */
+  variants?: string[];
 }
 
-const { name, lang, height, fallback, stock, hydrate = "visible", locales } = Astro.props;
+const { name, lang, height, fallback, stock, hydrate = "visible", locales, variants } = Astro.props;
 const { code, lang: codeLang } = sampleSource(name);
 const id = demoId(Astro.request, name);
+// A sample that imports `../shared/<file>` shows that file as a further code tab.
+const shared = sharedImports(code).map((file) => ({ file, ...sampleSource(`shared/${file}`) }));
 ---
 <figure
   class:list={["panel", "sample-demo", { "site-demo": !stock }]}
   data-sample={name}
   data-fallback={fallback || undefined}
+  data-variants={variants?.join(" ") || undefined}
   data-view="preview"
   style={`--demo-h:${height}`}
 >
   <div class="sample-demo__tabs mono" role="tablist">
     <button type="button" role="tab" id={`${id}-tab-preview`} aria-controls={`${id}-preview`} aria-selected="true" data-tab="preview">preview</button>
     <button type="button" role="tab" id={`${id}-tab-code`} aria-controls={`${id}-code`} aria-selected="false" tabindex="-1" data-tab="code">code</button>
+    {shared.map(({ file, lang: fileLang }) => (
+      <button type="button" role="tab" id={`${id}-tab-${file}`} aria-controls={`${id}-${file}`} aria-selected="false" tabindex="-1" data-tab={`shared/${file}`}>{`${file}.${fileLang}`}</button>
+    ))}
   </div>
   <div class="sample-demo__preview" id={`${id}-preview`} role="tabpanel" aria-labelledby={`${id}-tab-preview`} data-pane="preview">
     {hydrate === "load" && <SampleIsland client:load name={name} lang={lang} locales={locales} />}
     {hydrate === "idle" && <SampleIsland client:idle name={name} lang={lang} locales={locales} />}
     {hydrate === "visible" && <SampleIsland client:visible name={name} lang={lang} locales={locales} />}
   </div>
-  <div class="sample-code" id={`${id}-code`} role="tabpanel" aria-labelledby={`${id}-tab-code`} data-pane="code">
+  <div class="sample-code" id={`${id}-code`} role="tabpanel" aria-labelledby={`${id}-tab-code`} data-pane="code" hidden>
     <Code code={code} lang={codeLang} theme={CODE_THEME} dir="ltr" />
     <button type="button" class="copy-button" data-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
       {t(lang, "common.copy")}
     </button>
   </div>
+  {shared.map(({ file, code: fileCode, lang: fileLang }) => (
+    <div class="sample-code" id={`${id}-${file}`} role="tabpanel" aria-labelledby={`${id}-tab-${file}`} data-pane={`shared/${file}`} hidden>
+      <Code code={fileCode} lang={fileLang} theme={CODE_THEME} dir="ltr" />
+      <button type="button" class="copy-button" data-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
+        {t(lang, "common.copy")}
+      </button>
+    </div>
+  ))}
 </figure>
 <noscript><style is:inline>.sample-demo [data-pane] { display: block !important; } .sample-demo__tabs { display: none !important; }</style></noscript>
 
@@ -99,11 +115,6 @@ const id = demoId(Astro.request, name);
     padding: 1rem;
     overflow-x: auto;
   }
-
-  .sample-demo[data-view="preview"] [data-pane="code"],
-  .sample-demo[data-view="code"] [data-pane="preview"] {
-    display: none;
-  }
 </style>
 
 <script>
@@ -115,6 +126,7 @@ const id = demoId(Astro.request, name);
     const tabs = [...demo.querySelectorAll<HTMLButtonElement>("[data-tab]")];
     const select = (tab: HTMLButtonElement) => {
       demo.dataset.view = tab.dataset.tab;
+      for (const pane of demo.querySelectorAll<HTMLElement>("[data-pane]")) pane.hidden = pane.dataset.pane !== tab.dataset.tab;
       for (const other of tabs) {
         const selected = other === tab;
         other.setAttribute("aria-selected", String(selected));

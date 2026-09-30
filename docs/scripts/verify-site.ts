@@ -64,6 +64,23 @@ function sampleNames(): string[] {
     .sort();
 }
 
+/** The samples each sample imports by a relative path, keyed by name, so adapters and shared data count as shown with the sample that uses them. */
+function sampleImports(): Record<string, string[]> {
+  const imports: Record<string, string[]> = {};
+  const names = new Set(sampleNames());
+  for (const name of names) {
+    const file = walk(samplesDir).find((f) => relative(samplesDir, f).split("\\").join("/").replace(SAMPLE_EXTENSIONS, "") === name);
+    if (!file || !/\.tsx?$/.test(file)) continue;
+    const found: string[] = [];
+    for (const match of readFileSync(file, "utf8").matchAll(/(?:from|import)\s+["'](\.\.?\/[^"']+)["']/g)) {
+      const target = relative(samplesDir, resolve(dirname(file), match[1]!)).split("\\").join("/").replace(SAMPLE_EXTENSIONS, "");
+      if (names.has(target)) found.push(target);
+    }
+    imports[name] = found;
+  }
+  return imports;
+}
+
 function referenceAttributes(): SlotMap {
   const map: SlotMap = {};
   for (const slug of Object.keys(SLOT_SELECTORS)) {
@@ -207,7 +224,7 @@ async function main(): Promise<void> {
   const problems = [
     ...findMetaProblems(facts),
     ...findDeadLinks(facts, new Set(files)),
-    ...findUnusedSamples(facts, sampleNames()).map((name) => `sample "${name}" is not shown on any page`),
+    ...findUnusedSamples(facts, sampleNames(), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),
   ];
 
   const reference = referenceAttributes();

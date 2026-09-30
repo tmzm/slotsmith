@@ -31,3 +31,14 @@ export function demoId(request: Request, name: string): string {
   counts.set(request, count);
   return `demo-${name.replace(/[^\w-]/g, "-")}-${count}`;
 }
+
+/**
+ * The files a sample imports from `../shared/`, in import order.
+ *
+ * @param code - The sample's source.
+ * @returns The file names without extension (`people` for `../shared/people`).
+ */
+export function sharedImports(code: string): string[] {
+  const found = [...code.matchAll(/from\s+["']\.\.\/shared\/([\w-]+)["']/g)].map((match) => match[1]!);
+  return [...new Set(found)];
+}

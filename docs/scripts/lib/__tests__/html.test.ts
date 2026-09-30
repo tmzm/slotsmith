@@ -173,4 +173,16 @@ describe("findUnusedSamples", () => {
     const pages = [facts("/", { samples: ["landing/hero-table"] }), facts("/ar/", { samples: ["landing/hero-table"] })];
     expect(findUnusedSamples(pages, ["z/unused", "landing/hero-table", "a/unused"])).toEqual(["a/unused", "z/unused"]);
   });
+
+  it("counts a sample that a shown sample imports, directly or through another", () => {
+    const pages = [facts("/", { samples: ["landing/swap-mui"] })];
+    const imports = { "landing/swap-mui": ["adapters/data-table/mui", "shared/people"], "adapters/data-table/mui": ["adapters/util"] };
+    const names = ["adapters/data-table/mui", "adapters/util", "shared/people", "shared/orphan"];
+    expect(findUnusedSamples(pages, names, imports)).toEqual(["shared/orphan"]);
+  });
+
+  it("counts the variants a demo lists", () => {
+    const page = readPage("/", doc("/", { body: '<figure data-sample="landing/swap-fallback" data-variants="landing/swap-mui landing/swap-chakra"></figure>' }));
+    expect(page.samples).toEqual(["landing/swap-fallback", "landing/swap-mui", "landing/swap-chakra"]);
+  });
 });

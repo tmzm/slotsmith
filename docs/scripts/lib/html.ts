@@ -104,6 +104,8 @@ export function readPage(path: string, html: string): PageFacts {
     if (id) facts.ids.push(id);
     const sample = attrs.get("data-sample");
     if (sample) facts.samples.push(sample);
+    // A demo that swaps in other samples after load names them here; they count as shown.
+    for (const variant of attrs.get("data-variants")?.split(/\s+/) ?? []) if (variant) facts.samples.push(variant);
     const rel = attrs.get("rel")?.toLowerCase().split(/\s+/) ?? [];
     if (name === "meta" && attrs.get("name") === "description") facts.description = (attrs.get("content") ?? "").trim();
     else if (name === "meta" && attrs.get("property") === "og:image") facts.ogImage = attrs.get("content") ?? null;
@@ -189,8 +191,20 @@ export function findDeadLinks(pages: PageFacts[], files: ReadonlySet<string> = n
   return problems;
 }
 
-/** Sample names that no page shows, sorted. */
-export function findUnusedSamples(pages: PageFacts[], names: string[]): string[] {
-  const used = new Set(pages.flatMap((page) => page.samples));
+/**
+ * Sample names that no page shows, sorted.
+ *
+ * @param pages - The built pages' facts.
+ * @param names - Every sample name.
+ * @param imports - Optional: the samples each sample imports (adapters, shared data). A sample a shown sample imports, directly or through others, counts as shown.
+ */
+export function findUnusedSamples(pages: PageFacts[], names: string[], imports: Record<string, string[]> = {}): string[] {
+  const used = new Set<string>();
+  const visit = (name: string) => {
+    if (used.has(name)) return;
+    used.add(name);
+    for (const child of imports[name] ?? []) visit(child);
+  };
+  for (const page of pages) for (const name of page.samples) visit(name);
   return names.filter((name) => !used.has(name)).sort();
 }

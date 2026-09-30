@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { demoId, nextTabIndex } from "@/lib/demo";
+import { demoId, nextTabIndex, sharedImports } from "@/lib/demo";
 
 describe("nextTabIndex", () => {
   it("moves with the arrow that points the way in left-to-right text", () => {
@@ -38,5 +38,16 @@ describe("demoId", () => {
 
   it("starts again on every page, so builds are stable", () => {
     expect(demoId(new Request("https://example.test/a/"), "smoke/x")).toBe(demoId(new Request("https://example.test/b/"), "smoke/x"));
+  });
+});
+
+describe("sharedImports", () => {
+  it("lists the files a sample imports from ../shared/, once each", () => {
+    const code = 'import { a } from "../shared/people";\nimport { b } from "../shared/people";\nimport { c } from "../adapters/mui";\nimport d from "../shared/more-data";';
+    expect(sharedImports(code)).toEqual(["people", "more-data"]);
+  });
+
+  it("finds nothing in a sample with no shared imports", () => {
+    expect(sharedImports('import { DataTable } from "slotsmith";')).toEqual([]);
   });
 });
