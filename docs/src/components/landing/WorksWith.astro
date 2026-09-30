@@ -52,14 +52,14 @@ const LIBRARIES = [
 </section>
 
 <script>
-  // Focus stops the loop (CSS), which moves the track after the browser has
+  // Keyboard focus stops the loop (CSS), which moves the track after the browser has
   // scrolled the focused link into view, so bring it into view again once the
   // track has settled. Once focus leaves the strip, scroll it back so the
   // loop runs from its own start again.
   for (const marquee of document.querySelectorAll<HTMLElement>(".marquee")) {
     marquee.addEventListener("focusin", (event) => {
       const link = event.target;
-      if (!(link instanceof HTMLElement)) return;
+      if (!(link instanceof HTMLElement) || !link.matches(":focus-visible")) return;
       requestAnimationFrame(() => link.scrollIntoView({ block: "nearest", inline: "nearest" }));
     });
     marquee.addEventListener("focusout", (event) => {
@@ -126,9 +126,10 @@ const LIBRARIES = [
     animation-play-state: paused;
   }
 
-  /* Keyboard focus stops the loop at its start, so the strip can scroll the
+  /* Keyboard focus (not a click's focus, which would move the link out from
+     under the pointer) stops the loop at its start, so the strip can scroll the
      focused link fully into view (a paused offset could leave it clipped). */
-  .marquee:focus-within .marquee__track {
+  .marquee:has(:focus-visible) .marquee__track {
     animation: none;
   }
 
