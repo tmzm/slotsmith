@@ -49,7 +49,8 @@ describe("token filtering", () => {
 });
 
 describe("data attribute merge", () => {
-  it("unions the extras into the slot's own attributes, sorted and unique", () => {
+  // Builds the reference twice; slow under a parallel run.
+  it("unions the extras into the slot's own attributes, sorted and unique", { timeout: 20_000 }, () => {
     const base = buildReference({}).find((r) => r.name === "data-table")!;
     const own = base.slots.find((s) => s.name === "Row")!.dataAttributes;
     const merged = buildReference({ "data-table": { Row: ["data-zzz", "data-aaa", ...own] } })

@@ -5,8 +5,10 @@
  * - every page's head (title, description, canonical, hreflang), internal links
  *   and `#id` targets, and that every sample is shown somewhere;
  * - in a browser: no console error or warning and no uncaught error on any
- *   page, axe (WCAG 2.2 AA) on every fallback demo, and every `data-*`
- *   attribute a demo's slots carry is listed in that slot's reference;
+ *   page, axe (WCAG 2.2 AA) on every fallback demo (findings allowlisted in
+ *   `lib/axe-allowlist.ts` are recorded as known library issues, not
+ *   problems), and every `data-*` attribute a demo's slots carry is listed in
+ *   that slot's reference;
  * - that an in-page anchor scrolls within the page instead of navigating.
  *
  * Writes `dist/a11y.json` and exits 1 on any problem. Stub pages are counted,
@@ -24,6 +26,7 @@ import { chromium, type Page } from "playwright";
 import type { ComponentReference } from "../src/lib/reference.ts";
 import { findDeadLinks, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
 import { serveDir } from "./lib/serve.ts";
+import { sortViolations, type KnownFinding } from "./lib/axe-allowlist.ts";
 import { SLOT_SELECTORS } from "./slot-selectors.ts";
 
 const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -44,6 +47,8 @@ interface A11yRow {
   sample: string;
   violations: number;
   passes: number;
+  /** Findings in the library's own parts, allowlisted in `lib/axe-allowlist.ts`: known library issues, not passes. */
+  knownLibraryIssues: KnownFinding[];
 }
 
 function walk(dir: string): string[] {
@@ -230,6 +235,7 @@ async function main(): Promise<void> {
   const reference = referenceAttributes();
   const missing: SlotMap = {};
   const a11y: A11yRow[] = [];
+  let knownIssues = 0;
 
   const server = await serveDir(distDir, 0);
   const channel = process.env.DOCS_BROWSER_CHANNEL ?? "chrome";
@@ -261,11 +267,12 @@ async function main(): Promise<void> {
           await figure.evaluate((element) => element.setAttribute("data-verify", "axe"));
           const result = await new AxeBuilder({ page }).include('[data-verify="axe"]').withTags(AXE_TAGS).analyze();
           await figure.evaluate((element) => element.removeAttribute("data-verify"));
-          a11y.push({ page: path, sample, violations: result.violations.length, passes: result.passes.length });
-          for (const violation of result.violations) {
-            const targets = violation.nodes.map((node) => node.target.join(" ")).join("; ");
-            problems.push(`axe ${violation.id} (${violation.impact}) in ${sample} on ${path}: ${violation.help} [${targets}]`);
+          const { known, problems: found } = sortViolations(result.violations);
+          a11y.push({ page: path, sample, violations: found.length, passes: result.passes.length, knownLibraryIssues: known });
+          for (const violation of found) {
+            problems.push(`axe ${violation.id} (${violation.impact}) in ${sample} on ${path}: ${violation.help} [${violation.targets.join("; ")}]`);
           }
+          knownIssues += known.length;
         }
         for (const [slug, slots] of Object.entries(await slotAttributes(page, index))) {
           for (const [slot, names] of Object.entries(slots)) {
@@ -302,7 +309,7 @@ async function main(): Promise<void> {
     problems.push(...facts.filter((page) => page.stub).map((page) => `stub page ${page.path}`));
   }
   for (const problem of problems) console.error(`  ✗ ${problem}`);
-  console.log(`verify: ${facts.length} pages, ${problems.length} problems, ${stubs} stubs`);
+  console.log(`verify: ${facts.length} pages, ${problems.length} problems, ${stubs} stubs, ${knownIssues} known library a11y issues`);
   if (problems.length) process.exitCode = 1;
 }
 

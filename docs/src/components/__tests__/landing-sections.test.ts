@@ -96,7 +96,8 @@ describe("Cards", () => {
     const panels = [...doc.querySelectorAll("[data-panel]")];
     expect(panels).toHaveLength(4);
     const links = panels.map((panel) => panel.querySelector("h3 a")?.getAttribute("href"));
-    expect(links).toEqual(["/components/data-table/", "/components/autocomplete/", "/components/date-picker/", "/components/file-uploader/"]);
+    // Reading order, which is the mosaic's visual order: table, combobox, uploader, date picker.
+    expect(links).toEqual(["/components/data-table/", "/components/autocomplete/", "/components/file-uploader/", "/components/date-picker/"]);
   });
 
   it("gives each panel its live card demo, fallback, with no code shown and a reserved height", async () => {
@@ -105,8 +106,8 @@ describe("Cards", () => {
     expect(figures.map((figure) => figure.getAttribute("data-sample"))).toEqual([
       "landing/card-data-table",
       "landing/card-autocomplete",
-      "landing/card-date-picker",
       "landing/card-file-uploader",
+      "landing/card-date-picker",
     ]);
     for (const figure of figures) {
       expect(figure.hasAttribute("data-fallback")).toBe(true);

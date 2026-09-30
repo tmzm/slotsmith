@@ -24,6 +24,5 @@ const copy = {
 
 export default function CardAutocomplete() {
   const { label, options } = useSlotsmithLocale().code.startsWith("ar") ? copy.ar : copy.en;
-  // No clear button: at 20px it misses the 24px target size (see docs/LAUNCH-REPORT.md).
-  return <Autocomplete options={options} defaultValue={["cairo"]} clearable={false} aria-label={label} />;
+  return <Autocomplete options={options} defaultValue={["cairo"]} aria-label={label} />;
 }

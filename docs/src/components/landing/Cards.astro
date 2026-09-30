@@ -4,7 +4,8 @@
  * asymmetric panel mosaic, not a grid of equal cards: on wide screens the
  * data table takes two columns and two rows, the combobox sits small beside
  * it, the uploader runs tall down the end column and the date picker lies wide
- * under the table. One column on phones.
+ * under the table. One column on phones. The panels are in that reading
+ * order in the DOM (table, combobox, uploader, date picker).
  *
  * Each panel holds the component's name in display type, its summary, and
  * its live mini demo (a `card-<slug>` sample; the fallback parts, no code).
@@ -22,6 +23,10 @@ export interface Props {
 
 const { lang } = Astro.props;
 
+/** The panels in reading order, which is also the mosaic's visual order, so Tab follows the eye. */
+const ORDER: ComponentSlug[] = ["data-table", "autocomplete", "file-uploader", "date-picker"];
+const panels = ORDER.map((slug) => COMPONENTS.find((meta) => meta.slug === slug)!);
+
 /** The space each mini demo reserves: its rendered height, measured at 360px and 1440px in both languages. */
 const HEIGHTS: Record<ComponentSlug, string> = {
   "data-table": "12.5rem",
@@ -37,7 +42,7 @@ const HEIGHTS: Record<ComponentSlug, string> = {
   </div>
 
   <div class="cards__mosaic">
-    {COMPONENTS.map((meta) => (
+    {panels.map((meta) => (
       <article class:list={["panel", "card", `card--${meta.slug}`]} data-panel={meta.slug} data-interactive>
         <div class="card__text">
           <h3 class="card__name">
@@ -179,14 +184,31 @@ const HEIGHTS: Record<ComponentSlug, string> = {
     padding: 0;
   }
 
+  /* Tablets: the table across the top; below it the combobox and date picker
+     stacked at the start, the uploader tall at the end. */
   @media (min-width: 768px) {
     .cards__mosaic {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        "table table"
+        "combo upload"
+        "date upload";
     }
 
-    .card--data-table,
+    .card--data-table {
+      grid-area: table;
+    }
+
+    .card--autocomplete {
+      grid-area: combo;
+    }
+
     .card--file-uploader {
-      grid-column: 1 / -1;
+      grid-area: upload;
+    }
+
+    .card--date-picker {
+      grid-area: date;
     }
   }
 
@@ -205,20 +227,7 @@ const HEIGHTS: Record<ComponentSlug, string> = {
       padding: 1.5rem;
     }
 
-    .card--data-table {
-      grid-area: table;
-    }
-
-    .card--autocomplete {
-      grid-area: combo;
-    }
-
-    .card--file-uploader {
-      grid-area: upload;
-    }
-
     .card--date-picker {
-      grid-area: date;
       grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
       align-items: end;
       column-gap: 2rem;
