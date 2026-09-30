@@ -175,6 +175,61 @@ describe("SwapDemo", () => {
     expect(events).toEqual(["before:mui", "after:mui"]);
   });
 
+  it("lets a swap:before listener hold the switch until its promise settles", async () => {
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui") }} />);
+    const root = container.firstElementChild!;
+    const events: string[] = [];
+    let release!: () => void;
+    root.addEventListener("swap:before", (event) => {
+      events.push("before");
+      (event as CustomEvent<{ waitUntil: (promise: Promise<unknown>) => void }>).detail.waitUntil(new Promise<void>((done) => (release = done)));
+    });
+    root.addEventListener("swap:after", () => events.push("after"));
+    await act(async () => fireEvent.click(radio("MUI")));
+    expect(events).toEqual(["before"]);
+    expect(root.getAttribute("data-current")).toBe("fallback");
+    expect(radio("MUI").getAttribute("aria-checked")).toBe("true");
+    await act(async () => release());
+    expect(root.getAttribute("data-current")).toBe("mui");
+    expect(events).toEqual(["before", "after"]);
+  });
+
+  it("switches after 700ms even when a swap:before promise never settles", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui") }} />);
+      const root = container.firstElementChild!;
+      root.addEventListener("swap:before", (event) => (event as CustomEvent<{ waitUntil: (promise: Promise<unknown>) => void }>).detail.waitUntil(new Promise(() => {})));
+      await act(async () => fireEvent.click(radio("MUI")));
+      await act(async () => vi.advanceTimersByTimeAsync(699));
+      expect(root.getAttribute("data-current")).toBe("fallback");
+      await act(async () => vi.advanceTimersByTimeAsync(1));
+      expect(root.getAttribute("data-current")).toBe("mui");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("drops a held switch when a later choice comes in while it waits", async () => {
+    const { container } = render(
+      <SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui"), chakra: resolved("chakra") }} />,
+    );
+    const root = container.firstElementChild!;
+    const releases: (() => void)[] = [];
+    const after: string[] = [];
+    root.addEventListener("swap:before", (event) =>
+      (event as CustomEvent<{ waitUntil: (promise: Promise<unknown>) => void }>).detail.waitUntil(new Promise<void>((done) => releases.push(done))),
+    );
+    root.addEventListener("swap:after", (event) => after.push((event as CustomEvent).detail.to));
+    await act(async () => fireEvent.click(radio("MUI")));
+    await act(async () => fireEvent.click(radio("Chakra")));
+    await act(async () => releases[0]!());
+    expect(root.getAttribute("data-current")).toBe("fallback");
+    await act(async () => releases[1]!());
+    expect(root.getAttribute("data-current")).toBe("chakra");
+    expect(after).toEqual(["chakra"]);
+  });
+
   it("labels the segments in Arabic on Arabic pages", async () => {
     render(<SwapDemo lang="ar" messages={swapMessages("ar")} sources={sources} />);
     // The Arabic locale pack loads lazily, so the first client render waits for it.

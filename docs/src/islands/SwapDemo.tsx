@@ -18,7 +18,11 @@
  *
  * Every switch fires `swap:before` and `swap:after` on the root, so
  * `landing-motion.ts` can play its explode, swap and reassemble around it
- * without this island importing the motion library.
+ * without this island importing the motion library. A `swap:before`
+ * listener may hold the switch by passing a promise to `detail.waitUntil`
+ * (while the event is dispatching); the switch happens when every such
+ * promise settles, or after {@link SWAP_WAIT_MAX} ms, whichever comes first.
+ * A later choice made while it waits replaces it.
  */
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ComponentType, type KeyboardEvent, type ReactNode } from "react";
 import Fallback from "@samples/landing/swap-fallback";
@@ -45,6 +49,22 @@ type VariantModule = { default: ComponentType };
 export type VariantLoader = () => Promise<VariantModule>;
 
 export const VARIANTS: readonly Variant[] = ["fallback", "shadcn", "mui", "chakra"];
+
+/** The longest a `swap:before` listener can hold a switch, in ms (DESIGN.md: explode, swap and reassemble in 700ms at most). */
+export const SWAP_WAIT_MAX = 700;
+
+/** The `detail` of the `swap:before` event. */
+export interface SwapBeforeDetail {
+  from: Variant;
+  to: Variant;
+  /** Holds the switch until `promise` settles (at most {@link SWAP_WAIT_MAX} ms). Call it while the event is dispatching. */
+  waitUntil(promise: Promise<unknown>): void;
+}
+
+/** The `detail` of the `swap:after` event. */
+export interface SwapAfterDetail {
+  to: Variant;
+}
 
 type ProviderComponent = ComponentType<VariantSettings & { children: ReactNode }>;
 
@@ -203,9 +223,35 @@ export default function SwapDemo({ lang, messages, sources, loaders, parts = [],
 
   const show = (variant: Variant) => {
     if (shown.current === variant) return;
-    root.current?.dispatchEvent(new CustomEvent("swap:before", { detail: { from: shown.current, to: variant } }));
-    shown.current = variant;
-    setCurrent(variant);
+    const holds: Promise<unknown>[] = [];
+    let dispatching = true;
+    const detail: SwapBeforeDetail = {
+      from: shown.current,
+      to: variant,
+      waitUntil: (promise) => {
+        if (dispatching) holds.push(promise);
+      },
+    };
+    root.current?.dispatchEvent(new CustomEvent<SwapBeforeDetail>("swap:before", { detail }));
+    dispatching = false;
+    const commit = () => {
+      // A later choice made while this one waited has taken over.
+      if (latest.current !== variant || shown.current === variant) return;
+      shown.current = variant;
+      setCurrent(variant);
+    };
+    if (holds.length === 0) {
+      commit();
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const cap = new Promise<void>((done) => {
+      timer = setTimeout(done, SWAP_WAIT_MAX);
+    });
+    void Promise.race([Promise.allSettled(holds), cap]).then(() => {
+      clearTimeout(timer);
+      commit();
+    });
   };
 
   const select = (variant: Variant, retry = false) => {
@@ -236,7 +282,7 @@ export default function SwapDemo({ lang, messages, sources, loaders, parts = [],
       first.current = false;
       return;
     }
-    root.current?.dispatchEvent(new CustomEvent("swap:after", { detail: { to: current } }));
+    root.current?.dispatchEvent(new CustomEvent<SwapAfterDetail>("swap:after", { detail: { to: current } }));
   }, [current]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
