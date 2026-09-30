@@ -1,8 +1,9 @@
 ---
 /**
  * Landing "Works with what you have" (docs/DESIGN.md section 6, item 5). A
- * slow marquee of monochrome logos, each a link to the page that shows the
- * library working with slotsmith.
+ * slow marquee of the libraries' names as plain text wordmarks (official
+ * monochrome marks wait on the owner, see LAUNCH-REPORT), each a link to the
+ * page that shows the library working with slotsmith.
  *
  * The marquee is CSS only: the list is drawn twice and the track moves by
  * half its length, so the loop has no seam. The copy is hidden from
@@ -11,11 +12,6 @@
  * focus, and under reduced motion becomes one static, wrapped row.
  */
 import { localePath, t, type Lang } from "@/i18n";
-import shadcn from "@/components/logos/shadcn.svg?raw";
-import mui from "@/components/logos/mui.svg?raw";
-import chakra from "@/components/logos/chakra.svg?raw";
-import tailwind from "@/components/logos/tailwind.svg?raw";
-import tanstack from "@/components/logos/tanstack.svg?raw";
 
 export interface Props {
   lang: Lang;
@@ -24,12 +20,12 @@ export interface Props {
 const { lang } = Astro.props;
 
 const LIBRARIES = [
-  { name: "shadcn/ui", logo: shadcn, href: "/components/data-table/adapters/#shadcn" },
-  { name: "MUI", logo: mui, href: "/components/data-table/adapters/#mui" },
-  { name: "Chakra UI", logo: chakra, href: "/components/data-table/adapters/#chakra" },
-  { name: "Tailwind CSS", logo: tailwind, href: "/theming/#tailwind" },
-  { name: "TanStack Table", logo: tanstack, href: "/components/data-table/" },
-  { name: "TanStack Query", logo: tanstack, href: "/components/data-table/guides/server-data/" },
+  { name: "shadcn/ui", href: "/components/data-table/adapters/#shadcn" },
+  { name: "MUI", href: "/components/data-table/adapters/#mui" },
+  { name: "Chakra UI", href: "/components/data-table/adapters/#chakra" },
+  { name: "Tailwind CSS", href: "/theming/#tailwind" },
+  { name: "TanStack Table", href: "/components/data-table/" },
+  { name: "TanStack Query", href: "/components/data-table/guides/server-data/" },
 ];
 ---
 <section class="works" aria-labelledby="works-title">
@@ -45,7 +41,6 @@ const LIBRARIES = [
           {LIBRARIES.map((library) => (
             <li>
               <a class="marquee__item" href={localePath(lang, library.href)} lang="en" dir="ltr" tabindex={copy ? "-1" : undefined}>
-                <span class="marquee__logo" set:html={library.logo} />
                 <span class="marquee__name">{library.name}</span>
               </a>
             </li>
@@ -55,6 +50,24 @@ const LIBRARIES = [
     </div>
   </div>
 </section>
+
+<script>
+  // Focus stops the loop (CSS), which moves the track after the browser has
+  // scrolled the focused link into view, so bring it into view again once the
+  // track has settled. Once focus leaves the strip, scroll it back so the
+  // loop runs from its own start again.
+  for (const marquee of document.querySelectorAll<HTMLElement>(".marquee")) {
+    marquee.addEventListener("focusin", (event) => {
+      const link = event.target;
+      if (!(link instanceof HTMLElement)) return;
+      requestAnimationFrame(() => link.scrollIntoView({ block: "nearest", inline: "nearest" }));
+    });
+    marquee.addEventListener("focusout", (event) => {
+      if (event.relatedTarget instanceof Node && marquee.contains(event.relatedTarget)) return;
+      marquee.scrollLeft = 0;
+    });
+  }
+</script>
 
 <style>
   .works {
@@ -109,9 +122,14 @@ const LIBRARIES = [
     animation: marquee 60s linear infinite;
   }
 
-  .marquee:hover .marquee__track,
-  .marquee:focus-within .marquee__track {
+  .marquee:hover .marquee__track {
     animation-play-state: paused;
+  }
+
+  /* Keyboard focus stops the loop at its start, so the strip can scroll the
+     focused link fully into view (a paused offset could leave it clipped). */
+  .marquee:focus-within .marquee__track {
+    animation: none;
   }
 
   @keyframes marquee {
@@ -144,30 +162,15 @@ const LIBRARIES = [
 
   .marquee__item:hover,
   .marquee__item:focus-visible {
-    color: var(--ink);
+    color: var(--gold-text);
   }
 
-  .marquee__item:hover .marquee__logo,
-  .marquee__item:focus-visible .marquee__logo {
-    color: var(--gold);
-  }
-
-  .marquee__logo {
-    display: inline-flex;
-    transition: color 320ms var(--ease-out);
-  }
-
-  .marquee__logo :global(svg) {
-    inline-size: 1.75rem;
-    block-size: 1.75rem;
-  }
-
+  /* Each name as a plain wordmark in the project's own casing. */
   .marquee__name {
     font-family: var(--font-display);
     font-weight: 900;
     font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
     line-height: 1;
-    text-transform: uppercase;
     letter-spacing: -0.005em;
   }
 

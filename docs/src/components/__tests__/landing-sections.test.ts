@@ -158,11 +158,11 @@ describe("WorksWith", () => {
     for (const link of copy!.querySelectorAll("a")) expect(link.getAttribute("tabindex")).toBe("-1");
   });
 
-  it("draws the logos inline in currentColor", async () => {
+  it("shows each library as a text wordmark, with no third-party logo", async () => {
     const doc = await render("en");
-    const svgs = [...doc.querySelectorAll(".marquee__list:not([aria-hidden]) svg")];
-    expect(svgs).toHaveLength(6);
-    for (const svg of svgs) expect(svg.outerHTML).toContain("currentColor");
+    const names = [...doc.querySelectorAll(".marquee__list:not([aria-hidden]) .marquee__name")].map((el) => normalise(el.textContent));
+    expect(names).toEqual(["shadcn/ui", "MUI", "Chakra UI", "Tailwind CSS", "TanStack Table", "TanStack Query"]);
+    expect(doc.querySelectorAll(".marquee svg, .marquee img")).toHaveLength(0);
   });
 
   it("links in the page's language on Arabic pages", async () => {
