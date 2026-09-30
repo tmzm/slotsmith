@@ -15,5 +15,5 @@ const columns: DataTableColumnDef<Part>[] = [
 ];
 
 export default function HelloTable() {
-  return <DataTable data={parts} columns={columns} enablePagination={false} />;
+  return <DataTable data={parts} columns={columns} />;
 }

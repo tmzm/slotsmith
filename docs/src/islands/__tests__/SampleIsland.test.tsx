@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import SampleIsland from "@/islands/SampleIsland";
 
@@ -16,8 +17,19 @@ describe("SampleIsland", () => {
     expect(html).toContain('dir="ltr"');
   });
 
-  it("sets the Arabic direction", async () => {
-    expect(await render("smoke/hello-table", "ar")).toContain('dir="rtl"');
+  it("renders Arabic pages in Arabic, right to left", async () => {
+    const html = await render("smoke/hello-table", "ar");
+    expect(html).toContain('dir="rtl"');
+    expect(html).toMatch(/[؀-ۿ]/);
+  });
+
+  it("keeps English demos in English", async () => {
+    expect(await render("smoke/hello-table")).not.toMatch(/[؀-ۿ]/);
+  });
+
+  it("never imports a locale pack statically, so packs stay out of the first load", () => {
+    const source = readFileSync(new URL("../SampleIsland.tsx", import.meta.url), "utf8");
+    expect(source).not.toMatch(/^import[^;]*["']slotsmith\/locales\//m);
   });
 
   it("fails the render with the bad name instead of rendering nothing", async () => {

@@ -9,10 +9,13 @@
  * Suspense boundary here on purpose), so the prerendered HTML holds the full
  * demo, not a fallback. On the client, hydration waits for the same chunk and
  * keeps the server HTML in place meanwhile.
+ *
+ * Locale packs are never in the first load: the Arabic pack is imported only
+ * on Arabic pages, the same lazy way on the server and the client, so the
+ * first client render matches the prerendered HTML.
  */
 import { lazy, type ComponentType, type LazyExoticComponent, type ReactNode } from "react";
 import { SlotsmithProvider } from "slotsmith/provider";
-import { ar } from "slotsmith/locales/ar";
 import type { Lang } from "@/i18n";
 
 export interface SampleIslandProps {
@@ -27,8 +30,6 @@ type SampleModule = { default: ComponentType };
 
 const loaders = import.meta.glob<SampleModule>("../../samples/**/*.tsx");
 
-const SITE_LOCALES = [ar];
-
 const samples = new Map<string, LazyExoticComponent<ComponentType>>();
 
 /** One lazy component per sample, kept so React sees the same type on every render. */
@@ -42,6 +43,19 @@ function lazySample(name: string): LazyExoticComponent<ComponentType> {
   }
   return sample;
 }
+
+/** The Arabic pack, loaded only on Arabic pages. */
+const Arabic = lazy(async () => {
+  const { ar } = await import("slotsmith/locales/ar");
+  const packs = [ar];
+  return {
+    default: ({ children }: { children: ReactNode }) => (
+      <SlotsmithProvider locale="ar" locales={packs}>
+        {children}
+      </SlotsmithProvider>
+    ),
+  };
+});
 
 /** Every pack the library ships, loaded only by the demos that ask for them. */
 const AllLocales = lazy(async () => {
@@ -72,9 +86,6 @@ export default function SampleIsland({ name, lang, locales = "site" }: SampleIsl
     </div>
   );
   if (locales === "all") return <AllLocales lang={lang}>{stage}</AllLocales>;
-  return (
-    <SlotsmithProvider locale={lang === "ar" ? "ar" : "en-US"} locales={SITE_LOCALES}>
-      {stage}
-    </SlotsmithProvider>
-  );
+  if (lang === "ar") return <Arabic>{stage}</Arabic>;
+  return <SlotsmithProvider locale="en-US">{stage}</SlotsmithProvider>;
 }
