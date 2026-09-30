@@ -150,6 +150,18 @@ describe("findDeadLinks", () => {
     expect(problems.join("\n")).toContain("/theming ");
   });
 
+  it("matches a percent-encoded Arabic anchor to its raw id", () => {
+    const ar = readPage("/ar/theming/", doc("/ar/theming/", { body: '<h2 id="تنسيق-الجدول"></h2><a href="#تنسيق-الجدول">x</a>' }));
+    expect(ar.links).toContain("/ar/theming/#%D8%AA%D9%86%D8%B3%D9%8A%D9%82-%D8%A7%D9%84%D8%AC%D8%AF%D9%88%D9%84");
+    expect(findDeadLinks([ar])).toEqual([]);
+  });
+
+  it("reports a malformed percent escape in an anchor as dead instead of throwing", () => {
+    const problems = findDeadLinks([theming, facts("/", { links: ["/theming/#bad%E0%A4%A"] })]);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("/theming/#bad%E0%A4%A");
+  });
+
   it("ignores external links, which readPage never keeps", () => {
     const page = readPage("/", doc("/", { body: '<a href="https://example.com/x/#y">x</a>' }));
     expect(findDeadLinks([page])).toEqual([]);

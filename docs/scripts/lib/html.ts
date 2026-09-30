@@ -168,7 +168,13 @@ export function findDeadLinks(pages: PageFacts[], files: ReadonlySet<string> = n
     for (const link of new Set(page.links)) {
       const hashAt = link.indexOf("#");
       const path = hashAt === -1 ? link : link.slice(0, hashAt);
-      const hash = hashAt === -1 ? "" : decodeURIComponent(link.slice(hashAt + 1));
+      let hash = "";
+      try {
+        hash = hashAt === -1 ? "" : decodeURIComponent(link.slice(hashAt + 1));
+      } catch {
+        problems.push(`dead link ${link} on ${page.path}: malformed escape in its anchor`);
+        continue;
+      }
       const target = byPath.get(path);
       if (!target) {
         if (!files.has(path)) problems.push(`dead link ${link} on ${page.path}: no such page`);

@@ -75,10 +75,10 @@ function referenceAttributes(): SlotMap {
 
 /** Scrolls each demo into view and waits for its islands to hydrate. */
 async function hydrateDemos(page: Page): Promise<void> {
-  for (const figure of await page.locator("[data-sample]").all()) {
+  for (const figure of await page.locator("figure[data-sample]").all()) {
     await figure.scrollIntoViewIfNeeded();
   }
-  await page.waitForFunction(() => document.querySelectorAll("[data-sample] astro-island[ssr]").length === 0, null, {
+  await page.waitForFunction(() => document.querySelectorAll("figure[data-sample] astro-island[ssr]").length === 0, null, {
     timeout: HYDRATE_MS,
   });
   await page.waitForLoadState("networkidle");
@@ -88,7 +88,7 @@ async function hydrateDemos(page: Page): Promise<void> {
 function slotAttributes(page: Page, index: number): Promise<SlotMap> {
   return page.evaluate(
     ({ index, selectors, pattern }) => {
-      const figure = document.querySelectorAll("[data-sample]")[index]!;
+      const figure = document.querySelectorAll("figure[data-sample]")[index]!;
       const site = new RegExp(pattern);
       const found: Record<string, Record<string, string[]>> = {};
       for (const [slug, slots] of Object.entries(selectors)) {
@@ -119,21 +119,41 @@ async function checkAnchor(page: Page, origin: string, facts: PageFacts[]): Prom
 
   await page.setViewportSize({ width: 360, height: 640 });
   await page.goto(origin + chosen.path, { waitUntil: "load" });
-  const id = decodeURIComponent(hash.slice(1));
-  const before = await page.evaluate((hash) => {
-    // Make the page taller than the viewport so a scroll is observable, then start at the bottom.
-    const spacer = document.createElement("div");
-    spacer.style.blockSize = "300vh";
-    document.body.append(spacer);
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
-    const anchors = [...document.querySelectorAll<HTMLAnchorElement>(`a[href="${hash}"]`)];
-    const anchor = anchors.find((a) => a.getClientRects().length > 0) ?? anchors[0];
-    if (!anchor) return null;
-    const y = window.scrollY;
-    anchor.click();
-    return y;
-  }, hash);
-  if (before === null) return [`anchor: no <a href="${hash}"> on ${chosen.path}`];
+  // Links hold the percent-encoded hash; ids and the HTML's hrefs hold the raw text (Arabic slugs).
+  let id: string;
+  try {
+    id = decodeURIComponent(hash.slice(1));
+  } catch {
+    return [`anchor: ${hash} on ${chosen.path} has a malformed escape`];
+  }
+  const shown = `#${id}`;
+  const before = await page.evaluate(
+    ({ id, path }) => {
+      const decode = (text: string) => {
+        try {
+          return decodeURIComponent(text);
+        } catch {
+          return text;
+        }
+      };
+      // Make the page taller than the viewport so a scroll is observable, then start at the bottom.
+      const spacer = document.createElement("div");
+      spacer.style.blockSize = "300vh";
+      document.body.append(spacer);
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+      // Any link to this page's anchor counts, written as `#id` or as `/path/#id`.
+      const anchors = [...document.querySelectorAll<HTMLAnchorElement>("a[href*='#']")].filter(
+        (a) => decode(a.pathname) === decode(path) && decode(a.hash) === `#${id}`,
+      );
+      const anchor = anchors.find((a) => a.getClientRects().length > 0) ?? anchors[0];
+      if (!anchor) return null;
+      const y = window.scrollY;
+      anchor.click();
+      return y;
+    },
+    { id, path: chosen.path },
+  );
+  if (before === null) return [`anchor: no link to ${shown} on ${chosen.path}`];
   try {
     // Smooth scrolling is on: wait until the target is in view.
     await page.waitForFunction(
@@ -147,29 +167,38 @@ async function checkAnchor(page: Page, origin: string, facts: PageFacts[]): Prom
   } catch {
     // Reported below with the numbers.
   }
-  const result = await page.evaluate((id) => ({
-    after: window.scrollY,
-    top: document.getElementById(id)?.getBoundingClientRect().top ?? Number.NaN,
-    height: window.innerHeight,
-    path: location.pathname,
-    hash: location.hash,
-  }), id);
+  const result = await page.evaluate((id) => {
+    const decode = (text: string) => {
+      try {
+        return decodeURIComponent(text);
+      } catch {
+        return text;
+      }
+    };
+    return {
+      after: window.scrollY,
+      top: document.getElementById(id)?.getBoundingClientRect().top ?? Number.NaN,
+      height: window.innerHeight,
+      path: decode(location.pathname),
+      hash: decode(location.hash),
+    };
+  }, id);
   const problems: string[] = [];
-  if (result.path !== chosen.path || result.hash !== hash) {
-    problems.push(`anchor: ${hash} on ${chosen.path} navigated to ${result.path}${result.hash}`);
+  if (result.path !== chosen.path || result.hash !== shown) {
+    problems.push(`anchor: ${shown} on ${chosen.path} navigated to ${result.path}${result.hash}`);
   } else if (!(result.after < before && result.top >= 0 && result.top < result.height)) {
     problems.push(
-      `anchor: ${hash} on ${chosen.path} did not scroll its target into view (scrollY ${Math.round(before)} -> ${Math.round(result.after)}, target top ${Math.round(result.top)} of ${result.height})`,
+      `anchor: ${shown} on ${chosen.path} did not scroll its target into view (scrollY ${Math.round(before)} -> ${Math.round(result.after)}, target top ${Math.round(result.top)} of ${result.height})`,
     );
   } else {
-    console.log(`verify: ${hash} on ${chosen.path} scrolled from ${Math.round(before)} to ${Math.round(result.after)}`);
+    console.log(`verify: ${shown} on ${chosen.path} scrolled from ${Math.round(before)} to ${Math.round(result.after)}`);
   }
   return problems;
 }
 
 async function main(): Promise<void> {
   const files = walk(distDir).map(toUrlPath);
-  const pageFiles = files.filter((file) => file.endsWith("/index.html"));
+  const pageFiles = files.filter((file) => file.endsWith("/index.html")).sort();
   const facts = pageFiles.map((file) => {
     const path = file.slice(0, -"index.html".length);
     return readPage(path, readFileSync(resolve(distDir, `.${file}`), "utf8"));
@@ -200,7 +229,7 @@ async function main(): Promise<void> {
       page.on("pageerror", (error) => problems.push(`uncaught error on ${path}: ${error.message}`));
       await page.goto(server.url + path, { waitUntil: "load" });
 
-      const demos = await page.locator("[data-sample]").count();
+      const demos = await page.locator("figure[data-sample]").count();
       if (demos > 0) {
         try {
           await hydrateDemos(page);
@@ -209,7 +238,7 @@ async function main(): Promise<void> {
         }
       }
       for (let index = 0; index < demos; index++) {
-        const figure = page.locator("[data-sample]").nth(index);
+        const figure = page.locator("figure[data-sample]").nth(index);
         const sample = (await figure.getAttribute("data-sample")) ?? "";
         if ((await figure.getAttribute("data-fallback")) !== null) {
           await figure.evaluate((element) => element.setAttribute("data-verify", "axe"));

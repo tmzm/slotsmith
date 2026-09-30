@@ -1,12 +1,15 @@
 ---
 /**
  * A level-2 prose heading that links to itself. The id is the slug MDX gives
- * the heading, the same one the "On this page" list links to.
+ * the heading, the same one the "On this page" list links to. A heading that
+ * already holds a link stays unlinked, since links cannot nest.
  */
 interface Props {
   id?: string;
 }
 
 const { id, ...rest } = Astro.props;
+const inner = await Astro.slots.render("default");
+const selfLink = Boolean(id) && !/<a[\s>]/i.test(inner);
 ---
-<h2 id={id} {...rest}>{id ? <a class="heading-anchor" href={`#${id}`}><slot /></a> : <slot />}</h2>
+<h2 id={id} {...rest}>{selfLink ? <a class="heading-anchor" href={`#${id}`}><Fragment set:html={inner} /></a> : <Fragment set:html={inner} />}</h2>
