@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bracketLabel, explodeParts } from "@/lib/explode";
+import { bracketLabel, explodeParts, slotKinds } from "@/lib/explode";
 import { getReference } from "@/lib/reference";
 import { SLOT_SELECTORS } from "../../../scripts/slot-selectors.ts";
 
@@ -38,5 +38,18 @@ describe("bracketLabel", () => {
   it("frames element parts in angle brackets and widget parts in braces", () => {
     expect(bracketLabel({ slot: "Row", kind: "element" })).toBe("<Row>");
     expect(bracketLabel({ slot: "Checkbox", kind: "widget" })).toBe("{Checkbox}");
+  });
+});
+
+describe("slotKinds", () => {
+  it("names each slot with its kind from the reference", () => {
+    expect(slotKinds(reference, ["Row", "Checkbox"])).toEqual([
+      { slot: "Row", kind: "element" },
+      { slot: "Checkbox", kind: "widget" },
+    ]);
+  });
+
+  it("throws on a slot the reference does not have", () => {
+    expect(() => slotKinds(reference, ["Rowz"])).toThrow(/"Rowz"/);
   });
 });

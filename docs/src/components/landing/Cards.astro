@@ -1,0 +1,227 @@
+---
+/**
+ * Landing "Four components" (docs/DESIGN.md section 6, item 4). An
+ * asymmetric panel mosaic, not a grid of equal cards: on wide screens the
+ * data table takes two columns and two rows, the combobox sits small beside
+ * it, the uploader runs tall down the end column and the date picker lies wide
+ * under the table. One column on phones.
+ *
+ * Each panel holds the component's name in display type, its summary, and
+ * its live mini demo (a `card-<slug>` sample; the fallback parts, no code).
+ * The name links to the component's page, and the link's hit area covers the
+ * panel; the demo sits above that area, so its controls stay usable. Each
+ * demo reserves its height, so hydrating shifts nothing.
+ */
+import Demo from "@/components/Demo.astro";
+import { COMPONENTS, type ComponentSlug } from "@/data/components";
+import { localePath, t, type Lang } from "@/i18n";
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+/** The space each mini demo reserves: its rendered height, measured at 360px and 1440px in both languages. */
+const HEIGHTS: Record<ComponentSlug, string> = {
+  "data-table": "12.5rem",
+  autocomplete: "2.25rem",
+  "date-picker": "2.25rem",
+  "file-uploader": "10.25rem",
+};
+---
+<section class="cards" aria-labelledby="cards-title">
+  <div class="cards__intro">
+    <h2 id="cards-title" class="display cards__title">{t(lang, "cards.title")}</h2>
+    <p class="cards__lede">{t(lang, "cards.lede")}</p>
+  </div>
+
+  <div class="cards__mosaic">
+    {COMPONENTS.map((meta) => (
+      <article class:list={["panel", "card", `card--${meta.slug}`]} data-panel={meta.slug} data-interactive>
+        <div class="card__text">
+          <h3 class="card__name">
+            <a class="display" href={localePath(lang, `/components/${meta.slug}/`)}>{t(lang, meta.title)}</a>
+          </h3>
+          <p class="card__summary">{t(lang, meta.summary)}</p>
+        </div>
+        <div class="card__demo">
+          <Demo name={`landing/card-${meta.slug}`} lang={lang} height={HEIGHTS[meta.slug]} fallback showCode={false} />
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .cards {
+    display: grid;
+    gap: 2.5rem;
+    padding-block: 4rem;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .cards__intro {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .cards__title {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(2.25rem, 1.2rem + 4.4vw, 4.5rem);
+    text-wrap: balance;
+  }
+
+  :global(html[lang="ar"]) .cards__title {
+    font-size: clamp(1.875rem, 1.2rem + 3vw, 3.5rem);
+    line-height: 1.3;
+  }
+
+  .cards__lede {
+    margin: 0;
+    max-inline-size: 52ch;
+    color: var(--ink-2);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .cards__mosaic {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .card {
+    position: relative;
+    display: grid;
+    align-content: space-between;
+    gap: 1.25rem;
+    min-inline-size: 0;
+    padding: 1.25rem;
+  }
+
+  .card__text {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .card__name {
+    margin: 0;
+    font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+    line-height: 0.88;
+  }
+
+  .card--data-table .card__name {
+    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  }
+
+  :global(html[lang="ar"]) .card__name {
+    font-size: clamp(1.625rem, 1.3rem + 1.4vw, 2.25rem);
+    line-height: 1.3;
+  }
+
+  :global(html[lang="ar"]) .card--data-table .card__name {
+    font-size: clamp(1.875rem, 1.3rem + 2.4vw, 3rem);
+  }
+
+  .card__name a {
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 320ms var(--ease-out);
+  }
+
+  /* The link's hit area is the whole panel. */
+  .card__name a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .card:hover .card__name a {
+    color: var(--gold-text);
+  }
+
+  .card__name a:focus-visible {
+    outline: none;
+  }
+
+  .card:has(.card__name a:focus-visible) {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  .card__summary {
+    margin: 0;
+    max-inline-size: 48ch;
+    color: var(--ink-2);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  /* The demo is the panel's body, not a panel of its own, and sits above the
+     link's hit area so its controls take their own clicks. */
+  .card__demo {
+    position: relative;
+    min-inline-size: 0;
+  }
+
+  .card__demo :global(.sample-demo) {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .card__demo :global(.sample-demo__preview) {
+    padding: 0;
+  }
+
+  @media (min-width: 768px) {
+    .cards__mosaic {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card--data-table,
+    .card--file-uploader {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Table: two columns, two rows. Combobox small at the end; the uploader
+     tall below it; the date picker wide under the table. */
+  @media (min-width: 1024px) {
+    .cards__mosaic {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-areas:
+        "table table combo"
+        "table table upload"
+        "date date upload";
+    }
+
+    .card {
+      padding: 1.5rem;
+    }
+
+    .card--data-table {
+      grid-area: table;
+    }
+
+    .card--autocomplete {
+      grid-area: combo;
+    }
+
+    .card--file-uploader {
+      grid-area: upload;
+    }
+
+    .card--date-picker {
+      grid-area: date;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
+      align-items: end;
+      column-gap: 2rem;
+    }
+  }
+</style>

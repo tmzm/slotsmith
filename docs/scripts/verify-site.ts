@@ -59,7 +59,7 @@ const toUrlPath = (file: string) => `/${relative(distDir, file).split("\\").join
 function sampleNames(): string[] {
   return walk(samplesDir)
     .map((file) => relative(samplesDir, file).split("\\").join("/"))
-    .filter((name) => SAMPLE_EXTENSIONS.test(name) && name !== "tsconfig.json")
+    .filter((name) => SAMPLE_EXTENSIONS.test(name) && name !== "tsconfig.json" && !name.split("/").includes("__tests__"))
     .map((name) => name.replace(SAMPLE_EXTENSIONS, ""))
     .sort();
 }

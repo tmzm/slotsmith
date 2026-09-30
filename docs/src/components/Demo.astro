@@ -30,13 +30,15 @@ export interface Props {
   locales?: "site" | "all";
   /** Other samples the demo swaps in after load (the swap demo's variants); they count as shown. */
   variants?: string[];
+  /** Shows the tab row and the code. `false` renders the live demo alone (the landing's component cards); the figure still names its sample. */
+  showCode?: boolean;
 }
 
-const { name, lang, height, fallback, stock, hydrate = "visible", locales, variants } = Astro.props;
+const { name, lang, height, fallback, stock, hydrate = "visible", locales, variants, showCode = true } = Astro.props;
 const { code, lang: codeLang } = sampleSource(name);
 const id = demoId(Astro.request, name);
 // A sample that imports `../shared/<file>` shows that file as a further code tab.
-const shared = sharedImports(code).map((file) => ({ file, ...sampleSource(`shared/${file}`) }));
+const shared = showCode ? sharedImports(code).map((file) => ({ file, ...sampleSource(`shared/${file}`) })) : [];
 ---
 <figure
   class:list={["panel", "sample-demo", { "site-demo": !stock }]}
@@ -46,24 +48,34 @@ const shared = sharedImports(code).map((file) => ({ file, ...sampleSource(`share
   data-view="preview"
   style={`--demo-h:${height}`}
 >
-  <div class="sample-demo__tabs mono" role="tablist">
-    <button type="button" role="tab" id={`${id}-tab-preview`} aria-controls={`${id}-preview`} aria-selected="true" data-tab="preview">preview</button>
-    <button type="button" role="tab" id={`${id}-tab-code`} aria-controls={`${id}-code`} aria-selected="false" tabindex="-1" data-tab="code">code</button>
-    {shared.map(({ file, lang: fileLang }) => (
-      <button type="button" role="tab" id={`${id}-tab-${file}`} aria-controls={`${id}-${file}`} aria-selected="false" tabindex="-1" data-tab={`shared/${file}`}>{`${file}.${fileLang}`}</button>
-    ))}
-  </div>
-  <div class="sample-demo__preview" id={`${id}-preview`} role="tabpanel" aria-labelledby={`${id}-tab-preview`} data-pane="preview">
+  {showCode && (
+    <div class="sample-demo__tabs mono" role="tablist">
+      <button type="button" role="tab" id={`${id}-tab-preview`} aria-controls={`${id}-preview`} aria-selected="true" data-tab="preview">preview</button>
+      <button type="button" role="tab" id={`${id}-tab-code`} aria-controls={`${id}-code`} aria-selected="false" tabindex="-1" data-tab="code">code</button>
+      {shared.map(({ file, lang: fileLang }) => (
+        <button type="button" role="tab" id={`${id}-tab-${file}`} aria-controls={`${id}-${file}`} aria-selected="false" tabindex="-1" data-tab={`shared/${file}`}>{`${file}.${fileLang}`}</button>
+      ))}
+    </div>
+  )}
+  <div
+    class="sample-demo__preview"
+    id={`${id}-preview`}
+    role={showCode ? "tabpanel" : undefined}
+    aria-labelledby={showCode ? `${id}-tab-preview` : undefined}
+    data-pane="preview"
+  >
     {hydrate === "load" && <SampleIsland client:load name={name} lang={lang} locales={locales} />}
     {hydrate === "idle" && <SampleIsland client:idle name={name} lang={lang} locales={locales} />}
     {hydrate === "visible" && <SampleIsland client:visible name={name} lang={lang} locales={locales} />}
   </div>
-  <div class="sample-code" id={`${id}-code`} role="tabpanel" aria-labelledby={`${id}-tab-code`} data-pane="code" hidden>
-    <Code code={code} lang={codeLang} theme={CODE_THEME} dir="ltr" />
-    <button type="button" class="copy-button" data-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
-      {t(lang, "common.copy")}
-    </button>
-  </div>
+  {showCode && (
+    <div class="sample-code" id={`${id}-code`} role="tabpanel" aria-labelledby={`${id}-tab-code`} data-pane="code" hidden>
+      <Code code={code} lang={codeLang} theme={CODE_THEME} dir="ltr" />
+      <button type="button" class="copy-button" data-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
+        {t(lang, "common.copy")}
+      </button>
+    </div>
+  )}
   {shared.map(({ file, code: fileCode, lang: fileLang }) => (
     <div class="sample-code" id={`${id}-${file}`} role="tabpanel" aria-labelledby={`${id}-tab-${file}`} data-pane={`shared/${file}`} hidden>
       <Code code={fileCode} lang={fileLang} theme={CODE_THEME} dir="ltr" />

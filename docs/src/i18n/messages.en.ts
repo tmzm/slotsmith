@@ -93,6 +93,26 @@ export const en = {
   // {element} and {widget} are shown as the bracketed kind names.
   "swap.diagram": "The table's parts. {element} parts take DOM props; {widget} parts take semantic props.",
 
+  "parts.title": "Two kinds of parts",
+  "parts.lede": "Every part of every component is one of two kinds. The kind tells you what your replacement receives.",
+  "parts.elementTitle": "Element parts",
+  // `backticks` mark code runs.
+  "parts.element": "An element part renders one DOM element. It gets plain DOM props, with state as `data-*` attributes, so a library's primitive drops in as it is.",
+  "parts.widgetTitle": "Widget parts",
+  "parts.widget": "A widget part is told what is true: `checked`, `indeterminate`, `onCheckedChange`. A few lines map that to your component's props.",
+  "parts.tableCaption": "What each kind of part receives",
+  "parts.kind": "Kind",
+  "parts.receives": "Receives",
+  "parts.dropIn": "Drop-in for",
+  "parts.elementReceives": "Plain DOM props, with state as `data-*` attributes",
+  "parts.elementDropIn": "shadcn/ui, MUI and Chakra primitives, unchanged",
+  "parts.widgetReceives": "Semantic props (`checked`, `pageIndex`, `setPageSize`)",
+  "parts.widgetDropIn": "Your components, through a few-line adapter",
+  "parts.guides": "Read the guides",
+
+  "cards.title": "Four components",
+  "cards.lede": "Each panel is the component itself, with its built-in parts. Open one for its guides and API.",
+
   "summary.dataTable": "A table with sorting, selection, pagination, server data, tree rows, virtual rows and row reorder.",
   "summary.autocomplete": "A select and combobox with multiple values, remote options, creatable options and virtual lists.",
   "summary.datePicker": "A date picker for single days, ranges and multiple dates, with bounds, blocked days and presets.",

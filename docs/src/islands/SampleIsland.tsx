@@ -24,7 +24,7 @@ export interface SampleIslandProps {
 
 type SampleModule = { default: ComponentType };
 
-const loaders = import.meta.glob<SampleModule>("../../samples/**/*.tsx");
+const loaders = import.meta.glob<SampleModule>(["../../samples/**/*.tsx", "!../../samples/**/__tests__/**"]);
 
 const samples = new Map<string, LazyExoticComponent<ComponentType>>();
 

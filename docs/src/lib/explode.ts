@@ -63,3 +63,18 @@ export function explodeParts(reference: ComponentReference, selectors: Record<st
 export function bracketLabel(part: Pick<ExplodePart, "slot" | "kind">): string {
   return part.kind === "element" ? `<${part.slot}>` : `{${part.slot}}`;
 }
+
+/**
+ * Slots named with their kind, for labels outside the exploded view.
+ *
+ * @param reference - The component's generated reference; each kind comes from its slot there.
+ * @param names - The slot names, in the order to show them.
+ * @throws When a slot is not in the reference, naming the slot.
+ */
+export function slotKinds(reference: ComponentReference, names: string[]): Pick<ExplodePart, "slot" | "kind">[] {
+  return names.map((name) => {
+    const slot = reference.slots.find((candidate) => candidate.name === name);
+    if (!slot) throw new Error(`Slot "${name}" is not in the ${reference.name} reference.`);
+    return { slot: name, kind: slot.kind };
+  });
+}
