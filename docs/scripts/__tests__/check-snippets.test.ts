@@ -32,4 +32,16 @@ describe("findUnbackedSnippets", () => {
   it("ignores bash and untyped blocks", () => {
     expect(findUnbackedSnippets(mdx("bash", "pnpm add slotsmith") + mdx("", "anything"), [sample])).toEqual([]);
   });
+
+  it("reads an empty block as empty, without swallowing the prose and the next block", () => {
+    const text = "```tsx\n```\n\nProse with <DataTable data={prose} /> in it.\n\n```tsx\n<DataTable data={other} />\n```\n";
+    expect(findUnbackedSnippets(text, [sample])).toEqual(["<DataTable data={other} />"]);
+  });
+
+  it("fails an indented fence inside JSX and points to SampleCode", () => {
+    const text = "<Tabs>\n  <Tab>\n    ```tsx\n    <DataTable data={rows} />\n    ```\n  </Tab>\n</Tabs>\n";
+    const found = findUnbackedSnippets(text, [sample]);
+    expect(found).toHaveLength(1);
+    expect(found[0]).toContain("use <SampleCode");
+  });
 });

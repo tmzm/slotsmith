@@ -5,24 +5,37 @@ import { fileURLToPath } from "node:url";
 /** Fenced languages whose blocks must be copied from a sample. */
 const CHECKED = new Set(["tsx", "ts", "jsx", "css"]);
 
-const FENCE = /^(`{3,}|~{3,})[ \t]*([\w-]*)[^\n]*\n([\s\S]*?)\n[ \t]*\1[ \t]*$/gm;
+/**
+ * A fenced block: indentation, fence, language, then the body up to a closing
+ * fence of the same kind. The body group is optional and tried empty first, so
+ * an empty block closes on the next line instead of running on to a later one.
+ */
+const FENCE = /^([ \t]*)(`{3,}|~{3,})[ \t]*([\w-]*)[^\n]*\n(?:([\s\S]*?)\n)??[ \t]*\2[ \t]*$/gm;
 
 /** Collapses every run of whitespace, so indentation and line breaks do not matter. */
 const normalise = (text: string) => text.replace(/\s+/g, " ").trim();
 
 /**
- * Code blocks in an MDX file that no sample backs.
+ * Code blocks in an MDX file that no sample backs. A checked block indented
+ * inside JSX (a tab, a note) is reported whatever its text: MDX keeps the
+ * indentation in the code, so such blocks belong in `<SampleCode>`.
  *
  * @param mdx - The MDX text.
  * @param samples - The text of every sample file.
  * @returns The body of each fenced `tsx`, `ts`, `jsx` or `css` block whose
- *   whitespace-normalised text is not part of any sample, in order.
+ *   whitespace-normalised text is not part of any sample, in order; for an
+ *   indented block, a message that says to use `<SampleCode>` instead.
  */
 export function findUnbackedSnippets(mdx: string, samples: string[]): string[] {
   const haystacks = samples.map(normalise);
   const unbacked: string[] = [];
-  for (const [, , lang = "", body = ""] of mdx.matchAll(FENCE)) {
+  for (const [, indent = "", fence = "", lang = "", body = ""] of mdx.matchAll(FENCE)) {
     if (!CHECKED.has(lang)) continue;
+    if (indent) {
+      const first = body.trim().split("\n", 1)[0];
+      unbacked.push(`indented ${fence}${lang} block inside JSX, use <SampleCode name="…" /> instead: ${first}`);
+      continue;
+    }
     const needle = normalise(body);
     if (!haystacks.some((haystack) => haystack.includes(needle))) unbacked.push(body);
   }

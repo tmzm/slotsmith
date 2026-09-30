@@ -11,6 +11,7 @@ import "@/styles/code.css";
 import { Code } from "astro:components";
 import SampleIsland from "@/islands/SampleIsland";
 import { CODE_THEME, sampleSource } from "@/lib/samples";
+import { demoId } from "@/lib/demo";
 import { t, type Lang } from "@/i18n";
 
 export interface Props {
@@ -31,7 +32,7 @@ export interface Props {
 
 const { name, lang, height, fallback, stock, hydrate = "visible", locales } = Astro.props;
 const { code, lang: codeLang } = sampleSource(name);
-const id = `demo-${name.replace(/[^\w-]/g, "-")}`;
+const id = demoId(Astro.request, name);
 ---
 <figure
   class:list={["panel", "sample-demo", { "site-demo": !stock }]}
@@ -40,7 +41,7 @@ const id = `demo-${name.replace(/[^\w-]/g, "-")}`;
   data-view="preview"
   style={`--demo-h:${height}`}
 >
-  <div class="sample-demo__tabs mono" role="tablist" dir="ltr">
+  <div class="sample-demo__tabs mono" role="tablist">
     <button type="button" role="tab" id={`${id}-tab-preview`} aria-controls={`${id}-preview`} aria-selected="true" data-tab="preview">preview</button>
     <button type="button" role="tab" id={`${id}-tab-code`} aria-controls={`${id}-code`} aria-selected="false" tabindex="-1" data-tab="code">code</button>
   </div>
@@ -106,6 +107,8 @@ const id = `demo-${name.replace(/[^\w-]/g, "-")}`;
 </style>
 
 <script>
+  import { nextTabIndex } from "@/lib/demo";
+
   const COPIED_MS = 1500;
 
   for (const demo of document.querySelectorAll<HTMLElement>(".sample-demo")) {
@@ -121,9 +124,11 @@ const id = `demo-${name.replace(/[^\w-]/g, "-")}`;
     for (const tab of tabs) {
       tab.addEventListener("click", () => select(tab));
       tab.addEventListener("keydown", (event) => {
-        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-        const next = tabs[(tabs.indexOf(tab) + 1) % tabs.length];
+        const dir = getComputedStyle(tab).direction === "rtl" ? "rtl" : "ltr";
+        const index = nextTabIndex(tabs.indexOf(tab), tabs.length, event.key, dir);
+        const next = index === undefined ? undefined : tabs[index];
         if (next) {
+          event.preventDefault();
           select(next);
           next.focus();
         }
