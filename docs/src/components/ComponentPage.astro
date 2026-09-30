@@ -44,4 +44,6 @@ if (section === "api" || section === "adapters") {
 const prose = await getOptionalProse(lang, proseSlug);
 const fallback = { title, description };
 ---
-<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override} />
+<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override}>
+  <slot />
+</DocPage>

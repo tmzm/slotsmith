@@ -39,4 +39,5 @@ const toc = headings
 <Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub} tocLang={contentLang}>
   <PageHeader title={title} lead={prose ? undefined : description} meta={meta} contentLang={contentLang} />
   {prose ? <Prose prose={prose} /> : <p>{t(lang, "common.stub")}</p>}
+  <slot />
 </Docs>

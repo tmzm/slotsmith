@@ -1,0 +1,192 @@
+---
+/**
+ * Landing "Languages and right-to-left" (docs/DESIGN.md section 6, item 6).
+ * One full-width demo panel: the `landing/languages` sample, whose toggle sets
+ * the table's locale to English, Arabic or Persian and flips its direction.
+ *
+ * English pages carry no Arabic font. The first click on a non-English toggle
+ * inside the demo adds the Noto Sans Arabic subset with the FontFace API, so
+ * the font is fetched only when someone asks for Arabic or Persian. Arabic
+ * pages already declare it in the head. The motion module (Task 6) watches
+ * the demo's `dir` and plays a sweep in the new reading direction.
+ */
+import Demo from "@/components/Demo.astro";
+import { localePath, t, type Lang } from "@/i18n";
+import notoArabic400 from "@fontsource/noto-sans-arabic/files/noto-sans-arabic-arabic-400-normal.woff2?url";
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+/** Head.astro's Arabic unicode-range, so the face never sets Latin text. */
+const ARABIC =
+  "U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC";
+---
+<section class="languages" aria-labelledby="languages-title" data-languages>
+  <div class="languages__intro">
+    <h2 id="languages-title" class="display languages__title">{t(lang, "languages.title")}</h2>
+    <p class="languages__lede">{t(lang, "languages.lede")}</p>
+  </div>
+
+  <div class="languages__demo">
+    <Demo name="landing/languages" lang={lang} height="24.5rem" fallback />
+  </div>
+
+  <p class="languages__more">
+    <a href={localePath(lang, "/languages/")}>
+      {t(lang, "languages.more")}
+      <svg class="languages__arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <path d="M3 8h10M9 4l4 4-4 4" />
+      </svg>
+    </a>
+  </p>
+</section>
+
+{lang === "en" && (
+  <script is:inline define:vars={{ fontUrl: notoArabic400, range: ARABIC }}>
+    (() => {
+      const demo = document.querySelector('[data-languages] [data-sample="landing/languages"]');
+      if (!demo || !("fonts" in document) || typeof FontFace !== "function") return;
+      const onClick = (event) => {
+        const button = event.target instanceof Element ? event.target.closest("button[lang]") : null;
+        if (!button || button.lang === "en") return;
+        demo.removeEventListener("click", onClick);
+        const face = new FontFace("Noto Sans Arabic", `url(${fontUrl}) format("woff2")`, { weight: "400", unicodeRange: range, display: "swap" });
+        document.fonts.add(face);
+        document.fonts.load('400 1em "Noto Sans Arabic"').catch(() => {});
+      };
+      demo.addEventListener("click", onClick);
+    })();
+  </script>
+)}
+
+<style>
+  .languages {
+    display: grid;
+    gap: 2.5rem;
+    padding-block: 4rem;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .languages__intro {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .languages__title {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(2.25rem, 1.2rem + 4.4vw, 4.5rem);
+    text-wrap: balance;
+  }
+
+  :global(html[lang="ar"]) .languages__title {
+    font-size: clamp(1.875rem, 1.2rem + 3vw, 3.5rem);
+    line-height: 1.3;
+  }
+
+  .languages__lede {
+    margin: 0;
+    max-inline-size: 52ch;
+    color: var(--ink-2);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .languages__demo {
+    min-inline-size: 0;
+  }
+
+  .languages__demo :global(.sample-demo) {
+    margin: 0;
+  }
+
+  /* Below 420px the pagination wraps to two lines; reserve that height too. */
+  @media (max-width: 419.98px) {
+    .languages__demo :global(.sample-demo__preview) {
+      min-block-size: 27rem;
+    }
+  }
+
+  /* Arabic and Persian text in the demo uses Noto Sans Arabic once it loads. */
+  .languages__demo :global(.sample-demo__preview) {
+    font-family: "Geist", "Noto Sans Arabic", system-ui, sans-serif;
+  }
+
+  /* The toggle: a segmented control, the chosen language a gold panel. */
+  .languages__demo :global(.languages-demo) {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .languages__demo :global(.languages-demo [role="group"]) {
+    display: inline-flex;
+    justify-self: start;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+  }
+
+  .languages__demo :global(.languages-demo [role="group"] button) {
+    min-block-size: 2.75rem;
+    padding: 0.25rem 1rem;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+
+  .languages__demo :global(.languages-demo [role="group"] button:hover) {
+    color: var(--ink);
+  }
+
+  .languages__demo :global(.languages-demo [role="group"] button[aria-pressed="true"]) {
+    background: var(--gold);
+    color: var(--on-gold);
+  }
+
+  .languages__more {
+    margin: 0;
+  }
+
+  .languages__more a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;
+    color: var(--gold-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .languages__arrow {
+    inline-size: 1rem;
+    block-size: 1rem;
+    transition: transform 200ms var(--ease-out);
+  }
+
+  .languages__more a:hover .languages__arrow {
+    transform: translateX(2px);
+  }
+
+  :global(html[dir="rtl"]) .languages__arrow {
+    transform: scaleX(-1);
+  }
+
+  :global(html[dir="rtl"]) .languages__more a:hover .languages__arrow {
+    transform: scaleX(-1) translateX(2px);
+  }
+</style>

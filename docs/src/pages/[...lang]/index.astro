@@ -5,6 +5,10 @@ import Hero from "@/components/landing/Hero.astro";
 import Swap from "@/components/landing/Swap.astro";
 import Parts from "@/components/landing/Parts.astro";
 import Cards from "@/components/landing/Cards.astro";
+import WorksWith from "@/components/landing/WorksWith.astro";
+import Languages from "@/components/landing/Languages.astro";
+import Agents from "@/components/landing/Agents.astro";
+import TrustStrip from "@/components/landing/TrustStrip.astro";
 import { langFromParam, langPaths, t } from "@/i18n";
 
 export function getStaticPaths() {
@@ -19,4 +23,8 @@ const lang = langFromParam(Astro.params.lang);
   <Swap lang={lang} />
   <Parts lang={lang} />
   <Cards lang={lang} />
+  <WorksWith lang={lang} />
+  <Languages lang={lang} />
+  <Agents lang={lang} />
+  <TrustStrip lang={lang} />
 </Base>

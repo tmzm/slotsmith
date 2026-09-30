@@ -113,6 +113,21 @@ export const en = {
   "cards.title": "Four components",
   "cards.lede": "Each panel is the component itself, with its built-in parts. Open one for its guides and API.",
 
+  "works.title": "Works with what you have",
+  "works.lede": "Keep your design system and your data layer. Each name opens the page that shows it working.",
+  "works.list": "Libraries slotsmith works with",
+
+  "languages.title": "Languages and right-to-left",
+  "languages.lede": "Every label comes from a locale pack. Switch the language: the labels change, and the table mirrors for right-to-left.",
+  "languages.more": "Read the languages guide",
+
+  "agents.title": "Use with AI agents",
+  "agents.lede": "`slotsmith-ai` is an MCP server. It gives your coding agent every prop, slot and label, and copies ready-made adapters into your project. Claude Code adds it with one command; Cursor reads `.cursor/mcp.json`; VS Code reads `.vscode/mcp.json`.",
+  "agents.tabs": "MCP setup for your client",
+  "agents.more": "Read the AI tools guide",
+
+  "trust.title": "Tests, size and license",
+
   "summary.dataTable": "A table with sorting, selection, pagination, server data, tree rows, virtual rows and row reorder.",
   "summary.autocomplete": "A select and combobox with multiple values, remote options, creatable options and virtual lists.",
   "summary.datePicker": "A date picker for single days, ranges and multiple dates, with bounds, blocked days and presets.",

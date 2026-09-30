@@ -8,5 +8,16 @@ export function getStaticPaths() {
 }
 
 const { lang: langParam, component } = Astro.params;
+
+/** One section per UI library the adapters cover; other pages link to these ids. The content comes in plan 03. */
+const LIBRARIES = [
+  { id: "shadcn", name: "shadcn/ui" },
+  { id: "mui", name: "MUI" },
+  { id: "chakra", name: "Chakra UI" },
+  { id: "antd", name: "Ant Design" },
+  { id: "radix", name: "Radix Themes" },
+];
 ---
-<ComponentPage lang={langFromParam(langParam)} component={component} section="adapters" />
+<ComponentPage lang={langFromParam(langParam)} component={component} section="adapters">
+  {LIBRARIES.map((library) => <h2 id={library.id} lang="en">{library.name}</h2>)}
+</ComponentPage>

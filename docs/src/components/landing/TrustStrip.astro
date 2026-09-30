@@ -1,0 +1,88 @@
+---
+/**
+ * Landing trust strip (docs/DESIGN.md section 6, item 8). One mono line
+ * written like a `package.json` excerpt,
+ * `{ tests: 1311, suites: 20, gzip: "17.0 KB", license: "ISC", react: ">=18" }`:
+ * braces in gold, keys muted, values in ink, each pair a link to its section
+ * of the Trust page. Every value is measured by `scripts/facts.ts`. The line
+ * is code, so it reads left to right on Arabic pages too, and it wraps only
+ * between pairs.
+ */
+import { localePath, t, type Lang } from "@/i18n";
+import { getFacts, manifestLine, type Facts } from "@/lib/facts";
+
+export interface Props {
+  lang: Lang;
+  /** The facts to show; defaults to the generated ones. */
+  facts?: Facts;
+}
+
+const { lang, facts = getFacts() } = Astro.props;
+const pairs = manifestLine(facts);
+const last = pairs.length - 1;
+---
+<section class="trust" aria-labelledby="trust-title">
+  <h2 id="trust-title" class="visually-hidden">{t(lang, "trust.title")}</h2>
+  <p class="manifest" dir="ltr" lang="en"><span class="manifest__brace">{"{"}</span> {pairs.map((pair, index) => (<><span class="manifest__item"><a class="manifest__pair" href={localePath(lang, pair.href)}><span class="manifest__key">{pair.key}</span><span class="manifest__colon">:</span> <span class="manifest__value">{pair.value}</span></a>{index < last && <span class="manifest__comma">,</span>}</span>{" "}</>))}<span class="manifest__brace">{"}"}</span></p>
+</section>
+
+<style>
+  .trust {
+    padding-block: 3rem;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .manifest {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+    line-height: 1.8;
+    font-variant-ligatures: none;
+    font-feature-settings: "calt" 0, "liga" 0;
+    color: var(--muted);
+    text-align: start;
+  }
+
+  .manifest__brace {
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .manifest__item {
+    white-space: nowrap;
+  }
+
+  .manifest__pair {
+    border-radius: 2px;
+    text-decoration: none;
+    transition: color 200ms var(--ease-out);
+  }
+
+  .manifest__key {
+    color: var(--muted);
+    transition: color 200ms var(--ease-out);
+  }
+
+  .manifest__colon {
+    color: var(--muted);
+  }
+
+  .manifest__value {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+    transition: text-decoration-color 200ms var(--ease-out);
+  }
+
+  .manifest__pair:hover .manifest__key,
+  .manifest__pair:focus-visible .manifest__key {
+    color: var(--gold-text);
+  }
+
+  .manifest__pair:hover .manifest__value,
+  .manifest__pair:focus-visible .manifest__value {
+    text-decoration-color: var(--gold);
+  }
+</style>

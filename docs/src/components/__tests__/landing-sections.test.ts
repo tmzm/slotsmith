@@ -8,6 +8,10 @@ import { JSDOM } from "jsdom";
 import Demo from "@/components/Demo.astro";
 import Parts from "@/components/landing/Parts.astro";
 import Cards from "@/components/landing/Cards.astro";
+import WorksWith from "@/components/landing/WorksWith.astro";
+import Languages from "@/components/landing/Languages.astro";
+import Agents from "@/components/landing/Agents.astro";
+import TrustStrip from "@/components/landing/TrustStrip.astro";
 
 let container: AstroContainer;
 
@@ -125,5 +129,93 @@ describe("Cards", () => {
     const doc = await render("ar");
     expect(doc.querySelector('[data-panel] h3 a[href="/ar/components/data-table/"]')).not.toBeNull();
     expect(normalise(doc.querySelector("h2")?.textContent)).toMatch(/[؀-ۿ]/);
+  });
+});
+
+describe("WorksWith", () => {
+  async function render(lang: "en" | "ar") {
+    return parse(await container.renderToString(WorksWith, { props: { lang } }));
+  }
+
+  it("is headed 'Works with what you have' and links each logo to its page", async () => {
+    const doc = await render("en");
+    expect(normalise(doc.querySelector("h2")?.textContent)).toBe("Works with what you have");
+    const links = [...doc.querySelectorAll(".marquee__list:not([aria-hidden]) a")].map((a) => [normalise(a.textContent), a.getAttribute("href")]);
+    expect(links).toEqual([
+      ["shadcn/ui", "/components/data-table/adapters/#shadcn"],
+      ["MUI", "/components/data-table/adapters/#mui"],
+      ["Chakra UI", "/components/data-table/adapters/#chakra"],
+      ["Tailwind CSS", "/theming/#tailwind"],
+      ["TanStack Table", "/components/data-table/"],
+      ["TanStack Query", "/components/data-table/guides/server-data/"],
+    ]);
+  });
+
+  it("duplicates the list for the loop, hidden from assistive tech and out of the tab order", async () => {
+    const doc = await render("en");
+    const copy = doc.querySelector(".marquee__list[aria-hidden='true']");
+    expect(copy).not.toBeNull();
+    for (const link of copy!.querySelectorAll("a")) expect(link.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("draws the logos inline in currentColor", async () => {
+    const doc = await render("en");
+    const svgs = [...doc.querySelectorAll(".marquee__list:not([aria-hidden]) svg")];
+    expect(svgs).toHaveLength(6);
+    for (const svg of svgs) expect(svg.outerHTML).toContain("currentColor");
+  });
+
+  it("links in the page's language on Arabic pages", async () => {
+    const doc = await render("ar");
+    expect(doc.querySelector('a[href="/ar/theming/#tailwind"]')).not.toBeNull();
+    expect(normalise(doc.querySelector("h2")?.textContent)).toMatch(/[؀-ۿ]/);
+  });
+});
+
+describe("Languages", () => {
+  it("shows the languages demo full width, with its code, and loads the Arabic font on demand", async () => {
+    const html = await container.renderToString(Languages, { props: { lang: "en" } });
+    const doc = parse(html);
+    expect(normalise(doc.querySelector("h2")?.textContent)).toBe("Languages and right-to-left");
+    expect(doc.querySelector("figure")?.getAttribute("data-sample")).toBe("landing/languages");
+    expect(html).toMatch(/noto-sans-arabic[^"']*\.woff2/);
+    expect(html).toContain("document.fonts");
+  });
+});
+
+describe("Agents", () => {
+  it("shows tabs for Claude Code, Cursor and VS Code, and links to the AI tools page", async () => {
+    const doc = parse(await container.renderToString(Agents, { props: { lang: "en" } }));
+    expect(normalise(doc.querySelector("h2")?.textContent)).toBe("Use with AI agents");
+    expect([...doc.querySelectorAll('[role="tab"]')].map((tab) => normalise(tab.textContent))).toEqual(["Claude Code", "Cursor", "VS Code"]);
+    expect([...doc.querySelectorAll("[data-sample]")].map((el) => el.getAttribute("data-sample"))).toEqual([
+      "ai/claude-code",
+      "ai/cursor",
+      "ai/vscode",
+    ]);
+    expect(doc.querySelector('a[href="/ai-tools/"]')).not.toBeNull();
+  });
+});
+
+describe("TrustStrip", () => {
+  const facts = {
+    version: "1.7.0",
+    license: "ISC",
+    react: ">=18",
+    testFiles: 63,
+    tests: 1311,
+    integrationSuites: [{ component: "data-table", library: "mui" }],
+    bundle: [{ entry: "slotsmith/data-table", minBytes: 60_000, gzipBytes: 18_841 }],
+  };
+
+  it("renders one manifest line, braces in gold, each pair a link to the trust page", async () => {
+    const doc = parse(await container.renderToString(TrustStrip, { props: { lang: "ar", facts } }));
+    const line = doc.querySelector(".manifest");
+    expect(normalise(line?.textContent)).toBe('{ tests: 1311, suites: 1, gzip: "18.4 KB", license: "ISC", react: ">=18" }');
+    expect(line?.getAttribute("dir")).toBe("ltr");
+    const links = [...doc.querySelectorAll(".manifest a")];
+    expect(links).toHaveLength(5);
+    for (const link of links) expect(link.getAttribute("href")).toMatch(/^\/ar\/trust\/#/);
+    expect(doc.querySelectorAll(".manifest__brace")).toHaveLength(2);
   });
 });

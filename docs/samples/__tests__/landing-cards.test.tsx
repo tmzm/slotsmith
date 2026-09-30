@@ -54,3 +54,17 @@ describe("landing card data-table", () => {
     expect(html).not.toContain("sdt__pagination");
   });
 });
+
+describe("landing hero-table", () => {
+  it("shows its headers and data in Arabic on Arabic pages", async () => {
+    const { default: Sample } = (await import("../landing/hero-table.tsx")) as { default: ComponentType };
+    const stream = await renderToReadableStream(createElement(SiteLocale, { lang: "ar", children: createElement(Sample) }));
+    await stream.allReady;
+    const html = await new Response(stream).text();
+    const head = /<thead[^>]*>([\s\S]*?)<\/thead>/.exec(html)?.[1] ?? "";
+    const body = /<tbody[^>]*>([\s\S]*?)<\/tbody>/.exec(html)?.[1] ?? "";
+    expect(head).toMatch(/[؀-ۿ]/);
+    expect(head).not.toContain("Customer");
+    expect(body).not.toContain("Shipped");
+  });
+});

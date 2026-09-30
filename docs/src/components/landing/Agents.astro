@@ -1,0 +1,136 @@
+---
+/**
+ * Landing "Use with AI agents" (docs/DESIGN.md section 6, item 7). A mono
+ * panel with one tab per client (Claude Code, Cursor, VS Code), each showing
+ * the setup that client needs to run the `slotsmith-ai` MCP server, and a
+ * link to the AI tools guide. The samples are copied from the library
+ * README's "Use with AI agents" section.
+ */
+import Tabs from "@/components/Tabs.astro";
+import { localePath, t, type Lang } from "@/i18n";
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+const tabs = [
+  { label: "Claude Code", sample: "ai/claude-code" },
+  { label: "Cursor", sample: "ai/cursor" },
+  { label: "VS Code", sample: "ai/vscode" },
+];
+
+/** Splits a message into text and `code` runs; Latin words in Arabic text are marked English. */
+const runs = (message: string) =>
+  message.split(/`([^`]+)`/).flatMap((run, index) =>
+    index % 2 === 1
+      ? [{ text: run, code: true, latin: true }]
+      : lang === "ar"
+        ? run.split(/([A-Za-z][A-Za-z0-9/. +-]*[A-Za-z0-9])/).map((part, inner) => ({ text: part, code: false, latin: inner % 2 === 1 }))
+        : [{ text: run, code: false, latin: false }],
+  );
+---
+<section class="agents" aria-labelledby="agents-title">
+  <div class="agents__intro">
+    <h2 id="agents-title" class="display agents__title">{t(lang, "agents.title")}</h2>
+    <p class="agents__lede">
+      {runs(t(lang, "agents.lede")).map((run) =>
+        run.code ? <code dir="ltr">{run.text}</code> : run.latin ? <span lang="en">{run.text}</span> : run.text,
+      )}
+    </p>
+  </div>
+
+  <div class="agents__tabs" dir="ltr">
+    <Tabs id="agents-clients" tabs={tabs} label={t(lang, "agents.tabs")} lang={lang} />
+  </div>
+
+  <p class="agents__more">
+    <a href={localePath(lang, "/ai-tools/")}>
+      {t(lang, "agents.more")}
+      <svg class="agents__arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <path d="M3 8h10M9 4l4 4-4 4" />
+      </svg>
+    </a>
+  </p>
+</section>
+
+<style>
+  .agents {
+    display: grid;
+    gap: 2.5rem;
+    padding-block: 4rem;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .agents__intro {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .agents__title {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(2.25rem, 1.2rem + 4.4vw, 4.5rem);
+    text-wrap: balance;
+  }
+
+  :global(html[lang="ar"]) .agents__title {
+    font-size: clamp(1.875rem, 1.2rem + 3vw, 3.5rem);
+    line-height: 1.3;
+  }
+
+  .agents__lede {
+    margin: 0;
+    max-inline-size: 60ch;
+    color: var(--ink-2);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .agents__lede code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    color: var(--ink);
+  }
+
+  .agents__tabs {
+    min-inline-size: 0;
+    max-inline-size: 52rem;
+  }
+
+  .agents__more {
+    margin: 0;
+  }
+
+  .agents__more a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;
+    color: var(--gold-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .agents__arrow {
+    inline-size: 1rem;
+    block-size: 1rem;
+    transition: transform 200ms var(--ease-out);
+  }
+
+  .agents__more a:hover .agents__arrow {
+    transform: translateX(2px);
+  }
+
+  :global(html[dir="rtl"]) .agents__arrow {
+    transform: scaleX(-1);
+  }
+
+  :global(html[dir="rtl"]) .agents__more a:hover .agents__arrow {
+    transform: scaleX(-1) translateX(2px);
+  }
+</style>

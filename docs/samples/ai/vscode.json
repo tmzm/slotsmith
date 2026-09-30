@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "slotsmith": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "slotsmith-ai", "mcp"]
+    }
+  }
+}
