@@ -69,7 +69,7 @@ function sampleNames(): string[] {
     .sort();
 }
 
-/** The samples each sample imports by a relative path, keyed by name, so adapters and shared data count as shown with the sample that uses them. */
+/** The samples each sample imports by a relative path (a `?url` style query ignored), keyed by name, so adapters, stylesheets and shared data count as shown with the sample that uses them. */
 function sampleImports(): Record<string, string[]> {
   const imports: Record<string, string[]> = {};
   const names = new Set(sampleNames());
@@ -78,7 +78,7 @@ function sampleImports(): Record<string, string[]> {
     if (!file || !/\.tsx?$/.test(file)) continue;
     const found: string[] = [];
     for (const match of readFileSync(file, "utf8").matchAll(/(?:from|import)\s+["'](\.\.?\/[^"']+)["']/g)) {
-      const target = relative(samplesDir, resolve(dirname(file), match[1]!)).split("\\").join("/").replace(SAMPLE_EXTENSIONS, "");
+      const target = relative(samplesDir, resolve(dirname(file), match[1]!.replace(/\?.*$/, ""))).split("\\").join("/").replace(SAMPLE_EXTENSIONS, "");
       if (names.has(target)) found.push(target);
     }
     imports[name] = found;

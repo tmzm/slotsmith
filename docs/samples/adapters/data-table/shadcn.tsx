@@ -10,7 +10,6 @@
  * shadcn/ui files.
  */
 import { Select as SelectPrimitive } from "radix-ui";
-import "../shadcn.css";
 import { useId, type ComponentProps } from "react";
 import type {
   CheckboxSlotProps,

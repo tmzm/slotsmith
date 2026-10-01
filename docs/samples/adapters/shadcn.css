@@ -1,19 +1,37 @@
 /*
- * The stylesheet the shadcn adapter needs: shadcn/ui's design tokens, scoped
- * to `.shadcn-scope` so they cannot leak into the rest of the page. There is
- * no Tailwind preflight here.
+ * The stylesheet the shadcn adapter needs: Tailwind CSS v4 utilities for the
+ * classes the shadcn/ui sources use, and shadcn/ui's design tokens, scoped to
+ * `.shadcn-scope` so they cannot restyle the rest of the page.
  *
- * TODO(tailwind): once `tailwindcss` and `@tailwindcss/vite` are installed,
- * add the Tailwind layer at the top of this file:
- *
- *   @import "tailwindcss/theme.css" layer(theme);
- *   @import "tailwindcss/utilities.css" layer(utilities);
- *   @source "./";
- *
- * and add `@tailwindcss/vite` to `docs/astro.config.ts`. Until then the
- * shadcn classes are unstyled.
+ * - No Tailwind preflight. A few of its rules the shadcn table relies on
+ *   (border-box sizing, collapsed table borders, bare buttons, the default
+ *   border colour) are repeated below, inside the scope only.
+ * - `source(none)` turns off Tailwind's project scan: utilities are generated
+ *   only for the classes in the adapter and in the shadcn/ui files.
+ * - Tailwind's output sits in cascade layers and every utility is nested
+ *   under `.shadcn-scope`, so no utility reaches an element outside it.
+ * - The tokens are also set on radix's popper wrapper, so the rows-per-page
+ *   list, which radix portals to <body>, can use them.
+ * - Dark mode follows the site's `data-theme` attribute, not the system
+ *   setting.
  */
-.shadcn-scope {
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+
+@layer utilities {
+  .shadcn-scope {
+    @tailwind utilities source(none);
+  }
+}
+
+@source "./data-table/shadcn.tsx";
+@source "../../src/components/ui";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+.shadcn-scope,
+[data-radix-popper-content-wrapper] {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -33,10 +51,15 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
+}
+
+.shadcn-scope {
+  background-color: var(--background);
   color: var(--foreground);
 }
 
-[data-theme="dark"] .shadcn-scope {
+[data-theme="dark"] .shadcn-scope,
+[data-theme="dark"] [data-radix-popper-content-wrapper] {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -55,4 +78,195 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+}
+
+/* shadcn/ui's token mapping: `bg-muted`, `border-input`, `rounded-md`, ...
+   resolve to the scoped variables above. */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* The parts of Tailwind's preflight and shadcn/ui's base layer the table
+   needs, inside the scope only. */
+@layer base {
+  .shadcn-scope,
+  .shadcn-scope :where(*, ::before, ::after) {
+    box-sizing: border-box;
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  }
+
+  .shadcn-scope :where(table) {
+    border-collapse: collapse;
+    text-indent: 0;
+  }
+
+  .shadcn-scope :where(button) {
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    padding: 0;
+    border: 0 solid var(--border);
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .shadcn-scope :where(svg) {
+    display: block;
+    vertical-align: middle;
+  }
+
+  .shadcn-scope :where(ul, ol) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shadcn-scope :where(p) {
+    margin: 0;
+  }
+}
+
+/*
+ * Site resets and adapter gaps. Unlayered, so they win over the site's own
+ * unlayered element rules.
+ *
+ * - The site's `button` and `svg` rules would beat every Tailwind utility
+ *   on those elements (the checked checkbox lost its check colour, the icon
+ *   its size); `revert-layer` hands those properties back to the layers
+ *   above.
+ * - The generated adapter's pagination uses plain buttons and an unstyled
+ *   radix Select (no shadcn `Button` or `Select` classes), so in a shadcn app
+ *   the current page number is drawn in its own background colour. These
+ *   rules give them shadcn's button and select look until the adapter does
+ *   (docs/LAUNCH-REPORT.md, "Library issues").
+ */
+.shadcn-scope button {
+  font: revert-layer;
+  color: revert-layer;
+}
+
+.shadcn-scope svg {
+  display: revert-layer;
+  max-inline-size: revert-layer;
+}
+
+.shadcn-scope nav ul button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.shadcn-scope nav ul button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.shadcn-scope nav ul button[aria-current="page"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  cursor: default;
+}
+
+.shadcn-scope nav ul li > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  color: var(--muted-foreground);
+}
+
+.shadcn-scope [role="combobox"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+[data-theme="dark"] .shadcn-scope [role="combobox"] {
+  background: color-mix(in oklab, var(--input) 30%, transparent);
+}
+
+.shadcn-scope :is(nav ul button, [role="combobox"]):focus-visible {
+  border-color: var(--ring);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+[data-radix-popper-content-wrapper] [role="listbox"] {
+  min-inline-size: var(--radix-select-trigger-width);
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--popover);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  color: var(--popover-foreground);
+  font-size: 0.875rem;
+}
+
+[data-radix-popper-content-wrapper] [role="option"] {
+  padding: 0.375rem 0.5rem;
+  border-radius: calc(var(--radius) - 4px);
+  outline: none;
+  cursor: default;
+}
+
+[data-radix-popper-content-wrapper] [role="option"][data-highlighted] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+[data-radix-popper-content-wrapper] [role="option"][data-state="checked"] {
+  font-weight: 500;
+}
+
+/* shadcn/ui's table uses physical sides (`text-left`, `pr-0`); mirror them
+   on right-to-left pages. */
+[dir="rtl"] .shadcn-scope th {
+  text-align: right;
+}
+
+[dir="rtl"] .shadcn-scope :is(th, td):has([role="checkbox"]) {
+  padding-right: calc(var(--spacing) * 2);
+  padding-left: 0;
 }

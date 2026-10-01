@@ -114,7 +114,12 @@ const PROVIDER_MODULES = {
   chakra: retryable(() => import("@samples/adapters/provider-chakra")),
 };
 const DEFAULT_LOADERS: Record<Remote, VariantLoader> = {
-  shadcn: () => withProvider(SAMPLES.shadcn, () => PROVIDER_MODULES.shadcn().then((m) => m.ShadcnProvider)),
+  shadcn: () =>
+    withProvider(SAMPLES.shadcn, async () => {
+      const m = await PROVIDER_MODULES.shadcn();
+      await m.loadShadcnStyles();
+      return m.ShadcnProvider;
+    }),
   mui: () => withProvider(SAMPLES.mui, () => PROVIDER_MODULES.mui().then((m) => m.MuiProvider)),
   chakra: () => withProvider(SAMPLES.chakra, () => PROVIDER_MODULES.chakra().then((m) => m.ChakraUiProvider)),
 };
