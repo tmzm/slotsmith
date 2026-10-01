@@ -9,7 +9,7 @@ import Tabs from "@/components/Tabs.astro";
 import Hero from "@/components/landing/Hero.astro";
 
 const POSITIONING_FIRST =
-  "Finished data table, combobox, date picker and file uploader for React that drop into shadcn/ui, MUI, Chakra or your own design system.";
+  "Finished data table, combobox, date picker and file uploader for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own.";
 const POSITIONING_SECOND = "Every part is a slot; what you don't replace still looks finished.";
 
 const INSTALL_TABS = [

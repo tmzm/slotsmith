@@ -11,7 +11,7 @@ export const ar: Record<MessageKey, string> = {
   "site.name": "slotsmith",
   "site.tagline": "مكوّنات React يمكنك تفكيكها",
   "site.positioning":
-    "جدول بيانات ومربع تحرير وسرد ومنتقي تاريخ ورافع ملفات جاهزة لـ React، تندمج في shadcn/ui أو MUI أو Chakra أو في نظام التصميم الخاص بك.",
+    "جدول بيانات ومربع تحرير وسرد ومنتقي تاريخ ورافع ملفات جاهزة لـ React، تندمج في أي نظام تصميم: shadcn/ui أو MUI أو Chakra أو Ant Design أو نظامك الخاص.",
 
   "common.skip": "تخطَّ إلى المحتوى",
   "common.home": "الصفحة الرئيسية لـ slotsmith",
@@ -74,13 +74,13 @@ export const ar: Record<MessageKey, string> = {
   "common.stub": "هذه الصفحة قيد الكتابة.",
 
   "hero.title":
-    "[جدول بيانات] و[مربع تحرير وسرد] و[منتقي تاريخ] و[رافع ملفات] جاهزة لـ React، تندمج في shadcn/ui أو MUI أو Chakra أو في نظام التصميم الخاص بك.",
+    "[جدول بيانات] و[مربع تحرير وسرد] و[منتقي تاريخ] و[رافع ملفات] جاهزة لـ React، تندمج في أي نظام تصميم: shadcn/ui أو MUI أو Chakra أو Ant Design أو نظامك الخاص.",
   "hero.lede": "كل جزء فيها slot قابل للاستبدال؛ وما لا تستبدله يبقى مكتمل المظهر.",
   "hero.install": "ثبّت بمدير الحزم الذي تستخدمه",
   "hero.getStarted": "ابدأ الآن",
 
   "swap.title": "بدّل نظام التصميم، واحتفظ بالجدول",
-  "swap.lede": "الجدول نفسه في أربعة أنظمة تصميم. لا يتغيّر إلا الخاصية {prop}.",
+  "swap.lede": "الجدول نفسه في بعض أنظمة التصميم المعروفة، ونظامك يعمل بالطريقة نفسها. لا يتغيّر إلا الخاصية {prop}.",
   "swap.label": "نظام التصميم",
   "swap.fallback": "الافتراضي",
   "swap.loading": "جارٍ تحميل {name}…",
@@ -103,7 +103,7 @@ export const ar: Record<MessageKey, string> = {
   "parts.receives": "يستقبل",
   "parts.dropIn": "بديل عن",
   "parts.elementReceives": "خصائص DOM عادية، والحالة في سمات `data-*`",
-  "parts.elementDropIn": "العناصر الأساسية في shadcn/ui وMUI وChakra، دون تعديل",
+  "parts.elementDropIn": "العناصر الأساسية من أي مكتبة، دون تعديل، مثل shadcn/ui وMUI وChakra",
   "parts.widgetReceives": "خصائص دلالية (`checked` و`pageIndex` و`setPageSize`)",
   "parts.widgetDropIn": "مكوّناتك، عبر محوّل من بضعة أسطر",
   "parts.guides": "اقرأ الأدلة",
@@ -112,8 +112,8 @@ export const ar: Record<MessageKey, string> = {
   "cards.lede": "كل لوحة هي المكوّن نفسه بأجزائه المدمجة. افتح أيًّا منها لتقرأ أدلته وواجهته البرمجية.",
 
   "works.title": "يعمل مع ما لديك",
-  "works.lede": "احتفظ بنظام التصميم وطبقة البيانات لديك. كل اسم يفتح الصفحة التي تعرضه وهو يعمل.",
-  "works.list": "مكتبات يعمل معها slotsmith",
+  "works.lede": "احتفظ بنظام التصميم وطبقة البيانات لديك، أيًّا كانا. هذه بعض المكتبات المعروفة، وكل اسم يفتح الصفحة التي تعرضه وهو يعمل.",
+  "works.list": "بعض المكتبات التي يعمل معها slotsmith",
 
   "languages.title": "اللغات والكتابة من اليمين إلى اليسار",
   "languages.lede": "كل تسمية تأتي من حزمة لغة. بدّل اللغة: تتغيّر التسميات، وينعكس الجدول للكتابة من اليمين إلى اليسار.",

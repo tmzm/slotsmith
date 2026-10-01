@@ -9,7 +9,7 @@ export const en = {
   "site.name": "slotsmith",
   "site.tagline": "React components you can take apart",
   "site.positioning":
-    "Finished data table, combobox, date picker and file uploader for React that drop into shadcn/ui, MUI, Chakra or your own design system.",
+    "Finished data table, combobox, date picker and file uploader for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own.",
 
   "common.skip": "Skip to content",
   "common.home": "slotsmith home",
@@ -73,14 +73,14 @@ export const en = {
 
   // The first positioning sentence; [brackets] mark the component names set at poster scale.
   "hero.title":
-    "Finished [data table], [combobox], [date picker] and [file uploader] for React that drop into shadcn/ui, MUI, Chakra or your own design system.",
+    "Finished [data table], [combobox], [date picker] and [file uploader] for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own.",
   "hero.lede": "Every part is a slot; what you don't replace still looks finished.",
   "hero.install": "Install with your package manager",
   "hero.getStarted": "Get started",
 
   "swap.title": "Swap the design system, keep the table",
   // {prop} is set in code type.
-  "swap.lede": "The same table in four design systems. Only the {prop} prop changes.",
+  "swap.lede": "The same table in a few well-known design systems; yours works the same way. Only the {prop} prop changes.",
   "swap.label": "Design system",
   "swap.fallback": "Fallback",
   "swap.loading": "Loading {name}…",
@@ -105,7 +105,7 @@ export const en = {
   "parts.receives": "Receives",
   "parts.dropIn": "Drop-in for",
   "parts.elementReceives": "Plain DOM props, with state as `data-*` attributes",
-  "parts.elementDropIn": "shadcn/ui, MUI and Chakra primitives, unchanged",
+  "parts.elementDropIn": "Any library's primitives, unchanged: shadcn/ui, MUI or Chakra, for example",
   "parts.widgetReceives": "Semantic props (`checked`, `pageIndex`, `setPageSize`)",
   "parts.widgetDropIn": "Your components, through a few-line adapter",
   "parts.guides": "Read the guides",
@@ -114,8 +114,8 @@ export const en = {
   "cards.lede": "Each panel is the component itself, with its built-in parts. Open one for its guides and API.",
 
   "works.title": "Works with what you have",
-  "works.lede": "Keep your design system and your data layer. Each name opens the page that shows it working.",
-  "works.list": "Libraries slotsmith works with",
+  "works.lede": "Keep your design system, whichever it is, and your data layer. Here are a few well-known ones; each opens the page that shows it working.",
+  "works.list": "Some of the libraries slotsmith works with",
 
   "languages.title": "Languages and right-to-left",
   "languages.lede": "Every label comes from a locale pack. Switch the language: the labels change, and the table mirrors for right-to-left.",

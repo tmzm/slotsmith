@@ -7,7 +7,9 @@ describe("pageTitle", () => {
   });
 
   it("uses the positioning for the landing", () => {
-    expect(pageTitle("en", null).startsWith("Finished data table, combobox, date picker and file uploader for React")).toBe(true);
+    expect(pageTitle("en", null)).toBe(
+      "Finished data table, combobox, date picker and file uploader for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own. · slotsmith",
+    );
   });
 });
 
