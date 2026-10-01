@@ -146,12 +146,14 @@ const ChakraCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...
  *
  * A compact pagination bar: Chakra's `Pagination.Root` (with `count` as the
  * total row count) for the pages, and a `NativeSelect` for the page size,
- * named by the `labels.rowsPerPage` text beside it.
+ * named by the `labels.rowsPerPage` text beside it. Padding above keeps the
+ * bar clear of the last row's border.
  */
 function ChakraPagination({ pageIndex, pageSize, pageSizeOptions, rowCount, setPageIndex, setPageSize, labels }: PaginationSlotProps) {
   const rowsPerPageId = useId();
   return (
     <Pagination.Root
+      pt="3"
       mb="2"
       mx="2"
       count={rowCount}
