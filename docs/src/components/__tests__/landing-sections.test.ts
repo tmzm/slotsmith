@@ -150,6 +150,7 @@ describe("WorksWith", () => {
       ["shadcn/ui", "/components/data-table/adapters/#shadcn"],
       ["MUI", "/components/data-table/adapters/#mui"],
       ["Chakra UI", "/components/data-table/adapters/#chakra"],
+      ["Ant Design", "/components/data-table/adapters/#antd"],
       ["Tailwind CSS", "/theming/#tailwind"],
       ["TanStack Table", "/components/data-table/"],
       ["TanStack Query", "/components/data-table/guides/server-data/"],
@@ -163,11 +164,26 @@ describe("WorksWith", () => {
     for (const link of copy!.querySelectorAll("a")) expect(link.getAttribute("tabindex")).toBe("-1");
   });
 
-  it("shows each library as a text wordmark, with no third-party logo", async () => {
+  it("shows each library's mark beside its name, the mark hidden and drawn in the text colour", async () => {
     const doc = await render("en");
-    const names = [...doc.querySelectorAll(".marquee__list:not([aria-hidden]) .marquee__name")].map((el) => normalise(el.textContent));
-    expect(names).toEqual(["shadcn/ui", "MUI", "Chakra UI", "Tailwind CSS", "TanStack Table", "TanStack Query"]);
-    expect(doc.querySelectorAll(".marquee svg, .marquee img")).toHaveLength(0);
+    const items = [...doc.querySelectorAll(".marquee__list:not([aria-hidden]) .marquee__item")];
+    expect(items.map((item) => normalise(item.querySelector(".marquee__name")?.textContent))).toEqual([
+      "shadcn/ui",
+      "MUI",
+      "Chakra UI",
+      "Ant Design",
+      "Tailwind CSS",
+      "TanStack Table",
+      "TanStack Query",
+    ]);
+    for (const item of items) {
+      const svg = item.querySelector(".marquee__logo > svg");
+      expect(svg?.getAttribute("aria-hidden")).toBe("true");
+      expect(svg?.getAttribute("fill")).toBe("currentColor");
+      expect(svg?.querySelector("path")?.getAttribute("d")).toBeTruthy();
+      expect(svg?.querySelector("title")).toBeNull();
+    }
+    expect(doc.querySelectorAll(".marquee img")).toHaveLength(0);
   });
 
   it("links in the page's language on Arabic pages", async () => {

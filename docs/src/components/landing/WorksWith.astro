@@ -1,9 +1,11 @@
 ---
 /**
  * Landing "Works with what you have" (docs/DESIGN.md section 6, item 5). A
- * slow marquee of the libraries' names as plain text wordmarks (official
- * monochrome marks wait on the owner, see LAUNCH-REPORT), each a link to the
- * page that shows the library working with slotsmith.
+ * slow marquee of a few well-known libraries, each its monochrome mark beside
+ * its name, and each a link to the page that shows the library working with
+ * slotsmith. The marks are Simple Icons' paths (CC0) in `../logos/`, drawn
+ * in `currentColor` and hidden from assistive tech; the name is the link's
+ * text. The trademarks belong to their owners (see LAUNCH-REPORT).
  *
  * The marquee is CSS only: the list is drawn twice and the track moves by
  * half its length, so the loop has no seam. The copy is hidden from
@@ -19,13 +21,23 @@ export interface Props {
 
 const { lang } = Astro.props;
 
+/** Each logo's SVG source, by file name (one Simple Icons slug each). */
+const LOGOS = Object.fromEntries(
+  Object.entries(import.meta.glob<string>("../logos/*.svg", { query: "?raw", import: "default", eager: true })).map(([path, svg]) => [
+    path.replace(/^.*\/|\.svg$/g, ""),
+    svg.trim(),
+  ]),
+);
+
 const LIBRARIES = [
-  { name: "shadcn/ui", href: "/components/data-table/adapters/#shadcn" },
-  { name: "MUI", href: "/components/data-table/adapters/#mui" },
-  { name: "Chakra UI", href: "/components/data-table/adapters/#chakra" },
-  { name: "Tailwind CSS", href: "/theming/#tailwind" },
-  { name: "TanStack Table", href: "/components/data-table/" },
-  { name: "TanStack Query", href: "/components/data-table/guides/server-data/" },
+  { name: "shadcn/ui", logo: "shadcnui", href: "/components/data-table/adapters/#shadcn" },
+  { name: "MUI", logo: "mui", href: "/components/data-table/adapters/#mui" },
+  { name: "Chakra UI", logo: "chakraui", href: "/components/data-table/adapters/#chakra" },
+  { name: "Ant Design", logo: "antdesign", href: "/components/data-table/adapters/#antd" },
+  { name: "Tailwind CSS", logo: "tailwindcss", href: "/theming/#tailwind" },
+  // TanStack's libraries share the TanStack mark.
+  { name: "TanStack Table", logo: "tanstack", href: "/components/data-table/" },
+  { name: "TanStack Query", logo: "tanstack", href: "/components/data-table/guides/server-data/" },
 ];
 ---
 <section class="works" aria-labelledby="works-title">
@@ -41,6 +53,7 @@ const LIBRARIES = [
           {LIBRARIES.map((library) => (
             <li>
               <a class="marquee__item" href={localePath(lang, library.href)} lang="en" dir="ltr" tabindex={copy ? "-1" : undefined}>
+                <span class="marquee__logo" set:html={LOGOS[library.logo]} />
                 <span class="marquee__name">{library.name}</span>
               </a>
             </li>
@@ -166,7 +179,19 @@ const LIBRARIES = [
     color: var(--gold-text);
   }
 
-  /* Each name as a plain wordmark in the project's own casing. */
+  /* The mark at the name's cap height, in the link's colour. */
+  .marquee__logo {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .marquee__logo :global(svg) {
+    display: block;
+    inline-size: clamp(1.5rem, 1.15rem + 1.2vw, 2rem);
+    block-size: auto;
+  }
+
+  /* Each name as a wordmark in the project's own casing. */
   .marquee__name {
     font-family: var(--font-display);
     font-weight: 900;
