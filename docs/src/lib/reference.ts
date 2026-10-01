@@ -1,8 +1,8 @@
 import type { ComponentKnowledge } from "../../../packages/ai/src/knowledge/types.ts";
 import type { ComponentSlug } from "@/data/components";
 
-/** The generator's component record plus the custom properties its CSS sets or reads. */
-export type ComponentReference = ComponentKnowledge & { tokens: string[] };
+/** The generator's component record plus the custom properties its CSS sets or reads and the class names its markup uses. */
+export type ComponentReference = ComponentKnowledge & { tokens: string[]; classes: string[] };
 
 const files = import.meta.glob<ComponentReference>("../generated/reference/*.json", {
   eager: true,

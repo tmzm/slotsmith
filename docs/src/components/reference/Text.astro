@@ -1,0 +1,16 @@
+---
+/**
+ * JSDoc text from the reference, with its backticked runs set as code. The
+ * text is English, so it is marked `lang="en"` and set left to right on
+ * Arabic pages too; the code runs carry `dir="ltr"` themselves.
+ */
+import { codeSegments } from "@/lib/format";
+
+interface Props {
+  text: string;
+  class?: string;
+}
+
+const { text, class: className } = Astro.props;
+---
+{text && <p class:list={["ref-desc", className]} lang="en" dir="ltr">{codeSegments(text).map((s) => (s.code ? <code dir="ltr">{s.text}</code> : s.text))}</p>}

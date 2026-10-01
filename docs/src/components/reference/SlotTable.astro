@@ -1,0 +1,87 @@
+---
+/**
+ * The slots table of one component, from the generated reference: name,
+ * kind, the props each slot receives, its fallback's source (collapsed), and
+ * the `data-*` attributes its element carries. Each row is `#slot-<Name>`, so
+ * guides can link straight to a slot.
+ */
+import "@/styles/reference.css";
+import { Code } from "astro:components";
+import Text from "./Text.astro";
+import type { ComponentSlug } from "@/data/components";
+import { t, type Lang } from "@/i18n";
+import { NONE } from "@/lib/format";
+import { getReference } from "@/lib/reference";
+import { CODE_THEME } from "@/lib/samples";
+
+interface Props {
+  slug: ComponentSlug;
+  lang?: Lang;
+}
+
+const { slug, lang = "en" } = Astro.props;
+const reference = getReference(slug);
+---
+<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.slotsLabel")}`}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "ref.name")}</th>
+        <th scope="col">{t(lang, "ref.kind")}</th>
+        <th scope="col">{t(lang, "ref.slotProps")}</th>
+        <th scope="col">{t(lang, "ref.fallback")}</th>
+        <th scope="col" dir="ltr">{t(lang, "ref.dataAttributes")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {reference.slots.map((slot) => (
+        <tr id={`slot-${slot.name}`}>
+          <th scope="row" class="ref-name">
+            <code dir="ltr">{slot.name}</code>
+          </th>
+          <td>
+            <span class="ref-kind" data-kind={slot.kind} dir="ltr">{slot.kind === "element" ? "<element>" : "{widget}"}</span>
+          </td>
+          <td class="ref-type">
+            {slot.domType && (
+              <p class="ref-sub">
+                {t(lang, "ref.domProps")} <code dir="ltr">{slot.domType}</code>
+              </p>
+            )}
+            {slot.props.length > 0 ? (
+              <ul class="ref-members">
+                {slot.props.map((prop) => (
+                  <li>
+                    <code dir="ltr">{`${prop.name}${prop.optional ? "?" : ""}: ${prop.type}`}</code>
+                    <Text text={prop.description} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              !slot.domType && <span class="ref-none">{t(lang, "ref.noProps")}</span>
+            )}
+          </td>
+          <td class="ref-fallback">
+            <details>
+              <summary>{t(lang, "ref.fallbackSource")}</summary>
+              <Code code={slot.fallback} lang="tsx" theme={CODE_THEME} dir="ltr" />
+            </details>
+          </td>
+          <td>
+            {slot.dataAttributes.length > 0 ? (
+              <ul class="ref-attrs">
+                {slot.dataAttributes.map((name) => (
+                  <li>
+                    <code dir="ltr">{name}</code>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span class="ref-none">{NONE}</span>
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

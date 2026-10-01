@@ -1,0 +1,226 @@
+/*
+ * Generated reference tables (docs/DESIGN.md section 5, "Reference tables"):
+ * dense hairline rows, --panel-2 on hover, a sticky header, types in mono
+ * that wrap. Each table scrolls inside its own region, never the page; the
+ * region is capped in height so the sticky header has something to stick to.
+ */
+.ref-table {
+  max-block-size: 80vh;
+  margin-block: 1rem 2rem;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  overscroll-behavior-inline: contain;
+}
+
+.ref-table:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.ref-table table {
+  inline-size: 100%;
+  min-inline-size: 40rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.ref-table th,
+.ref-table td {
+  padding: 0.5rem 0.75rem;
+  border-block-end: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+}
+
+.ref-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--panel);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+.ref-table tbody tr:last-child > * {
+  border-block-end: 0;
+}
+
+.ref-table tbody tr {
+  transition: background-color 160ms var(--ease-out);
+}
+
+.ref-table tbody tr:hover {
+  background: var(--panel-2);
+}
+
+/* A group heading row inside the props table. */
+.ref-table tbody th[scope="colgroup"] {
+  padding-block-start: 1rem;
+  background: var(--bg);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.ref-table tbody tr:has(> th[scope="colgroup"]):hover {
+  background: var(--bg);
+}
+
+/* Anchored rows (#slot-Row) clear the sticky site header and show they are the target. */
+.ref-table tr[id] {
+  scroll-margin-block-start: 5rem;
+}
+
+.ref-table tr:target {
+  background: color-mix(in oklab, var(--gold) 12%, transparent);
+}
+
+.ref-table code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  unicode-bidi: isolate;
+}
+
+.ref-name {
+  white-space: nowrap;
+}
+
+.ref-name code {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Types: mono, wrapping at any point so a long union stays inside its cell. */
+.ref-type {
+  max-inline-size: 22rem;
+}
+
+.ref-desc {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.ref-desc code {
+  font-size: 0.8125em;
+}
+
+.ref-sub {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.ref-tag {
+  display: inline-block;
+  margin-inline-start: 0.375rem;
+  padding: 0 0.375rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.ref-tag[data-required] {
+  border-color: var(--gold);
+  color: var(--gold-text);
+}
+
+/* The Kind column: <element> in ink, {widget} in gold, as on the landing. */
+.ref-kind {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.ref-kind[data-kind="element"] {
+  color: var(--ink);
+}
+
+.ref-kind[data-kind="widget"] {
+  color: var(--gold-text);
+}
+
+.ref-members {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ref-members .ref-desc {
+  font-size: 0.8125rem;
+}
+
+.ref-attrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ref-none {
+  color: var(--muted);
+}
+
+.ref-fallback {
+  min-inline-size: 12rem;
+}
+
+.ref-fallback summary {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 160ms var(--ease-out);
+}
+
+.ref-fallback summary:hover {
+  color: var(--ink);
+}
+
+.ref-fallback .astro-code {
+  max-inline-size: 32rem;
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+.ref-example {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.ref-note {
+  margin-block: -1rem 2rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ref-table tbody tr,
+  .ref-fallback summary {
+    transition: none;
+  }
+}

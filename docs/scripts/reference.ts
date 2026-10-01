@@ -5,13 +5,26 @@ import { DEFAULT_OPTIONS, generateKnowledge } from "../../packages/ai/scripts/ge
 import type { ComponentReference } from "../src/lib/reference.ts";
 import attributes from "../src/data/data-attributes.json" with { type: "json" };
 import { extractTokens, ownTokens, TOKEN_PREFIX } from "./lib/tokens.ts";
+import { classes as autocompleteClasses } from "../../src/autocomplete/classes.ts";
+import { classes as dataTableClasses } from "../../src/data-table/classes.ts";
+import { classes as datePickerClasses } from "../../src/date-picker/classes.ts";
+import { classes as fileUploaderClasses } from "../../src/file-uploader/classes.ts";
+
+/** Each component's class map, as the library declares it. */
+const CLASSES: Record<string, Record<string, string>> = {
+  autocomplete: autocompleteClasses,
+  "data-table": dataTableClasses,
+  "date-picker": datePickerClasses,
+  "file-uploader": fileUploaderClasses,
+};
 
 const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = resolve(docsRoot, "src/generated/reference");
 
 /**
  * Builds the reference for every component: the generator's record, the tokens
- * its stylesheet uses, and each slot's data attributes merged with the extras
+ * its stylesheet uses, the class names its markup uses (its `classes.ts`, in
+ * declaration order), and each slot's data attributes merged with the extras
  * kept in `src/data/data-attributes.json` (or the `extra` given, for tests).
  */
 export function buildReference(extra: Record<string, Record<string, string[]>> = attributes): ComponentReference[] {
@@ -20,6 +33,7 @@ export function buildReference(extra: Record<string, Record<string, string[]>> =
     const css = readFileSync(resolve(DEFAULT_OPTIONS.libraryRoot, "src", component.name, "styles.css"), "utf8");
     return {
       ...component,
+      classes: [...new Set(Object.values(CLASSES[component.name] ?? {}))],
       tokens: ownTokens(extractTokens(css), TOKEN_PREFIX[component.name as keyof typeof TOKEN_PREFIX]),
       slots: component.slots.map((slot) => ({
         ...slot,

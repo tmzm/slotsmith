@@ -1,0 +1,87 @@
+---
+/**
+ * The props table of one component, from the generated reference, grouped
+ * as the library documents them: name (with a `required` tag), type, default
+ * and description. Each row is `#prop-<name>` (a prop whose type depends on
+ * a mode gets `#prop-<name>-<mode>` for its later declarations). A last line
+ * names the root element that takes any other DOM prop.
+ */
+import "@/styles/reference.css";
+import Text from "./Text.astro";
+import type { ComponentSlug } from "@/data/components";
+import { t, type Lang } from "@/i18n";
+import { formatDefault, groupProps } from "@/lib/format";
+import { getReference } from "@/lib/reference";
+
+interface Props {
+  slug: ComponentSlug;
+  lang?: Lang;
+}
+
+const { slug, lang = "en" } = Astro.props;
+const reference = getReference(slug);
+const groups = groupProps(reference.props, reference.groups);
+
+const seen = new Set<string>();
+/** The first declaration of a name owns `#prop-<name>`; later ones add their mode. */
+const rowId = (name: string, mode?: string) => {
+  const id = seen.has(name) && mode ? `prop-${name}-${mode}` : `prop-${name}`;
+  seen.add(name);
+  return id;
+};
+/** A default the JSDoc states in words ("the provider's", "`row.id`, falling back to …") rather than as a value. */
+const isProse = (text: string) => text.includes("`") || /^[a-z]+(?:'s)?(?: [a-z]+(?:'s)?)+$/i.test(text);
+const [before = "", after = ""] = t(lang, "ref.rootProps", { element: "\u0000" }).split("\u0000");
+---
+<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.propsLabel")}`}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "ref.name")}</th>
+        <th scope="col">{t(lang, "ref.type")}</th>
+        <th scope="col">{t(lang, "ref.default")}</th>
+        <th scope="col">{t(lang, "ref.description")}</th>
+      </tr>
+    </thead>
+    {groups.map(({ group, props }) => (
+      <tbody>
+        <tr>
+          <th scope="colgroup" colspan="4" lang={group === "Other" ? undefined : "en"}>
+            {group === "Other" ? t(lang, "ref.otherGroup") : group}
+          </th>
+        </tr>
+        {props.map((prop) => (
+          <tr id={rowId(prop.name, prop.mode)}>
+            <th scope="row" class="ref-name">
+              <code dir="ltr">{prop.name}</code>
+              {!prop.optional && <span class="ref-tag" data-required>{t(lang, "ref.required")}</span>}
+              {prop.mode && (
+                <span class="ref-tag" dir="ltr" lang="en">
+                  {t("en", "ref.mode", { mode: prop.mode })}
+                </span>
+              )}
+            </th>
+            <td class="ref-type">
+              <code dir="ltr">{prop.type}</code>
+            </td>
+            <td class="ref-type">
+              {!prop.default ? (
+                <span class="ref-none">{formatDefault(undefined)}</span>
+              ) : isProse(prop.default) ? (
+                <Text text={prop.default} />
+              ) : (
+                <code dir="ltr">{formatDefault(prop.default)}</code>
+              )}
+            </td>
+            <td>
+              <Text text={prop.description} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    ))}
+  </table>
+</div>
+<p class="ref-note ref-root-note">
+  {before}<code dir="ltr">{`<${reference.rootElement}>`}</code>{after}
+</p>

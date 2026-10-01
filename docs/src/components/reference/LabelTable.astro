@@ -1,0 +1,86 @@
+---
+/**
+ * The labels table of one component: key, type, English default and
+ * description, from the generated reference. A function label shows its
+ * signature in the Type column and, under Default, a call with example
+ * arguments and what the English default prints for it. Defaults the
+ * generator could not read (spread in from another object) come from the
+ * library's exported labels object. Each row is `#label-<key>`.
+ */
+import "@/styles/reference.css";
+import * as slotsmith from "slotsmith";
+import Text from "./Text.astro";
+import type { ComponentSlug } from "@/data/components";
+import { t, type Lang } from "@/i18n";
+import { exampleArgs, formatArg, formatDefault, isFunctionType } from "@/lib/format";
+import { getReference } from "@/lib/reference";
+
+interface Props {
+  slug: ComponentSlug;
+  lang?: Lang;
+}
+
+const { slug, lang = "en" } = Astro.props;
+const reference = getReference(slug);
+const runtime = (slotsmith as unknown as Record<string, Record<string, unknown> | undefined>)[reference.labelsExport];
+if (!runtime) throw new Error(`slotsmith does not export "${reference.labelsExport}", the ${slug} labels.`);
+
+/** What one label's Default cell shows. */
+function describe(name: string, type: string, source: string | undefined): { value?: string; call?: string; output?: string } {
+  const value = runtime![name];
+  if (typeof value === "function" && isFunctionType(type)) {
+    const args = exampleArgs(type);
+    const output = (value as (...a: unknown[]) => unknown)(...args);
+    return {
+      call: `${name}(${args.map(formatArg).join(", ")})`,
+      output: typeof output === "string" || typeof output === "number" ? JSON.stringify(output) : undefined,
+    };
+  }
+  if (source) return { value: formatDefault(source) };
+  if (typeof value === "string") return { value: JSON.stringify(value) };
+  return {};
+}
+
+const rows = reference.labels.map((label) => ({ label, shown: describe(label.name, label.type, label.default) }));
+---
+<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.labelsLabel")}`}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "ref.key")}</th>
+        <th scope="col">{t(lang, "ref.type")}</th>
+        <th scope="col">{t(lang, "ref.englishDefault")}</th>
+        <th scope="col">{t(lang, "ref.description")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map(({ label, shown }) => (
+        <tr id={`label-${label.name}`}>
+          <th scope="row" class="ref-name">
+            <code dir="ltr">{label.name}</code>
+          </th>
+          <td class="ref-type">
+            <code dir="ltr">{label.type}</code>
+          </td>
+          <td class="ref-type">
+            {shown.value && <code dir="ltr">{shown.value}</code>}
+            {shown.call && (
+              <>
+                <code dir="ltr">{shown.call}</code>
+                {shown.output && (
+                  <p class="ref-example">
+                    {t(lang, "ref.example")} <code dir="ltr">{shown.output}</code>
+                  </p>
+                )}
+              </>
+            )}
+            {!shown.value && !shown.call && <span class="ref-none">{formatDefault(undefined)}</span>}
+          </td>
+          <td>
+            <Text text={label.description} />
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

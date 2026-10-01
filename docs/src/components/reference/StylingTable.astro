@@ -1,0 +1,92 @@
+---
+/**
+ * The styling reference of one component: its class names (with the slot
+ * each one styles, linked to the slots table) and its tokens, both from the
+ * generated reference, then how dark mode switches the tokens.
+ */
+import "@/styles/reference.css";
+import type { ComponentSlug } from "@/data/components";
+import { t, type Lang } from "@/i18n";
+import { NONE } from "@/lib/format";
+import { getReference } from "@/lib/reference";
+import { SLOT_SELECTORS } from "../../../scripts/slot-selectors.ts";
+
+interface Props {
+  slug: ComponentSlug;
+  lang?: Lang;
+}
+
+/** The selector the tokens switch under, as in every component's stylesheet. */
+const DARK_SELECTOR = '.dark, [data-theme="dark"]';
+
+const { slug, lang = "en" } = Astro.props;
+const reference = getReference(slug);
+const selectors = SLOT_SELECTORS[slug];
+
+/** The slots whose fallback element a class names (the last class of the slot's selector). */
+const slotsFor = (name: string) =>
+  Object.entries(selectors)
+    .filter(([, selector]) => selector.split(/\s+/).at(-1) === `.${name}`)
+    .map(([slot]) => slot);
+const [before = "", after = ""] = t(lang, "ref.darkMode", { selector: "\u0000" }).split("\u0000");
+---
+<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.classesLabel")}`}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "ref.class")}</th>
+        <th scope="col">{t(lang, "ref.slot")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {reference.classes.map((name) => {
+        const slots = slotsFor(name);
+        return (
+          <tr>
+            <th scope="row" class="ref-name">
+              <code dir="ltr">{`.${name}`}</code>
+            </th>
+            <td>
+              {slots.length > 0 ? (
+                <ul class="ref-attrs">
+                  {slots.map((slot) => (
+                    <li>
+                      <a href={`#slot-${slot}`}>
+                        <code dir="ltr">{slot}</code>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <span class="ref-none">{NONE}</span>
+              )}
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
+<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.tokensLabel")}`}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "ref.token")}</th>
+        <th scope="col">{t(lang, "ref.layer")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {reference.tokens.map((token) => (
+        <tr>
+          <th scope="row" class="ref-name">
+            <code dir="ltr">{token}</code>
+          </th>
+          <td>{token.startsWith("--ss-") ? t(lang, "ref.layerShared") : t(lang, "ref.layerOwn")}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+<p class="ref-note">
+  {before}<code dir="ltr">{DARK_SELECTOR}</code>{after}
+</p>

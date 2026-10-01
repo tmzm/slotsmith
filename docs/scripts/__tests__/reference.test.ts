@@ -59,3 +59,15 @@ describe("data attribute merge", () => {
     expect(merged.slots.find((s) => s.name === "Cell")!.dataAttributes).toEqual(base.slots.find((s) => s.name === "Cell")!.dataAttributes);
   });
 });
+
+describe("class names", () => {
+  it("lists each component's classes from its class map, root first", () => {
+    for (const reference of buildReference()) {
+      expect(reference.classes.length, reference.name).toBeGreaterThan(0);
+      expect(reference.classes).toEqual([...new Set(reference.classes)]);
+    }
+    const table = buildReference().find((r) => r.name === "data-table")!;
+    expect(table.classes[0]).toBe("sdt");
+    expect(table.classes).toContain("sdt__row");
+  });
+});

@@ -71,6 +71,38 @@ export const en = {
 
   "common.stub": "This page is being written.",
 
+  // Generated reference tables (API pages). Names in {braces} are filled in code.
+  "ref.slotsLabel": "Slots",
+  "ref.propsLabel": "Props",
+  "ref.labelsLabel": "Labels",
+  "ref.classesLabel": "Class names",
+  "ref.tokensLabel": "Tokens",
+  "ref.name": "Name",
+  "ref.kind": "Kind",
+  "ref.slotProps": "Props it receives",
+  "ref.fallback": "Default fallback",
+  "ref.dataAttributes": "data-* attributes",
+  "ref.fallbackSource": "Fallback source",
+  "ref.domProps": "DOM props:",
+  "ref.noProps": "No props of its own.",
+  "ref.type": "Type",
+  "ref.default": "Default",
+  "ref.description": "Description",
+  "ref.required": "required",
+  "ref.mode": "{mode} mode",
+  "ref.otherGroup": "Other",
+  "ref.rootProps": "Any other prop is passed to the root {element} element.",
+  "ref.key": "Key",
+  "ref.englishDefault": "English default",
+  "ref.example": "prints",
+  "ref.class": "Class",
+  "ref.slot": "Slot",
+  "ref.token": "Token",
+  "ref.layer": "Layer",
+  "ref.layerOwn": "This component",
+  "ref.layerShared": "Shared by every component",
+  "ref.darkMode": "Every token switches to its dark value under {selector}, on the page or on any element around the component.",
+
   // The first positioning sentence; [brackets] mark the component names set at poster scale.
   "hero.title":
     "Finished [data table], [combobox], [date picker] and [file uploader] for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own.",
