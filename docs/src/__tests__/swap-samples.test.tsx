@@ -5,15 +5,17 @@ import { resolve } from "node:path";
 import type { ComponentType } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PROVIDERS } from "@samples/adapters/providers";
+import Antd from "@samples/landing/swap-antd";
 import Chakra from "@samples/landing/swap-chakra";
 import Fallback from "@samples/landing/swap-fallback";
 import Mui from "@samples/landing/swap-mui";
 import Shadcn from "@samples/landing/swap-shadcn";
 
-const VARIANTS: [name: "shadcn" | "mui" | "chakra", Sample: ComponentType][] = [
+const VARIANTS: [name: "shadcn" | "mui" | "chakra" | "antd", Sample: ComponentType][] = [
   ["shadcn", Shadcn],
   ["mui", Mui],
   ["chakra", Chakra],
+  ["antd", Antd],
 ];
 
 const lines = (name: string) => readFileSync(resolve(process.cwd(), `samples/landing/swap-${name}.tsx`), "utf8").split("\n");
@@ -43,7 +45,7 @@ describe("swap samples", () => {
     error.mockRestore();
   });
 
-  it.each(["shadcn", "mui", "chakra"])("differs from the fallback in at most two lines: %s", (name) => {
+  it.each(["shadcn", "mui", "chakra", "antd"])("differs from the fallback in at most two lines: %s", (name) => {
     const fallback = new Set(lines("fallback"));
     const other = new Set(lines(name));
     const changed = [...other].filter((l) => !fallback.has(l)).length;

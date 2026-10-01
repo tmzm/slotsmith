@@ -15,6 +15,7 @@ const sources: Record<Variant, string> = {
   shadcn: "import a\nimport s\n<DataTable components={s} />",
   mui: "import a\nimport m\n<DataTable components={m} />",
   chakra: "import a\nimport c\n<DataTable components={c} />",
+  antd: "import a\nimport d\n<DataTable components={d} />",
 };
 
 /** A loader whose promise the test settles by hand. */
@@ -44,7 +45,7 @@ describe("SwapDemo", () => {
     const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} />);
     expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
     expect(screen.getByRole("radiogroup")).toBeTruthy();
-    expect(screen.getAllByRole("radio")).toHaveLength(4);
+    expect(screen.getAllByRole("radio")).toHaveLength(5);
     expect(radio("Fallback").getAttribute("aria-checked")).toBe("true");
     expect(radio("MUI").getAttribute("aria-checked")).toBe("false");
   });
@@ -121,7 +122,7 @@ describe("SwapDemo", () => {
   });
 
   it("moves and selects with the arrow keys, as a radio group", async () => {
-    render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ shadcn: resolved("shadcn"), mui: resolved("mui"), chakra: resolved("chakra") }} />);
+    render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ shadcn: resolved("shadcn"), mui: resolved("mui"), chakra: resolved("chakra"), antd: resolved("antd") }} />);
     const fallback = radio("Fallback");
     expect(fallback.tabIndex).toBe(0);
     expect(radio("shadcn").tabIndex).toBe(-1);
@@ -139,7 +140,11 @@ describe("SwapDemo", () => {
     expect(document.activeElement).toBe(radio("shadcn"));
     await act(async () => fireEvent.keyDown(radio("shadcn"), { key: "ArrowUp" }));
     await act(async () => fireEvent.keyDown(radio("Fallback"), { key: "ArrowUp" }));
-    expect(radio("Chakra").getAttribute("aria-checked")).toBe("true");
+    expect(radio("Ant Design").getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByTestId("variant-antd")).toBeTruthy();
+    // Right from the last choice wraps back to the first.
+    await act(async () => fireEvent.keyDown(radio("Ant Design"), { key: "ArrowRight" }));
+    expect(radio("Fallback").getAttribute("aria-checked")).toBe("true");
   });
 
   it("prefetches a variant once on hover", () => {
@@ -240,7 +245,7 @@ describe("SwapDemo", () => {
   it("keeps design-system code and the message catalogs out of its first load", () => {
     const source = readFileSync(resolve(process.cwd(), "src/islands/SwapDemo.tsx"), "utf8");
     const staticImports = [...source.matchAll(/^import (?!type )[^;]*from ["']([^"']+)["']/gm)].map((match) => match[1]);
-    expect(staticImports.filter((path) => /@mui|@chakra-ui|swap-(shadcn|mui|chakra)|provider|^@\/i18n$/.test(path!))).toEqual([]);
+    expect(staticImports.filter((path) => /@mui|@chakra-ui|antd|@ant-design|swap-(shadcn|mui|chakra|antd)|provider|^@\/i18n$/.test(path!))).toEqual([]);
   });
 });
 

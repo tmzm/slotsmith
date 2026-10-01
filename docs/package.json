@@ -13,6 +13,7 @@
     "facts": "node scripts/facts.ts"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.3.4",
     "@astrojs/mdx": "^8.0.2",
     "@astrojs/react": "^7.0.0",
     "@chakra-ui/react": "^3.37.0",
@@ -27,6 +28,7 @@
     "@mui/material": "^7.3.11",
     "@tanstack/react-table": "^9.2.4",
     "@tanstack/react-virtual": "^3.14.13",
+    "antd": "^6.6.5",
     "astro": "^7.3.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

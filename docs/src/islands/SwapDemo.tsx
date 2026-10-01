@@ -1,13 +1,13 @@
 /**
  * SwapDemo
  *
- * The landing's swap demo: one table, four design systems, and a segmented
+ * The landing's swap demo: one table, five ways to dress it, and a segmented
  * control that switches between them. Only the `components` prop differs
- * between the four samples; the providers (MUI theme, Chakra system, the
- * shadcn scope) are applied here, never in a sample.
+ * between the samples; the providers (MUI theme, Chakra system, Ant Design's
+ * `ConfigProvider`, the shadcn scope) are applied here, never in a sample.
  *
  * The Fallback sample is imported statically, so it is in the prerendered
- * HTML. The other three load on demand: prefetched on hover, focus or touch
+ * HTML. The others load on demand: prefetched on hover, focus or touch
  * of their segment, and loaded on selection. Selection is a small state
  * machine: `current` is shown, `requested` is the latest choice, and a load
  * that finishes is shown only if it is still the latest choice, so rapid
@@ -34,7 +34,7 @@ import { nextTabIndex } from "@/lib/demo";
 import type { ExplodePart } from "@/lib/explode";
 import type { SwapMessages } from "@/lib/swap-messages";
 
-export type Variant = "fallback" | "shadcn" | "mui" | "chakra";
+export type Variant = "fallback" | "shadcn" | "mui" | "chakra" | "antd";
 type Remote = Exclude<Variant, "fallback">;
 
 /** What a variant's provider reads: the site's theme and the page's direction. */
@@ -48,7 +48,7 @@ const Settings = createContext<VariantSettings>({ theme: "dark", dir: "ltr" });
 type VariantModule = { default: ComponentType };
 export type VariantLoader = () => Promise<VariantModule>;
 
-export const VARIANTS: readonly Variant[] = ["fallback", "shadcn", "mui", "chakra"];
+export const VARIANTS: readonly Variant[] = ["fallback", "shadcn", "mui", "chakra", "antd"];
 
 /** The longest a `swap:before` listener can hold a switch, in ms (DESIGN.md: explode, swap and reassemble in 700ms at most). */
 export const SWAP_WAIT_MAX = 700;
@@ -102,16 +102,18 @@ async function withProvider(sample: () => Promise<{ default: ComponentType }>, p
   };
 }
 
-/** One chunk set per design system: choosing shadcn never loads MUI or Chakra (`adapters/providers` gathers the same three). */
+/** One chunk set per design system: choosing shadcn never loads MUI, Chakra or Ant Design (`adapters/providers` gathers the same four). */
 const SAMPLES = {
   shadcn: retryable(() => import("@samples/landing/swap-shadcn")),
   mui: retryable(() => import("@samples/landing/swap-mui")),
   chakra: retryable(() => import("@samples/landing/swap-chakra")),
+  antd: retryable(() => import("@samples/landing/swap-antd")),
 };
 const PROVIDER_MODULES = {
   shadcn: retryable(() => import("@samples/adapters/provider-shadcn")),
   mui: retryable(() => import("@samples/adapters/provider-mui")),
   chakra: retryable(() => import("@samples/adapters/provider-chakra")),
+  antd: retryable(() => import("@samples/adapters/provider-antd")),
 };
 const DEFAULT_LOADERS: Record<Remote, VariantLoader> = {
   shadcn: () =>
@@ -122,6 +124,7 @@ const DEFAULT_LOADERS: Record<Remote, VariantLoader> = {
     }),
   mui: () => withProvider(SAMPLES.mui, () => PROVIDER_MODULES.mui().then((m) => m.MuiProvider)),
   chakra: () => withProvider(SAMPLES.chakra, () => PROVIDER_MODULES.chakra().then((m) => m.ChakraUiProvider)),
+  antd: () => withProvider(SAMPLES.antd, () => PROVIDER_MODULES.antd().then((m) => m.AntdProvider)),
 };
 
 export interface SwapDemoProps {
@@ -144,7 +147,7 @@ export interface SwapDemoProps {
   children?: ReactNode;
 }
 
-const NAMES: Record<Remote, string> = { shadcn: "shadcn", mui: "MUI", chakra: "Chakra" };
+const NAMES: Record<Remote, string> = { shadcn: "shadcn", mui: "MUI", chakra: "Chakra", antd: "Ant Design" };
 
 function segmentLabel(lang: Lang, messages: SwapMessages, variant: Variant): ReactNode {
   if (variant === "fallback") return messages.fallback;

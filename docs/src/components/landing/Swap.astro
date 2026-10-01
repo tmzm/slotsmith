@@ -1,8 +1,8 @@
 ---
 /**
  * Landing swap section (docs/DESIGN.md section 6, item 2): the same table in
- * four design systems, shown as an exploded view. The island prerenders the
- * Fallback table; the other three variants load when asked for.
+ * several design systems, shown as an exploded view. The island prerenders the
+ * Fallback table; the other variants load when asked for.
  *
  * The code panes are highlighted here at build time, with the lines each
  * variant changes from the Fallback marked, and passed to the island as its
@@ -51,7 +51,7 @@ const caption = t(lang, "swap.diagram").split(/(\{element\}|\{widget\})/);
     class="swap-section__demo"
     data-sample="landing/swap-fallback"
     data-fallback
-    data-variants="landing/swap-shadcn landing/swap-mui landing/swap-chakra adapters/providers"
+    data-variants="landing/swap-shadcn landing/swap-mui landing/swap-chakra landing/swap-antd adapters/providers"
   >
     <SwapDemo client:idle lang={lang} messages={swapMessages(lang)} sources={sources} parts={parts}>
       <Fragment slot="caption">

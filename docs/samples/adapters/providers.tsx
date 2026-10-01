@@ -6,6 +6,7 @@
  * variant; the swap samples themselves never do.
  */
 import type { ComponentType, ReactNode } from "react";
+import { AntdProvider } from "./provider-antd";
 import { ChakraUiProvider } from "./provider-chakra";
 import { MuiProvider } from "./provider-mui";
 import { ShadcnProvider } from "./provider-shadcn";
@@ -16,8 +17,9 @@ export interface ProviderProps {
   dir: "ltr" | "rtl";
 }
 
-export const PROVIDERS: Record<"shadcn" | "mui" | "chakra", ComponentType<ProviderProps>> = {
+export const PROVIDERS: Record<"shadcn" | "mui" | "chakra" | "antd", ComponentType<ProviderProps>> = {
   shadcn: ShadcnProvider,
   mui: MuiProvider,
   chakra: ChakraUiProvider,
+  antd: AntdProvider,
 };
