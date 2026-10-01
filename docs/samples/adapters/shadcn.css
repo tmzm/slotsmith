@@ -9,9 +9,12 @@
  * - `source(none)` turns off Tailwind's project scan: utilities are generated
  *   only for the classes in the adapter and in the shadcn/ui files.
  * - Tailwind's output sits in cascade layers and every utility is nested
- *   under `.shadcn-scope`, so no utility reaches an element outside it.
- * - The tokens are also set on radix's popper wrapper, so the rows-per-page
- *   list, which radix portals to <body>, can use them.
+ *   under `.shadcn-scope` (and the portal wrapper below), so no utility
+ *   reaches an element outside them.
+ * - The rows-per-page list is portalled to <body>, outside the scope. The
+ *   element radix wraps it in (`:has(> [data-slot="select-content"])`) gets
+ *   the same tokens, utilities and resets, and nothing else on the site
+ *   matches it.
  * - Dark mode follows the site's `data-theme` attribute, not the system
  *   setting.
  */
@@ -20,7 +23,7 @@
 @import "tailwindcss/theme.css" layer(theme);
 
 @layer utilities {
-  .shadcn-scope {
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])) {
     @tailwind utilities source(none);
   }
 }
@@ -31,7 +34,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 .shadcn-scope,
-[data-radix-popper-content-wrapper] {
+:has(> [data-slot="select-content"]) {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -59,7 +62,7 @@
 }
 
 [data-theme="dark"] .shadcn-scope,
-[data-theme="dark"] [data-radix-popper-content-wrapper] {
+[data-theme="dark"] :has(> [data-slot="select-content"]) {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -110,19 +113,19 @@
 /* The parts of Tailwind's preflight and shadcn/ui's base layer the table
    needs, inside the scope only. */
 @layer base {
-  .shadcn-scope,
-  .shadcn-scope :where(*, ::before, ::after) {
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])),
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(*, ::before, ::after) {
     box-sizing: border-box;
     border-color: var(--border);
     outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
 
-  .shadcn-scope :where(table) {
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(table) {
     border-collapse: collapse;
     text-indent: 0;
   }
 
-  .shadcn-scope :where(button) {
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(button) {
     font: inherit;
     letter-spacing: inherit;
     color: inherit;
@@ -132,132 +135,36 @@
     background-color: transparent;
   }
 
-  .shadcn-scope :where(svg) {
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(svg) {
     display: block;
     vertical-align: middle;
   }
 
-  .shadcn-scope :where(ul, ol) {
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(ul, ol) {
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  .shadcn-scope :where(p) {
+  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(p) {
     margin: 0;
   }
 }
 
 /*
- * Site resets and adapter gaps. Unlayered, so they win over the site's own
- * unlayered element rules.
- *
- * - The site's `button` and `svg` rules would beat every Tailwind utility
- *   on those elements (the checked checkbox lost its check colour, the icon
- *   its size); `revert-layer` hands those properties back to the layers
- *   above.
- * - The generated adapter's pagination uses plain buttons and an unstyled
- *   radix Select (no shadcn `Button` or `Select` classes), so in a shadcn app
- *   the current page number is drawn in its own background colour. These
- *   rules give them shadcn's button and select look until the adapter does
- *   (docs/LAUNCH-REPORT.md, "Library issues").
+ * Site resets. Unlayered, so they win over the site's own unlayered element
+ * rules: its `button` and `svg` rules would beat every Tailwind utility on
+ * those elements (the checked checkbox lost its check colour, the icon its
+ * size); `revert-layer` hands those properties back to the layers above.
  */
-.shadcn-scope button {
+:is(.shadcn-scope, :has(> [data-slot="select-content"])) button {
   font: revert-layer;
   color: revert-layer;
 }
 
-.shadcn-scope svg {
+:is(.shadcn-scope, :has(> [data-slot="select-content"])) svg {
   display: revert-layer;
   max-inline-size: revert-layer;
-}
-
-.shadcn-scope nav ul button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-inline-size: 2rem;
-  block-size: 2rem;
-  padding: 0 0.5rem;
-  border: 1px solid transparent;
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
-  color: var(--foreground);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.shadcn-scope nav ul button:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.shadcn-scope nav ul button[aria-current="page"] {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: var(--primary-foreground);
-  cursor: default;
-}
-
-.shadcn-scope nav ul li > span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: 2rem;
-  color: var(--muted-foreground);
-}
-
-.shadcn-scope [role="combobox"] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--input);
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  color: var(--foreground);
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-[data-theme="dark"] .shadcn-scope [role="combobox"] {
-  background: color-mix(in oklab, var(--input) 30%, transparent);
-}
-
-.shadcn-scope :is(nav ul button, [role="combobox"]):focus-visible {
-  border-color: var(--ring);
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
-}
-
-[data-radix-popper-content-wrapper] [role="listbox"] {
-  min-inline-size: var(--radix-select-trigger-width);
-  padding: 0.25rem;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--popover);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  color: var(--popover-foreground);
-  font-size: 0.875rem;
-}
-
-[data-radix-popper-content-wrapper] [role="option"] {
-  padding: 0.375rem 0.5rem;
-  border-radius: calc(var(--radius) - 4px);
-  outline: none;
-  cursor: default;
-}
-
-[data-radix-popper-content-wrapper] [role="option"][data-highlighted] {
-  background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-[data-radix-popper-content-wrapper] [role="option"][data-state="checked"] {
-  font-weight: 500;
 }
 
 /* shadcn/ui's table uses physical sides (`text-left`, `pr-0`); mirror them

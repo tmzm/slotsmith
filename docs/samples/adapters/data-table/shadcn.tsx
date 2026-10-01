@@ -9,7 +9,6 @@
  * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
  * shadcn/ui files.
  */
-import { Select as SelectPrimitive } from "radix-ui";
 import { useId, type ComponentProps } from "react";
 import type {
   CheckboxSlotProps,
@@ -22,6 +21,7 @@ import type {
 } from "slotsmith/data-table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -135,12 +135,40 @@ function visiblePages(page: number, total: number): (number | "ellipsis")[] {
 }
 
 /**
+ * Chevron icons
+ *
+ * lucide's `ChevronLeft` and `ChevronRight`, drawn inline like the grip, and
+ * turned round on right-to-left pages so they point the reading way.
+ */
+const Chevron = ({ d, className, ...props }: ComponentProps<"svg"> & { d: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={cn("rtl:rotate-180", className)}
+    {...props}
+  >
+    <path d={d} />
+  </svg>
+);
+const ChevronLeft = (props: ComponentProps<"svg">) => <Chevron d="m15 18-6-6 6-6" {...props} className={cn("lucide lucide-chevron-left", props.className)} />;
+const ChevronRight = (props: ComponentProps<"svg">) => <Chevron d="m9 18 6-6-6-6" {...props} className={cn("lucide lucide-chevron-right", props.className)} />;
+
+/**
  * Shadcn pagination
  *
- * A compact pagination bar: the page summary, a radix rows-per-page select,
- * and numbered page buttons whose previous / next buttons disappear at
- * either end. Every word on it comes from `labels`, so a locale or a custom
- * label reaches it.
+ * A compact pagination bar: the page summary, shadcn's `Select` for rows per
+ * page, and numbered page `Button`s (the current one in the default variant
+ * with `aria-current="page"`, the rest ghost) whose outline previous / next
+ * buttons disappear at either end. Every word on it comes from `labels`, so
+ * a locale or a custom label reaches it.
  */
 function ShadcnPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, setPageIndex, setPageSize, labels }: PaginationSlotProps) {
   const page = pageIndex + 1;
@@ -148,59 +176,58 @@ function ShadcnPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, set
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-6 px-6 py-4">
-      <div className="text-sm text-font-body">{labels.pageInfo(page, pageCount)}</div>
+      <div className="text-sm text-muted-foreground">{labels.pageInfo(page, pageCount)}</div>
       <div className="flex items-center gap-2">
-        <span id={rowsPerPageId} className="text-sm text-font-body">
+        <span id={rowsPerPageId} className="text-sm font-medium">
           {labels.rowsPerPage}
         </span>
-        <SelectPrimitive.Root value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
-          <SelectPrimitive.Trigger aria-labelledby={rowsPerPageId} className="h-8 min-w-14">
-            <SelectPrimitive.Value />
-          </SelectPrimitive.Trigger>
-          <SelectPrimitive.Portal>
-            <SelectPrimitive.Content position="popper">
-              <SelectPrimitive.Viewport>
-                {pageSizeOptions.map((size) => (
-                  <SelectPrimitive.Item key={size} value={String(size)}>
-                    <SelectPrimitive.ItemText>{size}</SelectPrimitive.ItemText>
-                  </SelectPrimitive.Item>
-                ))}
-              </SelectPrimitive.Viewport>
-            </SelectPrimitive.Content>
-          </SelectPrimitive.Portal>
-        </SelectPrimitive.Root>
+        <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+          <SelectTrigger size="sm" aria-labelledby={rowsPerPageId} className="w-20">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent side="top">
+            {pageSizeOptions.map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <nav role="navigation" aria-label={labels.pagination}>
-        <ul className="flex items-center gap-2">
+        <ul className="flex items-center gap-1">
           {page > 1 && (
             <li>
-              <button type="button" aria-label={labels.previousPage} onClick={() => setPageIndex(pageIndex - 1)}>
-                ‹
-              </button>
+              <Button type="button" variant="outline" size="icon" className="size-8" aria-label={labels.previousPage} onClick={() => setPageIndex(pageIndex - 1)}>
+                <ChevronLeft />
+              </Button>
             </li>
           )}
           {visiblePages(page, pageCount).map((item, index) => (
             <li key={index}>
               {item === "ellipsis" ? (
-                <span>…</span>
+                <span aria-hidden="true" className="flex size-8 items-center justify-center text-muted-foreground">
+                  …
+                </span>
               ) : (
-                <button
+                <Button
                   type="button"
-                  disabled={item === page}
+                  variant={item === page ? "default" : "ghost"}
+                  size="icon"
+                  className="size-8"
                   aria-current={item === page ? "page" : undefined}
-                  className={cn("rounded-md border", item === page && "bg-primary")}
                   onClick={() => setPageIndex(item - 1)}
                 >
                   {item}
-                </button>
+                </Button>
               )}
             </li>
           ))}
           {page < pageCount && (
             <li>
-              <button type="button" aria-label={labels.nextPage} onClick={() => setPageIndex(pageIndex + 1)}>
-                ›
-              </button>
+              <Button type="button" variant="outline" size="icon" className="size-8" aria-label={labels.nextPage} onClick={() => setPageIndex(pageIndex + 1)}>
+                <ChevronRight />
+              </Button>
             </li>
           )}
         </ul>
