@@ -80,7 +80,7 @@ export const ar: Record<MessageKey, string> = {
   "hero.getStarted": "ابدأ الآن",
 
   "swap.title": "بدّل نظام التصميم، واحتفظ بالجدول",
-  "swap.lede": "الجدول نفسه في بعض أنظمة التصميم المعروفة، ونظامك يعمل بالطريقة نفسها. لا يتغيّر إلا الخاصية {prop}.",
+  "swap.lede": "الجدول نفسه في بعض أنظمة التصميم المعروفة، ويعمل نظامك بالطريقة نفسها. لا يتغيّر إلا الخاصية {prop}.",
   "swap.label": "نظام التصميم",
   "swap.fallback": "الافتراضي",
   "swap.loading": "جارٍ تحميل {name}…",
@@ -103,7 +103,7 @@ export const ar: Record<MessageKey, string> = {
   "parts.receives": "يستقبل",
   "parts.dropIn": "بديل عن",
   "parts.elementReceives": "خصائص DOM عادية، والحالة في سمات `data-*`",
-  "parts.elementDropIn": "العناصر الأساسية من أي مكتبة، دون تعديل، مثل shadcn/ui وMUI وChakra",
+  "parts.elementDropIn": "العناصر الأساسية من أي مكتبة، دون تعديل، مثل عناصر shadcn/ui وMUI وChakra",
   "parts.widgetReceives": "خصائص دلالية (`checked` و`pageIndex` و`setPageSize`)",
   "parts.widgetDropIn": "مكوّناتك، عبر محوّل من بضعة أسطر",
   "parts.guides": "اقرأ الأدلة",

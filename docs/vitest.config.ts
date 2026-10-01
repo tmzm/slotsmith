@@ -10,6 +10,9 @@ export default getViteConfig({
   },
   test: {
     environment: "node",
+    // Rendering .astro components cold can take over 5s on a busy machine.
+    testTimeout: 20000,
+    hookTimeout: 20000,
     include: ["src/**/__tests__/**/*.test.{ts,tsx}", "samples/**/__tests__/**/*.test.{ts,tsx}", "scripts/**/__tests__/**/*.test.ts"],
   },
 });

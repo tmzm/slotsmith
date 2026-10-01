@@ -41,6 +41,7 @@ describe("swap samples", () => {
     );
     expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
     if (name === "mui") expect(container.querySelector(".MuiTableRow-root")).not.toBeNull();
+    if (name === "antd") expect(container.querySelector(".ant-checkbox")).not.toBeNull();
     expect(error).not.toHaveBeenCalled();
     error.mockRestore();
   });

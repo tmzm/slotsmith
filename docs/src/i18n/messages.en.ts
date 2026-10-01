@@ -114,7 +114,7 @@ export const en = {
   "cards.lede": "Each panel is the component itself, with its built-in parts. Open one for its guides and API.",
 
   "works.title": "Works with what you have",
-  "works.lede": "Keep your design system, whichever it is, and your data layer. Here are a few well-known ones; each opens the page that shows it working.",
+  "works.lede": "Keep your design system, whichever it is, and your data layer. Here are a few well-known libraries; each opens the page that shows it working.",
   "works.list": "Some of the libraries slotsmith works with",
 
   "languages.title": "Languages and right-to-left",
