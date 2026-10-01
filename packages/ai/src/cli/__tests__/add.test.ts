@@ -326,7 +326,7 @@ describe("slotsmith-ai add", () => {
     const cwd = project({ manifest: { dependencies: { slotsmith: "1" } } });
     const result = await add(cwd, "autocomplete", "data-table", "--ui", "shadcn");
     expect(result.code).toBe(0);
-    expect(result.out).toMatch(/^npx shadcn@latest add badge button checkbox input skeleton table$/m);
-    expect(result.out).toMatch(/^npm install radix-ui$/m);
+    expect(result.out).toMatch(/^npx shadcn@latest add badge button checkbox input select skeleton table$/m);
+    expect(result.out).not.toMatch(/^npm install/m);
   });
 });

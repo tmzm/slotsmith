@@ -141,13 +141,14 @@ describe("shadcn registry", () => {
 
   it("lists slotsmith plus the adapter's own peers as dependencies", () => {
     expect(items.find((item) => item.name === "slotsmith-date-picker")!.dependencies).toEqual(["slotsmith"]);
-    expect(items.find((item) => item.name === "slotsmith-data-table")!.dependencies).toEqual(["slotsmith", "radix-ui"]);
+    expect(items.find((item) => item.name === "slotsmith-data-table")!.dependencies).toEqual(["slotsmith"]);
   });
 
   it("lists every @/components/ui import as a registryDependency, sorted", () => {
     expect(items.find((item) => item.name === "slotsmith-data-table")!.registryDependencies).toEqual([
       "button",
       "checkbox",
+      "select",
       "skeleton",
       "table",
     ]);

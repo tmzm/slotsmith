@@ -99,7 +99,7 @@ describe("peersOf", () => {
 
   it("reads the peers of the generated adapters", () => {
     expect(peersOf(toAdapterSource(skin("data-table", "mui"), "data-table"))).toEqual(["@mui/material"]);
-    expect(peersOf(toAdapterSource(skin("data-table", "shadcn"), "data-table"))).toEqual(["radix-ui"]);
+    expect(peersOf(toAdapterSource(skin("data-table", "shadcn"), "data-table"))).toEqual([]);
     expect(peersOf(toAdapterSource(skin("date-picker", "antd"), "date-picker"))).toEqual(["@ant-design/icons", "antd"]);
     expect(peersOf(toAdapterSource(skin("autocomplete", "radix"), "autocomplete"))).toEqual(["@radix-ui/react-icons", "@radix-ui/themes"]);
   });

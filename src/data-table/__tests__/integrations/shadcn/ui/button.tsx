@@ -10,6 +10,8 @@ import { cn } from "./utils"
  */
 const variants = {
   default: "bg-primary text-primary-foreground hover:bg-primary/90",
+  outline:
+    "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
   ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
 }
 

@@ -89,6 +89,27 @@ describe("shadcn/ui (editorial layout)", () => {
     expect(screen.queryByRole("button", { name: "Next page" })).not.toBeInTheDocument();
   });
 
+  it("marks the current page with aria-current and shadcn's default Button variant", async () => {
+    const user = renderShadcnTable();
+    const current = () => screen.getByRole("button", { current: "page" });
+    expect(current()).toHaveTextContent(/^1$/);
+    expect(current()).toHaveAttribute("data-slot", "button");
+    expect(current()).toHaveAttribute("data-variant", "default");
+    expect(screen.getByRole("button", { name: "2" })).toHaveAttribute("data-variant", "ghost");
+    expect(screen.getByRole("button", { name: "2" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("button", { name: "Next page" })).toHaveAttribute("data-variant", "outline");
+
+    await user.click(screen.getByRole("button", { name: "2" }));
+    expect(current()).toHaveTextContent(/^2$/);
+    expect(screen.getByRole("button", { name: "1" })).toHaveAttribute("data-variant", "ghost");
+  });
+
+  it("uses shadcn's Select for the rows per page", () => {
+    renderShadcnTable();
+    expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveAttribute("data-slot", "select-trigger");
+    expect(screen.getByText("Page 1 of 3")).toHaveClass("text-muted-foreground");
+  });
+
   it("changes the page size with the radix select (keyboard)", async () => {
     const user = renderShadcnTable();
     screen.getByRole("combobox", { name: "Rows per page" }).focus();
