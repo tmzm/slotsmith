@@ -1,0 +1,187 @@
+---
+/**
+ * Landing close (docs/DESIGN.md section 6, item 9). The landing's one
+ * drenched section: a full-bleed `--gold` band with `npm i slotsmith` at
+ * display scale in `--on-gold` (about 8:1), a copy button, and links to
+ * Getting started and GitHub.
+ *
+ * The command is code: it reads left to right and keeps its lower case on
+ * Arabic pages too. When the clipboard is refused, the copy button selects
+ * the command instead, so it can be copied by hand.
+ */
+import { localePath, t, type Lang } from "@/i18n";
+import { SITE } from "../../../site.config.ts";
+
+export interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const command = "npm i slotsmith";
+---
+<section class="close" aria-labelledby="close-title">
+  <h2 id="close-title" class="visually-hidden">{t(lang, "close.title")}</h2>
+  <div class="close__row">
+    <code class="close__command" dir="ltr" lang="en" data-close-command>{command}</code>
+    <button type="button" class="close__copy" data-close-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
+      {t(lang, "common.copy")}
+    </button>
+    <span class="visually-hidden" role="status" data-close-status></span>
+  </div>
+  <p class="close__links">
+    <a class="close__link close__link--primary" href={localePath(lang, "/getting-started/")}>
+      {t(lang, "hero.getStarted")}
+      <svg class="close__arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <path d="M3 8h10M9 4l4 4-4 4" />
+      </svg>
+    </a>
+    <a class="close__link" href={SITE.repo}>{t(lang, "common.github")}</a>
+  </p>
+</section>
+
+<script>
+  for (const section of document.querySelectorAll<HTMLElement>(".close")) {
+    const command = section.querySelector<HTMLElement>("[data-close-command]");
+    const copy = section.querySelector<HTMLButtonElement>("[data-close-copy]");
+    const status = section.querySelector<HTMLElement>("[data-close-status]");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    copy?.addEventListener("click", async () => {
+      if (!command) return;
+      try {
+        await navigator.clipboard.writeText(command.textContent?.trim() ?? "");
+      } catch {
+        // No clipboard access: select the command so it can be copied by hand.
+        getSelection()?.selectAllChildren(command);
+        return;
+      }
+      copy.textContent = copy.dataset.labelCopied ?? "";
+      copy.toggleAttribute("data-copied", true);
+      if (status) status.textContent = copy.dataset.labelCopied ?? "";
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        copy.textContent = copy.dataset.label ?? "";
+        copy.removeAttribute("data-copied");
+        if (status) status.textContent = "";
+      }, 1500);
+    });
+  }
+</script>
+
+<style>
+  /* Full bleed without overflow: the shadow paints the band past the page's
+     max width to both viewport edges; the clip keeps it from spilling up or down. */
+  .close {
+    display: grid;
+    gap: 2rem;
+    margin-block-start: 2rem;
+    padding-block: 4.5rem 5rem;
+    background: var(--gold);
+    box-shadow: 0 0 0 100vmax var(--gold);
+    clip-path: inset(0 -100vmax);
+    color: var(--on-gold);
+  }
+
+  /* The band meets the footer (the scripts after it render nothing). */
+  :global(.shell > main:has(> .close)) {
+    padding-block-end: 0;
+  }
+
+  .close__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.75rem;
+  }
+
+  .close__command {
+    min-inline-size: 0;
+    font-family: var(--font-latin-display);
+    font-size: clamp(3.25rem, 1.4rem + 8.6vw, 10rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.01em;
+    overflow-wrap: break-word;
+  }
+
+  /* The command reads left to right but, when it wraps, keeps to the page's
+     start edge on Arabic pages. */
+  :global(html[dir="rtl"]) .close__command {
+    text-align: right;
+  }
+
+  .close__command::selection {
+    background: var(--on-gold);
+    color: var(--gold);
+  }
+
+  .close__copy {
+    min-block-size: 2.75rem;
+    min-inline-size: 5.5rem;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid var(--on-gold);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--on-gold);
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+
+  .close__copy:hover,
+  .close__copy[data-copied] {
+    background: var(--on-gold);
+    color: var(--gold);
+  }
+
+  .close__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 0;
+    font-size: 1.125rem;
+  }
+
+  .close__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;
+    color: var(--on-gold);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .close__link--primary {
+    font-weight: 700;
+    text-decoration-thickness: 2px;
+  }
+
+  .close__arrow {
+    inline-size: 1rem;
+    block-size: 1rem;
+    transition: transform 200ms var(--ease-out);
+  }
+
+  .close__link:hover .close__arrow {
+    transform: translateX(3px);
+  }
+
+  :global(html[dir="rtl"]) .close__arrow {
+    transform: scaleX(-1);
+  }
+
+  :global(html[dir="rtl"]) .close__link:hover .close__arrow {
+    transform: scaleX(-1) translateX(3px);
+  }
+
+  /* The site's gold focus ring would vanish on gold. */
+  .close :focus-visible {
+    outline-color: var(--on-gold);
+  }
+</style>

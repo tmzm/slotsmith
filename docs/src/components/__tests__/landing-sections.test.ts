@@ -12,6 +12,11 @@ import WorksWith from "@/components/landing/WorksWith.astro";
 import Languages from "@/components/landing/Languages.astro";
 import Agents from "@/components/landing/Agents.astro";
 import TrustStrip from "@/components/landing/TrustStrip.astro";
+import Close from "@/components/landing/Close.astro";
+import MotionLoader from "@/components/landing/MotionLoader.astro";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { SITE } from "../../../site.config.ts";
 
 let container: AstroContainer;
 
@@ -217,5 +222,63 @@ describe("TrustStrip", () => {
     expect(links).toHaveLength(5);
     for (const link of links) expect(link.getAttribute("href")).toMatch(/^\/ar\/trust\/#/);
     expect(doc.querySelectorAll(".manifest__brace")).toHaveLength(2);
+  });
+});
+
+describe("Close", () => {
+  it("shows the install command at display scale with a copy button and two links", async () => {
+    const doc = parse(await container.renderToString(Close, { props: { lang: "en" } }));
+    const section = doc.querySelector("section.close");
+    expect(section?.getAttribute("aria-labelledby")).toBe("close-title");
+    expect(normalise(doc.getElementById("close-title")?.textContent)).toBe("Install slotsmith");
+    const command = doc.querySelector(".close__command");
+    expect(normalise(command?.textContent)).toBe("npm i slotsmith");
+    expect(command?.closest("[dir]")?.getAttribute("dir")).toBe("ltr");
+    const copy = doc.querySelector("button[data-close-copy]");
+    expect(normalise(copy?.textContent)).toBe("Copy");
+    expect(copy?.getAttribute("data-label-copied")).toBe("Copied");
+    const links = [...doc.querySelectorAll(".close__links a")].map((a) => [normalise(a.textContent), a.getAttribute("href")]);
+    expect(links).toEqual([
+      ["Get started", "/getting-started/"],
+      ["GitHub", SITE.repo],
+    ]);
+  });
+
+  it("links in the page's language on Arabic pages", async () => {
+    const doc = parse(await container.renderToString(Close, { props: { lang: "ar" } }));
+    expect(doc.querySelector('.close__links a[href="/ar/getting-started/"]')).not.toBeNull();
+    expect(normalise(doc.querySelector(".close__command")?.textContent)).toBe("npm i slotsmith");
+  });
+
+  it("sets text on gold that passes 4.5:1 in both themes", () => {
+    const tokens = readFileSync(resolve(process.cwd(), "src/styles/tokens.css"), "utf8");
+    const values = (name: string) => [...tokens.matchAll(new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`, "gi"))].map((match) => match[1]!);
+    const luminance = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((at) => {
+        const channel = parseInt(hex.slice(at, at + 2), 16) / 255;
+        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+    };
+    const gold = values("gold");
+    const onGold = values("on-gold");
+    expect(gold).toHaveLength(2);
+    expect(onGold).toHaveLength(2);
+    gold.forEach((background, theme) => {
+      const [light, dark] = [luminance(background), luminance(onGold[theme]!)].sort((a, b) => b - a);
+      expect((light! + 0.05) / (dark! + 0.05)).toBeGreaterThanOrEqual(4.5);
+    });
+  });
+});
+
+describe("MotionLoader", () => {
+  it("renders no markup of its own; its script waits for load and reduced motion before importing the motion module", async () => {
+    const html = await container.renderToString(MotionLoader);
+    expect(parse(html).body.textContent?.trim()).toBe("");
+    const source = readFileSync(resolve(process.cwd(), "src/components/landing/MotionLoader.astro"), "utf8");
+    expect(source).toMatch(/prefers-reduced-motion: reduce/);
+    expect(source).toMatch(/import\("@\/lib\/landing-motion"\)/);
+    expect(source).not.toMatch(/^\s*import [^(]*landing-motion/m);
+    expect(source).toMatch(/"load"/);
   });
 });

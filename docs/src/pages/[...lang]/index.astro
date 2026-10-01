@@ -9,6 +9,8 @@ import WorksWith from "@/components/landing/WorksWith.astro";
 import Languages from "@/components/landing/Languages.astro";
 import Agents from "@/components/landing/Agents.astro";
 import TrustStrip from "@/components/landing/TrustStrip.astro";
+import Close from "@/components/landing/Close.astro";
+import MotionLoader from "@/components/landing/MotionLoader.astro";
 import { langFromParam, langPaths, t } from "@/i18n";
 
 export function getStaticPaths() {
@@ -27,4 +29,6 @@ const lang = langFromParam(Astro.params.lang);
   <Languages lang={lang} />
   <Agents lang={lang} />
   <TrustStrip lang={lang} />
+  <Close lang={lang} />
+  <MotionLoader />
 </Base>

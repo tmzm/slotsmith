@@ -128,6 +128,8 @@ export const en = {
 
   "trust.title": "Tests, size and license",
 
+  "close.title": "Install slotsmith",
+
   "summary.dataTable": "A table with sorting, selection, pagination, server data, tree rows, virtual rows and row reorder.",
   "summary.autocomplete": "A select and combobox with multiple values, remote options, creatable options and virtual lists.",
   "summary.datePicker": "A date picker for single days, ranges and multiple dates, with bounds, blocked days and presets.",

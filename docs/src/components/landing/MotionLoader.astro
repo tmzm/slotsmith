@@ -1,0 +1,25 @@
+---
+/**
+ * Loads the landing's motion (docs/DESIGN.md section 7). After `load`, and
+ * only when the reader has not asked for reduced motion, it imports
+ * `@/lib/landing-motion` with `import()` (its own chunk, never in the
+ * initial JavaScript) and starts it with the page's reading direction. Any
+ * failure leaves the page in its static state, which is complete. Landing
+ * only; renders no markup.
+ */
+---
+<script>
+  const start = () => {
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return;
+    const rtl = document.documentElement.dir === "rtl";
+    import("@/lib/landing-motion")
+      .then(({ startLandingMotion }) => startLandingMotion(document, { reducedMotion, rtl }))
+      .catch(() => {
+        // Motion is decoration: the page already works without it.
+      });
+  };
+
+  if (document.readyState === "complete") start();
+  else addEventListener("load", start, { once: true });
+</script>
