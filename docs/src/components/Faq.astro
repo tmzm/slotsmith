@@ -1,0 +1,124 @@
+---
+/**
+ * An FAQ: one `<details>` per question, its answer and a link to the page
+ * that shows it. The same items feed the page's `FAQPage` JSON-LD
+ * (`lib/structured-data`), and `verify-site` checks that the `<summary>`
+ * texts match it.
+ *
+ * Standalone (the landing) it is a `<section id="faq">` with its own `<h2>`.
+ * Inside a component overview's MDX, `<Faq />` takes no props: the `## FAQ`
+ * heading is the MDX's own, and the items come from the frontmatter through
+ * the component context.
+ */
+import type { FaqItem } from "@/data/faq";
+import { localePath, t, type Lang } from "@/i18n";
+import { optionalComponentContext } from "@/lib/component-context";
+
+interface Props {
+  /** Defaults to the overview's frontmatter `faq`. */
+  items?: FaqItem[];
+  /** Defaults to the overview's language. */
+  lang?: Lang;
+}
+
+const context = optionalComponentContext(Astro.locals);
+const standalone = Astro.props.items !== undefined;
+const items = Astro.props.items ?? context?.faq;
+if (!items) throw new Error("<Faq /> needs items outside a component overview, or a faq list in the overview's frontmatter.");
+const lang = Astro.props.lang ?? context?.lang ?? "en";
+const contentLang = standalone ? lang : (context?.contentLang ?? lang);
+const href = (link: string) => (link.startsWith("/") ? localePath(lang, link) : link);
+const Wrapper = standalone ? "section" : "div";
+---
+<Wrapper class:list={["faq", standalone && "faq--standalone"]} id={standalone ? "faq" : undefined} aria-labelledby={standalone ? "faq-title" : undefined} data-faq>
+  {standalone && <h2 id="faq-title" class="display faq__title">{t(lang, "faq.title")}</h2>}
+  <div class="faq__list">
+    {items.map((item) => (
+      <details class="faq__item">
+        <summary class="faq__question" data-faq-question>{item.q}</summary>
+        <div class="faq__answer">
+          <p>{item.a}</p>
+          {item.link && <p class="faq__more"><a href={href(item.link)}>{t(contentLang, "faq.more")}</a></p>}
+        </div>
+      </details>
+    ))}
+  </div>
+</Wrapper>
+
+<style>
+  .faq--standalone {
+    display: grid;
+    gap: 2rem;
+    padding-block: 4rem;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .faq__title {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(2.25rem, 1.2rem + 4.4vw, 4.5rem);
+  }
+
+  :global(html[lang="ar"]) .faq__title {
+    font-size: clamp(1.875rem, 1.2rem + 3vw, 3.5rem);
+    line-height: 1.3;
+  }
+
+  .faq__list {
+    max-inline-size: 52rem;
+    margin-block: 1rem 2rem;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .faq--standalone .faq__list {
+    margin: 0;
+  }
+
+  .faq__item {
+    border-block-end: 1px solid var(--line);
+  }
+
+  .faq__question {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding-block: 0.875rem;
+    color: var(--ink);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .faq__question::-webkit-details-marker {
+    display: none;
+  }
+
+  /* The disclosure mark, in mono gold: `+` closed, `−` open. */
+  .faq__question::after {
+    content: "+";
+    flex: none;
+    color: var(--gold-text);
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+
+  .faq__item[open] > .faq__question::after {
+    content: "−";
+  }
+
+  .faq__answer {
+    padding-block-end: 1rem;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+
+  .faq__answer p {
+    margin: 0;
+    max-inline-size: 65ch;
+  }
+
+  .faq__more {
+    margin-block-start: 0.5rem !important;
+    font-size: 0.9375rem;
+  }
+</style>

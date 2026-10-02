@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SITE } from "../../../site.config.ts";
-import { findDeadLinks, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "../html.ts";
+import { findDeadLinks, findGeoProblems, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "../html.ts";
 
 function doc(path: string, { title = "Theming · slotsmith", description = "How to theme.", body = "", stub = false } = {}) {
   const ar = path.startsWith("/ar/");
@@ -184,5 +184,52 @@ describe("findUnusedSamples", () => {
   it("counts the variants a demo lists", () => {
     const page = readPage("/", doc("/", { body: '<figure data-sample="landing/swap-fallback" data-variants="landing/swap-mui landing/swap-chakra"></figure>' }));
     expect(page.samples).toEqual(["landing/swap-fallback", "landing/swap-mui", "landing/swap-chakra"]);
+  });
+});
+
+describe("findGeoProblems", () => {
+  const ld = (data: object) => `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
+  const article = ld({ "@context": "https://schema.org", "@type": "TechArticle", headline: "Data table" });
+  const crumbs = ld({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [] });
+  const mdLink = '<link rel="alternate" type="text/markdown" href="https://slotsmith.dev/components/data-table/index.md" />';
+  const faqLd = (...qs: string[]) =>
+    ld({ "@type": "FAQPage", mainEntity: qs.map((q) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: "A." } })) });
+  const faqHtml = (...qs: string[]) =>
+    `<h2 id="faq">FAQ</h2>${qs.map((q) => `<details><summary data-faq-question>${q}</summary><p>A.</p></details>`).join("")}`;
+  const page = (head: string, body = "") => `<html><head>${head}</head><body><main>${body}</main></body></html>`;
+  const path = "/components/data-table/";
+  const md = "# Data table\n\n> A table.\n";
+
+  it("accepts a docs page with an article, breadcrumbs, a matching FAQ and its Markdown copy", () => {
+    const html = page(mdLink + article + crumbs + faqLd("Q & one?", "Two?"), faqHtml("Q &amp; one?", "Two?"));
+    expect(findGeoProblems(path, html, md)).toEqual([]);
+  });
+
+  it("needs structured data that parses", () => {
+    expect(findGeoProblems(path, page(mdLink), md)).toContainEqual(expect.stringContaining("no application/ld+json"));
+    const broken = '<script type="application/ld+json">{"@type": </script>';
+    expect(findGeoProblems(path, page(mdLink + article + crumbs + broken), md)).toEqual([expect.stringContaining("does not parse")]);
+  });
+
+  it("needs SoftwareSourceCode on the landing and BreadcrumbList elsewhere", () => {
+    const landing = ld({ "@type": "SoftwareSourceCode", name: "slotsmith" });
+    const landingLink = '<link rel="alternate" type="text/markdown" href="https://slotsmith.dev/index.md" />';
+    expect(findGeoProblems("/", page(landingLink + landing), "# slotsmith\n")).toEqual([]);
+    const arLink = landingLink.replace("/index.md", "/ar/index.md");
+    expect(findGeoProblems("/ar/", page(arLink + article), "# slotsmith\n")).toEqual([expect.stringContaining("SoftwareSourceCode")]);
+    expect(findGeoProblems("/ar/", page(landingLink + landing), "# slotsmith\n")).toEqual([expect.stringContaining("/ar/index.md")]);
+    expect(findGeoProblems(path, page(mdLink + article), md)).toEqual([expect.stringContaining("BreadcrumbList")]);
+  });
+
+  it("fails when the FAQ markup and the visible FAQ differ", () => {
+    const html = page(mdLink + article + crumbs + faqLd("One?", "Two?"), faqHtml("Two?", "One?"));
+    expect(findGeoProblems(path, html, md)).toEqual([expect.stringContaining("FAQ")]);
+    expect(findGeoProblems(path, page(mdLink + article + crumbs, faqHtml("One?")), md)).toEqual([expect.stringContaining("FAQ")]);
+  });
+
+  it("needs the Markdown copy, its link, and its title", () => {
+    expect(findGeoProblems(path, page(article + crumbs), md)).toEqual([expect.stringContaining("text/markdown")]);
+    expect(findGeoProblems(path, page(mdLink + article + crumbs), null)).toEqual([expect.stringContaining("index.md")]);
+    expect(findGeoProblems(path, page(mdLink + article + crumbs), "# Other\n")).toEqual([expect.stringContaining('"# Data table"')]);
   });
 });

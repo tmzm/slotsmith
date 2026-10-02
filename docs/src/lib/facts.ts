@@ -39,7 +39,7 @@ export function getFacts(): Facts {
 }
 
 /** Formats bytes as kilobytes with one decimal (`18.4 KB`). */
-function kilobytes(bytes: number): string {
+export function kilobytes(bytes: number): string {
   return `${(bytes / 1024).toFixed(1)} KB`;
 }
 

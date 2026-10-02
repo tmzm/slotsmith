@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findStructureProblems, OVERVIEW_HEADINGS } from "../check-structure.ts";
+import { findAnswerFirstProblems, findStructureProblems, OVERVIEW_HEADINGS } from "../check-structure.ts";
 
 const OVERVIEW = "src/content/docs/en/components/data-table/index.mdx";
 const GUIDE = "src/content/docs/en/components/data-table/guides/pagination.mdx";
@@ -51,5 +51,43 @@ describe("findStructureProblems", () => {
 
   it("checks Windows paths too", () => {
     expect(findStructureProblems(OVERVIEW.replaceAll("/", "\\"), frontmatter)).not.toEqual([]);
+  });
+});
+
+describe("findAnswerFirstProblems", () => {
+  const page = (body: string, title = "Data table") => `---\ntitle: "${title}"\ndescription: "A table."\n---\n\nimport X from "y";\n\n${body}`;
+
+  it("ends the overview headings with FAQ", () => {
+    expect(OVERVIEW_HEADINGS.at(-1)).toBe("FAQ");
+  });
+
+  it("accepts a short opening paragraph that names the subject", () => {
+    expect(findAnswerFirstProblems(OVERVIEW, page("The data table renders rows with sorting and selection.\n\n## Overview\n"))).toEqual([]);
+  });
+
+  it("rejects a page that opens with a heading, a component, a list or code", () => {
+    expect(findAnswerFirstProblems(OVERVIEW, page("## Heading\n\nThe data table renders rows.\n"))).toHaveLength(1);
+    expect(findAnswerFirstProblems(OVERVIEW, page('<Demo name="x" />\n\nThe data table renders rows.\n'))).toHaveLength(1);
+    expect(findAnswerFirstProblems(OVERVIEW, page("- The data table renders rows.\n"))).toHaveLength(1);
+    expect(findAnswerFirstProblems(OVERVIEW, page("```tsx\nconst table = 1;\n```\n"))).toHaveLength(1);
+  });
+
+  it("rejects an opening paragraph over 50 words", () => {
+    const long = `The data table ${"renders many rows ".repeat(20).trim()}.`;
+    const problems = findAnswerFirstProblems(OVERVIEW, page(long));
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("50");
+  });
+
+  it("rejects an opening that does not name the subject", () => {
+    expect(findAnswerFirstProblems(OVERVIEW, page("Rows, sorted and selected.\n"))).toHaveLength(1);
+  });
+
+  it("accepts the component name as a guide's subject", () => {
+    expect(findAnswerFirstProblems(GUIDE, page("The data table splits rows into pages.\n", "Pagination"))).toEqual([]);
+  });
+
+  it("leaves non-MDX files alone", () => {
+    expect(findAnswerFirstProblems(QUICK_START, "## Not prose\n")).toEqual([]);
   });
 });

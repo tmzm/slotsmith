@@ -55,7 +55,7 @@ describe("renderLlms", () => {
 
   it("links English pages only, with their descriptions, grouped by kind", () => {
     expect(text).not.toContain("/ar/");
-    expect(text).toMatch(/## Docs\n[\s\S]*- \[Title of \/theming\/\]\(https:\/\/slotsmith\.dev\/theming\/\): About \/theming\/\./);
+    expect(text).toMatch(/## Docs\n[\s\S]*- \[Title of \/theming\/\]\(https:\/\/slotsmith\.dev\/theming\/index\.md\): About \/theming\/\./);
     expect(text).toMatch(/## Components\n[\s\S]*Title of \/components\/data-table\//);
   });
 });
@@ -69,5 +69,24 @@ describe("renderLlmsFull", () => {
     expect(text.startsWith("# slotsmith\n")).toBe(true);
     expect(text).toContain("Source: https://slotsmith.dev/theming/\n\n# Theming\n\nTokens.");
     expect(text.indexOf("Theming")).toBeLessThan(text.indexOf("Data table API"));
+  });
+});
+
+describe("AI crawlers and Markdown copies", () => {
+  it("names each AI crawler, allows it, and keeps the sitemap line", () => {
+    const robots = renderRobots();
+    for (const bot of ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-User", "Claude-SearchBot", "PerplexityBot", "Perplexity-User", "Google-Extended", "Applebot-Extended", "CCBot"]) {
+      expect(robots).toContain(`User-agent: ${bot}\nAllow: /\n`);
+    }
+    expect(robots.indexOf("User-agent: *")).toBeGreaterThan(robots.indexOf("User-agent: CCBot"));
+    expect(robots.endsWith("Sitemap: https://slotsmith.dev/sitemap.xml\n")).toBe(true);
+  });
+
+  it("links llms.txt entries to their Markdown copies", () => {
+    expect(renderLlms([page("/theming/")])).toContain("- [Title of /theming/](https://slotsmith.dev/theming/index.md): About /theming/.");
+  });
+
+  it("adds a lastmod when a page has a date", () => {
+    expect(renderSitemap([{ path: "/theming/", lang: "en", lastmod: "2026-09-30T12:00:00+03:00" }])).toContain("<lastmod>2026-09-30T12:00:00+03:00</lastmod>");
   });
 });

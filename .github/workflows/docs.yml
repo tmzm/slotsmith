@@ -31,6 +31,10 @@ jobs:
       DOCS_BROWSER_CHANNEL: chromium
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history: each page's last-updated date is its newest commit, and a
+          # shallow clone has no dates at all.
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
         with:

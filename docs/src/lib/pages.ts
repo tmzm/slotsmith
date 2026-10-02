@@ -18,6 +18,7 @@ import { LANGS, t, type Lang } from "@/i18n";
 import { ADAPTER_LIBRARIES } from "@/lib/adapters";
 import { findProse, type Prose } from "@/lib/prose";
 import { SAMPLE_SOURCES } from "@/lib/samples";
+import { SITE } from "../../site.config.ts";
 
 type DocsEntry = CollectionEntry<"docs">;
 
@@ -38,7 +39,17 @@ export interface PageInfo {
   component?: ComponentSlug;
   /** The prose behind the page, when it has any. */
   prose?: Prose;
+  /**
+   * The files the page is made from, from the repository root: its MDX, or
+   * its template while it has none; the API and Adapters pages add the
+   * component's source folder. Its last-updated date is the newest commit
+   * touching any of them.
+   */
+  sources: string[];
 }
+
+const TEMPLATES = "docs/src/pages/[...lang]";
+const mdxSource = (prose: Prose) => `${SITE.docsDir}/${prose.sourcePath}`;
 
 /** The top-level docs pages, each `src/content/docs/en/<slug>.mdx`. */
 export const DOC_SLUGS = [
@@ -112,6 +123,10 @@ function componentPage(lang: Lang, meta: ComponentMeta, section: ComponentSectio
   const base = componentPageMeta(lang, meta, section);
   const prose = findProse(lang, base.proseSlug, lookup);
   const generatedComplete = section === "api" ? hasApiSample(meta.slug) : section === "adapters" ? hasAdapterSamples(meta.slug) : undefined;
+  const template = section.startsWith("guides/") ? "guides/[guide]" : section;
+  const sources = prose ? [mdxSource(prose)] : [`${TEMPLATES}/components/[component]/${template}.astro`];
+  if (section === "api" || section === "adapters") sources.push(`src/${meta.slug}/`);
+  if (section === "adapters") sources.push(`docs/samples/adapters/${meta.slug}/`);
   return {
     path: base.path,
     lang,
@@ -121,6 +136,7 @@ function componentPage(lang: Lang, meta: ComponentMeta, section: ComponentSectio
     stub: generatedComplete !== undefined ? !generatedComplete : !prose || prose.entry.data.draft === true,
     component: meta.slug,
     prose,
+    sources,
   };
 }
 
@@ -132,7 +148,7 @@ function componentPage(lang: Lang, meta: ComponentMeta, section: ComponentSectio
  */
 export function buildPages(lookup: (id: string) => DocsEntry | undefined, docSlugs: readonly string[] = DOC_SLUGS): PageInfo[] {
   return LANGS.flatMap((lang): PageInfo[] => [
-    { path: "/", lang, title: t(lang, "site.name"), description: t(lang, "site.positioning"), kind: "landing", stub: false },
+    { path: "/", lang, title: t(lang, "site.name"), description: t(lang, "site.positioning"), kind: "landing", stub: false, sources: [`${TEMPLATES}/index.astro`, "docs/src/components/landing/"] },
     ...docSlugs.map((slug): PageInfo => {
       const prose = findProse(lang, slug, lookup);
       if (!prose) throw new Error(`No prose for "${slug}": expected src/content/docs/en/${slug}.mdx.`);
@@ -144,6 +160,7 @@ export function buildPages(lookup: (id: string) => DocsEntry | undefined, docSlu
         kind: "doc",
         stub: prose.entry.data.draft === true,
         prose,
+        sources: [mdxSource(prose)],
       };
     }),
     ...COMPONENTS.flatMap((meta) => [

@@ -1,0 +1,32 @@
+---
+/**
+ * "Last updated <date>" under a docs page, from git (`lib/git-dates`). Renders
+ * nothing without a date: a shallow clone or an uncommitted page shows none
+ * rather than a guessed one.
+ */
+import { t, type Lang } from "@/i18n";
+
+interface Props {
+  lang: Lang;
+  /** ISO 8601, or null for no date. */
+  date: string | null;
+}
+
+const { lang, date } = Astro.props;
+// Latin digits in Arabic too, as the rest of the site writes numbers.
+const formatted = date ? new Intl.DateTimeFormat(lang === "ar" ? "ar-u-nu-latn" : "en", { dateStyle: "long", timeZone: "UTC" }).format(new Date(date)) : "";
+const [before = "", after = ""] = t(lang, "common.lastUpdated", { date: "\u0000" }).split("\u0000");
+---
+{date && (
+  <p class="last-updated">
+    {before}<time datetime={date}>{formatted}</time>{after}
+  </p>
+)}
+
+<style>
+  .last-updated {
+    margin-block: 0.5rem 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+</style>

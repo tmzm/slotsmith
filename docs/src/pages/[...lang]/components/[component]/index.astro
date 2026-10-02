@@ -3,7 +3,8 @@
  * A component's overview page. The prose is `components/<slug>/index.mdx`,
  * whose `##` headings follow `OVERVIEW_HEADINGS` (scripts/check-structure.ts):
  * Overview and its live demo, Install, Quick start, Guides, Reference,
- * Adapters, Accessibility, Limitations. The MDX uses the blocks below by name,
+ * Adapters, Accessibility, Limitations, FAQ (its questions in the
+ * frontmatter, so the page's `FAQPage` JSON-LD reads the same list). The MDX uses the blocks below by name,
  * without props: the template stores the slug and the languages in the page's
  * component context first. On an Arabic page with no Arabic MDX the blocks
  * follow the English prose, while their links stay on the Arabic pages.
@@ -11,6 +12,7 @@
  */
 import ComponentPage from "@/components/ComponentPage.astro";
 import Demo from "@/components/Demo.astro";
+import Faq from "@/components/Faq.astro";
 import Note from "@/components/Note.astro";
 import GuideList from "@/components/reference/GuideList.astro";
 import InstallBlock from "@/components/reference/InstallBlock.astro";
@@ -30,8 +32,8 @@ const { lang: langParam, component } = Astro.params;
 const lang = langFromParam(langParam);
 const { slug } = componentMeta(component);
 const prose = await getOptionalProse(lang, `components/${slug}`);
-setComponentContext(Astro.locals, { slug, lang, contentLang: prose && !prose.translated ? "en" : lang });
+setComponentContext(Astro.locals, { slug, lang, contentLang: prose && !prose.translated ? "en" : lang, faq: prose?.entry.data.faq });
 
-const components = { Install: InstallBlock, QuickStart, GuideList, Reference: ReferenceLinks, Demo, KeyboardTable, Note };
+const components = { Install: InstallBlock, QuickStart, GuideList, Reference: ReferenceLinks, Demo, KeyboardTable, Note, Faq };
 ---
 <ComponentPage lang={lang} component={component} section="index" components={components} />

@@ -20,6 +20,13 @@ describe("resolveProse", () => {
     expect(prose.sourcePath).toBe("src/content/docs/en/theming.mdx");
   });
 
+  it("points at the entry's own file, so an index.mdx is not read as <folder>.mdx", () => {
+    const overview = { id: "en/components/data-table", filePath: "src/content/docs/en/components/data-table/index.mdx", data: { title: "t", description: "d" } } as never;
+    expect(resolveProse("en", "components/data-table", (id) => (id === "en/components/data-table" ? overview : undefined)).sourcePath).toBe(
+      "src/content/docs/en/components/data-table/index.mdx",
+    );
+  });
+
   it("reads nested slugs", () => {
     const slug = "components/data-table/guides/tree-rows";
     expect(resolveProse("en", slug, only(`en/${slug}`)).entry.id).toBe(`en/${slug}`);

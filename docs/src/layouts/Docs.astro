@@ -1,10 +1,11 @@
 ---
 /**
- * Docs page layout: Base plus the sidebar column, the "On this page" list and
- * the "Edit this page" link.
+ * Docs page layout: Base plus the sidebar column, the "On this page" list,
+ * the "Edit this page" link and the page's last-updated date from git.
  */
 import Base, { type Props as BaseProps } from "./Base.astro";
 import Sidebar from "@/components/Sidebar.astro";
+import LastUpdated from "@/components/LastUpdated.astro";
 import { t } from "@/i18n";
 import { editUrl } from "@/lib/page";
 
@@ -14,9 +15,11 @@ interface Props extends BaseProps {
   /** Set to "en" when the contents links are English on an Arabic page. */
   tocLang?: "en";
   toc?: { id: string; text: string; depth: 2 | 3 }[];
+  /** The newest commit date of the page's sources; null hides the date. */
+  lastUpdated?: string | null;
 }
 
-const { sourcePath, toc = [], tocLang, ...base } = Astro.props;
+const { sourcePath, toc = [], tocLang, lastUpdated = null, ...base } = Astro.props;
 const { lang, path } = base;
 ---
 <Base {...base}>
@@ -24,7 +27,12 @@ const { lang, path } = base;
   <div class="docs" data-toc={toc.length > 0 || undefined}>
     <article class="docs__article">
       <slot />
-      {sourcePath && <a class="docs__edit" href={editUrl(sourcePath)}>{t(lang, "common.editPage")}</a>}
+      {(sourcePath || lastUpdated) && (
+        <footer class="docs__meta">
+          {sourcePath && <a class="docs__edit" href={editUrl(sourcePath)}>{t(lang, "common.editPage")}</a>}
+          <LastUpdated lang={lang} date={lastUpdated} />
+        </footer>
+      )}
     </article>
     {
       toc.length > 0 && (
@@ -42,3 +50,19 @@ const { lang, path } = base;
     }
   </div>
 </Base>
+
+<style>
+  /* "Edit this page" and the last-updated date, stacked under the article. */
+  .docs__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-block-start: 3rem;
+  }
+
+  .docs__meta :global(.docs__edit),
+  .docs__meta :global(.last-updated) {
+    margin: 0;
+  }
+</style>

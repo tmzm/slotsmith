@@ -1,0 +1,14 @@
+---
+/**
+ * Structured data: one `<script type="application/ld+json">` per object.
+ * `<` is escaped so no string in the data can close the script early.
+ */
+interface Props {
+  data: object[];
+}
+
+const { data } = Astro.props;
+// JSON's own escape for `<`, so the parsed data is unchanged.
+const serialise = (item: object) => JSON.stringify(item).replace(/</g, "\\u003c");
+---
+{data.map((item) => <script type="application/ld+json" is:inline set:html={serialise(item)} />)}

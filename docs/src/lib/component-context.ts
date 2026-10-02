@@ -1,4 +1,5 @@
 import type { ComponentSlug } from "@/data/components";
+import type { FaqItem } from "@/data/faq";
 import type { Lang } from "@/i18n";
 
 /**
@@ -15,6 +16,8 @@ export interface ComponentContext {
   lang: Lang;
   /** The language the prose is shown in: an Arabic page with no Arabic MDX shows English, and its blocks follow the prose. */
   contentLang: Lang;
+  /** The overview's frontmatter FAQ, for `<Faq />`. */
+  faq?: FaqItem[];
 }
 
 const KEY = Symbol.for("slotsmith-docs.component-context");

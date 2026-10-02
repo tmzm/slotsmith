@@ -1,5 +1,5 @@
 ---
-/** Docs page header: display title, the answer-first lead, and a mono `{key} value` meta row. */
+/** Docs page header: display title, the answer-first lead, a mono `{key} value` meta row, then anything slotted (the Markdown controls). */
 interface Props {
   title: string;
   lead?: string;
@@ -29,4 +29,5 @@ const { title, lead, meta, contentLang } = Astro.props;
       </ul>
     )
   }
+  <slot />
 </header>

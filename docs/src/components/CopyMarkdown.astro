@@ -1,0 +1,106 @@
+---
+/**
+ * The page's Markdown copy, for pasting into an AI chat or a note: a button
+ * that fetches `<path>index.md` and copies it, and a plain "View as Markdown"
+ * link that works without JavaScript. The button stays hidden until the
+ * script runs, so no dead control shows when it does not.
+ */
+import { dirOf, t, type Lang } from "@/i18n";
+
+interface Props {
+  lang: Lang;
+  /** The Markdown copy's URL, site-relative (`/theming/index.md`). */
+  href: string;
+}
+
+const { lang, href } = Astro.props;
+---
+{/* The labels follow the page's language, even inside a header showing English prose. */}
+<div class="copy-markdown mono" lang={lang} dir={dirOf(lang)}>
+  <button
+    type="button"
+    class="copy-markdown__button"
+    data-copy-markdown={href}
+    data-label={t(lang, "common.copyMarkdown")}
+    data-label-copied={t(lang, "common.copied")}
+    data-label-failed={t(lang, "common.copyMarkdownFailed")}
+    hidden
+  >
+    {t(lang, "common.copyMarkdown")}
+  </button>
+  <a class="copy-markdown__link" href={href} type="text/markdown">{t(lang, "common.viewMarkdown")}</a>
+  <span class="visually-hidden" role="status" data-copy-markdown-status></span>
+</div>
+
+<script is:inline>
+  (() => {
+    for (const button of document.querySelectorAll("[data-copy-markdown]")) {
+      if (!navigator.clipboard) continue;
+      button.hidden = false;
+      const status = button.parentElement.querySelector("[data-copy-markdown-status]");
+      let timer;
+      const say = (label) => {
+        button.textContent = label;
+        if (status) status.textContent = label;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          button.textContent = button.dataset.label;
+          if (status) status.textContent = "";
+        }, 1500);
+      };
+      button.addEventListener("click", async () => {
+        try {
+          const response = await fetch(button.dataset.copyMarkdown);
+          if (!response.ok) throw new Error(String(response.status));
+          await navigator.clipboard.writeText(await response.text());
+          say(button.dataset.labelCopied);
+        } catch {
+          say(button.dataset.labelFailed);
+        }
+      });
+    }
+  })();
+</script>
+
+<style>
+  .copy-markdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    margin-block: 1rem 0;
+    font-size: 0.8125rem;
+  }
+
+  .copy-markdown__button {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--panel);
+    color: var(--ink-2);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      border-color 320ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+
+  .copy-markdown__button:hover {
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+
+  .copy-markdown__link {
+    color: var(--muted);
+  }
+
+  .copy-markdown__link:hover {
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .copy-markdown__button {
+      transition: none;
+    }
+  }
+</style>

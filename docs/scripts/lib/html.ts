@@ -208,3 +208,58 @@ export function findUnusedSamples(pages: PageFacts[], names: string[], imports: 
   for (const page of pages) for (const name of page.samples) visit(name);
   return names.filter((name) => !used.has(name)).sort();
 }
+
+const LD_JSON = /<script\b[^>]*\btype\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script\s*>/gi;
+const FAQ_SUMMARY = /<summary\b[^>]*\bdata-faq-question\b[^>]*>([\s\S]*?)<\/summary\s*>/gi;
+
+const typesOf = (item: unknown): string[] => {
+  const type = (item as { "@type"?: unknown } | null)?.["@type"];
+  return Array.isArray(type) ? type.map(String) : type === undefined ? [] : [String(type)];
+};
+
+/**
+ * Generative-engine problems on one built page: its JSON-LD must parse, the
+ * landing must describe the package (`SoftwareSourceCode`) and every other
+ * page its trail (`BreadcrumbList`); a visible FAQ and its `FAQPage` must
+ * list the same questions in the same order; and the page must link its
+ * Markdown copy, which must start with `# <title>` (the article's headline,
+ * or the package's name on the landing).
+ *
+ * @param path - The page's path with trailing slash.
+ * @param html - Its HTML.
+ * @param markdown - Its `<path>index.md`, or null when there is none.
+ */
+export function findGeoProblems(path: string, html: string, markdown: string | null): string[] {
+  const problems: string[] = [];
+  const data: unknown[] = [];
+  const blocks = [...html.matchAll(LD_JSON)];
+  if (blocks.length === 0) problems.push(`no application/ld+json block on ${path}`);
+  for (const [, json] of blocks) {
+    try {
+      data.push(JSON.parse(json!));
+    } catch {
+      problems.push(`an application/ld+json block on ${path} does not parse`);
+    }
+  }
+  const ofType = (type: string) => data.find((item) => typesOf(item).includes(type)) as Record<string, unknown> | undefined;
+  const landing = path === "/" || /^\/[a-z]{2}\/$/.test(path);
+  if (landing && !ofType("SoftwareSourceCode")) problems.push(`no SoftwareSourceCode JSON-LD on the landing ${path}`);
+  if (!landing && !ofType("BreadcrumbList")) problems.push(`no BreadcrumbList JSON-LD on ${path}`);
+
+  const markup = (ofType("FAQPage")?.mainEntity as { name?: string }[] | undefined)?.map((question) => question.name ?? "") ?? [];
+  const markupless = html.replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "");
+  const visible = [...markupless.matchAll(FAQ_SUMMARY)].map(([, inner]) => decode(inner!.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim());
+  const same = visible.length === markup.length && visible.every((question, index) => question === markup[index]!.replace(/\s+/g, " ").trim());
+  if (!same) problems.push(`the FAQ on ${path} shows ${JSON.stringify(visible)} but its FAQPage JSON-LD lists ${JSON.stringify(markup)}`);
+
+  const alternate = [...tags(markupless)].find(
+    ({ name, attrs }) => name === "link" && attrs.get("rel")?.toLowerCase().split(/\s+/).includes("alternate") && attrs.get("type") === "text/markdown",
+  );
+  if (!alternate) problems.push(`no <link rel="alternate" type="text/markdown"> on ${path}`);
+  else if (!alternate.attrs.get("href")?.endsWith(`${path}index.md`)) problems.push(`the Markdown link on ${path} points at ${alternate.attrs.get("href")}, expected …${path}index.md`);
+
+  const title = String((landing ? ofType("SoftwareSourceCode")?.name : ofType("TechArticle")?.headline) ?? "");
+  if (markdown === null) problems.push(`no ${path}index.md for ${path}`);
+  else if (title && !markdown.startsWith(`# ${title}\n`)) problems.push(`${path}index.md does not start with "# ${title}"`);
+  return problems;
+}

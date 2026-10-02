@@ -1,6 +1,19 @@
 ---
 title: "Data table"
 description: "The slotsmith data table: sorting, selection, pagination, tree rows, virtual rows and row reorder, with every part replaceable by your design system's."
+faq:
+  - q: "Does the data table support server-side pagination?"
+    a: "Yes. Set manualPagination, pass the current page as data and the total as rowCount, and fetch the next page in onPaginationChange. Server-side sorting works the same way with manualSorting."
+    link: "/components/data-table/guides/server-data/"
+  - q: "Can I use virtual rows and row reorder together?"
+    a: "No. VirtualDataTable ignores row reorder, so a long list is either windowed or reorderable. A reorderable table can use pagination instead."
+    link: "/components/data-table/guides/virtual-rows/"
+  - q: "Can I render custom cells?"
+    a: "Yes. Columns are TanStack Table column definitions, so a column's cell function can return any React node. To change the cell element itself, replace the Cell slot."
+    link: "/components/data-table/api/#slots"
+  - q: "Which TanStack Table version does it need?"
+    a: "TanStack Table 9: install @tanstack/react-table ^9.2.0 next to slotsmith. VirtualDataTable also needs @tanstack/react-virtual ^3.10.0."
+    link: "/components/data-table/#install"
 ---
 
 The slotsmith data table is a React table built on TanStack Table, with sorting, selection, pagination, tree rows, virtual rows and row reorder built in. Every part it renders is a slot: keep the fallbacks, or pass your design system's own components.
@@ -69,3 +82,7 @@ Every label can be translated or replaced; see [Labels & locales](./api/#labels)
 - No dragging between tables, no multi-row drag, and no moving a row to another parent. See [row reorder](./guides/row-reorder/).
 - A custom `Row` slot must keep a stable identity. See [row reorder](./guides/row-reorder/).
 </Note>
+
+## FAQ
+
+<Faq />

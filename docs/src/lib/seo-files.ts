@@ -46,9 +46,34 @@ export function renderSitemap(pages: { path: string; lang: Lang; lastmod?: strin
   ].join("\n");
 }
 
-/** `robots.txt`: everything is allowed, and the sitemap is named. */
+/**
+ * The AI crawlers `robots.txt` names, each allowed: search and answer
+ * engines read the docs (and their Markdown copies) to answer questions about
+ * slotsmith, which is what public docs are for.
+ */
+export const AI_CRAWLERS = [
+  "GPTBot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "ClaudeBot",
+  "Claude-User",
+  "Claude-SearchBot",
+  "PerplexityBot",
+  "Perplexity-User",
+  "Google-Extended",
+  "Applebot-Extended",
+  "CCBot",
+] as const;
+
+/** `robots.txt`: one allowing block per AI crawler, then every other crawler, then the sitemap. */
 export function renderRobots(): string {
-  return `User-agent: *\nAllow: /\n\nSitemap: ${SITE.url}/sitemap.xml\n`;
+  const blocks = [...AI_CRAWLERS, "*"].map((agent) => `User-agent: ${agent}\nAllow: /\n`);
+  return `${blocks.join("\n")}\nSitemap: ${SITE.url}/sitemap.xml\n`;
+}
+
+/** The URL of a page's Markdown copy: `<canonical URL>index.md`. */
+export function markdownUrl(lang: Lang, path: string): string {
+  return `${canonicalUrl(lang, path)}index.md`;
 }
 
 /** The `llms.txt` sections, in order, and the page kinds each lists. */
@@ -71,11 +96,11 @@ function llmsHeader(): string {
  * translations of the same content.
  *
  * @param pages - The pages to list, in reading order.
- * @param href - The URL each link points at. Defaults to the page's canonical URL.
+ * @param href - The URL each link points at. Defaults to the page's Markdown copy.
  */
 export function renderLlms(
   pages: { path: string; lang: Lang; title: string; description: string; kind: PageKind }[],
-  href: (page: { path: string; lang: Lang }) => string = (page) => canonicalUrl(page.lang, page.path),
+  href: (page: { path: string; lang: Lang }) => string = (page) => markdownUrl(page.lang, page.path),
 ): string {
   const english = pages.filter((page) => page.lang === "en");
   const sections = LLMS_SECTIONS.map(({ title, kinds }) => {

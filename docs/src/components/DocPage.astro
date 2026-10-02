@@ -2,14 +2,21 @@
 /**
  * One docs page: layout, header, prose (or the stub marker when there is none).
  * Every page template except the landing renders through this, so the stub
- * convention and the answer-first header live in one place.
+ * convention, the answer-first header, the Markdown controls, the JSON-LD
+ * (`TechArticle`, `BreadcrumbList`, and `FAQPage` when the prose has an FAQ)
+ * and the last-updated date live in one place.
  */
 import Docs from "@/layouts/Docs.astro";
+import CopyMarkdown from "@/components/CopyMarkdown.astro";
 import PageHeader from "@/components/PageHeader.astro";
 import Prose from "@/components/Prose.astro";
 import { render } from "astro:content";
-import { t, type Lang } from "@/i18n";
+import { localePath, t, type Lang } from "@/i18n";
+import { lastModified } from "@/lib/git-dates";
+import { canonicalUrl } from "@/lib/page";
+import { allPages } from "@/lib/pages";
 import type { Prose as ProseData } from "@/lib/prose";
+import { breadcrumbs, faqPage, techArticle } from "@/lib/structured-data";
 
 interface Props {
   lang: Lang;
@@ -42,9 +49,33 @@ const toc = [
   ...headings.filter((h) => h.depth === 2 || h.depth === 3).map((h) => ({ id: h.slug, text: h.text, depth: h.depth as 2 | 3 })),
   ...own,
 ];
+
+// The page as the sitemap knows it: its source files give the last-updated date.
+const pages = (await allPages()).filter((page) => page.lang === lang);
+const info = pages.find((page) => page.path === path);
+if (!info) throw new Error(`No page "${path}" in allPages() for ${lang}.`);
+const dateModified = lastModified(info.sources);
+// The trail: the landing, then every page whose path this one's starts with.
+const trail = [
+  { name: t(lang, "site.name"), url: canonicalUrl(lang, "/") },
+  ...pages
+    .filter((page) => page.kind !== "landing" && path.startsWith(page.path) && page.path !== path)
+    .sort((a, b) => a.path.length - b.path.length)
+    .map((page) => ({ name: page.title, url: canonicalUrl(lang, page.path) })),
+  { name: title, url: canonicalUrl(lang, path) },
+];
+const faq = prose?.entry.data.faq;
+const jsonLd = [
+  // `inLanguage` is the text's language: English on an Arabic page that shows English prose.
+  techArticle({ title, description, url: canonicalUrl(lang, path), lang: contentLang ?? lang, dateModified }),
+  breadcrumbs(trail),
+  ...(faq?.length ? [faqPage(faq)] : []),
+];
 ---
-<Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub} tocLang={contentLang}>
-  <PageHeader title={title} lead={prose ? undefined : description} meta={meta} contentLang={contentLang} />
+<Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub} tocLang={contentLang} jsonLd={jsonLd} lastUpdated={dateModified}>
+  <PageHeader title={title} lead={prose ? undefined : description} meta={meta} contentLang={contentLang}>
+    <CopyMarkdown lang={lang} href={`${localePath(lang, path)}index.md`} />
+  </PageHeader>
   {prose ? <Prose prose={prose} components={components} /> : stub && <p>{t(lang, "common.stub")}</p>}
   <slot />
 </Docs>

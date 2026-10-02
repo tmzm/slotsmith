@@ -12,7 +12,8 @@ export interface Prose {
   sourcePath: string;
 }
 
-const sourceOf = (id: string) => `src/content/docs/${id}.mdx`;
+/** The entry's MDX file, relative to `docs/`. Its id drops a trailing `/index`, so the loader's own `filePath` is read first. */
+const sourceOf = (entry: DocsEntry) => entry.filePath?.replace(/^\.\//, "") ?? `src/content/docs/${entry.id}.mdx`;
 
 /** Resolves prose through an injected lookup, so it runs outside Astro. Returns undefined when English is missing. */
 export function findProse(lang: Lang, slug: string, lookup: (id: string) => DocsEntry | undefined): Prose | undefined {
@@ -20,9 +21,9 @@ export function findProse(lang: Lang, slug: string, lookup: (id: string) => Docs
   if (!en) return undefined; // English is the source: an Arabic-only entry is an orphan
   if (lang === "ar") {
     const ar = lookup(`ar/${slug}`);
-    if (ar) return { entry: ar, lang, translated: true, sourcePath: sourceOf(ar.id) };
+    if (ar) return { entry: ar, lang, translated: true, sourcePath: sourceOf(ar) };
   }
-  return { entry: en, lang, translated: lang === "en", sourcePath: sourceOf(en.id) };
+  return { entry: en, lang, translated: lang === "en", sourcePath: sourceOf(en) };
 }
 
 /** Like `findProse`, but a missing English entry is an error naming the slug. */

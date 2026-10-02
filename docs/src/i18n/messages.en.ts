@@ -80,6 +80,26 @@ export const en = {
   "component.adaptersDescription": "Using the slotsmith {component} with shadcn/ui, MUI, Chakra, Ant Design and Radix Themes.",
 
   "common.stub": "This page is being written.",
+  "common.lastUpdated": "Last updated {date}",
+  "common.copyMarkdown": "Copy as Markdown",
+  "common.copyMarkdownFailed": "Could not copy. Use View as Markdown.",
+  "common.viewMarkdown": "View as Markdown",
+
+  // The landing FAQ. Each answer comes from the docs and links to where it is shown; the JSON-LD uses the same text.
+  "faq.title": "FAQ",
+  "faq.more": "See it in the docs",
+  "faq.nextjs.q": "Does slotsmith work with the Next.js App Router?",
+  "faq.nextjs.a": "Yes. Every entry point starts with \"use client\", so you can import a component straight into a Server Component file. It renders on the server and hydrates on the client.",
+  "faq.tailwind.q": "Do I need Tailwind?",
+  "faq.tailwind.a": "No. Each component ships a plain CSS stylesheet, themed with CSS custom properties. Tailwind is only needed if your own design system uses it.",
+  "faq.designSystem.q": "Does it work with my existing design system?",
+  "faq.designSystem.a": "Yes. Every part is a slot: pass your design system's button, checkbox or select and it replaces the fallback. The Adapters pages show shadcn/ui, MUI, Chakra, Ant Design and Radix Themes as examples.",
+  "faq.bundle.q": "How much does one component add to my bundle?",
+  "faq.bundle.a": "Each component has its own entry point. The data table entry is {size} gzipped, not counting React, TanStack Table and Floating UI, which it imports. The Trust page lists every entry.",
+  "faq.react18.q": "Does it work with React 18?",
+  "faq.react18.a": "Yes. The peer dependency range is react {react}, so React 18 and React 19 both work.",
+  "faq.license.q": "What is the license?",
+  "faq.license.a": "{license}. You can use slotsmith in commercial and closed-source projects.",
 
   // Component API page: section headings and their leads. {code} placeholders render as code.
   "api.slots": "Slots",

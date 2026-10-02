@@ -4,6 +4,10 @@
  * Checks `docs/dist` after `astro build`:
  * - every page's head (title, description, canonical, hreflang), internal links
  *   and `#id` targets, and that every sample is shown somewhere;
+ * - every page's JSON-LD (it parses; `SoftwareSourceCode` on the landing,
+ *   `BreadcrumbList` elsewhere; an `FAQPage` lists the visible FAQ's
+ *   questions in order) and its Markdown copy (`<path>index.md`, linked from
+ *   the head, starting with `# <title>`);
  * - in a browser: no console error or warning and no uncaught error on any
  *   page, axe (WCAG 2.2 AA) on every fallback demo (findings allowlisted in
  *   `lib/axe-allowlist.ts` are recorded as known library issues, not
@@ -19,13 +23,13 @@
  * to use the bundled build, as CI does. `DOCS_SKIP_VERIFY=1` skips the whole
  * run (Netlify's build image has no browser; CI verifies every change).
  */
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { chromium, type Page } from "playwright";
 import type { ComponentReference } from "../src/lib/reference.ts";
-import { findDeadLinks, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
+import { findDeadLinks, findGeoProblems, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
 import { serveDir } from "./lib/serve.ts";
 import { sortViolations, type KnownFinding } from "./lib/axe-allowlist.ts";
 import { SLOT_SELECTORS } from "./slot-selectors.ts";
@@ -225,15 +229,20 @@ async function main(): Promise<void> {
   }
   const files = walk(distDir).map(toUrlPath);
   const pageFiles = files.filter((file) => file.endsWith("/index.html")).sort();
+  const geoProblems: string[] = [];
   const facts = pageFiles.map((file) => {
     const path = file.slice(0, -"index.html".length);
-    return readPage(path, readFileSync(resolve(distDir, `.${file}`), "utf8"));
+    const html = readFileSync(resolve(distDir, `.${file}`), "utf8");
+    const markdownFile = resolve(distDir, `.${path}index.md`);
+    geoProblems.push(...findGeoProblems(path, html, existsSync(markdownFile) ? readFileSync(markdownFile, "utf8") : null));
+    return readPage(path, html);
   });
 
   const problems = [
     ...findMetaProblems(facts),
     ...findDeadLinks(facts, new Set(files)),
     ...findUnusedSamples(facts, sampleNames(), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),
+    ...geoProblems,
   ];
 
   const reference = referenceAttributes();

@@ -10,16 +10,23 @@ import Languages from "@/components/landing/Languages.astro";
 import Agents from "@/components/landing/Agents.astro";
 import TrustStrip from "@/components/landing/TrustStrip.astro";
 import Close from "@/components/landing/Close.astro";
+import Faq from "@/components/Faq.astro";
 import MotionLoader from "@/components/landing/MotionLoader.astro";
+import { landingFaq } from "@/data/faq";
 import { langFromParam, langPaths, t } from "@/i18n";
+import { getFacts } from "@/lib/facts";
+import { faqPage, softwareSourceCode } from "@/lib/structured-data";
 
 export function getStaticPaths() {
   return langPaths();
 }
 
 const lang = langFromParam(Astro.params.lang);
+// The FAQ and its FAQPage JSON-LD are one list, so the markup says what the page shows.
+const faq = landingFaq(lang);
+const jsonLd = [softwareSourceCode(getFacts(), lang), faqPage(faq)];
 ---
-<Base lang={lang} title={null} description={t(lang, "site.positioning")} path="/">
+<Base lang={lang} title={null} description={t(lang, "site.positioning")} path="/" jsonLd={jsonLd}>
   {lang === "en" && <HashRedirect />}
   <Hero lang={lang} />
   <Swap lang={lang} />
@@ -29,6 +36,7 @@ const lang = langFromParam(Astro.params.lang);
   <Languages lang={lang} />
   <Agents lang={lang} />
   <TrustStrip lang={lang} />
+  <Faq items={faq} lang={lang} />
   <Close lang={lang} />
   <MotionLoader />
 </Base>
