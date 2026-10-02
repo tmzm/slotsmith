@@ -34,3 +34,4 @@ coverage
 # Misc
 .cache
 *.local
+graphify-out/
