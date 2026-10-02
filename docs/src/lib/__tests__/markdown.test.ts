@@ -47,6 +47,19 @@ describe("pageMarkdown", () => {
     expect(markdown).toContain("### Does it sort?\n\nYes. See https://slotsmith.dev/components/data-table/guides/sorting-and-selection/");
   });
 
+  it("leaves a capitalised tag inside inline code alone", async () => {
+    const markdown = await pageMarkdown(prosePage("Pass `<Button>` as the `Trigger` slot, then read on.\n\nThe end.\n"));
+    expect(markdown).toContain("Pass `<Button>` as the `Trigger` slot, then read on.");
+    expect(markdown).toContain("The end.");
+  });
+
+  it("keeps the rest of the text when a block has no closing tag", async () => {
+    const markdown = await pageMarkdown(prosePage('Theming starts here.\n\n<Demo name="landing/hero-table">\n\nThe last paragraph.\n'));
+    expect(markdown).toContain("Theming starts here.");
+    expect(markdown).toContain("```tsx\n" + sampleSource("landing/hero-table").code.trim() + "\n```");
+    expect(markdown).toContain("The last paragraph.");
+  });
+
   it("says a stub is being written", async () => {
     const stub: PageInfo = { path: "/roadmap/", lang: "en", title: "Roadmap", description: "Next.", kind: "doc", stub: true, sources: [] };
     expect(await pageMarkdown(stub)).toBe("# Roadmap\n\n> Next.\n\nThis page is being written.\n");

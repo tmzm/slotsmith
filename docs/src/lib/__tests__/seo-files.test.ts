@@ -89,4 +89,14 @@ describe("AI crawlers and Markdown copies", () => {
   it("adds a lastmod when a page has a date", () => {
     expect(renderSitemap([{ path: "/theming/", lang: "en", lastmod: "2026-09-30T12:00:00+03:00" }])).toContain("<lastmod>2026-09-30T12:00:00+03:00</lastmod>");
   });
+
+  it("keeps the newest date by time, not by string order, across offsets", () => {
+    // 21:00Z is newer than 23:00+03:00 (20:00Z), though it sorts lower as a string.
+    const xml = renderSitemap([
+      { path: "/theming/", lang: "en", lastmod: "2026-09-30T23:00:00+03:00" },
+      { path: "/theming/", lang: "ar", lastmod: "2026-09-30T21:00:00+00:00" },
+    ]);
+    expect(xml).toContain("<lastmod>2026-09-30T21:00:00+00:00</lastmod>");
+    expect(xml).not.toContain("23:00:00+03:00");
+  });
 });

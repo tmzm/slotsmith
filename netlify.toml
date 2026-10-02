@@ -12,7 +12,9 @@
   # measured on a developer machine, likely longer on Netlify's build image),
   # redirects, astro build, and the verifier (skipped here, see below).
   # `git fetch --unshallow` keeps the full history for last-updated dates.
-  command = "git fetch --unshallow || true; cd .. && pnpm install --frozen-lockfile && pnpm build && pnpm --filter slotsmith-docs build"
+  # `command -v pnpm` is a fallback for PNPM_VERSION below, until a real deploy
+  # confirms the pin.
+  command = "git fetch --unshallow || true; command -v pnpm >/dev/null || npm install --global pnpm@11; cd .. && pnpm install --frozen-lockfile && pnpm build && pnpm --filter slotsmith-docs build"
 
 [build.environment]
   # The docs scripts run .ts files directly, which needs Node 22.18 or newer
@@ -31,3 +33,20 @@
   for = "/_astro/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Markdown copies of every page (<path>index.md) and the llms files are UTF-8:
+# without the charset, Arabic copies show as mojibake in a browser.
+[[headers]]
+  for = "/*.md"
+  [headers.values]
+    Content-Type = "text/markdown; charset=utf-8"
+
+[[headers]]
+  for = "/llms.txt"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
+
+[[headers]]
+  for = "/llms-full.txt"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"

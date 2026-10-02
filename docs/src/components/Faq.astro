@@ -93,9 +93,11 @@ const Wrapper = standalone ? "section" : "div";
     display: none;
   }
 
-  /* The disclosure mark, in mono gold: `+` closed, `−` open. */
+  /* The disclosure mark, in mono gold: `+` closed, `−` open. The empty alternative text keeps it out of
+     the question's accessible name; the plain declaration first is for browsers without that syntax. */
   .faq__question::after {
     content: "+";
+    content: "+" / "";
     flex: none;
     color: var(--gold-text);
     font-family: var(--font-mono);
@@ -104,6 +106,7 @@ const Wrapper = standalone ? "section" : "div";
 
   .faq__item[open] > .faq__question::after {
     content: "−";
+    content: "−" / "";
   }
 
   .faq__answer {

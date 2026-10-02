@@ -111,12 +111,39 @@ function tagEnd(text: string, start: number): { end: number; selfClosing: boolea
   return { end: text.length, selfClosing: true };
 }
 
-/** Replaces every capitalised JSX block in the prose with what `render` returns for it. */
+/** The `[start, end)` ranges of the inline code spans in a Markdown text: a backtick run up to the next run of the same length. */
+function codeSpans(text: string): [number, number][] {
+  const spans: [number, number][] = [];
+  const run = /`+/g;
+  for (let match = run.exec(text); match; match = run.exec(text)) {
+    const ticks = match[0];
+    const close = new RegExp(`(?<!\`)${ticks}(?!\`)`, "g");
+    close.lastIndex = match.index + ticks.length;
+    const found = close.exec(text);
+    if (!found) continue; // An unmatched run is literal text.
+    spans.push([match.index, found.index + ticks.length]);
+    run.lastIndex = found.index + ticks.length;
+  }
+  return spans;
+}
+
+/**
+ * Replaces every capitalised JSX block in the prose with what `render` returns
+ * for it. A tag inside an inline code span is text, not a block. A paired tag
+ * with no closing tag renders as if it closed itself, and the text after it
+ * is kept.
+ */
 async function replaceBlocks(text: string, render: (block: Block) => Promise<string>): Promise<string> {
   let out = "";
   let at = 0;
+  const spans = codeSpans(text);
   const open = /<([A-Z]\w*)\b/g;
   for (let match = open.exec(text); match; match = open.exec(text)) {
+    const span = spans.find(([start, stop]) => match!.index >= start && match!.index < stop);
+    if (span) {
+      open.lastIndex = span[1];
+      continue;
+    }
     const name = match[1]!;
     const { end, selfClosing } = tagEnd(text, match.index + match[0].length);
     const attrs = parseAttrs(text.slice(match.index + match[0].length, selfClosing ? end - 2 : end - 1));
@@ -124,8 +151,10 @@ async function replaceBlocks(text: string, render: (block: Block) => Promise<str
     let children: string | undefined;
     if (!selfClosing) {
       const close = text.indexOf(`</${name}>`, end);
-      children = text.slice(end, close === -1 ? text.length : close);
-      blockEnd = close === -1 ? text.length : close + name.length + 3;
+      if (close !== -1) {
+        children = text.slice(end, close);
+        blockEnd = close + name.length + 3;
+      }
     }
     out += text.slice(at, match.index) + (await render({ name, attrs, children }));
     at = blockEnd;

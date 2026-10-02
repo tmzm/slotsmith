@@ -23,8 +23,8 @@ export function renderSitemap(pages: { path: string; lang: Lang; lastmod?: strin
   const byPath = new Map<string, string | null | undefined>();
   for (const page of pages) {
     const known = byPath.get(page.path);
-    // The newest date any language of the page has.
-    if (!byPath.has(page.path) || (page.lastmod && (!known || page.lastmod > known))) byPath.set(page.path, page.lastmod);
+    // The newest date any language of the page has, compared as times: git dates carry their own UTC offsets.
+    if (!byPath.has(page.path) || (page.lastmod && (!known || Date.parse(page.lastmod) > Date.parse(known)))) byPath.set(page.path, page.lastmod);
   }
   const urls = [...byPath.entries()].flatMap(([path, lastmod]) =>
     LANGS.map((lang) =>
