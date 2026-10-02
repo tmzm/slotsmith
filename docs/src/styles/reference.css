@@ -27,9 +27,14 @@
   line-height: 1.5;
 }
 
+/* The two-column styling tables fit a phone without scrolling sideways. */
+.ref-table--narrow table {
+  min-inline-size: 0;
+}
+
 .ref-table th,
 .ref-table td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.625rem;
   border-block-end: 1px solid var(--line);
   text-align: start;
   vertical-align: top;
@@ -90,7 +95,11 @@
   unicode-bidi: isolate;
 }
 
-/* The name never breaks; a required or mode tag may drop below it. */
+/*
+ * The name sits on its own line, any tag below it. From 768px up a name never
+ * breaks; on phones a long camelCase name may break between its words
+ * (Type.astro's <wbr>), so its column stays narrow.
+ */
 .ref-name {
   min-inline-size: 6rem;
 }
@@ -98,18 +107,31 @@
 .ref-name code {
   display: block;
   font-weight: 600;
-  white-space: normal;
+  white-space: nowrap;
+}
+
+/* Chrome breaks at <wbr> even under nowrap; from 768px up the name's break points are removed. */
+@media (min-width: 768px) {
+  .ref-name wbr {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .ref-name code {
+    white-space: normal;
+  }
 }
 
 /* Types: mono, wrapping at their punctuation (Type.astro's <wbr>) so a long union stays inside its cell. */
 .ref-type {
-  min-inline-size: 10rem;
+  min-inline-size: 9rem;
   max-inline-size: 16rem;
 }
 
 /* Descriptions keep a readable measure; the table scrolls inside its region instead. */
 .ref-table .ref-desc-cell {
-  min-inline-size: 12rem;
+  min-inline-size: 10rem;
 }
 
 .ref-table .ref-default {
@@ -232,7 +254,11 @@
   font-size: 0.875rem;
 }
 
-/* On phones the region only scrolls sideways: no scroll inside a scroll. */
+/*
+ * On phones the region only scrolls sideways: no scroll inside a scroll. The
+ * tradeoff is that the header does not stick there, since it sticks only
+ * inside its own scrolling region.
+ */
 @media (max-width: 767px) {
   .ref-table {
     max-block-size: none;

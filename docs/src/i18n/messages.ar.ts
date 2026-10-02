@@ -113,7 +113,7 @@ export const ar: Record<MessageKey, string> = {
   "ref.kind": "النوع",
   "ref.slotProps": "الخصائص التي تستقبلها",
   "ref.fallback": "البديل الافتراضي",
-  "ref.dataAttributes": "سمات data-*",
+  "ref.dataAttributes": "سمات {attr}",
   "ref.fallbackSource": "مصدر البديل",
   "ref.domProps": "خصائص DOM:",
   "ref.noProps": "لا خصائص خاصة بها.",

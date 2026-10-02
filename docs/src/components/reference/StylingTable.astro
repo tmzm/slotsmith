@@ -30,7 +30,7 @@ const slotsFor = (name: string) =>
     .map(([slot]) => slot);
 const [before = "", after = ""] = t(lang, "ref.darkMode", { selector: "\u0000" }).split("\u0000");
 ---
-<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.classesLabel")}`}>
+<div class="ref-table ref-table--narrow" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.classesLabel")}`}>
   <table>
     <thead>
       <tr>
@@ -67,7 +67,7 @@ const [before = "", after = ""] = t(lang, "ref.darkMode", { selector: "\u0000" }
     </tbody>
   </table>
 </div>
-<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.tokensLabel")}`}>
+<div class="ref-table ref-table--narrow" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.tokensLabel")}`}>
   <table>
     <thead>
       <tr>

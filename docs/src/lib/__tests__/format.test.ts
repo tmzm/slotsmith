@@ -99,3 +99,10 @@ describe("typeBreaks", () => {
     expect(typeBreaks(type).join("")).toBe(type);
   });
 });
+
+describe("typeBreaks in defaults", () => {
+  it("also breaks long constants and indexed types", () => {
+    expect(typeBreaks("DEFAULT_PAGE_SIZE")).toEqual(["DEFAULT_", "PAGE_", "SIZE"]);
+    expect(typeBreaks('Ctx<T>["onRowClick"]')).toEqual(["Ctx<", "T>", '["onRowClick"]']);
+  });
+});

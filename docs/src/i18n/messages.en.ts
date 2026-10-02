@@ -111,7 +111,7 @@ export const en = {
   "ref.kind": "Kind",
   "ref.slotProps": "Props it receives",
   "ref.fallback": "Default fallback",
-  "ref.dataAttributes": "data-* attributes",
+  "ref.dataAttributes": "{attr} attributes",
   "ref.fallbackSource": "Fallback source",
   "ref.domProps": "DOM props:",
   "ref.noProps": "No props of its own.",

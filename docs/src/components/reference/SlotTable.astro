@@ -7,6 +7,7 @@
  */
 import "@/styles/reference.css";
 import { Code } from "astro:components";
+import Fill from "./Fill.astro";
 import Text from "./Text.astro";
 import Type from "./Type.astro";
 import type { ComponentSlug } from "@/data/components";
@@ -31,7 +32,7 @@ const reference = getReference(slug);
         <th scope="col">{t(lang, "ref.kind")}</th>
         <th scope="col">{t(lang, "ref.slotProps")}</th>
         <th scope="col">{t(lang, "ref.fallback")}</th>
-        <th scope="col" dir="ltr">{t(lang, "ref.dataAttributes")}</th>
+        <th scope="col"><Fill lang={lang} message="ref.dataAttributes" code={{ attr: "data-*" }} /></th>
       </tr>
     </thead>
     <tbody>

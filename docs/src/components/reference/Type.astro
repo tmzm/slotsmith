@@ -2,8 +2,8 @@
 /**
  * Code in a reference table: mono, left to right, with a `<wbr>` at each
  * place it may wrap. A type wraps after `<`, `(`, `,` and `|` (see
- * `typeBreaks`); a name (`camel`) wraps before each capital, so a long prop
- * name such as `resetSelectionOnPageChange` does not widen its column.
+ * `typeBreaks`); a name (`camel`) may wrap before each capital, which the
+ * table allows only on phones (see `.ref-name` in reference.css).
  */
 import { typeBreaks } from "@/lib/format";
 
