@@ -53,8 +53,7 @@ describe("netlifyRedirects", () => {
     }
   });
 
-  it("keeps the domain rule commented out", () => {
-    expect(body).toContain("# https://slotsmith-docs.netlify.app/* https://slotsmith.dev/:splat 301!");
-    expect(body).not.toMatch(/^https:/m);
+  it("forwards the old netlify.app address to the real domain", () => {
+    expect(body).toMatch(/^https:\/\/slotsmith-docs\.netlify\.app\/\*  https:\/\/slotsmith\.dev\/:splat  301!$/m);
   });
 });

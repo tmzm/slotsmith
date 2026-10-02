@@ -155,7 +155,7 @@
     "type": "git",
     "url": "git+https://github.com/tmzm/slotsmith.git"
   },
-  "homepage": "https://slotsmith-docs.netlify.app",
+  "homepage": "https://slotsmith.dev",
   "keywords": [
     "react",
     "table",

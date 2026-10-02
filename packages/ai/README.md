@@ -4,7 +4,7 @@ An [MCP](https://modelcontextprotocol.io) server that teaches AI coding agents t
 
 Everything it knows is generated from the library's source, so the agent reads the real API instead of guessing prop names.
 
-**[Setup guide on the docs site → slotsmith-docs.netlify.app/#/docs/ai-tools](https://slotsmith-docs.netlify.app/#/docs/ai-tools)**
+**[Setup guide on the docs site → slotsmith.dev/ai-tools/](https://slotsmith.dev/ai-tools/)**
 
 ## Setup
 

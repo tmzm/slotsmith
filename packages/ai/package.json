@@ -31,7 +31,7 @@
     "url": "git+https://github.com/tmzm/slotsmith.git",
     "directory": "packages/ai"
   },
-  "homepage": "https://slotsmith-docs.netlify.app/#/docs/ai-tools",
+  "homepage": "https://slotsmith.dev/ai-tools/",
   "bugs": {
     "url": "https://github.com/tmzm/slotsmith/issues"
   },

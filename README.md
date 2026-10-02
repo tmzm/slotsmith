@@ -11,7 +11,7 @@ Headless logic with finished fallbacks: ship a component as it comes, then repla
 [![types](https://img.shields.io/npm/types/slotsmith?color=e0a11b)](https://www.npmjs.com/package/slotsmith)
 [![stars](https://img.shields.io/github/stars/tmzm/slotsmith?color=e0a11b)](https://github.com/tmzm/slotsmith)
 
-**[Documentation and live examples → slotsmith-docs.netlify.app](https://slotsmith-docs.netlify.app)**
+**[Documentation and live examples → slotsmith.dev](https://slotsmith.dev)**
 
 </div>
 
@@ -117,10 +117,10 @@ Store the new order in the same event, and save it to a server afterwards; a tab
 
 | Component | Status | Docs |
 | --- | --- | --- |
-| **Data table** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/data-table) · sorting, pagination, selection that survives server pages, tree rows, drag-to-reorder rows, virtual rows, loading / error / empty states, i18n and RTL |
-| **Autocomplete** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/autocomplete) · a combobox that is also a select; single or multiple, remote options with debounce and paging, create-as-you-type, full keyboard and typeahead |
-| **File uploader** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/file-uploader) · drop zone, image tile or picker-only; queued uploads with progress, retry and real cancellation; validation by type, size and count |
-| **Date picker** | ✅ shipping | [Docs](https://slotsmith-docs.netlify.app/#/docs/date-picker) · one date, several or a range as plain `YYYY-MM-DD` strings that never shift across time zones; full keyboard grid, min / max and blocked dates, presets, locale week start and RTL |
+| **Data table** | ✅ shipping | [Docs](https://slotsmith.dev/components/data-table/) · sorting, pagination, selection that survives server pages, tree rows, drag-to-reorder rows, virtual rows, loading / error / empty states, i18n and RTL |
+| **Autocomplete** | ✅ shipping | [Docs](https://slotsmith.dev/components/autocomplete/) · a combobox that is also a select; single or multiple, remote options with debounce and paging, create-as-you-type, full keyboard and typeahead |
+| **File uploader** | ✅ shipping | [Docs](https://slotsmith.dev/components/file-uploader/) · drop zone, image tile or picker-only; queued uploads with progress, retry and real cancellation; validation by type, size and count |
+| **Date picker** | ✅ shipping | [Docs](https://slotsmith.dev/components/date-picker/) · one date, several or a range as plain `YYYY-MM-DD` strings that never shift across time zones; full keyboard grid, min / max and blocked dates, presets, locale week start and RTL |
 | More | 🔜 next | Same rules: headless logic, replaceable parts, fallbacks good enough to ship |
 
 ## Languages
@@ -341,7 +341,7 @@ claude mcp add slotsmith -- npx -y slotsmith-ai mcp
 ```
 
 Tools, resources and prompts are listed in the [package README](https://github.com/tmzm/slotsmith/tree/master/packages/ai#readme);
-the [AI tools guide](https://slotsmith-docs.netlify.app/#/docs/ai-tools) walks through
+the [AI tools guide](https://slotsmith.dev/ai-tools/) walks through
 each client.
 
 ## Principles

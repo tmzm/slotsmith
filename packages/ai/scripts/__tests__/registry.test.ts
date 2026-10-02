@@ -156,7 +156,7 @@ describe("shadcn registry", () => {
   });
 
   it("builds a registry index that lists every item without repeating its file content", () => {
-    const index = buildRegistryIndex(items, { name: "slotsmith", homepage: "https://slotsmith-docs.netlify.app" });
+    const index = buildRegistryIndex(items, { name: "slotsmith", homepage: "https://slotsmith.dev" });
     expect(index.$schema).toBe("https://ui.shadcn.com/schema/registry.json");
     expect(index.name).toBe("slotsmith");
     expect(index.items).toHaveLength(items.length);
@@ -183,7 +183,7 @@ describe("writeRegistry", () => {
       knowledgeDir: DEFAULT_OPTIONS.knowledgeDir,
       outDir: dir,
       registryName: "slotsmith",
-      homepage: "https://slotsmith-docs.netlify.app",
+      homepage: "https://slotsmith.dev",
     });
 
     const expected = [...items.map((item) => `${item.name.replace(/^slotsmith-/, "")}.json`), "registry.json"].sort();
@@ -196,7 +196,7 @@ describe("writeRegistry", () => {
   });
 
   it("empties the folder first, so a removed item leaves no stale file", () => {
-    writeRegistry({ knowledgeDir: DEFAULT_OPTIONS.knowledgeDir, outDir: dir, registryName: "slotsmith", homepage: "https://slotsmith-docs.netlify.app" });
+    writeRegistry({ knowledgeDir: DEFAULT_OPTIONS.knowledgeDir, outDir: dir, registryName: "slotsmith", homepage: "https://slotsmith.dev" });
     const before = readdirSync(dir).sort();
 
     // Plants a file no current component would produce, standing in for an
@@ -204,7 +204,7 @@ describe("writeRegistry", () => {
     // component, or a renamed adapter file).
     writeFileSync(join(dir, "removed-component.json"), "{}");
 
-    writeRegistry({ knowledgeDir: DEFAULT_OPTIONS.knowledgeDir, outDir: dir, registryName: "slotsmith", homepage: "https://slotsmith-docs.netlify.app" });
+    writeRegistry({ knowledgeDir: DEFAULT_OPTIONS.knowledgeDir, outDir: dir, registryName: "slotsmith", homepage: "https://slotsmith.dev" });
     expect(readdirSync(dir).sort()).toEqual(before);
   });
 });

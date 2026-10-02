@@ -185,7 +185,7 @@ export const DEFAULT_REGISTRY_OPTIONS: RegistryOptions = {
   knowledgeDir: join(PACKAGE_ROOT, "knowledge"),
   outDir: join(PACKAGE_ROOT, "registry"),
   registryName: "slotsmith",
-  homepage: "https://slotsmith-docs.netlify.app",
+  homepage: "https://slotsmith.dev",
 };
 
 /**

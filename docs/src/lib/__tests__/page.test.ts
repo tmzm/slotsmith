@@ -15,8 +15,8 @@ describe("pageTitle", () => {
 
 describe("canonicalUrl", () => {
   it("joins the site url and the language path", () => {
-    expect(canonicalUrl("ar", "/theming/")).toBe("https://slotsmith-docs.netlify.app/ar/theming/");
-    expect(canonicalUrl("en", "/")).toBe("https://slotsmith-docs.netlify.app/");
+    expect(canonicalUrl("ar", "/theming/")).toBe("https://slotsmith.dev/ar/theming/");
+    expect(canonicalUrl("en", "/")).toBe("https://slotsmith.dev/");
   });
 });
 
@@ -33,8 +33,8 @@ describe("alternates", () => {
     const links = alternates("/");
     expect(links).toHaveLength(3);
     const byLang = Object.fromEntries(links.map((link) => [link.hreflang, link.href]));
-    expect(byLang.en).toBe("https://slotsmith-docs.netlify.app/");
-    expect(byLang.ar).toBe("https://slotsmith-docs.netlify.app/ar/");
+    expect(byLang.en).toBe("https://slotsmith.dev/");
+    expect(byLang.ar).toBe("https://slotsmith.dev/ar/");
     expect(byLang["x-default"]).toBe(byLang.en);
   });
 });
