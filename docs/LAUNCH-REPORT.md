@@ -7,6 +7,12 @@
 
 ## Needs a decision
 
+- **Owner actions: deploy the docs on Netlify (https://slotsmith.dev).** The repo is ready (`netlify.toml` at the root); these steps stay in Netlify's UI and at the DNS host.
+  1. Netlify: Add new project, Import from Git, pick `tmzm/slotsmith` (the repo's default branch, `master`, is the production branch). Leave the build settings as they come: base directory `docs`, build command and publish directory (`dist`) are read from `netlify.toml`.
+  2. Project settings, Domain management: add `slotsmith.dev` and make it the primary domain. At the DNS host, point the apex at Netlify (the `A` record or ALIAS/ANAME Netlify shows, or use Netlify DNS by switching the nameservers) and `www` as a CNAME to the project's `.netlify.app` address.
+  3. Keep `slotsmith-docs.netlify.app` as a domain alias of the project (do not delete or rename it). The forced rule in `public/_redirects` then sends every path on it to `https://slotsmith.dev/` with a 301.
+  4. Domain management, HTTPS: provision the Let's Encrypt certificate once DNS resolves, and turn on Force HTTPS.
+  5. Deploys: the first build runs the library's test suite (the facts step), so expect about five to seven minutes. The verifier is skipped on Netlify (`DOCS_SKIP_VERIFY=1` in `netlify.toml`, no browser in the build image); CI verifies every change before merge. `DOCS_STRICT` stays off until the last stub pages are written.
 - **Known library accessibility issues, allowlisted in the verifier.** Fallback demos show the parts exactly as they ship, so these axe findings are not worked around in the samples. `scripts/lib/axe-allowlist.ts` lists them (rule, selector, reason); `verify-site` records them in `dist/a11y.json` under `knownLibraryIssues` instead of failing the build, and any other finding still fails it. Each needs a library fix; remove its entry once fixed.
   - `nested-interactive` on `.sfu__zone`: the file uploader's dropzone is `role="button"` with `tabIndex=0` (`useFileUploader` `dropzoneProps`) and holds the Browse `<button>`. Possible fix: drop the zone's button role and tab stop (Browse already opens the dialog), or drop Browse from the zone.
   - `target-size` on `.sac__clear` and `.sdp__clear`: the combobox and date picker clear buttons are 1.25rem (20px) square next to other targets, under WCAG 2.5.8's 24px. Possible fix: a 1.5rem box (the icon can stay small).

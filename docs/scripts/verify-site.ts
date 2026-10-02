@@ -16,7 +16,8 @@
  *
  * The browser is Playwright's Chromium. `DOCS_BROWSER_CHANNEL` picks an
  * installed channel instead (default `chrome`); set it to `chromium` or empty
- * to use the bundled build, as CI does.
+ * to use the bundled build, as CI does. `DOCS_SKIP_VERIFY=1` skips the whole
+ * run (Netlify's build image has no browser; CI verifies every change).
  */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -219,6 +220,10 @@ async function checkAnchor(page: Page, origin: string, facts: PageFacts[]): Prom
 }
 
 async function main(): Promise<void> {
+  if (process.env.DOCS_SKIP_VERIFY === "1") {
+    console.log("verify: skipped (DOCS_SKIP_VERIFY=1)");
+    return;
+  }
   const files = walk(distDir).map(toUrlPath);
   const pageFiles = files.filter((file) => file.endsWith("/index.html")).sort();
   const facts = pageFiles.map((file) => {

@@ -1,0 +1,29 @@
+# Netlify builds the docs site (docs/) from this monorepo.
+#
+# Link the Netlify site to the repo and leave the build settings empty in the
+# UI: everything is read from here. Steps: docs/LAUNCH-REPORT.md, "Owner actions".
+
+[build]
+  base = "docs"
+  publish = "dist"
+  # Runs from `docs/`. Installs with the frozen lockfile, builds the library
+  # (the docs facts step reads ../dist), then builds the docs:
+  # reference tables, facts (this runs the library's test suite, about three
+  # minutes), redirects, astro build, and the verifier (skipped here, see below).
+  # `git fetch --unshallow` keeps the full history for last-updated dates.
+  command = "git fetch --unshallow || true; command -v pnpm >/dev/null || npm install --global pnpm@11; cd .. && pnpm install --frozen-lockfile && pnpm build && pnpm --filter slotsmith-docs build"
+
+[build.environment]
+  # The docs scripts run .ts files directly, which needs Node 22.18 or newer
+  # (CI uses 22).
+  NODE_VERSION = "22.18.0"
+  # The verifier drives a real browser (Playwright). Netlify's build image is
+  # not set up for that, and CI already runs it on every change before merge,
+  # so the Netlify build skips it. Remove this to verify on deploy.
+  DOCS_SKIP_VERIFY = "1"
+
+# Hashed build assets never change: cache them for a year.
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
