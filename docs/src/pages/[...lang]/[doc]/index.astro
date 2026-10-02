@@ -1,0 +1,15 @@
+---
+import DocPage from "@/components/DocPage.astro";
+import { langFromParam, langPaths } from "@/i18n";
+import { DOC_SLUGS } from "@/lib/pages";
+import { getProse } from "@/lib/prose";
+
+export function getStaticPaths() {
+  return langPaths().flatMap(({ params }) => DOC_SLUGS.map((doc) => ({ params: { ...params, doc } })));
+}
+
+const lang = langFromParam(Astro.params.lang);
+const { doc } = Astro.params;
+const prose = await getProse(lang, doc);
+---
+<DocPage lang={lang} path={`/${doc}/`} prose={prose} />
