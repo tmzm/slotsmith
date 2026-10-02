@@ -15,9 +15,11 @@ interface Props {
   stub?: boolean;
   /** Headings the template renders, for "On this page". */
   headings?: { id: string; text: string; depth: 2 | 3 }[];
+  /** Components the prose MDX may use (the overview's blocks). */
+  components?: Record<string, unknown>;
 }
 
-const { lang, component, section, stub, headings } = Astro.props;
+const { lang, component, section, stub, headings, components } = Astro.props;
 const meta = componentMeta(component);
 const reference = getReference(meta.slug);
 // docs/DESIGN.md "Page header": the entry point and stylesheet in the mono meta row.
@@ -55,6 +57,6 @@ if (section === "api" || section === "adapters") {
 const prose = await getOptionalProse(lang, proseSlug);
 const fallback = { title, description };
 ---
-<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override} meta={pageMeta} stub={stub} headings={headings}>
+<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override} meta={pageMeta} stub={stub} headings={headings} components={components}>
   <slot />
 </DocPage>

@@ -14,9 +14,11 @@ import type { ComponentSlug } from "@/data/components";
 import { t, type Lang } from "@/i18n";
 import { getReference } from "@/lib/reference";
 import { CODE_THEME } from "@/lib/samples";
+import { optionalComponentContext } from "@/lib/component-context";
 
 interface Props {
-  slug: ComponentSlug;
+  /** With `lang`, defaults to the component overview the block sits in. */
+  slug?: ComponentSlug;
   lang?: Lang;
 }
 
@@ -31,7 +33,10 @@ const MANAGERS = [
   { label: "bun", command: "bun add" },
 ];
 
-const { slug, lang = "en" } = Astro.props;
+const context = optionalComponentContext(Astro.locals);
+const slug = Astro.props.slug ?? context?.slug;
+if (!slug) throw new Error("<Install /> needs a slug outside a component overview.");
+const lang = Astro.props.lang ?? context?.contentLang ?? "en";
 const reference = getReference(slug);
 const packages = ["slotsmith", ...reference.requiredPeers.map((peer) => peer.name).filter((name) => !PRESENT.has(name))].join(" ");
 const tabs = MANAGERS.map(({ label, command }) => ({ label, code: `${command} ${packages}`, lang: "bash" as const }));

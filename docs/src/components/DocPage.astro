@@ -26,9 +26,11 @@ interface Props {
   stub?: boolean;
   /** Headings the page renders itself, listed in "On this page" after the prose's. */
   headings?: { id: string; text: string; depth: 2 | 3 }[];
+  /** Components the prose MDX may use (a component overview's blocks). */
+  components?: Record<string, unknown>;
 }
 
-const { lang, path, prose, fallback, meta, title: titleOverride, stub: stubOverride, headings: own = [] } = Astro.props;
+const { lang, path, prose, fallback, meta, title: titleOverride, stub: stubOverride, headings: own = [], components } = Astro.props;
 const title = titleOverride ?? prose?.entry.data.title ?? fallback?.title ?? "";
 const description = prose?.entry.data.description ?? fallback?.description ?? "";
 const sourcePath = prose?.sourcePath;
@@ -43,6 +45,6 @@ const toc = [
 ---
 <Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub} tocLang={contentLang}>
   <PageHeader title={title} lead={prose ? undefined : description} meta={meta} contentLang={contentLang} />
-  {prose ? <Prose prose={prose} /> : stub && <p>{t(lang, "common.stub")}</p>}
+  {prose ? <Prose prose={prose} components={components} /> : stub && <p>{t(lang, "common.stub")}</p>}
   <slot />
 </Docs>

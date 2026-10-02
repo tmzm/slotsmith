@@ -64,6 +64,16 @@ export const en = {
   "component.accessibility": "Accessibility",
   "component.limitations": "Limitations",
 
+  // Component overview blocks.
+  "overview.keyboard": "Keyboard",
+  "overview.keys": "Keys",
+  "overview.action": "Action",
+  "overview.refSlots": "Every part you can replace, the props it receives and its fallback.",
+  "overview.refProps": "Every prop, grouped, with its type and default.",
+  "overview.refLabels": "Every string it shows or announces, and how to translate them.",
+  "overview.refStyling": "Its class names and the tokens its stylesheet reads.",
+  "overview.refAdapters": "Ready slot maps for shadcn/ui, MUI, Chakra, Ant Design and Radix Themes.",
+
   "component.guideTitle": "{component}: {guide}",
   "component.guideDescription": "A guide to {guide} in the slotsmith {component}.",
   "component.apiDescription": "Props, slots, labels and styling of the slotsmith {component}.",

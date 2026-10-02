@@ -1,0 +1,49 @@
+---
+/**
+ * A keyboard map: one row per action, each key in a `<kbd>`. Keys that work
+ * together in one row are alternatives ("Space or Enter"), shown side by side.
+ * Uses the reference tables' look (docs/DESIGN.md section 5).
+ */
+import "@/styles/reference.css";
+import { t } from "@/i18n";
+import { componentContext } from "@/lib/component-context";
+
+interface Props {
+  rows: { keys: string[]; action: string }[];
+  /** Names the table for assistive technology. */
+  label?: string;
+}
+
+const { contentLang } = componentContext(Astro.locals, "KeyboardTable");
+const { rows, label = t(contentLang, "overview.keyboard") } = Astro.props;
+---
+<div class="ref-table ref-table--narrow keyboard-table" role="region" tabindex="0" aria-label={label}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(contentLang, "overview.keys")}</th>
+        <th scope="col">{t(contentLang, "overview.action")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr>
+          <td class="keyboard-table__keys" dir="ltr">
+            {row.keys.map((key) => <kbd>{key}</kbd>)}
+          </td>
+          <td>{row.action}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .keyboard-table__keys {
+    white-space: nowrap;
+  }
+
+  .keyboard-table__keys kbd + kbd {
+    margin-inline-start: 0.375rem;
+  }
+</style>

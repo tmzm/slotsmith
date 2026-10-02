@@ -17,11 +17,13 @@ import { CODE_THEME, sampleSource } from "@/lib/samples";
 import { demoId, sharedImports } from "@/lib/demo";
 import { t, type Lang } from "@/i18n";
 import type { ProviderName } from "@samples/adapters/providers";
+import { componentContext } from "@/lib/component-context";
 
 export interface Props {
   /** The sample's path under `samples/` without extension (`data-table/quick-start`). */
   name: string;
-  lang: Lang;
+  /** Defaults to the language of the component overview the demo sits in. */
+  lang?: Lang;
   /** The space the demo takes once rendered, as a CSS length. */
   height: string;
   /** Marks a demo that shows the library's built-in fallbacks. */
@@ -40,7 +42,8 @@ export interface Props {
   provider?: ProviderName;
 }
 
-const { name, lang, height, fallback, stock, hydrate = "visible", locales, variants, showCode = true, provider } = Astro.props;
+const { name, lang: langProp, height, fallback, stock, hydrate = "visible", locales, variants, showCode = true, provider } = Astro.props;
+const lang = langProp ?? componentContext(Astro.locals, "Demo").contentLang;
 const { code, lang: codeLang } = sampleSource(name);
 const id = demoId(Astro.request, name);
 // A sample that imports `../shared/<file>` shows that file as a further code tab.

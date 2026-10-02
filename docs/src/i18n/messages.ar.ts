@@ -66,6 +66,15 @@ export const ar: Record<MessageKey, string> = {
   "component.accessibility": "إمكانية الوصول",
   "component.limitations": "القيود",
 
+  "overview.keyboard": "لوحة المفاتيح",
+  "overview.keys": "المفاتيح",
+  "overview.action": "الإجراء",
+  "overview.refSlots": "كل جزء يمكنك استبداله، والخصائص التي يتلقاها، وبديله الافتراضي.",
+  "overview.refProps": "كل الخصائص مجمّعة، مع نوع كل منها وقيمته الافتراضية.",
+  "overview.refLabels": "كل نص يعرضه أو يعلنه، وطريقة ترجمته.",
+  "overview.refStyling": "أسماء الأصناف فيه، والمتغيرات التي تقرؤها ورقة أنماطه.",
+  "overview.refAdapters": "خرائط فتحات جاهزة لـ shadcn/ui وMUI وChakra وAnt Design وRadix Themes.",
+
   "component.guideTitle": "{component}: {guide}",
   "component.guideDescription": "دليل {guide} في {component} من slotsmith.",
   "component.apiDescription": "الخصائص والفتحات والنصوص والتنسيق في {component} من slotsmith.",

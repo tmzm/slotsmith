@@ -1,0 +1,71 @@
+---
+title: "Data table"
+description: "The slotsmith data table: sorting, selection, pagination, tree rows, virtual rows and row reorder, with every part replaceable by your design system's."
+---
+
+The slotsmith data table is a React table built on TanStack Table, with sorting, selection, pagination, tree rows, virtual rows and row reorder built in. Every part it renders is a slot: keep the fallbacks, or pass your design system's own components.
+
+## Overview
+
+The demo below uses the fallbacks only. Click a header to sort, shift-click a second header to sort by both, tick rows to select them, and change the page size under the table.
+
+{/* Both demos reserve their measured height (Chrome): 35.5rem at 360px, where cells wrap, down to 24.5rem from 485px. */}
+<Demo name="data-table/overview" height="clamp(24.5rem, 69rem - 146.67vw, 35.5rem)" fallback />
+
+Each feature has a guide with its own live demo: [sorting and selection](./guides/sorting-and-selection/), [pagination](./guides/pagination/), [server data](./guides/server-data/) with loading, empty and error states, [tree rows](./guides/tree-rows/), [virtual rows](./guides/virtual-rows/) for long lists, [row reorder](./guides/row-reorder/) by pointer, touch or keyboard, [footers](./guides/footers/), and [the headless hook](./guides/headless-hook/) for your own markup.
+
+## Install
+
+<Install />
+
+## Quick start
+
+Pass `data` and `columns`. Columns are TanStack Table column definitions; `getRowId` gives each row a stable id.
+
+<QuickStart height="clamp(24.5rem, 69rem - 146.67vw, 35.5rem)" />
+
+## Guides
+
+<GuideList />
+
+## Reference
+
+The [API page](./api/) is generated from the library's source, so it lists every slot, prop and label the installed version has.
+
+<Reference />
+
+## Adapters
+
+The table works with any design system. Each slot takes a component, so a library's own table, checkbox, button and select can replace the fallbacks. The [Adapters page](./adapters/) has ready slot maps for shadcn/ui, MUI, Chakra, Ant Design and Radix Themes, as examples of well-known libraries; the same approach works with your own.
+
+## Accessibility
+
+The table renders a real `<table>`, so screen readers announce rows, columns and headers. What the fallbacks add:
+
+- **Sorting.** A sortable header holds a `<button>`, and its `<th>` carries `aria-sort` (`ascending`, `descending` or `none`). With `enableMultiSort`, shift-click adds a column to the sort.
+- **Selection.** Each row and the header have a checkbox named by the `selectRow` and `selectAll` labels; the header checkbox is indeterminate while some rows on the page are selected.
+- **Tree rows.** The expand toggle is a `<button>` with `aria-expanded`, named by `expandRow` or `collapseRow`.
+- **Pagination.** The controls sit in a `<nav>` named by the `pagination` label. The previous and next buttons are named by `previousPage` and `nextPage`, and the page counter is an `aria-live="polite"` region, so a page change is read out. The page-size control is the slotsmith Autocomplete, a combobox named by the visible `rowsPerPage` text.
+- **Loading and errors.** While loading, the root has `aria-busy="true"` and the skeleton rows are hidden from assistive technology. The error state has `role="alert"` and a retry button.
+- **Row reorder.** Each drag handle is a `<button>` named by `reorderRow`, with `aria-describedby` pointing at hidden instructions (`reorderInstructions`) and `aria-pressed="true"` while it is lifted from the keyboard. A visually hidden live region (`role="status"`, `aria-live="assertive"`) reads each step with the `reorderLifted`, `reorderMoved`, `reorderDropped` and `reorderCancelled` labels, as positions such as "Position 2 of 5". In a tree table, a row with no visible sibling has its handle disabled.
+
+Moving a row from the keyboard, with focus on its drag handle:
+
+<KeyboardTable rows={[
+  { keys: ["Space", "Enter"], action: "Lift the row." },
+  { keys: ["↑", "↓"], action: "Move the lifted row up or down one place among its siblings." },
+  { keys: ["Space", "Enter"], action: "Drop the row in its new place. Focus stays on its handle." },
+  { keys: ["Esc"], action: "Cancel. The row goes back where it was." },
+  { keys: ["Tab"], action: "Cancel, and move focus on as usual. Leaving the handle any other way cancels too." },
+]} />
+
+Every label can be translated or replaced; see [Labels & locales](./api/#labels).
+
+## Limitations
+
+<Note kind="limitation">
+- `VirtualDataTable` ignores row reorder. See [virtual rows](./guides/virtual-rows/).
+- A drop while the table is sorted reorders `data`, but the view stays sorted. See [row reorder](./guides/row-reorder/).
+- No dragging between tables, no multi-row drag, and no moving a row to another parent. See [row reorder](./guides/row-reorder/).
+- A custom `Row` slot must keep a stable identity. See [row reorder](./guides/row-reorder/).
+</Note>

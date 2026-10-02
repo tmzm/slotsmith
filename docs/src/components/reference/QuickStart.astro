@@ -1,0 +1,22 @@
+---
+/**
+ * A component's quick start: the live `<slug>/quick-start` sample, marked as
+ * a fallback demo so the verifier runs axe on it. The sample is standalone
+ * (data inline, imports only from slotsmith, React and the component's
+ * peers), so its code works when copied as it is.
+ */
+import Demo from "@/components/Demo.astro";
+import type { ComponentSlug } from "@/data/components";
+import { componentContext } from "@/lib/component-context";
+
+interface Props {
+  /** Defaults to the component overview the block sits in. */
+  slug?: ComponentSlug;
+  /** The space the demo takes once rendered, as a CSS length. */
+  height?: string;
+}
+
+const context = componentContext(Astro.locals, "QuickStart");
+const { slug = context.slug, height = "20rem" } = Astro.props;
+---
+<Demo name={`${slug}/quick-start`} lang={context.contentLang} height={height} fallback />

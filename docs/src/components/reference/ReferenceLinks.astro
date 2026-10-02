@@ -1,0 +1,82 @@
+---
+/**
+ * The overview's way into the generated reference: the four sections of the
+ * API page (Slots, Props, Labels & locales, Styling) and the Adapters page,
+ * each with one line on what it holds.
+ */
+import type { ComponentSlug } from "@/data/components";
+import { localePath, t, type MessageKey } from "@/i18n";
+import { componentContext } from "@/lib/component-context";
+
+interface Props {
+  /** Defaults to the component overview the block sits in. */
+  slug?: ComponentSlug;
+}
+
+const context = componentContext(Astro.locals, "Reference");
+const { slug = context.slug } = Astro.props;
+const { lang, contentLang } = context;
+const base = `/components/${slug}/`;
+
+const LINKS: { href: string; title: MessageKey; lead: MessageKey }[] = [
+  { href: `${base}api/#slots`, title: "api.slots", lead: "overview.refSlots" },
+  { href: `${base}api/#props`, title: "api.props", lead: "overview.refProps" },
+  { href: `${base}api/#labels`, title: "api.labels", lead: "overview.refLabels" },
+  { href: `${base}api/#styling`, title: "api.styling", lead: "overview.refStyling" },
+  { href: `${base}adapters/`, title: "component.adapters", lead: "overview.refAdapters" },
+];
+---
+<ul class="reference-links">
+  {LINKS.map((link) => (
+    <li>
+      <a href={localePath(lang, link.href)}>{t(contentLang, link.title)}</a>
+      <span>{t(contentLang, link.lead)}</span>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .reference-links {
+    display: grid;
+    gap: 0.5rem;
+    margin: 1rem 0 2rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reference-links li {
+    display: grid;
+    gap: 0.125rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    transition: background-color 160ms var(--ease-out);
+  }
+
+  .reference-links li:hover {
+    background: var(--panel-2);
+  }
+
+  .reference-links a {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+  }
+
+  .reference-links span {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 640px) {
+    .reference-links {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reference-links li {
+      transition: none;
+    }
+  }
+</style>

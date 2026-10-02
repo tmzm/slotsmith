@@ -1,0 +1,75 @@
+---
+/**
+ * The guides of one component, in reading order, each linked with its
+ * description: the guide's MDX frontmatter, or the catalog's generic line
+ * while the guide is still being written.
+ */
+import { componentMeta, type ComponentSlug } from "@/data/components";
+import { localePath, t } from "@/i18n";
+import { componentContext } from "@/lib/component-context";
+import { getOptionalProse } from "@/lib/prose";
+
+interface Props {
+  /** Defaults to the component overview the block sits in. */
+  slug?: ComponentSlug;
+}
+
+const context = componentContext(Astro.locals, "GuideList");
+const { slug = context.slug } = Astro.props;
+const { lang, contentLang } = context;
+const meta = componentMeta(slug);
+const component = t(contentLang, meta.title);
+const guides = await Promise.all(
+  meta.guides.map(async (guide) => {
+    const prose = await getOptionalProse(contentLang, `components/${slug}/guides/${guide.slug}`);
+    const title = t(contentLang, guide.title);
+    return {
+      href: localePath(lang, `/components/${slug}/guides/${guide.slug}/`),
+      title,
+      description: prose?.entry.data.description ?? t(contentLang, "component.guideDescription", { component, guide: title }),
+    };
+  }),
+);
+---
+<ul class="guide-list">
+  {guides.map((guide) => (
+    <li>
+      <a href={guide.href}>{guide.title}</a>
+      <span>{guide.description}</span>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .guide-list {
+    display: grid;
+    margin: 1rem 0 2rem;
+    padding: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--line);
+  }
+
+  .guide-list li {
+    display: grid;
+    gap: 0.125rem;
+    padding: 0.625rem 0;
+    border-block-end: 1px solid var(--line);
+  }
+
+  .guide-list a {
+    font-weight: 600;
+  }
+
+  .guide-list span {
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 640px) {
+    .guide-list li {
+      grid-template-columns: 12rem minmax(0, 1fr);
+      gap: 1rem;
+      align-items: baseline;
+    }
+  }
+</style>

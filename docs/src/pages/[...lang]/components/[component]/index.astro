@@ -1,12 +1,37 @@
 ---
+/**
+ * A component's overview page. The prose is `components/<slug>/index.mdx`,
+ * whose `##` headings follow `OVERVIEW_HEADINGS` (scripts/check-structure.ts):
+ * Overview and its live demo, Install, Quick start, Guides, Reference,
+ * Adapters, Accessibility, Limitations. The MDX uses the blocks below by name,
+ * without props: the template stores the slug and the languages in the page's
+ * component context first. On an Arabic page with no Arabic MDX the blocks
+ * follow the English prose, while their links stay on the Arabic pages.
+ * A component with no overview MDX yet keeps the stub marker.
+ */
 import ComponentPage from "@/components/ComponentPage.astro";
-import { componentPaths } from "@/data/components";
+import Demo from "@/components/Demo.astro";
+import Note from "@/components/Note.astro";
+import GuideList from "@/components/reference/GuideList.astro";
+import InstallBlock from "@/components/reference/InstallBlock.astro";
+import KeyboardTable from "@/components/reference/KeyboardTable.astro";
+import QuickStart from "@/components/reference/QuickStart.astro";
+import ReferenceLinks from "@/components/reference/ReferenceLinks.astro";
+import { componentMeta, componentPaths } from "@/data/components";
 import { langFromParam } from "@/i18n";
+import { setComponentContext } from "@/lib/component-context";
+import { getOptionalProse } from "@/lib/prose";
 
 export function getStaticPaths() {
   return componentPaths();
 }
 
 const { lang: langParam, component } = Astro.params;
+const lang = langFromParam(langParam);
+const { slug } = componentMeta(component);
+const prose = await getOptionalProse(lang, `components/${slug}`);
+setComponentContext(Astro.locals, { slug, lang, contentLang: prose && !prose.translated ? "en" : lang });
+
+const components = { Install: InstallBlock, QuickStart, GuideList, Reference: ReferenceLinks, Demo, KeyboardTable, Note };
 ---
-<ComponentPage lang={langFromParam(langParam)} component={component} section="index" />
+<ComponentPage lang={lang} component={component} section="index" components={components} />

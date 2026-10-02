@@ -12,11 +12,13 @@ import H3 from "./prose/H3.astro";
 
 interface Props {
   prose: Prose;
+  /** Further components the MDX may use, beside the headings (a component overview's blocks). */
+  components?: Record<string, unknown>;
 }
 
-const { prose } = Astro.props;
+const { prose, components: extra = {} } = Astro.props;
 const { Content } = await render(prose.entry);
-const components = { h2: H2, h3: H3 };
+const components = { ...extra, h2: H2, h3: H3 };
 const fallback = prose.lang === "ar" && !prose.translated;
 ---
 {
