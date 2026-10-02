@@ -10,6 +10,7 @@
 import ThemeScript from "./ThemeScript.astro";
 import { alternates, canonicalUrl, pageTitle } from "@/lib/page";
 import type { Lang } from "@/i18n";
+import { SITE } from "../../site.config";
 
 import bigShoulders900 from "@fontsource/big-shoulders/files/big-shoulders-latin-900-normal.woff2?url";
 import geist400 from "@fontsource/geist/files/geist-latin-400-normal.woff2?url";
@@ -61,6 +62,13 @@ if (lang === "ar") {
 // the landing name; Geist is left out there, as Latin body runs are rare.
 const preloads = lang === "ar" ? [notoArabic400, alexandria800, bigShoulders900] : [geist400, bigShoulders900];
 
+/** Google's Tag Manager snippet, verbatim apart from the container id. */
+const gtmScript = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${SITE.gtm}');`;
+
 const fullTitle = pageTitle(lang, title);
 const canonical = canonicalUrl(lang, path);
 const ogImageUrl = ogImage ? new URL(ogImage, canonical).href : undefined;
@@ -73,6 +81,10 @@ const favicon =
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0f0e0b" />
+<!-- Google Tag Manager -->
+<script is:inline set:html={gtmScript}></script>
+<!-- End Google Tag Manager -->
+<meta name="google-site-verification" content={SITE.googleSiteVerification} />
 <ThemeScript />
 <title>{fullTitle}</title>
 <meta name="description" content={description} />

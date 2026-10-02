@@ -247,6 +247,12 @@ async function main(): Promise<void> {
   const browser = await chromium.launch(channel && channel !== "chromium" ? { channel } : {});
   try {
     const context = await browser.newContext();
+    // Every page loads Google Tag Manager. Answer it with an empty script so the
+    // run needs no network (a failed request is a console error) and tracking
+    // code never runs against the local server.
+    await context.route(/^https:\/\/www\.googletagmanager\.com\//, (route) =>
+      route.fulfill({ status: 200, contentType: "application/javascript", body: "/* Tag Manager, stubbed by the verifier */" }),
+    );
     for (const { path } of facts) {
       const page = await context.newPage();
       page.on("console", (message) => {

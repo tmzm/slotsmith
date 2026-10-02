@@ -14,6 +14,7 @@ import Footer from "@/components/Footer.astro";
 import Sidebar from "@/components/Sidebar.astro";
 import MobileDock from "@/components/MobileDock.astro";
 import { dirOf, t, type Lang } from "@/i18n";
+import { SITE } from "../../site.config";
 
 export interface Props {
   lang: Lang;
@@ -34,6 +35,9 @@ const hasSidebar = Astro.slots.has("sidebar");
     <Head lang={lang} title={title} description={description} path={path} ogImage={ogImage} />
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${SITE.gtm}`} height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <a class="skip-link" href="#content">{t(lang, "common.skip")}</a>
     <Header lang={lang} path={path} sheetOnly={!hasSidebar} />
     <div class="shell" data-has-sidebar={hasSidebar || undefined}>
