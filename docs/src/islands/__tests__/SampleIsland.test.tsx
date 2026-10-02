@@ -49,10 +49,11 @@ describe("SampleIsland provider", () => {
     return new Response(stream).text();
   }
 
-  // MUI's first import is slow when the whole suite runs at once.
-  it("wraps the sample in the design system's provider", { timeout: 60000 }, async () => {
+  it("prerenders only the empty stage, so no design system loads before the island hydrates", async () => {
     const html = await renderWith("adapters/data-table/mui-demo", "mui");
-    expect(html).toContain("MuiTableRow-root");
+    expect(html).toContain("sample-stage");
+    expect(html).not.toContain("Mui");
+    expect(html).not.toContain("<table");
   });
 
   it("fails with the unknown provider's name", async () => {

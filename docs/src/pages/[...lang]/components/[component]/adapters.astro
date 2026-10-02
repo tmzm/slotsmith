@@ -58,7 +58,8 @@ const headings = libraries.map((library) => ({ id: library.id, text: library.nam
           )}
         </p>
       </div>
-      <Demo name={library.demo} lang={lang} height="23rem" provider={library.id} />
+      {/* The tallest adapter demo at 360px (Chakra, 484px measured in Chrome), so none shifts the page as it loads. */}
+      <Demo name={library.demo} lang={lang} height="30.5rem" provider={library.id} />
       <p class="adapter-note">{t(lang, "adapters.provider", { library: library.name })}</p>
       <div class="panel sample-code adapter-code" data-sample={library.sample}>
         <p class="adapter-code__file mono" dir="ltr">{`${library.id}.tsx`}</p>

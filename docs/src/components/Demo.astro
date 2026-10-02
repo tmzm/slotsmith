@@ -5,8 +5,9 @@
  * The demo is prerendered, so the HTML holds it before hydration; `height`
  * reserves its space so hydrating causes no layout shift. An unknown `name`
  * fails the build with the name in the message. A demo with a `provider`
- * (the adapter demos) renders on the client only: the design system's
- * provider and stylesheet load with it, and it follows the site theme.
+ * (the adapter demos) hydrates when it comes within 200px of the viewport
+ * and only then loads the design system's provider, stylesheet and sample;
+ * the prerendered HTML holds its reserved space only. It follows the site theme.
  */
 import "slotsmith/styles.css";
 import "@/styles/code.css";
@@ -35,7 +36,7 @@ export interface Props {
   variants?: string[];
   /** Shows the tab row and the code. `false` renders the live demo alone (the landing's component cards); the figure still names its sample. */
   showCode?: boolean;
-  /** Wraps the sample in this design system's provider; the demo then renders on the client only. */
+  /** Wraps the sample in this design system's provider; the demo then loads when it comes into view. */
   provider?: ProviderName;
 }
 
@@ -70,7 +71,7 @@ const shared = showCode ? sharedImports(code).map((file) => ({ file, ...sampleSo
     aria-labelledby={showCode ? `${id}-tab-preview` : undefined}
     data-pane="preview"
   >
-    {provider && <SampleIsland client:only="react" name={name} lang={lang} locales={locales} provider={provider} />}
+    {provider && <SampleIsland client:visible={{ rootMargin: "200px" }} name={name} lang={lang} locales={locales} provider={provider} />}
     {!provider && hydrate === "load" && <SampleIsland client:load name={name} lang={lang} locales={locales} />}
     {!provider && hydrate === "idle" && <SampleIsland client:idle name={name} lang={lang} locales={locales} />}
     {!provider && hydrate === "visible" && <SampleIsland client:visible name={name} lang={lang} locales={locales} />}

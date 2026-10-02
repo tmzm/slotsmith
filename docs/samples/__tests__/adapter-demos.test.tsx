@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, waitFor } from "@testing-library/react";
+import SampleIsland from "@/islands/SampleIsland";
 import type { ComponentType } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PROVIDERS, type ProviderName } from "@samples/adapters/providers";
@@ -37,5 +38,14 @@ describe("data-table adapter demos", () => {
     expect(container.querySelectorAll("thead button").length).toBeGreaterThanOrEqual(5);
     expect(error).not.toHaveBeenCalled();
     error.mockRestore();
+  });
+});
+
+describe("SampleIsland with a provider", () => {
+  // MUI's first import is slow when the whole suite runs at once.
+  it("mounts the sample inside the design system's provider after hydration", { timeout: 60000 }, async () => {
+    const { container } = render(<SampleIsland name="adapters/data-table/mui-demo" lang="en" provider="mui" />);
+    await waitFor(() => expect(container.querySelector(".MuiTableRow-root")).not.toBeNull(), { timeout: 30000 });
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
   });
 });

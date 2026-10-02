@@ -13,9 +13,11 @@
  * With `provider`, the sample renders inside that design system's provider
  * (the adapter demos). Each provider is its own dynamic import, loaded with
  * its stylesheet before the sample shows, so a page loads only the design
- * systems it shows. The provider follows the site theme (`<html
- * data-theme>`) as it changes; it reads it on first render, so such a demo
- * renders on the client only (`Demo` hydrates it with `client:only`).
+ * systems it shows. Such a demo renders an empty stage on the server and
+ * on first hydration, and mounts the provider and sample only after that;
+ * `Demo` hydrates it `client:visible` (200px ahead), so nothing of a design
+ * system is fetched until its demo comes near the viewport. The provider
+ * follows the site theme (`<html data-theme>`) as it changes.
  */
 import { lazy, useEffect, useState, type ComponentType, type LazyExoticComponent, type ReactNode } from "react";
 import SiteLocale from "@/islands/SiteLocale";
@@ -121,11 +123,30 @@ function lazyProvider(name: ProviderName): LazyExoticComponent<Wrapper> {
   return wrapper;
 }
 
-/** Like `Sample`, the lookup happens while rendering so an unknown provider fails loudly. */
-function WithProvider({ provider, dir, children }: { provider: ProviderName; dir: "ltr" | "rtl"; children: ReactNode }) {
+/** Like `Sample`, checks while rendering (a child, not SampleIsland itself), so an unknown provider fails the build. */
+function CheckProvider({ provider }: { provider: ProviderName }) {
   if (!PROVIDER_LOADERS[provider]) throw new Error(`Unknown provider "${provider}". Expected one of: ${Object.keys(PROVIDER_LOADERS).join(", ")}.`);
+  return null;
+}
+
+/**
+ * Renders nothing but the provider check on the server and on first
+ * hydration, so both agree and nothing of the design system loads before
+ * the island does; mounts the provider and sample once hydrated. (Hooks live
+ * here, not in SampleIsland, which Astro also calls as a plain function.)
+ */
+function WithProvider({ provider, dir, children }: { provider: ProviderName; dir: "ltr" | "rtl"; children: ReactNode }) {
+  const mounted = useMounted();
+  if (!mounted) return <CheckProvider provider={provider} />;
   const Wrap = lazyProvider(provider);
   return <Wrap dir={dir}>{children}</Wrap>;
+}
+
+/** False on the server and on the first client render, true after mount. */
+function useMounted(): boolean {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted;
 }
 
 export default function SampleIsland({ name, lang, locales = "site", provider }: SampleIslandProps) {
