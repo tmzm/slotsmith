@@ -17,7 +17,7 @@ import StylingTable from "@/components/reference/StylingTable.astro";
 import { componentMeta, componentPaths } from "@/data/components";
 import { langFromParam, localePath, t } from "@/i18n";
 import { getReference } from "@/lib/reference";
-import { SAMPLE_SOURCES } from "@/lib/samples";
+import { hasApiSample } from "@/lib/pages";
 
 export function getStaticPaths() {
   return componentPaths();
@@ -28,7 +28,7 @@ const lang = langFromParam(langParam);
 const slug = componentMeta(component).slug;
 const reference = getReference(slug);
 const labelsSample = `${slug}/labels`;
-const hasLabelsSample = labelsSample in SAMPLE_SOURCES;
+const hasLabelsSample = hasApiSample(slug);
 
 const SECTIONS = [
   { id: "slots", key: "api.slots" },

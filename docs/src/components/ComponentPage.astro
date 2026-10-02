@@ -2,7 +2,8 @@
 /** A page under /components/<component>/: overview, API, adapters or one guide. */
 import DocPage from "@/components/DocPage.astro";
 import { componentMeta } from "@/data/components";
-import { t, type Lang } from "@/i18n";
+import type { Lang } from "@/i18n";
+import { componentPageMeta, type ComponentSection } from "@/lib/pages";
 import { getOptionalProse } from "@/lib/prose";
 import { getReference } from "@/lib/reference";
 
@@ -10,7 +11,7 @@ interface Props {
   lang: Lang;
   component: string;
   /** "index", "api", "adapters", or a guide slug prefixed with "guides/". */
-  section: string;
+  section: ComponentSection;
   /** False when the template renders the page's whole content (generated API and adapters pages). */
   stub?: boolean;
   /** Headings the template renders, for "On this page". */
@@ -27,36 +28,12 @@ const pageMeta = [
   { key: "entry", value: reference.entry },
   { key: "css", value: reference.css },
 ];
-const name = t(lang, meta.title);
-
-let title = name;
-let description = t(lang, meta.summary);
-let proseSlug = `components/${component}`;
-let path = `/components/${component}/`;
-let override: string | undefined;
-
-if (section === "api" || section === "adapters") {
-  const label = t(lang, section === "api" ? "component.api" : "component.adapters");
-  override = `${name} ${label}`;
-  description = t(lang, section === "api" ? "component.apiDescription" : "component.adaptersDescription", { component: name });
-  proseSlug = `components/${component}/${section}`;
-  path = `/components/${component}/${section}/`;
-  title = override;
-} else if (section.startsWith("guides/")) {
-  const slug = section.slice("guides/".length);
-  const guide = meta.guides.find((g) => g.slug === slug);
-  if (!guide) throw new Error(`Unknown guide "${slug}" for ${component}.`);
-  const guideName = t(lang, guide.title);
-  title = t(lang, "component.guideTitle", { component: name, guide: guideName });
-  description = t(lang, "component.guideDescription", { component: name, guide: guideName });
-  override = title;
-  proseSlug = `components/${component}/${section}`;
-  path = `/components/${component}/${section}/`;
-}
+// Title, description and path come from the same function `allPages()` uses, so the sitemap and llms files match the page.
+const { title, description, path, proseSlug, override } = componentPageMeta(lang, meta, section);
 
 const prose = await getOptionalProse(lang, proseSlug);
 const fallback = { title, description };
 ---
-<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override} meta={pageMeta} stub={stub} headings={headings} components={components}>
+<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override ? title : undefined} meta={pageMeta} stub={stub} headings={headings} components={components}>
   <slot />
 </DocPage>
