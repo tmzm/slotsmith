@@ -71,6 +71,36 @@ export const en = {
 
   "common.stub": "This page is being written.",
 
+  // Component API page: section headings and their leads. {code} placeholders render as code.
+  "api.slots": "Slots",
+  "api.props": "Props",
+  "api.labels": "Labels & locales",
+  "api.styling": "Styling",
+  "api.slotsLead":
+    "{component} has {count} slots. Pass a replacement for any of them in {prop}; every slot you leave out keeps its fallback. Element slots receive DOM props, so a library's own element fits as it is; widget slots receive named props and usually need a few lines of adapter.",
+  "api.propsLead":
+    "Every prop of {component}, grouped as in the library's documentation. Controlled state comes in pairs: pass a value with its change handler, or only the default to leave the state inside the component.",
+  "api.labelsLead":
+    "Every string {component} shows or announces, with its English default. Pass {labels} to change some of them for one component, or {locale} to switch every string to another language. The demo below does both.",
+  "api.languages": "The ready-made language packs, right-to-left support and app-wide locales are on {link}.",
+  "api.languagesLink": "the Languages page",
+  "api.stylingLead":
+    "The class names the fallbacks of {component} put on their elements, and the tokens its stylesheet reads. Set a token on the component, or on any element around it, to restyle it; target a class only for what no token covers.",
+  "api.themingLink": "Theming covers the tokens and the ready-made themes.",
+
+  // Component adapters page.
+  "adapters.nav": "Libraries",
+  "adapters.lead":
+    "This adapter renders {component} with {library} parts. Copy the file into your app and pass the map to {prop}; every slot you leave out keeps its fallback.",
+  "adapters.needs": "It imports {packages}.",
+  "adapters.needsShadcn": "It imports these shadcn/ui components; add them with {command}.",
+  "adapters.provider": "The demo sits inside {library}'s provider, as any app built on it already does.",
+  "adapters.file": "The adapter",
+
+  "install.label": "Install with your package manager",
+  "install.optional": "{component} from {entry} also needs {peers}.",
+  "install.css": "Import the stylesheet once, at your app's entry. {all} holds every component's styles instead.",
+
   // Generated reference tables (API pages). Names in {braces} are filled in code.
   "ref.slotsLabel": "Slots",
   "ref.propsLabel": "Props",

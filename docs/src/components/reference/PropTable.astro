@@ -8,6 +8,7 @@
  */
 import "@/styles/reference.css";
 import Text from "./Text.astro";
+import Type from "./Type.astro";
 import type { ComponentSlug } from "@/data/components";
 import { t, type Lang } from "@/i18n";
 import { formatDefault, groupProps } from "@/lib/format";
@@ -53,7 +54,7 @@ const [before = "", after = ""] = t(lang, "ref.rootProps", { element: "\u0000" }
         {props.map((prop) => (
           <tr id={rowId(prop.name, prop.mode)}>
             <th scope="row" class="ref-name">
-              <code dir="ltr">{prop.name}</code>
+              <Type text={prop.name} camel />
               {!prop.optional && <span class="ref-tag" data-required>{t(lang, "ref.required")}</span>}
               {prop.mode && (
                 <span class="ref-tag" dir="ltr" lang="en">
@@ -62,18 +63,18 @@ const [before = "", after = ""] = t(lang, "ref.rootProps", { element: "\u0000" }
               )}
             </th>
             <td class="ref-type">
-              <code dir="ltr">{prop.type}</code>
+              <Type text={prop.type} />
             </td>
-            <td class="ref-type">
+            <td class="ref-default">
               {!prop.default ? (
                 <span class="ref-none">{formatDefault(undefined)}</span>
               ) : isProse(prop.default) ? (
                 <Text text={prop.default} />
               ) : (
-                <code dir="ltr">{formatDefault(prop.default)}</code>
+                <Type text={formatDefault(prop.default)} />
               )}
             </td>
-            <td>
+            <td class="ref-desc-cell">
               <Text text={prop.description} />
             </td>
           </tr>

@@ -41,3 +41,27 @@ describe("SampleIsland", () => {
     expect(() => SampleIsland({ name: "data-table/quik-start", lang: "en" })).not.toThrow();
   });
 });
+
+describe("SampleIsland provider", () => {
+  async function renderWith(name: string, provider: string): Promise<string> {
+    const stream = await renderToReadableStream(createElement(SampleIsland, { name, lang: "en", provider: provider as "mui" }));
+    await stream.allReady;
+    return new Response(stream).text();
+  }
+
+  // MUI's first import is slow when the whole suite runs at once.
+  it("wraps the sample in the design system's provider", { timeout: 60000 }, async () => {
+    const html = await renderWith("adapters/data-table/mui-demo", "mui");
+    expect(html).toContain("MuiTableRow-root");
+  });
+
+  it("fails with the unknown provider's name", async () => {
+    await expect(renderWith("adapters/data-table/mui-demo", "bootstrap")).rejects.toThrow('Unknown provider "bootstrap"');
+  });
+
+  it("loads each provider with its own dynamic import, never the map of all of them", () => {
+    const source = readFileSync(new URL("../SampleIsland.tsx", import.meta.url), "utf8");
+    expect(source).not.toMatch(/^import\s+\{[^}]*PROVIDERS[^}]*\}/m);
+    for (const name of ["shadcn", "mui", "chakra", "antd", "radix"]) expect(source).toContain(`import("@samples/adapters/provider-${name}")`);
+  });
+});

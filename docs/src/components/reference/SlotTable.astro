@@ -8,6 +8,7 @@
 import "@/styles/reference.css";
 import { Code } from "astro:components";
 import Text from "./Text.astro";
+import Type from "./Type.astro";
 import type { ComponentSlug } from "@/data/components";
 import { t, type Lang } from "@/i18n";
 import { NONE } from "@/lib/format";
@@ -45,14 +46,14 @@ const reference = getReference(slug);
           <td class="ref-type">
             {slot.domType && (
               <p class="ref-sub">
-                {t(lang, "ref.domProps")} <code dir="ltr">{slot.domType}</code>
+                {t(lang, "ref.domProps")} <Type text={slot.domType} />
               </p>
             )}
             {slot.props.length > 0 ? (
               <ul class="ref-members">
                 {slot.props.map((prop) => (
                   <li>
-                    <code dir="ltr">{`${prop.name}${prop.optional ? "?" : ""}: ${prop.type}`}</code>
+                    <Type text={`${prop.name}${prop.optional ? "?" : ""}: ${prop.type}`} />
                     <Text text={prop.description} />
                   </li>
                 ))}

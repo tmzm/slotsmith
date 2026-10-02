@@ -16,6 +16,8 @@
 
 ## Library issues
 
+- **The knowledge generator misses label defaults that are spread in.** `packages/ai/scripts/generate.ts` reads each label's default from the `defaultLabels` object literal, so the six reorder labels that arrive through `...defaultReorderLabels` (`reorderRow` … `reorderCancelled`) have no `default` in the generated knowledge (and so none in slotsmith-ai's answers). The docs' labels table fills them from the library's exported `defaultLabels` at build time.
+- **`HeaderRow` and `FooterRow` are documented with body-row data attributes.** Both slots take `RowSlotProps`, whose JSDoc lists `data-depth`, `data-expanded` and `data-clickable`, so the generated reference gives them those attributes; the header and footer rows never carry them (`parts.tsx` spreads only `slotProps.headerRow` / `footerRow`). Fix: a separate props type (or JSDoc) for the header and footer rows. The docs show the generated data as it is.
 - **shadcn/ui's published table uses physical sides** (`text-left`, `[&:has([role=checkbox])]:pr-0`), so in right-to-left pages its headers stay left-aligned. Not a slotsmith bug; the docs mirror them under `[dir="rtl"]` in `samples/adapters/shadcn.css`.
 
 ## Notes

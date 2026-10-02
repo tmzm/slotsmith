@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { codeSegments, exampleArgs, formatDefault, groupProps, isFunctionType, splitParams } from "@/lib/format";
+import { codeSegments, exampleArgs, formatDefault, groupProps, isFunctionType, splitParams, typeBreaks } from "@/lib/format";
 
 describe("formatDefault", () => {
   it("shows a dash when there is no default", () => {
@@ -85,5 +85,17 @@ describe("codeSegments", () => {
       { text: "row.id", code: true },
       { text: ", then the index.", code: false },
     ]);
+  });
+});
+
+describe("typeBreaks", () => {
+  it("splits after brackets and separators so a long type wraps between names", () => {
+    expect(typeBreaks("HTMLAttributes<HTMLDivElement>")).toEqual(["HTMLAttributes<", "HTMLDivElement>"]);
+    expect(typeBreaks("boolean | ((row: DataTableRow<T>) => boolean)")).toEqual(["boolean |", " (", "(", "row: DataTableRow<", "T>) ", "=> boolean)"]);
+  });
+
+  it("joins back to the original text", () => {
+    const type = "(values: OptionValue[], options: (TOption | undefined)[]) => void";
+    expect(typeBreaks(type).join("")).toBe(type);
   });
 });

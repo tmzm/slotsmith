@@ -1,0 +1,27 @@
+---
+/**
+ * A catalog message with code in its placeholders: `t()` fills the text and
+ * each `{name}` becomes a `<code dir="ltr">` with the value given in `code`,
+ * so the sentence follows the page's direction and the code stays LTR.
+ */
+import { t, type Lang, type MessageKey } from "@/i18n";
+
+interface Props {
+  lang: Lang;
+  message: MessageKey;
+  /** Placeholder name to the code shown in its place. */
+  code: Record<string, string>;
+  /** Placeholders filled with plain text. */
+  vars?: Record<string, string | number>;
+}
+
+const { lang, message, code, vars = {} } = Astro.props;
+const names = Object.keys(code);
+// Fill each placeholder with a private-use marker, then split the sentence at the markers.
+const marked = t(lang, message, { ...vars, ...Object.fromEntries(names.map((name, i) => [name, String.fromCharCode(0xe000 + i)])) });
+const parts = marked.split(/([\ue000-\ue0ff])/).filter(Boolean);
+---
+{parts.map((part) => {
+  const index = part.charCodeAt(0) - 0xe000;
+  return part.length === 1 && index >= 0 && index < names.length ? <code dir="ltr">{code[names[index]!]}</code> : part;
+})}

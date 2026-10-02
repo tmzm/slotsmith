@@ -1,23 +1,138 @@
 ---
+/**
+ * A component's Adapters page: one section per design system (`#shadcn`,
+ * `#mui`, `#chakra`, `#antd`, `#radix`; other pages link to these ids), each
+ * with a live demo of `adapters/<slug>/<lib>-demo` inside that library's
+ * provider and the full adapter file, `adapters/<slug>/<lib>`. A row of
+ * links at the top jumps between them. The packages each adapter needs are
+ * read from its imports. A component with no adapter samples yet keeps the
+ * stub marker.
+ */
+import "@/styles/code.css";
+import { Code } from "astro:components";
 import ComponentPage from "@/components/ComponentPage.astro";
-import { componentPaths } from "@/data/components";
-import { langFromParam } from "@/i18n";
+import Demo from "@/components/Demo.astro";
+import H2 from "@/components/prose/H2.astro";
+import Fill from "@/components/reference/Fill.astro";
+import { componentMeta, componentPaths } from "@/data/components";
+import { langFromParam, t } from "@/i18n";
+import { ADAPTER_LIBRARIES, adapterNeeds } from "@/lib/adapters";
+import { getReference } from "@/lib/reference";
+import { CODE_THEME, SAMPLE_SOURCES } from "@/lib/samples";
 
 export function getStaticPaths() {
   return componentPaths();
 }
 
 const { lang: langParam, component } = Astro.params;
+const lang = langFromParam(langParam);
+const slug = componentMeta(component).slug;
+const { exportName } = getReference(slug);
 
-/** One section per UI library the adapters cover; other pages link to these ids. The content comes in plan 03. */
-const LIBRARIES = [
-  { id: "shadcn", name: "shadcn/ui" },
-  { id: "mui", name: "MUI" },
-  { id: "chakra", name: "Chakra UI" },
-  { id: "antd", name: "Ant Design" },
-  { id: "radix", name: "Radix Themes" },
-];
+const libraries = ADAPTER_LIBRARIES.filter((library) => `adapters/${slug}/${library.id}` in SAMPLE_SOURCES).map((library) => {
+  const name = `adapters/${slug}/${library.id}`;
+  const demo = `${name}-demo`;
+  if (!(demo in SAMPLE_SOURCES)) throw new Error(`The ${library.name} adapter for ${slug} has no demo: add samples/${demo}.tsx.`);
+  const code = SAMPLE_SOURCES[name]!.code;
+  return { ...library, name: library.name, sample: name, demo, code, needs: adapterNeeds(code) };
+});
+const headings = libraries.map((library) => ({ id: library.id, text: library.name, depth: 2 as const }));
 ---
-<ComponentPage lang={langFromParam(langParam)} component={component} section="adapters">
-  {LIBRARIES.map((library) => <h2 id={library.id} lang="en">{library.name}</h2>)}
+<ComponentPage lang={lang} component={component} section="adapters" stub={libraries.length === 0} headings={headings}>
+  {libraries.length > 0 && (
+    <nav class="adapter-nav mono" aria-label={t(lang, "adapters.nav")}>
+      {libraries.map((library) => (
+        <a href={`#${library.id}`} lang="en">{library.name}</a>
+      ))}
+    </nav>
+  )}
+  {libraries.map((library) => (
+    <section class="adapter" aria-labelledby={library.id}>
+      <div class="prose">
+        <H2 id={library.id} lang="en">{library.name}</H2>
+        <p>
+          <Fill lang={lang} message="adapters.lead" code={{ component: exportName, prop: "components" }} vars={{ library: library.name }} />{" "}
+          {library.needs.packages.length > 0 && <Fill lang={lang} message="adapters.needs" code={{ packages: library.needs.packages.join(" ") }} />}
+          {library.needs.shadcn.length > 0 && (
+            <Fill lang={lang} message="adapters.needsShadcn" code={{ command: `npx shadcn@latest add ${library.needs.shadcn.join(" ")}` }} />
+          )}
+        </p>
+      </div>
+      <Demo name={library.demo} lang={lang} height="23rem" provider={library.id} />
+      <p class="adapter-note">{t(lang, "adapters.provider", { library: library.name })}</p>
+      <div class="panel sample-code adapter-code" data-sample={library.sample}>
+        <p class="adapter-code__file mono" dir="ltr">{`${library.id}.tsx`}</p>
+        <Code code={library.code} lang="tsx" theme={CODE_THEME} dir="ltr" />
+        <button type="button" class="copy-button" data-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
+          {t(lang, "common.copy")}
+        </button>
+      </div>
+    </section>
+  ))}
 </ComponentPage>
+
+<style>
+  .adapter-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-block: 1.5rem 0;
+    padding: 0.375rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    font-size: 0.8125rem;
+  }
+
+  .adapter-nav a {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--muted);
+    text-decoration: none;
+    transition:
+      background-color 200ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+
+  .adapter-nav a:hover {
+    background: var(--gold);
+    color: var(--on-gold);
+  }
+
+  .adapter {
+    margin-block-start: 3rem;
+  }
+
+  .adapter :global(.prose code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    overflow-wrap: anywhere;
+  }
+
+  .adapter-note {
+    margin-block: -0.75rem 1rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .adapter-code__file {
+    margin: 0;
+    padding: 0.5rem 1.25rem;
+    border-block-end: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  /* The full adapter is long: it scrolls inside its panel (Shiki's <pre> is focusable). */
+  .adapter-code :global(.astro-code) {
+    max-block-size: 32rem;
+    overflow: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .adapter-nav a {
+      transition: none;
+    }
+  }
+</style>

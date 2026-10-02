@@ -167,3 +167,15 @@ export function codeSegments(text: string): Segment[] {
     .map((part, index) => ({ text: part, code: index % 2 === 1 }))
     .filter((segment) => segment.text !== "");
 }
+
+/**
+ * A type split where a line may break: after `<`, `(`, `{`, `,`, `|` and `&`
+ * and before `=>`. The table joins the pieces with `<wbr>`, so a long union or
+ * signature wraps at its punctuation instead of in the middle of a name.
+ *
+ * @param type - The type as written in the source.
+ * @returns The pieces, which join back to `type`.
+ */
+export function typeBreaks(type: string): string[] {
+  return type.split(/(?<=[<({,|&])|(?==>)/).filter((piece) => piece !== "");
+}

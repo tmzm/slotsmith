@@ -47,6 +47,10 @@ describe("sharedImports", () => {
     expect(sharedImports(code)).toEqual(["people", "more-data"]);
   });
 
+  it("finds shared files from samples nested deeper, such as the adapter demos", () => {
+    expect(sharedImports('import { columns, people } from "../../shared/people";')).toEqual(["people"]);
+  });
+
   it("finds nothing in a sample with no shared imports", () => {
     expect(sharedImports('import { DataTable } from "slotsmith";')).toEqual([]);
   });

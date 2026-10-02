@@ -1,0 +1,73 @@
+---
+/**
+ * The install block of one component, built from its reference: the install
+ * command for each package manager (slotsmith plus the required peers beyond
+ * React), a line naming the optional peers and what needs them, and the
+ * stylesheet import. The commands are made here from data, so they render
+ * with `<Code>` rather than as sample files.
+ */
+import "@/styles/reference.css";
+import { Code } from "astro:components";
+import Tabs from "@/components/Tabs.astro";
+import Fill from "./Fill.astro";
+import type { ComponentSlug } from "@/data/components";
+import { t, type Lang } from "@/i18n";
+import { getReference } from "@/lib/reference";
+import { CODE_THEME } from "@/lib/samples";
+
+interface Props {
+  slug: ComponentSlug;
+  lang?: Lang;
+}
+
+/** Every React app already has these, so the command leaves them out. */
+const PRESENT = new Set(["react", "react-dom"]);
+
+/** The install verb of each package manager, in the order the tabs show them. */
+const MANAGERS = [
+  { label: "npm", command: "npm i" },
+  { label: "pnpm", command: "pnpm add" },
+  { label: "yarn", command: "yarn add" },
+  { label: "bun", command: "bun add" },
+];
+
+const { slug, lang = "en" } = Astro.props;
+const reference = getReference(slug);
+const packages = ["slotsmith", ...reference.requiredPeers.map((peer) => peer.name).filter((name) => !PRESENT.has(name))].join(" ");
+const tabs = MANAGERS.map(({ label, command }) => ({ label, code: `${command} ${packages}`, lang: "bash" as const }));
+const optional = reference.optionalPeers.map((peer) => peer.name);
+---
+<div class="install-block">
+  <Tabs id={`install-${slug}`} tabs={tabs} remember="pm" label={t(lang, "install.label")} lang={lang} />
+  {reference.virtual && optional.length > 0 && (
+    <p class="install-optional">
+      <Fill lang={lang} message="install.optional" code={{ component: reference.virtual.exportName, entry: reference.virtual.entry, peers: optional.join(", ") }} />
+    </p>
+  )}
+  <div class="panel sample-code">
+    <Code code={`import "${reference.css}";`} lang="ts" theme={CODE_THEME} dir="ltr" />
+  </div>
+  <p class="install-css">
+    <Fill lang={lang} message="install.css" code={{ all: "slotsmith/styles.css" }} />
+  </p>
+</div>
+
+<style>
+  .install-block {
+    display: grid;
+    gap: 0.75rem;
+    margin-block: 1rem 2rem;
+  }
+
+  .install-block p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+
+  .install-block code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    unicode-bidi: isolate;
+  }
+</style>

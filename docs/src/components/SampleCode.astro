@@ -2,20 +2,19 @@
 /**
  * The code of one sample, highlighted, with no live demo. Use it for samples
  * that do not render (`.ts`, `.css`, `.json`, `.sh`) or when the demo is
- * elsewhere on the page.
+ * elsewhere on the page. `code` and `lang` show text built at build time
+ * instead (install commands made from reference data); it is not a sample,
+ * so it carries no `data-sample`.
  */
 import "@/styles/code.css";
 import { Code } from "astro:components";
-import { CODE_THEME, sampleSource } from "@/lib/samples";
+import { CODE_THEME, sampleSource, type SampleLang } from "@/lib/samples";
 
-export interface Props {
-  /** The sample's path under `samples/` without extension. */
-  name: string;
-}
+export type Props = { name: string; code?: never; lang?: never } | { name?: never; code: string; lang: SampleLang };
 
-const { name } = Astro.props;
-const { code, lang } = sampleSource(name);
+const props = Astro.props;
+const { code, lang } = props.name ? sampleSource(props.name) : { code: props.code!, lang: props.lang! };
 ---
-<div class="panel sample-code" data-sample={name}>
+<div class="panel sample-code" data-sample={props.name}>
   <Code code={code} lang={lang} theme={CODE_THEME} dir="ltr" />
 </div>

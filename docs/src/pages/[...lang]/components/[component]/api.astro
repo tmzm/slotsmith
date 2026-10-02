@@ -1,12 +1,91 @@
 ---
+/**
+ * A component's API page, generated: Slots, Props, Labels & locales and
+ * Styling, each an `<h2>` with a lead from the catalog and its table from
+ * `getReference()`. The labels section also renders the component's
+ * `<slug>/labels` sample, which passes `labels` and `locale`; until that
+ * sample exists the page stays marked as a stub.
+ */
 import ComponentPage from "@/components/ComponentPage.astro";
-import { componentPaths } from "@/data/components";
-import { langFromParam } from "@/i18n";
+import Demo from "@/components/Demo.astro";
+import H2 from "@/components/prose/H2.astro";
+import Fill from "@/components/reference/Fill.astro";
+import LabelTable from "@/components/reference/LabelTable.astro";
+import PropTable from "@/components/reference/PropTable.astro";
+import SlotTable from "@/components/reference/SlotTable.astro";
+import StylingTable from "@/components/reference/StylingTable.astro";
+import { componentMeta, componentPaths } from "@/data/components";
+import { langFromParam, localePath, t } from "@/i18n";
+import { getReference } from "@/lib/reference";
+import { SAMPLE_SOURCES } from "@/lib/samples";
 
 export function getStaticPaths() {
   return componentPaths();
 }
 
 const { lang: langParam, component } = Astro.params;
+const lang = langFromParam(langParam);
+const slug = componentMeta(component).slug;
+const reference = getReference(slug);
+const labelsSample = `${slug}/labels`;
+const hasLabelsSample = labelsSample in SAMPLE_SOURCES;
+
+const SECTIONS = [
+  { id: "slots", key: "api.slots" },
+  { id: "props", key: "api.props" },
+  { id: "labels", key: "api.labels" },
+  { id: "styling", key: "api.styling" },
+] as const;
+const headings = SECTIONS.map(({ id, key }) => ({ id, text: t(lang, key), depth: 2 as const }));
+const exportName = reference.exportName;
+const [languagesBefore = "", languagesAfter = ""] = t(lang, "api.languages", { link: "\u0000" }).split("\u0000");
 ---
-<ComponentPage lang={langFromParam(langParam)} component={component} section="api" />
+<ComponentPage lang={lang} component={component} section="api" stub={!hasLabelsSample} headings={headings}>
+  <section class="prose api-section" aria-labelledby="slots">
+    <H2 id="slots">{t(lang, "api.slots")}</H2>
+    <p><Fill lang={lang} message="api.slotsLead" code={{ component: exportName, prop: "components" }} vars={{ count: reference.slots.length }} /></p>
+  </section>
+  <SlotTable slug={slug} lang={lang} />
+
+  <section class="prose api-section" aria-labelledby="props">
+    <H2 id="props">{t(lang, "api.props")}</H2>
+    <p><Fill lang={lang} message="api.propsLead" code={{ component: exportName }} /></p>
+  </section>
+  <PropTable slug={slug} lang={lang} />
+
+  <section class="prose api-section" aria-labelledby="labels">
+    <H2 id="labels">{t(lang, "api.labels")}</H2>
+    <p><Fill lang={lang} message="api.labelsLead" code={{ component: exportName, labels: "labels", locale: "locale" }} /></p>
+  </section>
+  <LabelTable slug={slug} lang={lang} />
+  {hasLabelsSample && <Demo name={labelsSample} lang={lang} height="15rem" />}
+  <p class="api-more">
+    {languagesBefore}<a href={localePath(lang, "/languages/")}>{t(lang, "api.languagesLink")}</a>{languagesAfter}
+  </p>
+
+  <section class="prose api-section" aria-labelledby="styling">
+    <H2 id="styling">{t(lang, "api.styling")}</H2>
+    <p><Fill lang={lang} message="api.stylingLead" code={{ component: exportName }} /></p>
+  </section>
+  <StylingTable slug={slug} lang={lang} />
+  <p class="api-more">
+    <a href={localePath(lang, "/theming/")}>{t(lang, "api.themingLink")}</a>
+  </p>
+</ComponentPage>
+
+<style>
+  .api-section {
+    margin-block-start: 3rem;
+  }
+
+  .api-section :global(code),
+  .api-more :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+
+  .api-more {
+    margin-block: 0 2rem;
+    color: var(--ink-2);
+  }
+</style>

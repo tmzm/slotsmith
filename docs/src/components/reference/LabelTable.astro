@@ -10,6 +10,7 @@
 import "@/styles/reference.css";
 import * as slotsmith from "slotsmith";
 import Text from "./Text.astro";
+import Type from "./Type.astro";
 import type { ComponentSlug } from "@/data/components";
 import { t, type Lang } from "@/i18n";
 import { exampleArgs, formatArg, formatDefault, isFunctionType } from "@/lib/format";
@@ -57,16 +58,16 @@ const rows = reference.labels.map((label) => ({ label, shown: describe(label.nam
       {rows.map(({ label, shown }) => (
         <tr id={`label-${label.name}`}>
           <th scope="row" class="ref-name">
-            <code dir="ltr">{label.name}</code>
+            <Type text={label.name} camel />
           </th>
           <td class="ref-type">
-            <code dir="ltr">{label.type}</code>
+            <Type text={label.type} />
           </td>
-          <td class="ref-type">
-            {shown.value && <code dir="ltr">{shown.value}</code>}
+          <td class="ref-default">
+            {shown.value && <Type text={shown.value} />}
             {shown.call && (
               <>
-                <code dir="ltr">{shown.call}</code>
+                <Type text={shown.call} />
                 {shown.output && (
                   <p class="ref-example">
                     {t(lang, "ref.example")} <code dir="ltr">{shown.output}</code>
@@ -76,7 +77,7 @@ const rows = reference.labels.map((label) => ({ label, shown: describe(label.nam
             )}
             {!shown.value && !shown.call && <span class="ref-none">{formatDefault(undefined)}</span>}
           </td>
-          <td>
+          <td class="ref-desc-cell">
             <Text text={label.description} />
           </td>
         </tr>

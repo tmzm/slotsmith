@@ -4,7 +4,9 @@
  * tab row, the sample rendered by SampleIsland, and the same sample's source.
  * The demo is prerendered, so the HTML holds it before hydration; `height`
  * reserves its space so hydrating causes no layout shift. An unknown `name`
- * fails the build with the name in the message.
+ * fails the build with the name in the message. A demo with a `provider`
+ * (the adapter demos) renders on the client only: the design system's
+ * provider and stylesheet load with it, and it follows the site theme.
  */
 import "slotsmith/styles.css";
 import "@/styles/code.css";
@@ -13,6 +15,7 @@ import SampleIsland from "@/islands/SampleIsland";
 import { CODE_THEME, sampleSource } from "@/lib/samples";
 import { demoId, sharedImports } from "@/lib/demo";
 import { t, type Lang } from "@/i18n";
+import type { ProviderName } from "@samples/adapters/providers";
 
 export interface Props {
   /** The sample's path under `samples/` without extension (`data-table/quick-start`). */
@@ -32,9 +35,11 @@ export interface Props {
   variants?: string[];
   /** Shows the tab row and the code. `false` renders the live demo alone (the landing's component cards); the figure still names its sample. */
   showCode?: boolean;
+  /** Wraps the sample in this design system's provider; the demo then renders on the client only. */
+  provider?: ProviderName;
 }
 
-const { name, lang, height, fallback, stock, hydrate = "visible", locales, variants, showCode = true } = Astro.props;
+const { name, lang, height, fallback, stock, hydrate = "visible", locales, variants, showCode = true, provider } = Astro.props;
 const { code, lang: codeLang } = sampleSource(name);
 const id = demoId(Astro.request, name);
 // A sample that imports `../shared/<file>` shows that file as a further code tab.
@@ -45,6 +50,7 @@ const shared = showCode ? sharedImports(code).map((file) => ({ file, ...sampleSo
   data-sample={name}
   data-fallback={fallback || undefined}
   data-variants={variants?.join(" ") || undefined}
+  data-provider={provider}
   data-view="preview"
   style={`--demo-h:${height}`}
 >
@@ -64,9 +70,10 @@ const shared = showCode ? sharedImports(code).map((file) => ({ file, ...sampleSo
     aria-labelledby={showCode ? `${id}-tab-preview` : undefined}
     data-pane="preview"
   >
-    {hydrate === "load" && <SampleIsland client:load name={name} lang={lang} locales={locales} />}
-    {hydrate === "idle" && <SampleIsland client:idle name={name} lang={lang} locales={locales} />}
-    {hydrate === "visible" && <SampleIsland client:visible name={name} lang={lang} locales={locales} />}
+    {provider && <SampleIsland client:only="react" name={name} lang={lang} locales={locales} provider={provider} />}
+    {!provider && hydrate === "load" && <SampleIsland client:load name={name} lang={lang} locales={locales} />}
+    {!provider && hydrate === "idle" && <SampleIsland client:idle name={name} lang={lang} locales={locales} />}
+    {!provider && hydrate === "visible" && <SampleIsland client:visible name={name} lang={lang} locales={locales} />}
   </div>
   {showCode && (
     <div class="sample-code" id={`${id}-code`} role="tabpanel" aria-labelledby={`${id}-tab-code`} data-pane="code" hidden>

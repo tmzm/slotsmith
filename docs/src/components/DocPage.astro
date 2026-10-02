@@ -22,22 +22,27 @@ interface Props {
   meta?: { key: string; value: string }[];
   /** Overrides the prose title (component API and adapters pages). */
   title?: string;
+  /** False for a page whose content is generated rather than written in prose, so it is complete without an MDX entry. */
+  stub?: boolean;
+  /** Headings the page renders itself, listed in "On this page" after the prose's. */
+  headings?: { id: string; text: string; depth: 2 | 3 }[];
 }
 
-const { lang, path, prose, fallback, meta, title: titleOverride } = Astro.props;
+const { lang, path, prose, fallback, meta, title: titleOverride, stub: stubOverride, headings: own = [] } = Astro.props;
 const title = titleOverride ?? prose?.entry.data.title ?? fallback?.title ?? "";
 const description = prose?.entry.data.description ?? fallback?.description ?? "";
 const sourcePath = prose?.sourcePath;
 // An Arabic page showing English prose: the header and the contents links are English too.
 const contentLang = lang === "ar" && prose && !prose.translated ? "en" : undefined;
-const stub = prose ? prose.entry.data.draft === true : true;
+const stub = stubOverride ?? (prose ? prose.entry.data.draft === true : true);
 const headings = prose ? (await render(prose.entry)).headings : [];
-const toc = headings
-  .filter((h) => h.depth === 2 || h.depth === 3)
-  .map((h) => ({ id: h.slug, text: h.text, depth: h.depth as 2 | 3 }));
+const toc = [
+  ...headings.filter((h) => h.depth === 2 || h.depth === 3).map((h) => ({ id: h.slug, text: h.text, depth: h.depth as 2 | 3 })),
+  ...own,
+];
 ---
 <Docs lang={lang} title={title} description={description} path={path} sourcePath={sourcePath} toc={toc} stub={stub} tocLang={contentLang}>
   <PageHeader title={title} lead={prose ? undefined : description} meta={meta} contentLang={contentLang} />
-  {prose ? <Prose prose={prose} /> : <p>{t(lang, "common.stub")}</p>}
+  {prose ? <Prose prose={prose} /> : stub && <p>{t(lang, "common.stub")}</p>}
   <slot />
 </Docs>

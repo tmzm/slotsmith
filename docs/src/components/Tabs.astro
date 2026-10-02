@@ -9,11 +9,13 @@
  */
 import SampleCode from "./SampleCode.astro";
 import { t, type Lang } from "@/i18n";
+import type { SampleLang } from "@/lib/samples";
 
 export interface Props {
   /** A page-unique id; tab and panel ids derive from it. */
   id: string;
-  tabs: { label: string; sample: string }[];
+  /** Each tab shows a sample by name, or code built at build time with its language. */
+  tabs: ({ label: string; sample: string } | { label: string; code: string; lang: SampleLang })[];
   /** The storage key suffix for the chosen tab. */
   remember?: string;
   /** The tab row's accessible name. */
@@ -51,7 +53,7 @@ const panelId = (index: number) => `${id}-panel-${index}`;
   </div>
   {tabs.map((tab, index) => (
     <div class="tabs__panel" role="tabpanel" id={panelId(index)} aria-labelledby={tabId(index)} hidden={index !== 0}>
-      <SampleCode name={tab.sample} />
+      {"sample" in tab ? <SampleCode name={tab.sample} /> : <SampleCode code={tab.code} lang={tab.lang} />}
     </div>
   ))}
 </div>

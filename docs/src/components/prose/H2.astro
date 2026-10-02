@@ -4,9 +4,9 @@
  * the heading, the same one the "On this page" list links to. A heading that
  * already holds a link stays unlinked, since links cannot nest.
  */
-interface Props {
-  id?: string;
-}
+import type { HTMLAttributes } from "astro/types";
+
+type Props = HTMLAttributes<"h2">;
 
 const { id, ...rest } = Astro.props;
 const inner = await Astro.slots.render("default");

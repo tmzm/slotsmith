@@ -1,0 +1,19 @@
+---
+/**
+ * Code in a reference table: mono, left to right, with a `<wbr>` at each
+ * place it may wrap. A type wraps after `<`, `(`, `,` and `|` (see
+ * `typeBreaks`); a name (`camel`) wraps before each capital, so a long prop
+ * name such as `resetSelectionOnPageChange` does not widen its column.
+ */
+import { typeBreaks } from "@/lib/format";
+
+interface Props {
+  text: string;
+  /** Break a camelCase name between its words instead of a type at its punctuation. */
+  camel?: boolean;
+}
+
+const { text, camel } = Astro.props;
+const pieces = camel ? text.split(/(?=[A-Z])/) : typeBreaks(text);
+---
+<code dir="ltr" class="ref-code">{pieces.map((piece, i) => (i === 0 ? piece : <><wbr />{piece}</>))}</code>

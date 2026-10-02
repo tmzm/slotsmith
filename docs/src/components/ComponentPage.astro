@@ -4,16 +4,27 @@ import DocPage from "@/components/DocPage.astro";
 import { componentMeta } from "@/data/components";
 import { t, type Lang } from "@/i18n";
 import { getOptionalProse } from "@/lib/prose";
+import { getReference } from "@/lib/reference";
 
 interface Props {
   lang: Lang;
   component: string;
   /** "index", "api", "adapters", or a guide slug prefixed with "guides/". */
   section: string;
+  /** False when the template renders the page's whole content (generated API and adapters pages). */
+  stub?: boolean;
+  /** Headings the template renders, for "On this page". */
+  headings?: { id: string; text: string; depth: 2 | 3 }[];
 }
 
-const { lang, component, section } = Astro.props;
+const { lang, component, section, stub, headings } = Astro.props;
 const meta = componentMeta(component);
+const reference = getReference(meta.slug);
+// docs/DESIGN.md "Page header": the entry point and stylesheet in the mono meta row.
+const pageMeta = [
+  { key: "entry", value: reference.entry },
+  { key: "css", value: reference.css },
+];
 const name = t(lang, meta.title);
 
 let title = name;
@@ -44,6 +55,6 @@ if (section === "api" || section === "adapters") {
 const prose = await getOptionalProse(lang, proseSlug);
 const fallback = { title, description };
 ---
-<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override}>
+<DocPage lang={lang} path={path} prose={prose} fallback={fallback} title={override} meta={pageMeta} stub={stub} headings={headings}>
   <slot />
 </DocPage>
