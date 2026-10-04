@@ -1,0 +1,31 @@
+---
+title: "Multiple values"
+description: "Pick several values with the slotsmith Autocomplete: tags in the trigger, Backspace to remove the last one, and an overflow count."
+---
+
+With `multiple`, the Autocomplete keeps several values: `value` is an array of ids, each selected option shows as a tag in the trigger, and the popup stays open as you pick, so you can choose several in a row.
+
+{/* Reserved height measured in Chrome: the picker and the output line. */}
+<Demo name="autocomplete/multiple" height="7.25rem" fallback />
+
+Open the picker and press <kbd>Backspace</kbd> with the search box empty: the last tag goes. Clicking a selected option again removes it too.
+
+## Value and onChange
+
+[`multiple`](../../api/#prop-multiple) changes the type of the selection props, so neither mode can be given the other's shape. In single mode, `value` is an id or `null` and `onChange` receives `(id, option)`. In multiple mode, `value` is an array of ids and `onChange` receives `(ids, options)`, the options in the same order as the ids. An option is `undefined` only for an id no option has been seen for; [`selected`](../../api/#prop-selected) supplies those.
+
+## Tags
+
+- [`maxTags`](../../api/#prop-maxTags) sets how many tags show (2 by default); the rest collapse into a count read from the [`more`](../../api/#label-more) label, "+2". The demo shows three.
+- Each tag has a remove button named by the [`remove`](../../api/#label-remove) label, "Remove Forms". The [`Tag`](../../api/#slot-Tag) slot replaces the whole tag.
+- The clear button removes every value at once.
+
+## Picking and removing from the keyboard
+
+- <kbd>Enter</kbd> on a highlighted option adds it, or removes it if it is already selected. The popup stays open; set [`closeOnSelect`](../../api/#prop-closeOnSelect) to close it after each pick.
+- <kbd>Backspace</kbd> in the empty search box removes the last tag. With text in the search box it deletes text as usual.
+- The listbox has `aria-multiselectable="true"`, and each option's `aria-selected` follows the selection.
+
+## Disabled options
+
+[`optionDisabled`](../../api/#prop-optionDisabled) marks options that stay visible but cannot be picked, like the archived topic in the demo. They get `aria-disabled="true"`, the arrow keys skip them, and a click does nothing.

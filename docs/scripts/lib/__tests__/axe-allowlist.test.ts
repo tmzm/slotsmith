@@ -28,6 +28,14 @@ describe("sortViolations", () => {
     const { problems } = sortViolations([violation("nested-interactive", ".sfu__zone-extra")], allowlist);
     expect(problems).toHaveLength(1);
   });
+
+  it("reads the element's own class when axe names it by another attribute", () => {
+    const node = (html: string) => ({ id: "nested-interactive", impact: "serious", help: "help", nodes: [{ target: ['div[aria-label="Drop"]'], html }] });
+    expect(sortViolations([node('<div class="sfu__zone x" aria-label="Drop">')], allowlist).known).toHaveLength(1);
+    // A descendant's class in the markup does not count, nor does a longer class name.
+    expect(sortViolations([node('<div aria-label="Drop"><span class="sfu__zone">')], allowlist).problems).toHaveLength(1);
+    expect(sortViolations([node('<div class="sfu__zone-extra" aria-label="Drop">')], allowlist).problems).toHaveLength(1);
+  });
 });
 
 describe("KNOWN_LIBRARY_ISSUES", () => {

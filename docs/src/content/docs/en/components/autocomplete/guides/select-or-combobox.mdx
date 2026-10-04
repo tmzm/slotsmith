@@ -1,0 +1,35 @@
+---
+title: "Select or combobox"
+description: "Use the slotsmith Autocomplete as a combobox that filters as you type, or as a select with typeahead, by switching one prop."
+---
+
+The Autocomplete is a combobox by default: its popup holds a search box that filters the options as you type. Set `searchable` to `false` and the same component is a select: no search box, and typing jumps to a matching option.
+
+{/* Reserved height measured in Chrome: the checkbox, the picker and the output line. */}
+<Demo name="autocomplete/select-or-combobox" height="10.5rem" fallback />
+
+Untick `searchable` and focus the picker, then type <kbd>J</kbd>: the popup opens on Japan. Type <kbd>J</kbd> again for Jordan.
+
+## Combobox
+
+With [`searchable`](../../api/#prop-searchable) on, opening the popup moves focus to its search box, and the list narrows as you type. The default filter matches anywhere in the label and ignores case and accents, so "turk" finds "Türkiye".
+
+- [`filter`](../../api/#prop-filter) takes your own predicate, `(option, query) => boolean`, or `false` to show every option whatever the query, as remote options do.
+- [`searchQuery`](../../api/#prop-searchQuery) with [`onSearchChange`](../../api/#prop-onSearchChange) controls the text; [`minChars`](../../api/#prop-minChars) holds the search back until enough characters are typed (see [the states](../states/)).
+- Closing the popup clears the search, so it reopens on the full list.
+
+## Select
+
+With `searchable={false}` there is no search box, and focus stays on the trigger while the popup is open. Typing works like a native `<select>`:
+
+- Letters typed within 0.7 seconds of each other build one search: "ca" lands on the first option starting with "ca", and only if none does, on one containing it.
+- The same letter again moves to the next option starting with it, so <kbd>J</kbd>, <kbd>J</kbd> goes from Japan to Jordan.
+- Typing on the closed trigger opens the popup on the match.
+
+## Options and values
+
+Options are any objects. By default the autocomplete reads an option's id from `value` (or `id`) and its text from `label` (or `name`); [`getOptionValue`](../../api/#prop-getOptionValue) and [`getOptionLabel`](../../api/#prop-getOptionLabel) read other shapes, as the demo does with `code` and `name`. Values are strings or numbers.
+
+In single mode, [`value`](../../api/#prop-value) is the selected id or `null`, and [`onChange`](../../api/#prop-onChange) receives the new id and its option. Leave them out and use [`defaultValue`](../../api/#prop-defaultValue) for a picker that keeps its own value. [`clearable`](../../api/#prop-clearable) (on by default) shows a clear button while something is selected, and [`placeholder`](../../api/#prop-placeholder) sets the text shown while nothing is.
+
+A selected option stays labelled after the search narrows it out of the list. For a value whose option is not in `options` at all, as when a form loads a saved id before its options, pass the option as [`selected`](../../api/#prop-selected).

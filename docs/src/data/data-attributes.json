@@ -5,5 +5,9 @@
     "HeaderCell": ["data-slot"],
     "Cell": ["data-slot"],
     "ExpandToggle": ["data-expanded"]
+  },
+  "autocomplete": {
+    "Trigger": ["data-open", "data-disabled", "data-empty"],
+    "Popup": ["data-placement"]
   }
 }

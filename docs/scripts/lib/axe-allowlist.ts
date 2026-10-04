@@ -32,6 +32,11 @@ export const KNOWN_LIBRARY_ISSUES: KnownIssue[] = [
   },
   {
     rule: "target-size",
+    selector: ".sac__tag-remove",
+    reason: "The combobox tag's remove button is 16px square, under the 24px minimum, next to the next tag.",
+  },
+  {
+    rule: "target-size",
     selector: ".sdp__clear",
     reason: "The date picker clear button is 20px square, under the 24px minimum, next to other targets.",
   },
@@ -42,7 +47,8 @@ export interface AxeViolation {
   id: string;
   impact?: string | null;
   help: string;
-  nodes: { target: unknown[] }[];
+  /** `html` is the element's opening markup; axe may name an element by another attribute than its class. */
+  nodes: { target: unknown[]; html?: string }[];
 }
 
 export interface KnownFinding {
@@ -59,6 +65,9 @@ export interface ProblemFinding {
 }
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** The classes on the element itself, read from the opening tag in axe's `html`. */
+const ownClasses = (html = "") => /^<[^>]*?\sclass="([^"]*)"/.exec(html)?.[1]?.split(/\s+/) ?? [];
 
 /**
  * Splits axe violations into known library issues and problems, node by node.
@@ -77,8 +86,14 @@ export function sortViolations(
     const left: string[] = [];
     for (const node of violation.nodes) {
       const target = node.target.map(String).join(" ");
+      const classes = ownClasses(node.html);
       // The selector must end a compound class name, so `.sfu__zone` does not match `.sfu__zone-extra`.
-      const issue = allowlist.find((entry) => entry.rule === violation.id && new RegExp(`${escape(entry.selector)}(?![\\w-])`).test(target));
+      // When axe names the element by another attribute (`button[aria-label="…"]`), the element's own class decides.
+      const issue = allowlist.find(
+        (entry) =>
+          entry.rule === violation.id &&
+          (new RegExp(`${escape(entry.selector)}(?![\\w-])`).test(target) || classes.includes(entry.selector.slice(1))),
+      );
       if (issue) known.push({ rule: violation.id, target, reason: issue.reason });
       else left.push(target);
     }

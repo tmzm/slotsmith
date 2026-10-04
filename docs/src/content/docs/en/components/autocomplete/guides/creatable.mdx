@@ -1,0 +1,23 @@
+---
+title: "Creatable options"
+description: "Let people add a missing option from the slotsmith Autocomplete's search: the create row, onCreate, and a pending create."
+---
+
+With `creatable`, a search in the Autocomplete that matches nothing offers a create row instead of "No results". Picking it calls your `onCreate` with the typed text; you add the new option to `options` and select it.
+
+{/* Reserved height measured in Chrome: the picker and the output line. */}
+<Demo name="autocomplete/creatable" height="7.375rem" fallback />
+
+Type a topic that is not in the list, such as "Zebra", then press <kbd>Enter</kbd> or click the create row.
+
+## When the row shows
+
+The create row is offered only once the search has settled on nothing: the search box has text, no option matches, and nothing is loading, failed or held back by [`minChars`](../../api/#prop-minChars). While results may still arrive, it waits, so a record that was about to appear is not created twice.
+
+<kbd>Enter</kbd> with no option highlighted creates, like a click on the row. The row's text is the [`create`](../../api/#label-create) label, "Create “Zebra”".
+
+## onCreate
+
+[`onCreate`](../../api/#prop-onCreate) receives the trimmed search text. The autocomplete does not add anything itself: you create the record, add it to `options` and set the value, as the demo does. A selected value stays labelled while the search changes.
+
+When creating takes a request, pass [`createLoading`](../../api/#prop-createLoading) while it runs: the row is disabled and shows the [`creating`](../../api/#label-creating) label. The [`Create`](../../api/#slot-Create) slot replaces the row.

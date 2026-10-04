@@ -1,0 +1,35 @@
+---
+title: "Virtual lists"
+description: "Show thousands of options in the slotsmith Autocomplete with VirtualAutocomplete, which renders only the options in view."
+---
+
+`VirtualAutocomplete` is the Autocomplete for long option lists: it renders only the options in view, inside a scroll area. It takes the same props as `Autocomplete`, plus `virtual`, and comes from `slotsmith/virtual`, which needs `@tanstack/react-virtual` installed.
+
+{/* Reserved height measured in Chrome: the picker and the output line. */}
+<Demo name="autocomplete/virtual" height="7.375rem" fallback />
+
+The picker holds 5,000 cities. Open it and scroll, or type a number: only the options on screen exist in the page.
+
+## Install
+
+`@tanstack/react-virtual` is an optional peer: only `slotsmith/virtual` imports it, so a project that never imports `VirtualAutocomplete` does not need it.
+
+```sh
+pnpm add @tanstack/react-virtual
+```
+
+## The virtual option
+
+`virtual` takes three numbers:
+
+- `estimateSize`: the height of one option, in pixels. Defaults to 36. Set it to the height your option rows have.
+- `maxHeight`: the height of the scroll area, in pixels. Defaults to 320.
+- `overscan`: how many options to render beyond the visible ones, so a fast scroll shows no blank space. Defaults to 8.
+
+Everything else works as in `Autocomplete`: the keyboard, search, single and [multiple](../multiple/) values, [remote options](../remote-options/) with paging, the [states](../states/), the create row and every slot. Options outside the window are stood in for by empty spacer rows, hidden from assistive technology, so the scroll bar matches the whole list. Naming props such as `aria-label` go to the combobox, as in `Autocomplete`.
+
+Paging and windowing solve different problems, how much has been fetched and how much is rendered, and they work together.
+
+## Your own layout
+
+In a [compound layout](../compound-parts/), render `AutocompleteVirtualList` from `slotsmith/virtual` where `Autocomplete.List` would go. It takes the same three options as props.

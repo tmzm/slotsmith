@@ -1,0 +1,103 @@
+---
+title: "Autocomplete"
+description: "Combobox and select in one component: one value or several, remote options, a create row and virtual lists, with every part replaceable by your design system's."
+faq:
+  - q: "Is the autocomplete a select or a combobox?"
+    a: "Both. By default it is a combobox: the popup has a search box that filters the options as you type. With searchable set to false it is a select: no search box, and typing a letter jumps to the first option that starts with it."
+    link: "/components/autocomplete/guides/select-or-combobox/"
+  - q: "Does the autocomplete fetch options itself?"
+    a: "No. It renders the options you pass. For remote options, the useAsyncOptions hook calls your load function with the query, the page and an AbortSignal, and returns the props to spread onto the component: options, loading, error, paging and filter set to false."
+    link: "/components/autocomplete/guides/remote-options/"
+  - q: "How do I give the autocomplete an accessible name?"
+    a: "Pass aria-label or aria-labelledby to Autocomplete. The naming and validation attributes (id, title, aria-label, aria-labelledby, aria-describedby, aria-details, aria-errormessage, aria-invalid and aria-required) go to the element with role combobox, not to the wrapper."
+    link: "/components/autocomplete/#accessibility"
+  - q: "Can the autocomplete submit with a plain HTML form?"
+    a: "Yes. Give it a name and it renders one hidden input per selected value. onBlur fires once when focus leaves the whole control, which is when form libraries mark a field as touched."
+    link: "/components/autocomplete/api/#prop-name"
+  - q: "Can it show thousands of options?"
+    a: "Yes, with VirtualAutocomplete from slotsmith/virtual, which renders only the options in view. It needs @tanstack/react-virtual ^3.10.0 installed and takes the same props as Autocomplete, plus virtual."
+    link: "/components/autocomplete/guides/virtual/"
+---
+
+The slotsmith Autocomplete is a React combobox and select in one component: it filters as you type, or works as a plain select with typeahead. It takes one value or several, remote options, a create row and virtual lists. Every part it renders is a slot you can replace.
+
+## Overview
+
+The demo below uses the fallbacks only. Open a picker with the mouse or with <kbd>↓</kbd>, type to filter, and pick with <kbd>Enter</kbd>. The topics picker keeps several values as tags; its last topic is archived and cannot be picked.
+
+{/* Reserved height measured in Chrome: the two labelled pickers and the two output lines. */}
+<Demo name="autocomplete/overview" height="20.5rem" fallback />
+
+Each feature has a guide with its own live demo: [select or combobox](./guides/select-or-combobox/), [multiple values](./guides/multiple/), [remote options](./guides/remote-options/) with debounce, cancellation and paging, the [loading, empty and error states](./guides/states/), [creatable options](./guides/creatable/), [virtual lists](./guides/virtual/) for long lists, and [the compound parts](./guides/compound-parts/) for your own layout.
+
+## Install
+
+<Install />
+
+## Quick start
+
+Pass `options`, `value` and `onChange`, and name the combobox with `aria-label` or `aria-labelledby`. Options with `value` and `label` (or `id` and `name`) need no further props.
+
+<QuickStart height="3.5rem" />
+
+## Guides
+
+<GuideList />
+
+## Reference
+
+The [API page](./api/) is generated from the library's source, so it lists every slot, prop and label the installed version has.
+
+<Reference />
+
+## Adapters
+
+The autocomplete works with any design system. Each slot takes a component, so a library's own popover surface, input, tag and menu item can replace the fallbacks. The [Adapters page](./adapters/) has ready slot maps for shadcn/ui, MUI, Chakra, Ant Design and Radix Themes, as examples of well-known libraries; the same approach works with your own.
+
+## Accessibility
+
+The autocomplete follows the ARIA combobox pattern, with the listbox in a popup:
+
+- **The trigger** is the element with `role="combobox"`. It is in the tab order, and carries `aria-expanded`, `aria-haspopup="listbox"` and, while open, `aria-controls` pointing at the list. The naming and validation attributes you pass to `Autocomplete` (`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and the like, plus `id`) go to this element, not to the wrapper.
+- **The search box** gets focus when the popup opens. It has `role="searchbox"`, `aria-autocomplete="list"`, and is named by the [`search`](./api/#label-search) label. See [select or combobox](./guides/select-or-combobox/).
+- **The highlight** is announced through `aria-activedescendant`: on the search box, or on the trigger itself when `searchable` is `false`, so focus never leaves the field while you move through the options.
+- **The list** has `role="listbox"`, with `aria-multiselectable="true"` in multiple mode and `aria-busy="true"` while a first page loads. Each option has `role="option"` and `aria-selected`; an option ruled out by `optionDisabled` has `aria-disabled="true"` and the arrow keys skip it. See [multiple values](./guides/multiple/).
+- **Result counts** are read out: a visually hidden `role="status"` region (`aria-live="polite"`) says "12 results" as the list changes, from the [`results`](./api/#label-results) label. It is empty while the popup is closed or shows a status row. See [remote options](./guides/remote-options/).
+- **Tags and clearing.** Each tag's remove button is named by the [`remove`](./api/#label-remove) label ("Remove Forms"), and the clear button by [`clear`](./api/#label-clear). Spinners are hidden from assistive technology. See [the states](./guides/states/).
+
+With focus on the closed trigger:
+
+<KeyboardTable rows={[
+  { keys: ["↓", "Enter", "Space"], action: "Open the popup and highlight the first option." },
+  { keys: ["↑"], action: "Open the popup and highlight the last option." },
+  { keys: ["A–Z"], action: "Open the popup. With searchable set to false, also jump to the first option that starts with the typed letters." },
+]} />
+
+With the popup open:
+
+<KeyboardTable rows={[
+  { keys: ["↓", "↑"], action: "Move the highlight, skipping disabled options. It stops at the ends unless loop is set." },
+  { keys: ["Home", "End"], action: "Highlight the first or the last option." },
+  { keys: ["PgDn", "PgUp"], action: "Move the highlight ten options." },
+  { keys: ["Enter"], action: "Pick the highlighted option. With nothing highlighted and a create row offered, create." },
+  { keys: ["Esc"], action: "Close, and move focus back to the trigger." },
+  { keys: ["Tab"], action: "Close, and move focus on as usual." },
+  { keys: ["Backspace"], action: "In multiple mode, with the search box empty, remove the last tag." },
+  { keys: ["A–Z"], action: "With searchable set to false: jump to the next option that starts with the typed letters." },
+]} />
+
+Picking an option in single mode closes the popup and returns focus to the trigger; in multiple mode the popup stays open. A pointer press outside the control closes it. Every label can be translated or replaced; see [Labels & locales](./api/#labels).
+
+## Limitations
+
+<Note kind="limitation">
+- It does not fetch. `Autocomplete` renders the options you pass; [`useAsyncOptions`](./guides/remote-options/) calls your own `load` function.
+- The trigger is not a text field: typing goes to the search box in the popup. For an editable input as the trigger, or a command palette, build on the [`useAutocomplete`](./guides/compound-parts/) hook.
+- No option groups: the list is flat.
+- An option's label is a string, because the trigger, the filter and typeahead read it. A richer row goes in the `OptionLabel` slot. See [remote options](./guides/remote-options/).
+- The popup is not in a portal. It uses `position: fixed`, so it escapes `overflow: hidden`, but an ancestor with a `transform` or `filter` becomes its containing block.
+</Note>
+
+## FAQ
+
+<Faq />

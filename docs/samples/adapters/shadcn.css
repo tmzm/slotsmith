@@ -29,6 +29,7 @@
 }
 
 @source "./data-table/shadcn.tsx";
+@source "./autocomplete/shadcn.tsx";
 @source "../../src/components/ui";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

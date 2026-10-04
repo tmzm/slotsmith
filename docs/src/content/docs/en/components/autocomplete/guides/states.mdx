@@ -1,0 +1,30 @@
+---
+title: "Loading, empty and error states"
+description: "What the slotsmith Autocomplete shows instead of options: the loading, empty, minimum-characters and error rows, and how to change them."
+---
+
+When the Autocomplete has no options to show, its list shows one status row instead: loading, empty, an error with a retry button, or a prompt to type more. Each comes from a prop you pass, and each row is a slot.
+
+{/* Reserved height measured in Chrome: two rows of two labelled pickers, 216px at 360px and 210px wide. */}
+<Demo name="autocomplete/states" height="13.5rem" fallback />
+
+Open each picker to see its row. Retry in the error picker clears the error and shows the options.
+
+## Which row shows
+
+One row shows at a time, in this order:
+
+1. **Error**, while [`error`](../../api/#prop-error) is set. It replaces the list entirely, so a failed request never reads as "No results". With [`onRetry`](../../api/#prop-onRetry) it has a retry button named by the [`retry`](../../api/#label-retry) label.
+2. **Loading**, while [`loading`](../../api/#prop-loading) is true and there are no options to show. With options on screen, the list keeps them and sets `aria-busy="true"` instead. The trigger shows a spinner whenever `loading` is true.
+3. **Minimum characters**, while fewer than [`minChars`](../../api/#prop-minChars) characters are typed and there are no options, from the [`minChars`](../../api/#label-minChars) label.
+4. **Empty**, when the search matches nothing, from the [`empty`](../../api/#label-empty) label.
+
+The live region stays silent while a status row shows; it reads the result count again once options are back.
+
+## Changing the rows
+
+- The text: pass [`labels`](../../api/#prop-labels), as the demo does with `empty: "No countries match"`.
+- The row itself: replace the [`Empty`](../../api/#slot-Empty), [`Loading`](../../api/#slot-Loading) or [`Error`](../../api/#slot-Error) slot. `Empty` receives the query and the status, so one component can word "no results" and "type more" differently.
+- In your own layout, [`Autocomplete.StatusRows`](../compound-parts/) renders the right row for you.
+
+The [creatable](../creatable/) guide shows the row that replaces "No results" when new options can be made.

@@ -1,0 +1,42 @@
+---
+title: "Remote options"
+description: "Load the slotsmith Autocomplete's options from a server with useAsyncOptions: debounced, cancelled when superseded, and paged."
+---
+
+The Autocomplete never fetches: it renders the options it is given. For options from a server, the `useAsyncOptions` hook calls your `load` function as the search changes, debounced and cancellable, and returns the props to spread onto `Autocomplete`.
+
+{/* Reserved height measured in Chrome: the checkbox, the picker, the reload button and the first log line; the log grows as you use it. */}
+<Demo name="autocomplete/remote-options" height="11.75rem" fallback />
+
+The demo searches a made-up registry of 144 packages, 12 a page. Each request it makes is listed under the picker. Tick "Slow network" and type quickly: a request that a newer search replaces is marked `cancelled`.
+
+## The load function
+
+The demo's code tab shows the whole picker. `load(query, page, signal)` returns a promise of `{ data, nextPage }`: one page of options, and the next page number while more exist. Pages count from 1. Pass `signal` on to `fetch`, so a superseded request stops.
+
+What the hook takes:
+
+- `debounce`: milliseconds to wait after typing stops. Defaults to 300.
+- `minChars`: no request until the query is this long. Defaults to 0.
+- `enabled`: pass the popup's open state, as the demo does, so nothing is requested until the picker opens. Without it, every picker on a page requests as soon as it mounts.
+- `keepPreviousData`: keep the current options on screen while the next search loads. Defaults to `true`.
+
+It returns `options`, `loading`, `loadingMore`, `error`, `hasMore`, `minChars`, `onSearchChange`, `onLoadMore`, `onRetry` and `filter: false` (the server has already filtered), all `Autocomplete` props, plus `reload`, which runs the current search again from page one. `reload` is not a prop: take it out before spreading, as above.
+
+## Slow responses and stale results
+
+- While a new search loads, the previous results stay on screen; the list has `aria-busy="true"` and the trigger shows a spinner. Only when there is nothing to show yet does the list show the [`loading`](../../api/#label-loading) row.
+- Each search aborts the request before it through `signal`, and a response that arrives after a newer search started is dropped, so the list never shows an earlier query's results.
+- When `load` throws, the list shows the error with a retry button; see [the states](../states/).
+
+## Paging
+
+While `hasMore` is true, the list ends with a "Load more" row. It loads the next page when it scrolls into view inside the list, or when it is pressed. The next page is appended, and `loadingMore` shows a spinner in that row meanwhile.
+
+## Without the hook
+
+`Autocomplete` takes the same props from anywhere: pass [`options`](../../api/#prop-options), [`loading`](../../api/#prop-loading), [`error`](../../api/#prop-error) and [`onRetry`](../../api/#prop-onRetry), [`hasMore`](../../api/#prop-hasMore) and [`onLoadMore`](../../api/#prop-onLoadMore) from the query library you already use, set [`filter`](../../api/#prop-filter) to `false`, and fetch in [`onSearchChange`](../../api/#prop-onSearchChange).
+
+## Richer rows
+
+An option's label is a string. To show more in each row, as the demo does with download counts, replace the [`OptionLabel`](../../api/#slot-OptionLabel) slot: it receives the `option` record and its `label`.

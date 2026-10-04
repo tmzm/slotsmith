@@ -1,0 +1,34 @@
+---
+title: "Compound parts"
+description: "Lay out the slotsmith Autocomplete yourself with Autocomplete.Provider and its parts, read its state from the context, or use the useAutocomplete hook."
+---
+
+The Autocomplete's default layout is a root, a trigger, a popup and a live region. To place things between them, such as a visible label or a summary, build the layout yourself from the compound parts inside `Autocomplete.Provider`.
+
+{/* Reserved height measured in Chrome: the label, the trigger and the summary line. */}
+<Demo name="autocomplete/compound-parts" height="8.75rem" fallback />
+
+Pick a few topics: the line under the picker reads the selection from the context and clears it.
+
+## The parts
+
+`Autocomplete.Provider` takes every `Autocomplete` prop and renders no markup of its own. Inside it:
+
+- `Autocomplete.Root`: the wrapper, carrying `data-open`, `data-disabled` and `data-empty`. A pointer press outside it closes the popup.
+- `Autocomplete.Trigger`: the combobox with the value or tags, the clear button and the indicator. Name it here: `aria-label` or `aria-labelledby` on the trigger itself.
+- `Autocomplete.Popup`: the positioned popup with the search box and the list. It renders nothing while closed.
+- `Autocomplete.LiveRegion`: the result count for screen readers. The default layout includes it; in your own, add it, as the demo does.
+
+For a popup laid out differently, compose it from `Autocomplete.Search`, `Autocomplete.List`, `Autocomplete.Options` (the option rows without the listbox) and `Autocomplete.StatusRows` (the [loading, empty or error row](../states/)).
+
+These are layout parts, not slots: each still renders the slots inside it, so `components` replaces the elements while the parts decide where they go.
+
+## Reading the state
+
+`useAutocompleteContext()` returns the picker's state and actions to any component inside the provider: `values`, `selected`, `open`, `query`, `options`, `status`, and `select`, `remove`, `clear` and `setOpen`, among others. The demo's summary line uses `values` and `clear`.
+
+To wrap `Autocomplete` in a component of your own that takes the same props, `splitAutocompleteProps(props)` separates the provider's props from the root's DOM props.
+
+## The hook
+
+`useAutocomplete` is the engine underneath, with no markup at all: the selection, the search, the highlight, the full keyboard path and the ARIA wiring, as prop getters (`getRootProps`, `getTriggerProps`, `getSearchProps`, `getListProps`, `getOptionProps`). Use it for a shape the component does not cover, such as an editable input as the trigger or a command palette. Positioning is separate: `usePopupPosition` places a popup against its trigger.
