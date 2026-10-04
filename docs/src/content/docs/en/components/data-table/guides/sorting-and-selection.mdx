@@ -1,0 +1,31 @@
+---
+title: "Sorting and selection"
+description: "Sort the slotsmith data table by one or more columns, and select rows with checkboxes, controlled or uncontrolled, with a rule for rows that cannot be selected."
+---
+
+The data table sorts when you click a column header and selects rows with a checkbox column. Sorting is on by default; pass `enableRowSelection` to add the checkboxes, and `selection` with `onSelectionChange` to read the selected rows.
+
+{/* Reserved height measured in Chrome: 35rem up to 400px, where cells wrap, 26.5rem from 420px. */}
+<Demo name="data-table/sorting-and-selection" height="clamp(26.5rem, 202.9rem - 672vw, 35rem)" fallback />
+
+Click a header to sort by it; click again to reverse, and a third time to clear. Shift-click a second header to add it to the sort. Tick rows to select them: the text under the table lists them. Chloe Martin is on leave, so her checkbox is disabled.
+
+## Sorting
+
+Every column sorts unless its column definition sets `enableSorting: false`, as the Status column does. The header holds a button, and its `<th>` carries `aria-sort`, so screen readers announce the order.
+
+- [`sorting`](../../api/#props) and [`onSortingChange`](../../api/#props) control the sort. The state is a list of `{ id, desc }`, one per sorted column, in priority order. Leave them out and use [`defaultSorting`](../../api/#props) for a starting sort the table keeps itself.
+- [`enableMultiSort`](../../api/#props) lets shift-click add columns to the sort.
+- [`manualSorting`](../../api/#props) says the rows arrive already sorted, for sorting on the server; the table then only reports the clicks.
+
+The header button and the arrow are the [`SortTrigger`](../../api/#slot-SortTrigger) and [`SortIcon`](../../api/#slot-SortIcon) slots, so a design system's own can replace them.
+
+## Selection
+
+[`enableRowSelection`](../../api/#props) adds a checkbox to each row and a select-all checkbox to the header. Given a function, it decides per row: here, rows whose status is "On leave" cannot be selected.
+
+- [`selection`](../../api/#props) and [`onSelectionChange`](../../api/#props) control the selection as row objects, matched to rows by `getRowId`. [`defaultSelection`](../../api/#props) sets a starting selection instead.
+- The header checkbox selects every selectable row on the current page, and is indeterminate while only some are selected.
+- [`resetSelectionOnPageChange`](../../api/#props) clears the selection when the page or the page size changes.
+
+Give rows a stable id with [`getRowId`](../../api/#props), so a selection survives re-sorting and new data. The checkboxes are the [`Checkbox`](../../api/#slot-Checkbox) slot, named by the [`selectRow`](../../api/#label-selectRow) and [`selectAll`](../../api/#label-selectAll) labels.

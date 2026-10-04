@@ -1,0 +1,21 @@
+---
+title: "Footers"
+description: "Add a footer row to the slotsmith data table, such as a total, from each column's footer definition."
+---
+
+The data table adds a footer row as soon as one column defines `footer`. A footer is a string or a function of the table, so it can show a label or add up the rows, the way `header` builds the head.
+
+{/* Reserved height measured in Chrome: the same at every width. */}
+<Demo name="data-table/footers" height="19.75rem" fallback />
+
+The Item column's footer is the text "Total". The Quantity and Amount footers add up the rows the table shows.
+
+## Footer definitions
+
+`footer` sits on the column definition, next to `header`. A function receives the same context a header does, with `table`: `table.getRowModel().rows` are the rows on the current page after sorting, so the total follows the page. Columns with no `footer` get an empty cell.
+
+`meta: { align: "end" }` on a column aligns its header, cells and footer to the end, which suits numbers.
+
+## The footer parts
+
+The footer renders as the [`Foot`](../../api/#slot-Foot) slot (`<tfoot>`), with a [`FooterRow`](../../api/#slot-FooterRow) holding a [`FooterCell`](../../api/#slot-FooterCell) per column. When the table has a checkbox or drag-handle column, the footer row gets an empty cell for it, so the totals stay under their columns. With no `footer` on any column, the table renders no `<tfoot>` at all.

@@ -1,12 +1,32 @@
 ---
+/**
+ * One guide of a component. The prose is `components/<slug>/guides/<guide>.mdx`
+ * and must hold at least one live `<Demo />` (scripts/check-structure.ts). The
+ * template stores the component context first, so the MDX writes
+ * `<Demo name="…" height="…" />` without repeating the language; on an Arabic
+ * page with no Arabic MDX the demos follow the English prose. A guide with no
+ * MDX yet keeps the stub marker.
+ */
 import ComponentPage from "@/components/ComponentPage.astro";
-import { guidePaths } from "@/data/components";
+import Demo from "@/components/Demo.astro";
+import Note from "@/components/Note.astro";
+import SampleCode from "@/components/SampleCode.astro";
+import KeyboardTable from "@/components/reference/KeyboardTable.astro";
+import { componentMeta, guidePaths } from "@/data/components";
 import { langFromParam } from "@/i18n";
+import { setComponentContext } from "@/lib/component-context";
+import { getOptionalProse } from "@/lib/prose";
 
 export function getStaticPaths() {
   return guidePaths();
 }
 
 const { lang: langParam, component, guide } = Astro.params;
+const lang = langFromParam(langParam);
+const { slug } = componentMeta(component);
+const prose = await getOptionalProse(lang, `components/${slug}/guides/${guide}`);
+setComponentContext(Astro.locals, { slug, lang, contentLang: prose && !prose.translated ? "en" : lang });
+
+const components = { Demo, Note, SampleCode, KeyboardTable };
 ---
-<ComponentPage lang={langFromParam(langParam)} component={component} section={`guides/${guide}`} />
+<ComponentPage lang={lang} component={component} section={`guides/${guide}`} components={components} />

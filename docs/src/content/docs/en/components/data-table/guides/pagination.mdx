@@ -1,0 +1,30 @@
+---
+title: "Pagination"
+description: "Split the slotsmith data table into pages, control the page and page size, change the page-size options, or hide the controls."
+---
+
+The data table paginates by default: it shows ten rows a page, with previous and next buttons, a page counter and a page-size control under the table. Pass `pagination` with `onPaginationChange` to control the page, and `pageSizeOptions` to change the sizes offered.
+
+{/* Reserved height measured in Chrome: 33.75rem up to 400px, 31.25rem to 480px (cells and controls wrap), 24.1rem from 500px. */}
+<Demo name="data-table/pagination" height="clamp(24.1rem, 202.85rem - 572vw, 33.75rem)" fallback />
+
+Use the buttons to move between pages, or pick another page size. The text under the table follows the controlled state.
+
+## Page state
+
+The state is `{ pageIndex, pageSize }`, with `pageIndex` counting from 0.
+
+- [`pagination`](../../api/#props) and [`onPaginationChange`](../../api/#props) control it, as the demo does. Leave them out and use [`defaultPagination`](../../api/#props) for a starting page the table keeps itself; the default is the first page of ten rows.
+- [`pageSizeOptions`](../../api/#props) lists the sizes the page-size control offers.
+- [`resetSelectionOnPageChange`](../../api/#props) clears the [selection](../sorting-and-selection/) when the page or the page size changes.
+
+## Turning it off
+
+- [`enablePagination`](../../api/#props) set to `false` renders every row and no controls.
+- [`hidePagination`](../../api/#props) hides the controls but still shows one page, for a table that pages from controls of your own.
+
+For data that is paged on a server, set [`manualPagination`](../../api/#props), pass the current page as `data` and the total as [`rowCount`](../../api/#props). The [server data](../server-data/) guide covers it.
+
+## The controls
+
+The controls are the [`Pagination`](../../api/#slot-Pagination) slot: a `<nav>` named by the [`pagination`](../../api/#label-pagination) label, holding two [`PaginationButton`](../../api/#slot-PaginationButton) slots, the page counter and the [`PageSizeSelect`](../../api/#slot-PageSizeSelect) slot. The counter reads the [`pageInfo`](../../api/#label-pageInfo) label, "Page 1 of 3", in an `aria-live` region, so a page change is read out. The page-size control is the slotsmith Autocomplete, named by the visible [`rowsPerPage`](../../api/#label-rowsPerPage) text. Replace any of these slots with your design system's own.

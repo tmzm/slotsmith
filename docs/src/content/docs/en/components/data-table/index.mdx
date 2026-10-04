@@ -55,12 +55,12 @@ The table works with any design system. Each slot takes a component, so a librar
 
 The table renders a real `<table>`, so screen readers announce rows, columns and headers. What the fallbacks add:
 
-- **Sorting.** A sortable header holds a `<button>`, and its `<th>` carries `aria-sort` (`ascending`, `descending` or `none`). With `enableMultiSort`, shift-click adds a column to the sort.
-- **Selection.** Each row and the header have a checkbox named by the `selectRow` and `selectAll` labels; the header checkbox is indeterminate while some rows on the page are selected.
-- **Tree rows.** The expand toggle is a `<button>` with `aria-expanded`, named by `expandRow` or `collapseRow`.
-- **Pagination.** The controls sit in a `<nav>` named by the `pagination` label. The previous and next buttons are named by `previousPage` and `nextPage`, and the page counter is an `aria-live="polite"` region, so a page change is read out. The page-size control is the slotsmith Autocomplete, a combobox named by the visible `rowsPerPage` text.
-- **Loading and errors.** While loading, the root has `aria-busy="true"` and the skeleton rows are hidden from assistive technology. The error state has `role="alert"` and a retry button.
-- **Row reorder.** Each drag handle is a `<button>` named by `reorderRow`, with `aria-describedby` pointing at hidden instructions (`reorderInstructions`) and `aria-pressed="true"` while it is lifted from the keyboard. A visually hidden live region (`role="status"`, `aria-live="assertive"`) reads each step with the `reorderLifted`, `reorderMoved`, `reorderDropped` and `reorderCancelled` labels, as positions such as "Position 2 of 5". In a tree table, a row with no visible sibling has its handle disabled.
+- **Sorting.** A sortable header holds a `<button>`, and its `<th>` carries `aria-sort` (`ascending`, `descending` or `none`). With `enableMultiSort`, shift-click adds a column to the sort. See [sorting and selection](./guides/sorting-and-selection/).
+- **Selection.** Each row and the header have a checkbox named by the `selectRow` and `selectAll` labels; the header checkbox is indeterminate while some rows on the page are selected. See [sorting and selection](./guides/sorting-and-selection/).
+- **Tree rows.** The expand toggle is a `<button>` with `aria-expanded`, named by `expandRow` or `collapseRow`. See [tree rows](./guides/tree-rows/).
+- **Pagination.** The controls sit in a `<nav>` named by the `pagination` label. The previous and next buttons are named by `previousPage` and `nextPage`, and the page counter is an `aria-live="polite"` region, so a page change is read out. The page-size control is the slotsmith Autocomplete, a combobox named by the visible `rowsPerPage` text. See [pagination](./guides/pagination/).
+- **Loading and errors.** While loading, the root has `aria-busy="true"` and the skeleton rows are hidden from assistive technology. The error state has `role="alert"` and a retry button. See [server data](./guides/server-data/).
+- **Row reorder.** Each drag handle is a `<button>` named by `reorderRow`, with `aria-describedby` pointing at hidden instructions (`reorderInstructions`) and `aria-pressed="true"` while it is lifted from the keyboard. A visually hidden live region (`role="status"`, `aria-live="assertive"`) reads each step with the `reorderLifted`, `reorderMoved`, `reorderDropped` and `reorderCancelled` labels, as positions such as "Position 2 of 5". In a tree table, a row with no visible sibling has its handle disabled. See [row reorder](./guides/row-reorder/).
 
 Moving a row from the keyboard, with focus on its drag handle:
 
