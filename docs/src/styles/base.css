@@ -92,6 +92,11 @@ svg {
   max-inline-size: 100%;
 }
 
+/* The library sizes its own icons: capped at 100%, an svg in a shrink-to-fit cell (the drag-handle column) shrinks to nothing. */
+.sample-stage svg {
+  max-inline-size: none;
+}
+
 button {
   font: inherit;
   color: inherit;
