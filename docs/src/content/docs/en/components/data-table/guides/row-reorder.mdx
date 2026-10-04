@@ -1,0 +1,92 @@
+---
+title: "Row reorder"
+description: "Let people drag rows of the slotsmith data table into a new order by pointer, touch or keyboard, in flat and tree tables, and store the order."
+---
+
+The data table lets people drag rows into a new order, by pointer, touch or keyboard. Pass `enableRowReorder` and `onRowOrderChange`: the table adds a drag handle to each row, reports every drop, and changes nothing until you store the new `data`.
+
+{/* Reserved height measured in Chrome: 34.25rem at 380px and below, where cells wrap, 25.7rem from 506px. */}
+<Demo name="data-table/row-reorder" height="clamp(25.7rem, 63rem - 118vw, 34.25rem)" fallback />
+
+Drag a row by its handle, or focus a handle and press Space, an arrow key, then Space again. The line under the table shows the fields of the last move; Reset puts the rows back.
+
+## Storing the order
+
+The order is yours: `onRowOrderChange` receives a `RowOrderChange` and the table shows the new order only once `data` changes. Store it in the same event, and save it to a server afterwards; a table that waits for the reply shows the row slide back, then jump.
+
+- `row` and `rowId`: the row that moved.
+- `target` and `targetId`: the row it was dropped next to, always one of its siblings.
+- `position`: `"before"` or `"after"` the target.
+- `data`: the top-level rows in their new order.
+- `parentId`, `parent` and `siblings`: for a row in a [tree](../tree-rows/), its parent and the parent's children in their new order. For a top-level row, `parentId` and `parent` are `null` and `siblings` holds the same rows as `data`.
+
+Give rows a stable id with [`getRowId`](../../api/#props); `rowId`, `targetId` and the drag state use it. The library also exports `moveItem(items, from, to, position)`, the same move on a plain list.
+
+## Tree tables
+
+In a tree table a row moves among its siblings only, and takes its expanded sub-rows with it. For a sub-row, `data` is the unchanged top level: store `siblings` as the children of `parent`, as `placeSiblings` does here.
+
+{/* Reserved height measured in Chrome: 30.9rem at 380px and below, where cells wrap, 25.7rem from 420px. */}
+<Demo name="data-table/row-reorder-tree" height="clamp(25.7rem, 80.3rem - 208vw, 30.9rem)" fallback />
+
+Drag Design below Build: its three open sub-rows travel with it. Drag a sub-row of Design: it stays inside Design. A row with no visible sibling, such as the only open child of a parent, has its handle disabled.
+
+## Keyboard
+
+Each handle is a `<button>`, so it is in the tab order. With focus on a handle:
+
+<KeyboardTable rows={[
+  { keys: ["Space", "Enter"], action: "Lift the row." },
+  { keys: ["↑", "↓"], action: "Move the lifted row up or down one place among its siblings." },
+  { keys: ["Space", "Enter"], action: "Drop the row in its new place. Focus stays on its handle." },
+  { keys: ["Esc"], action: "Cancel. The row goes back where it was." },
+  { keys: ["Tab"], action: "Cancel, and move focus on as usual. Leaving the handle any other way cancels too." },
+]} />
+
+While a row is lifted from the keyboard its handle has `aria-pressed="true"`, and the rows scroll so the target stays in view.
+
+## Pointer and touch
+
+The row follows the pointer and the rows it passes slide out of its way. Near the top or bottom edge of the scroll area, or of the window, the view scrolls. Letting go above, below or beside the row's siblings cancels the drag. The handle sets `touch-action: none`, so a touch on it drags the row instead of scrolling the page, and a press on it never counts as a click on the row (`onRowClick`).
+
+## Announcements and labels
+
+A visually hidden live region (`role="status"`, `aria-live="assertive"`) reads each step, with positions counted among the row's siblings: "Row lifted. Position 1 of 6.", "Position 2 of 6.", "Row dropped at position 2 of 6." or "Reordering cancelled.". Every handle's `aria-describedby` points at hidden instructions.
+
+The six strings are labels, so a [locale pack](../../api/#labels) translates them and `labels` replaces any of them: [`reorderRow`](../../api/#label-reorderRow) names each handle, [`reorderInstructions`](../../api/#label-reorderInstructions) is the instructions, and [`reorderLifted`](../../api/#label-reorderLifted), [`reorderMoved`](../../api/#label-reorderMoved), [`reorderDropped`](../../api/#label-reorderDropped) and [`reorderCancelled`](../../api/#label-reorderCancelled) are the announcements; the first three are functions of the position and the total.
+
+## Motion and styling
+
+Rows slide with transforms while a row is dragged, and glide into place after a drop. When the reader prefers reduced motion nothing slides: the lifted rows are dimmed where they are, and a line marks where they will land.
+
+Every body [`Row`](../../api/#slot-Row) carries attributes a stylesheet can use:
+
+- `data-row-id`: the row's id, always present.
+- `data-dragging`: on the row being moved.
+- `data-dragging-child`: on its visible sub-rows, which move with it.
+- `data-drop-position`: `"before"` or `"after"`, on the row it would be dropped next to.
+- `data-drop-edge`: `"before"` or `"after"`, on the row whose edge it would land against: the target for `"before"`, and for `"after"` the last visible row of the target's subtree. Draw a drop line here.
+
+The fallback row already styles them. A design system's own row needs a rule such as `tr[data-dragging], tr[data-dragging-child]` with an opaque background, so the rows underneath do not show through, and the handle has `data-dragging` too.
+
+## The drag handle
+
+The handle is the [`DragHandle`](../../api/#slot-DragHandle) slot. A replacement must spread every prop it receives onto a real `<button>`: the pointer, key and blur handlers, the `aria-*` attributes, `disabled` and `style`.
+
+- [`reorderHandleColumn`](../../api/#props) set to `false` drops the leading handle column; place the handle in a cell of your own with `DataTable.DragHandle`, for example `{ id: "move", header: "", cell: () => <DataTable.DragHandle /> }`.
+- [`slotProps`](../../api/#props)`.dragHandle` adds props to every handle, per row. Its event handlers run after the table's own, not instead of them, so a handler that tracks a press keeps the drag working.
+
+## Sorting and custom rows
+
+A drop while a column is sorted still reorders `data`, but the view stays sorted, so the row slides back to where the sort puts it. Turn sorting off on a table that is ordered by hand, as both demos do with `enableSorting: false`. With pagination, a row moves within its page.
+
+A custom [`Row`](../../api/#slot-Row) slot must keep a stable identity: define the component once, outside the component that renders the table. A row component created during render is a new type each time, so React re-creates every row and each drag is cancelled.
+
+<Note kind="limitation">
+- `VirtualDataTable` ignores row reorder. See [virtual rows](../virtual-rows/).
+- A drop while the table is sorted reorders `data`, but the view stays sorted.
+- No dragging between tables, no multi-row drag, and no moving a row to another parent.
+- A custom `Row` slot must keep a stable identity.
+</Note>
+
+To reorder rows in markup of your own, the [headless hook](../headless-hook/) returns the same engine as `reorder`.

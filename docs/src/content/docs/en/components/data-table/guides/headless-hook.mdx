@@ -1,0 +1,40 @@
+---
+title: "The headless hook"
+description: "Render the slotsmith data table in markup of your own with useDataTable: the state, the TanStack Table instance and row reorder, with no UI."
+---
+
+`useDataTable` is the data table without its markup: it holds the state, builds the TanStack Table instance and runs row reorder, and you render every element yourself. `<DataTable>` calls it for you; use it directly when no slot replacement gets you the markup you need.
+
+{/* Reserved height measured in Chrome: 25.5rem at 380px and below, where cells wrap, 18.05rem from 420px. */}
+<Demo name="data-table/headless-hook" height="clamp(18.05rem, 96.3rem - 298vw, 25.5rem)" />
+
+The demo renders a plain `<table>` with no slotsmith class or stylesheet. Its rows still reorder by pointer, touch and keyboard, with the handle named "Move track" from its own labels.
+
+## Options
+
+`useDataTable` takes the same data and state options as the `DataTable` [props](../../api/#props): `data`, `columns`, `getRowId`, sorting, pagination, selection, expansion, `loading`, `error`, `enableRowReorder` and `onRowOrderChange`, each controlled or not in the same way. What it leaves out is everything about the markup: slots, `slotProps`, the size and `locale`.
+
+One option is the hook's own: `labels`. It reads the six reorder keys, the handle's name, its instructions and the announcements; a key you leave out stays English. `<DataTable>` passes its own `labels` and `locale` to the hook instead.
+
+## What it returns
+
+- `table`: the TanStack Table instance. Render the header groups, rows and cells from it with `flexRender` from `@tanstack/react-table`, as the demo does.
+- `status`: `"loading"`, `"error"`, `"empty"` or `"ready"`, for what the body should show; `error` and `onRetry` are the options as passed.
+- `selection`: the selected rows, including rows on other server pages, and `getRowKey`, the id of any row.
+- `selectable`, `expandable`, `paginationEnabled` and `pageSizeOptions`: what the options turned on.
+- `reorder`, `reorderable` and `reorderHandleColumn`: row reorder, below.
+
+## Row reorder in your own markup
+
+`reorder` is the engine `<DataTable>` uses. Wire it up in four places:
+
+- Spread `reorder.getRowProps(rowId)` on each body row. It gives `data-row-id` always, and during a drag `data-dragging`, `data-dragging-child`, `data-drop-position` and `data-drop-edge`; the demo reads them to draw the lifted row and the drop line.
+- Spread `reorder.getHandleProps(rowId)` on a `<button>` in each row. It carries the handlers, `aria-label`, `aria-describedby`, `aria-pressed`, `disabled` and `touch-action: none`.
+- Render an element with the id `reorder.instructionsId`, hidden, holding the instructions text.
+- Render `reorder.announcement` in a live region (`role="status"`, `aria-live="assertive"`) that is always in the page: a live region added at the moment it changes is not read.
+
+The rows must be siblings in one parent element, such as a `<tbody>`, because the engine measures and moves them there. `reorder.draggingId` and `reorder.target` give the drag state, and `reorder.enabled` says whether a drag can start now. Storing the order works as in the [row reorder](../row-reorder/) guide.
+
+## Between the two
+
+To keep most of the table and replace one region, there is a middle way: `DataTable.Provider` runs the hook and shares its result, `DataTable.Root`, `DataTable.Table` and `DataTable.Pagination` render the parts, and `useDataTableContext()` reads the same model inside any component you put among them.

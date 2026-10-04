@@ -1,0 +1,39 @@
+---
+title: "Virtual rows"
+description: "Render long lists in the slotsmith data table with VirtualDataTable, which draws only the rows in view."
+---
+
+`VirtualDataTable` is the data table for long lists: it renders only the rows in view, inside a scroll area with a sticky header. It takes the same props as `DataTable`, plus `virtual`, and comes from `slotsmith/virtual`, which needs `@tanstack/react-virtual` installed.
+
+{/* Reserved height measured in Chrome: the 360px scroll area plus the panel padding, the same at every width. */}
+<Demo name="data-table/virtual-rows" height="24.65rem" fallback />
+
+The table holds 10,000 log lines, built from their index so every render gets the same ones. Scroll it, or sort by a column: only the rows on screen exist in the page.
+
+## Install
+
+`@tanstack/react-virtual` is an optional peer: only `slotsmith/virtual` imports it, so a project that never imports `VirtualDataTable` does not need it.
+
+```sh
+pnpm add @tanstack/react-virtual
+```
+
+## The virtual option
+
+`virtual` takes three numbers:
+
+- `maxHeight`: the height of the scroll area, in pixels or as a CSS length. Defaults to 480.
+- `estimateSize`: the height of one row, in pixels. Defaults to 40. Rows are not measured, so set it to the height your rows have, and keep them that height: the demo stops its cells from wrapping with `slotProps.cell`, so a narrow screen scrolls the table sideways instead of growing the rows.
+- `overscan`: how many rows to render beyond the visible ones, so a fast scroll shows no blank space. Defaults to 10.
+
+Pagination is off by default; [`enablePagination`](../../api/#props) turns it back on. The table is compact (`size="sm"`) unless you pass `size="default"`.
+
+Everything else works as in `DataTable`: [sorting](../sorting-and-selection/), selection, [tree rows](../tree-rows/), the loading, empty and error states, labels and every slot. Rows above and below the window are stood in for by empty spacer rows, so the native table layout, and every `Row` and `Cell` slot, stays as it is.
+
+<Note kind="limitation">
+`VirtualDataTable` ignores row reorder. With `enableRowReorder` it shows no drag handles and logs a warning while you develop. For a list that people reorder by hand, use `DataTable`, with [pagination](../pagination/) if it is long. See [row reorder](../row-reorder/).
+</Note>
+
+## Your own layout
+
+`VirtualDataTable` is `DataTable.Provider` with a virtual body. To place the parts yourself, render `DataTableVirtualBody` from `slotsmith/virtual` as the `body` of `DataTable.Table`, and pass it the scroll area through `scrollRef`.

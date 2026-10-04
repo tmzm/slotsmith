@@ -1,7 +1,9 @@
 {
   "data-table": {
+    "Root": ["data-virtual"],
     "Row": ["data-row-id", "data-state", "data-dragging", "data-dragging-child", "data-drop-position", "data-drop-edge"],
     "HeaderCell": ["data-slot"],
-    "Cell": ["data-slot"]
+    "Cell": ["data-slot"],
+    "ExpandToggle": ["data-expanded"]
   }
 }

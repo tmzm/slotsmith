@@ -1,0 +1,29 @@
+---
+title: "Tree rows"
+description: "Show nested rows in the slotsmith data table with getSubRows, and control which rows are expanded."
+---
+
+The data table shows nested rows when you pass `getSubRows`, a function that returns a row's children. Rows with children get an expand toggle in their first cell, and each level is indented. Pass `expanded` with `onExpandedChange` to control which rows are open.
+
+{/* Reserved height measured in Chrome, collapsed as it loads: 20.5rem at 360px, where cells wrap, 16.2rem from 400px. */}
+<Demo name="data-table/tree-rows" height="clamp(16.2rem, 74.2rem - 232vw, 20.5rem)" fallback />
+
+Open Engineering, then Platform, to see two levels of sub-rows. The text under the table lists the expanded rows by id.
+
+## Sub-rows
+
+[`getSubRows`](../../api/#props) receives each row and returns its children, or `undefined` for a leaf. The children use the same columns as their parent. Give every row, at every level, an id with [`getRowId`](../../api/#props), so the expanded state, the selection and a [row reorder](../row-reorder/) follow the row and not its position.
+
+For children that load later, [`getRowCanExpand`](../../api/#props) decides which rows show a toggle before their children arrive; fetch the children when the row expands and put them in `data`.
+
+## Expanded state
+
+- [`expanded`](../../api/#props) and [`onExpandedChange`](../../api/#props) control it, as the demo does. The state is `{ [rowId]: true }` for the open rows, or `true` for every row.
+- [`defaultExpanded`](../../api/#props) sets a starting state the table keeps itself, such as `{ eng: true }` or `true` to open everything.
+- [`paginateExpandedRows`](../../api/#props) counts sub-rows towards the page size. By default only top-level rows count, so a page keeps its parents' children with it.
+
+## The parts
+
+The toggle is the [`ExpandToggle`](../../api/#slot-ExpandToggle) slot: a `<button>` with `aria-expanded`, named by the [`expandRow`](../../api/#label-expandRow) or [`collapseRow`](../../api/#label-collapseRow) label. It receives `expanded`, `depth` and `onToggle`, and a click on it does not run `onRowClick`. A row with no children gets a spacer in its place, so the names line up.
+
+Each [`Row`](../../api/#slot-Row) carries `data-depth` (`0` for top-level rows) and, when it can expand, `data-expanded` (`"true"` or `"false"`), so a stylesheet can mark the levels.
