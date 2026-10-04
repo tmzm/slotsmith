@@ -8,6 +8,8 @@ export const OVERVIEW_HEADINGS = ["Overview", "Install", "Quick start", "Guides"
 const OVERVIEW_FILE = /(?:^|\/)content\/docs\/[^/]+\/components\/[^/]+\/index\.mdx$/;
 const GUIDE_FILE = /(?:^|\/)content\/docs\/[^/]+\/components\/[^/]+\/guides\/[^/]+\.mdx$/;
 const QUICK_START_FILE = /(?:^|\/)samples\/[^/]+\/quick-start\.tsx$/;
+/** An import of `../shared/` in any form: `from "…"` (an import or a re-export), a side-effect `import "…"`, or a dynamic `import("…")`. */
+const SHARED_IMPORT = /\b(?:from|import)\s*\(?\s*["']\.\.\/shared\//;
 const DOCS_MDX_FILE = /(?:^|\/)content\/docs\/.+\.mdx$/;
 
 /** Fenced code blocks, so a `##` or `<Demo` inside an example is not read as page structure. */
@@ -42,7 +44,7 @@ function overviewProblems(mdx: string): string[] {
  *   heading, one for unknown headings and one for a wrong order. A guide MDX
  *   (`components/<slug>/guides/*.mdx`) without a `<Demo`: one message. A
  *   quick-start sample (`samples/<slug>/quick-start.tsx`) importing from
- *   `../shared/`: one message, since quick starts are copied standalone.
+ *   `../shared/` in any form (static, side-effect, dynamic or re-export): one message, since quick starts are copied standalone.
  *   Anything else: none.
  */
 export function findStructureProblems(file: string, text: string): string[] {
@@ -52,7 +54,7 @@ export function findStructureProblems(file: string, text: string): string[] {
     return /<Demo\b/.test(text.replace(FENCED, "")) ? [] : ["a guide needs at least one live <Demo />"];
   }
   if (QUICK_START_FILE.test(path)) {
-    return /from\s+["']\.\.\/shared\//.test(text) ? ['a quick start must be standalone: inline its data instead of importing from "../shared/"'] : [];
+    return SHARED_IMPORT.test(text) ? ['a quick start must be standalone: inline its data instead of importing from "../shared/"'] : [];
   }
   return [];
 }

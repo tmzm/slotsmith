@@ -44,6 +44,19 @@ describe("findStructureProblems", () => {
     expect(findStructureProblems(QUICK_START, 'import { DataTable } from "slotsmith/data-table";\n')).toEqual([]);
   });
 
+  it.each([
+    ["a side-effect import", 'import "../shared/people";\n'],
+    ["a dynamic import", 'const people = await import("../shared/people");\n'],
+    ["a dynamic import with spaces", "const people = await import ( '../shared/people' );\n"],
+    ["a re-export", 'export { people } from "../shared/people";\n'],
+  ])("reports a quick-start sample with %s of a shared file", (_kind, sample) => {
+    expect(findStructureProblems(QUICK_START, sample)).toHaveLength(1);
+  });
+
+  it("does not mistake a string mentioning ../shared/ for an import", () => {
+    expect(findStructureProblems(QUICK_START, 'const note = "see ../shared/people";\n')).toEqual([]);
+  });
+
   it("leaves other files alone", () => {
     expect(findStructureProblems("src/content/docs/en/theming.mdx", "## Anything\n")).toEqual([]);
     expect(findStructureProblems("samples/data-table/overview.tsx", 'import { people } from "../shared/people";\n')).toEqual([]);
