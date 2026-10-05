@@ -299,6 +299,8 @@ describe("file uploader guide: virtual", () => {
   it("renders a scroll container with fewer rows in the DOM than files", () => {
     render(<Virtual />);
     const list = document.querySelector<HTMLElement>(".sfu__list")!;
+    // The sample's workaround for the flex list that shrinks the spacer rows.
+    expect(list.style.display).toBe("block");
     expect(list.style.maxHeight).toBe("320px");
     expect(list.style.overflowY).toBe("auto");
     const rows = list.querySelectorAll(".sfu__item");
@@ -344,13 +346,13 @@ describe("file uploader samples: prerender", () => {
   });
 });
 
-/** Each adapter demo and an element only that library renders. */
-const ADAPTER_DEMOS: [name: ProviderName, Demo: ComponentType, marker: string][] = [
-  ["shadcn", ShadcnDemo, '[data-slot="dropzone"]'],
-  ["mui", MuiDemo, ".MuiPaper-root"],
-  ["chakra", ChakraDemo, "[class*='chakra-button']"],
-  ["antd", AntdDemo, ".ant-btn"],
-  ["radix", RadixDemo, ".rt-Button, .rt-IconButton"],
+/** Each adapter demo, an element only that library renders, and the role of its refusal region. */
+const ADAPTER_DEMOS: [name: ProviderName, Demo: ComponentType, marker: string, refusalRole: "status" | "alert"][] = [
+  ["shadcn", ShadcnDemo, '[data-slot="dropzone"]', "status"],
+  ["mui", MuiDemo, ".MuiPaper-root", "status"],
+  ["chakra", ChakraDemo, "[class*='chakra-button']", "status"],
+  ["antd", AntdDemo, ".ant-btn", "status"],
+  ["radix", RadixDemo, ".rt-Button, .rt-IconButton", "status"],
 ];
 
 const Wrapped = ({ name, children }: { name: ProviderName; children: ReactNode }) => {
@@ -386,7 +388,7 @@ describe("file uploader adapter demos", () => {
     })) as typeof window.matchMedia;
   });
 
-  it.each(ADAPTER_DEMOS)("%s: shows the stored file with the library's parts, uploads a new one and refuses a wrong type", { timeout: 60000 }, async (name, Demo, marker) => {
+  it.each(ADAPTER_DEMOS)("%s: shows the stored file with the library's parts, uploads a new one and refuses a wrong type", { timeout: 60000 }, async (name, Demo, marker, refusalRole) => {
     vi.useFakeTimers();
     const { container } = render(
       <Wrapped name={name}>
@@ -408,12 +410,16 @@ describe("file uploader adapter demos", () => {
     } else {
       expect(screen.getByRole("progressbar", { name: "Uploading plan.pdf" })).toBe(bar);
     }
-    if (name !== "shadcn") expect(bar.getAttribute("aria-valuenow")).toBe("40");
+    expect(bar.getAttribute("aria-valuenow")).toBe("40");
     await advance(1000);
     expect(screen.queryByRole("progressbar")).toBeNull();
     expect(screen.getAllByRole("button", { name: "Remove file" })).toHaveLength(2);
 
     pick([file("notes.txt", "text/plain")], container);
-    expect(screen.getByText("notes.txt is not an allowed file type")).toBeTruthy();
+    const refusal = screen.getByText("notes.txt is not an allowed file type");
+    const region = refusal.closest('[role="status"],[role="alert"]');
+    expect(region, `${name} refusal region`).not.toBeNull();
+    expect(region!.getAttribute("role")).toBe(refusalRole);
+    if (refusalRole === "status") expect(region!.getAttribute("aria-live") ?? "polite").toBe("polite");
   });
 });
