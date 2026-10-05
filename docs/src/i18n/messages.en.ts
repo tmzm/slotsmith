@@ -114,6 +114,9 @@ export const en = {
     "Every string {component} shows or announces, with its English default. Pass {labels} to change some of them for one component, or {locale} to switch every string to another language. The demo below does both.",
   "api.languages": "The ready-made language packs, right-to-left support and app-wide locales are on {link}.",
   "api.languagesLink": "the Languages page",
+  "api.validationLabels": "Validation messages",
+  "api.validationLabelsLead":
+    "The messages for files the constraints turn away, a second labels section. Pass {validationLabels} to change some of them for one component; a {locale} pack translates them with the rest.",
   "api.stylingLead":
     "The class names the fallbacks of {component} put on their elements, and the tokens its stylesheet reads. Set a token on the component, or on any element around it, to restyle it; target a class only for what no token covers.",
   "api.themingLink": "Theming covers the tokens and the ready-made themes.",
@@ -135,6 +138,7 @@ export const en = {
   "ref.slotsLabel": "Slots",
   "ref.propsLabel": "Props",
   "ref.labelsLabel": "Labels",
+  "ref.validationLabelsLabel": "Validation messages",
   "ref.classesLabel": "Class names",
   "ref.tokensLabel": "Tokens",
   "ref.name": "Name",

@@ -1,0 +1,25 @@
+---
+title: "Editing a record"
+description: "Show the files a record already has in the slotsmith FileUploader: pass their URLs as defaultValue, then save the URLs onUrlsChange gives back."
+---
+
+To edit a record that already has files, pass their stored URLs to the file uploader as `defaultValue`. Each becomes a finished item, with a preview for images, that can be removed like any other. `onUrlsChange` gives back the URLs to save: the ones left plus the new uploads.
+
+{/* Reserved height measured in Chrome: the drop zone, the stored image's row and the output line. */}
+<Demo name="file-uploader/editing-a-record" height="23rem" fallback />
+
+The record starts with one stored image. Remove it, or add another: the line under the uploader shows what the form would save.
+
+## From URLs to items
+
+[`defaultValue`](../../api/#prop-defaultValue) takes stored URLs, `File` objects or full items. A URL becomes an item that is already `done`:
+
+- Its name is the last part of the URL path, decoded.
+- Its type is guessed from the extension, so a `.jpg`, `.png`, `.webp` or other image extension shows a preview. Anything else shows the file glyph.
+- Its size is unknown, so none is shown. It has no file, so it cannot be retried.
+
+`defaultValue` is read once, when the uploader mounts. To change the items later, control them with [`value`](../../api/#prop-value) and [`onValueChange`](../../api/#prop-onValueChange).
+
+## Saving
+
+[`onUrlsChange`](../../api/#prop-onUrlsChange) is called after every change with the URLs of the stored items and of the finished uploads, in list order. A file still uploading has no URL yet, so it joins the list when it finishes. That array is what a record usually keeps.

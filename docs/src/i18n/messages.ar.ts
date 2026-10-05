@@ -114,6 +114,9 @@ export const ar: Record<MessageKey, string> = {
     "كل نص يعرضه {component} أو يعلنه، مع قيمته الافتراضية بالإنجليزية. مرّر {labels} لتغيير بعضها في مكوّن واحد، أو {locale} لتحويل كل النصوص إلى لغة أخرى. العرض أدناه يفعل الأمرين.",
   "api.languages": "حزم اللغات الجاهزة ودعم الكتابة من اليمين إلى اليسار واللغة على مستوى التطبيق موضّحة في {link}.",
   "api.languagesLink": "صفحة اللغات",
+  "api.validationLabels": "رسائل التحقق",
+  "api.validationLabelsLead":
+    "رسائل الملفات التي ترفضها القيود، وهي قسم ثانٍ من النصوص. مرّر {validationLabels} لتغيير بعضها في مكوّن واحد، وحزمة {locale} تترجمها مع بقية النصوص.",
   "api.stylingLead":
     "أسماء الأصناف التي تضعها البدائل الافتراضية في {component} على عناصرها، والمتغيرات التي يقرؤها ملف تنسيقه. اضبط متغيرًا على المكوّن أو على أي عنصر يحيط به لتغيير مظهره، واستهدف الصنف فقط لما لا يغطيه متغير.",
   "api.themingLink": "صفحة السمات تشرح المتغيرات والسمات الجاهزة.",
@@ -135,6 +138,7 @@ export const ar: Record<MessageKey, string> = {
   "ref.slotsLabel": "الفتحات",
   "ref.propsLabel": "الخصائص",
   "ref.labelsLabel": "النصوص",
+  "ref.validationLabelsLabel": "رسائل التحقق",
   "ref.classesLabel": "أسماء الأصناف",
   "ref.tokensLabel": "المتغيرات",
   "ref.name": "الاسم",

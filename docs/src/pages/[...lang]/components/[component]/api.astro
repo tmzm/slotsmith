@@ -4,11 +4,14 @@
  * Styling, each an `<h2>` with a lead from the catalog and its table from
  * `getReference()`. The labels section also renders the component's
  * `<slug>/labels` sample, which passes `labels` and `locale`; until that
- * sample exists the page stays marked as a stub.
+ * sample exists the page stays marked as a stub. A component with validation
+ * messages (the file uploader) gets a second labels table under its own
+ * heading.
  */
 import ComponentPage from "@/components/ComponentPage.astro";
 import Demo from "@/components/Demo.astro";
 import H2 from "@/components/prose/H2.astro";
+import H3 from "@/components/prose/H3.astro";
 import Fill from "@/components/reference/Fill.astro";
 import LabelTable from "@/components/reference/LabelTable.astro";
 import PropTable from "@/components/reference/PropTable.astro";
@@ -36,7 +39,11 @@ const SECTIONS = [
   { id: "labels", key: "api.labels" },
   { id: "styling", key: "api.styling" },
 ] as const;
-const headings = SECTIONS.map(({ id, key }) => ({ id, text: t(lang, key), depth: 2 as const }));
+const hasValidation = (reference.validationLabels?.length ?? 0) > 0;
+const headings = SECTIONS.flatMap(({ id, key }) => [
+  { id, text: t(lang, key), depth: 2 as 2 | 3 },
+  ...(id === "labels" && hasValidation ? [{ id: "validation-labels", text: t(lang, "api.validationLabels"), depth: 3 as 2 | 3 }] : []),
+]);
 const exportName = reference.exportName;
 const [languagesBefore = "", languagesAfter = ""] = t(lang, "api.languages", { link: "\u0000" }).split("\u0000");
 ---
@@ -63,6 +70,15 @@ const [languagesBefore = "", languagesAfter = ""] = t(lang, "api.languages", { l
       <p><Fill lang={lang} message="api.labelsLead" code={{ component: exportName, labels: "labels", locale: "locale" }} /></p>
     </div>
     <LabelTable slug={slug} lang={lang} />
+    {hasValidation && (
+      <>
+        <div class="prose">
+          <H3 id="validation-labels">{t(lang, "api.validationLabels")}</H3>
+          <p><Fill lang={lang} message="api.validationLabelsLead" code={{ validationLabels: "validationLabels", locale: "locale" }} /></p>
+        </div>
+        <LabelTable slug={slug} lang={lang} section="validation" />
+      </>
+    )}
     {hasLabelsSample && <Demo name={labelsSample} lang={lang} height="15rem" />}
     <p class="api-more">
       {languagesBefore}<a href={localePath(lang, "/languages/")}>{t(lang, "api.languagesLink")}</a>{languagesAfter}

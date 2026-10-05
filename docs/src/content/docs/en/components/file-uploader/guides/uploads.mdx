@@ -1,0 +1,35 @@
+---
+title: "Uploads"
+description: "Give the slotsmith FileUploader an upload function: files are queued with progress, cancel through an AbortSignal, and retry after a failure."
+---
+
+Pass the file uploader an `upload` function and it uploads: each file is queued, shows its progress, can be cancelled while it runs, and can be retried after it fails. The function receives the file and `{ signal, onProgress }`, and returns the URL to keep.
+
+{/* Reserved height measured in Chrome: the checkbox, the empty drop zone and the output line. */}
+<Demo name="file-uploader/uploads" height="20.75rem" fallback />
+
+Drop three files: two upload at once and the third waits. Press Cancel on one while it runs. Then tick the box, add another file, and retry it once it fails. The uploads are simulated in the page; nothing leaves your browser.
+
+## The upload function
+
+[`upload`](../../api/#prop-upload) is called once per file with the file and a context:
+
+- `signal` is an `AbortSignal`. It aborts when the item is cancelled or removed, or the component unmounts. Pass it to `fetch` or axios so the request stops too.
+- `onProgress(percent)` takes a number from 0 to 100. Values are rounded and clamped.
+- `item` is the item being sent, for an id the server needs.
+
+It returns a promise of a URL string, an object `{ url, data }`, or nothing. The URL goes into the item and into [`onUrlsChange`](../../api/#prop-onUrlsChange); `data` is kept on the item for ids and metadata the server sends back. A rejected promise marks the item failed, and the error's message is shown in it. The demo's `fakeUpload`, in its `fake-upload.ts` tab, has the same shape.
+
+## The queue
+
+Uploads start as soon as files are added. [`concurrency`](../../api/#prop-concurrency) sets how many run at once (3 by default; the demo uses 2), and the rest wait as `ready`. With [`autoUpload`](../../api/#prop-autoUpload) set to `false`, nothing starts until you call `uploadAll()` from `useFileUploaderContext()`.
+
+## Cancel, retry and remove
+
+Each item's actions follow its status:
+
+- **Uploading:** Cancel aborts the signal and puts the item back to `ready`. A cancelled item has no Retry button; `uploadAll()` sends it again. Remove aborts the upload and drops the item.
+- **Failed:** the error replaces the size, and Retry sends the file again from zero.
+- **Any status:** Remove drops the item and releases its preview.
+
+[`onUploaded`](../../api/#prop-onUploaded) and [`onUploadError`](../../api/#prop-onUploadError) are called per file, for a toast or a log.

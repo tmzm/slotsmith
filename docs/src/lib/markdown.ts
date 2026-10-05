@@ -5,15 +5,17 @@
  * title, the description as a quote, then the page's content. Prose comes
  * from the MDX with its blocks turned into what they show: a demo becomes its
  * sample's code, the install block its commands, a keyboard table a Markdown
- * table, `<Faq />` the frontmatter's questions. Generated pages (API,
- * Adapters) are written from the reference and the adapter samples. Links
- * become absolute, so a copy reads the same wherever it is pasted.
+ * table, `<CompoundParts />` a list of the parts, `<Faq />` the
+ * frontmatter's questions. Generated pages (API, Adapters) are written from
+ * the reference and the adapter samples. Links become absolute, so a copy
+ * reads the same wherever it is pasted.
  */
 import { SITE } from "../../site.config.ts";
 import { COMPONENTS, componentMeta, type ComponentSlug } from "@/data/components";
 import { landingFaq, type FaqItem } from "@/data/faq";
 import { localePath, t, type Lang, type MessageKey } from "@/i18n";
 import { ADAPTER_LIBRARIES } from "@/lib/adapters";
+import { compoundParts } from "@/lib/compound-parts";
 import { canonicalUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/pages";
 import { getReference, type ComponentReference } from "@/lib/reference";
@@ -245,6 +247,14 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
         return page.component ? guideListMarkdown(page.component, page.lang, contentLang) : "";
       case "Reference":
         return page.component ? referenceLinksMarkdown(page.component, page.lang, contentLang) : "";
+      case "CompoundParts": {
+        const slug = (attrs.slug as ComponentSlug | undefined) ?? page.component;
+        return slug
+          ? compoundParts(slug)
+              .map((part) => `- ${code(part.member)}${part.named === part.member.replace(".", "") ? "" : ` (${code(part.named)})`}`)
+              .join("\n")
+          : "";
+      }
       case "KeyboardTable": {
         const rows = literal<{ keys: string[]; action: string }[]>(attrs.rows) ?? [];
         return markdownTable([t(contentLang, "overview.keys"), t(contentLang, "overview.action")], rows.map((row) => [row.keys.join(", "), row.action]));
@@ -288,6 +298,16 @@ function apiMarkdown(slug: ComponentSlug, lang: Lang): string {
       ["Label", "Type", "Default", "Description"],
       reference.labels.map((label) => [code(label.name), code(label.type), label.default ? code(label.default) : "", label.description]),
     ),
+    ...(reference.validationLabels?.length
+      ? [
+          `### ${t(lang, "api.validationLabels")}`,
+          t(lang, "api.validationLabelsLead", { validationLabels: code("validationLabels"), locale: code("locale") }),
+          markdownTable(
+            ["Label", "Type", "Default", "Description"],
+            reference.validationLabels.map((label) => [code(label.name), code(label.type), label.default ? code(label.default) : "", label.description]),
+          ),
+        ]
+      : []),
     `## ${t(lang, "api.styling")}`,
     t(lang, "api.stylingLead", { component }),
     `Classes: ${reference.classes.map(code).join(", ")}`,

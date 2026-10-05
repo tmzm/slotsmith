@@ -1,0 +1,95 @@
+---
+title: "File uploader"
+description: "A React file uploader with drag and drop, validation, image previews and uploads with progress, retry and cancel, or a plain picker. Every part is replaceable."
+faq:
+  - q: "How does the file uploader send files?"
+    a: "Through the upload function you pass: upload(file, { signal, onProgress }) returns a promise with the stored URL. Use fetch, axios or a presigned PUT. Pass signal on so Cancel stops the request, and call onProgress with a percentage. Uploads are queued, three at a time by default."
+    link: "/components/file-uploader/guides/uploads/"
+  - q: "Can I use the file uploader in a form without uploading?"
+    a: "Yes. Leave out upload and nothing is ever sent: the items stay ready and onFilesChange hands you the File objects, so the form sends them with the rest of its fields."
+    link: "/components/file-uploader/guides/picker/"
+  - q: "How do I show the files a record already has?"
+    a: "Pass their URLs as defaultValue. Each becomes a finished item, with a preview when the URL ends in an image extension, and can be removed like any other. onUrlsChange gives you the URLs to save."
+    link: "/components/file-uploader/guides/editing-a-record/"
+  - q: "In what unit are maxSize and minSize?"
+    a: "Bytes, so 5 MB is 5 * 1024 * 1024. The hint and the rejection messages show the limit formatted with 1024 per step (5 MB, 512 KB). maxFiles counts the items already in the list."
+    link: "/components/file-uploader/guides/validation/"
+  - q: "Does the file uploader work in Arabic and right to left?"
+    a: "Yes. A locale pack translates the parts' text and the rejection messages, two sections called fileUploader and fileValidation, and writes the sizes in that language's number format. The layout uses logical properties, so it mirrors inside a right-to-left ancestor."
+    link: "/components/file-uploader/api/#labels"
+---
+
+The slotsmith FileUploader is a React file uploader. Drop or browse files, check them against your limits, preview images, and upload them with progress, retry and cancellation. Leave out the `upload` function and it is a picker that never touches the network. Every part is a slot you can replace.
+
+## Overview
+
+The demo below uses the fallbacks only, and its uploads are simulated in the page: nothing leaves your browser. Drop up to four images or PDFs, or press <kbd>Enter</kbd> on the drop zone to browse. Tick the box to make the next uploads fail, then retry them.
+
+{/* Reserved height measured in Chrome: the checkbox, the empty drop zone and the count line. */}
+<Demo name="file-uploader/overview" height="20.75rem" fallback />
+
+Each feature has a guide with its own live demo: [the picker](./guides/picker/) for forms that send files themselves, [uploads](./guides/uploads/) with progress, cancel and retry, the [tile](./guides/tile/) and [compact](./guides/compact/) layouts, [editing a record](./guides/editing-a-record/) that already has files, [validation](./guides/validation/), and [virtual lists](./guides/virtual/) for batches of hundreds.
+
+## Install
+
+<Install />
+
+## Quick start
+
+Render `FileUploader` and read the files from `onFilesChange`. With no `upload` prop nothing is sent. `accept` filters the file dialog and is checked again on drop, and `maxSize` is in bytes.
+
+<QuickStart height="18.125rem" />
+
+## Guides
+
+<GuideList />
+
+## Reference
+
+The [API page](./api/) is generated from the library's source, so it lists every slot, prop and label the installed version has. The file uploader has two label sections: the parts' text, and the [validation messages](./api/#validation-labels) for refused files.
+
+<Reference />
+
+`FileUploader` is also a set of compound parts, for a layout of your own. `FileUploader.Provider` runs the uploader and renders no markup; the others render the parts in it, and `useFileUploaderContext()` reads its state anywhere inside. The [validation guide's demo](./guides/validation/) is built from them. The list is read from the installed library:
+
+<CompoundParts />
+
+## Adapters
+
+The file uploader works with any design system. Each slot takes a component, so a library's own surface, buttons, avatar and progress bar can replace the fallbacks while the queue, the validation and the previews stay the same. The [Adapters page](./adapters/) has ready slot maps for shadcn/ui, MUI, Chakra, Ant Design and Radix Themes, as examples of well-known libraries; the same approach works with your own.
+
+## Accessibility
+
+- **The drop zone** has `role="button"` and is in the tab order (`tabindex="0"`, or `-1` while [`disabled`](./api/#prop-disabled), with `aria-disabled`). It is named by the [`dropzone`](./api/#label-dropzone) label, "Add files" by default. A click, <kbd>Enter</kbd> or <kbd>Space</kbd> opens the file dialog. Dragging a file over it sets `data-dragging` and switches the title to the [`dropHere`](./api/#label-dropHere) label.
+- **The file input** is a real `<input type="file">`, visually hidden but left in the accessibility tree and named by the same label. It is out of the tab order, because the zone and the Browse button open it, but Chrome exposes it as a second "Add files" button to a screen reader's browse mode; this is a known library issue. Its `accept` and `multiple` follow your props.
+- **The Browse button** is a `<button type="button">` inside the zone, so it never submits a form. A button inside a `role="button"` element is a nested interactive control, which some screen readers announce poorly; this is a known library issue.
+- **Progress** is a `role="progressbar"` with `aria-valuenow` (the percentage, rounded), `aria-valuemin="0"` and `aria-valuemax="100"`, named "Uploading" and the file name by the [`progress`](./api/#label-progress) label. See it in the [uploads guide](./guides/uploads/).
+- **Each item's actions** are buttons named by the [`remove`](./api/#label-remove), [`retry`](./api/#label-retry) and [`cancel`](./api/#label-cancel) labels. The names do not include the file name, so a list of several files has several "Remove file" buttons; the button sits in the file's list item.
+- **Image previews** are `<img>` elements with alt text from the [`preview`](./api/#label-preview) label ("Preview of photo.png"). Other files show a decorative glyph, hidden from assistive technology.
+- **Refused files** are listed in a `role="status"` region with `aria-live="polite"`, and stay until the Dismiss button, named by the [`dismiss`](./api/#label-dismiss) label, clears them. The region appears with the first refusal, which some screen readers do not announce; later refusals are added to it and announced without interrupting. This is a known library issue. See the [validation guide](./guides/validation/).
+- **Status changes** of an item (Uploading, Uploaded, Failed) are shown as text in the item and are not announced on their own.
+
+With focus on the drop zone, or in the compact layout on the Browse button:
+
+<KeyboardTable rows={[
+  { keys: ["Enter", "Space"], action: "Open the file dialog." },
+  { keys: ["Tab"], action: "Move to the Browse button, then to each item's Cancel, Retry and Remove buttons, then to Dismiss when files were refused." },
+]} />
+
+Every label can be translated or replaced; see [Labels & locales](./api/#labels).
+
+## Limitations
+
+<Note kind="limitation">
+- One request per file. There are no chunked or resumable uploads, and a retry starts the file again from zero.
+- No `name` prop: the file input has no name, so a plain HTML form does not send the files. Build the request yourself from `onFilesChange`, as the [picker guide](./guides/picker/) does.
+- Files only: a dropped folder is not read file by file, and there is no paste from the clipboard.
+- `accept` checks the file name and the MIME type the browser reports, not the file's contents. Check files on the server too.
+- Previews are object URLs for images only. There is no cropping, resizing or compression before upload.
+- A drop that misses the zone opens the file in the browser tab, unless you set [`captureWindowDrops`](./api/#prop-captureWindowDrops).
+- Items restored from a URL have no size, so none is shown, and cannot be retried.
+</Note>
+
+## FAQ
+
+<Faq />

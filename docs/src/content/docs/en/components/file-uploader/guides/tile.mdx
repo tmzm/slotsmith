@@ -1,0 +1,22 @@
+---
+title: "The tile layout"
+description: "The slotsmith FileUploader's tile variant: one square where the picked image replaces the drop zone, for avatars, logos and covers."
+---
+
+Set `variant="tile"` and the file uploader is a single square where the picked image replaces the drop zone. The preview shows at once, from a local object URL, while the upload runs. Use it for avatars, logos and covers.
+
+{/* Reserved height measured in Chrome: the caption and the 160px tile. */}
+<Demo name="file-uploader/tile" height="16.5rem" fallback />
+
+Pick an image: it fills the tile, a progress bar runs along its bottom edge, and the Remove button in the corner brings the empty tile back.
+
+## How the tile works
+
+- The zone shows the newest item: its preview, its progress while it uploads, its error if it fails, and its actions. There is no list.
+- Without [`multiple`](../../api/#prop-multiple), a new pick replaces the current image, as a profile photo should.
+- The preview comes from the file before the upload finishes, so it never waits for the server. After a reload, pass the stored URL as [`defaultValue`](../editing-a-record/).
+- The tile is 160px square. Set the `--sfu-tile-size` token on the component or an ancestor to change it; see [Styling](../../api/#styling).
+
+## Naming the tile
+
+The zone is a button named by the [`dropzone`](../../api/#label-dropzone) label, "Add files" by default. The demo sets it to "Profile photo", so a screen reader announces what the tile is for, and sets the [`title`](../../api/#label-title) shown inside the empty tile.

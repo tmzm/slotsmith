@@ -1,0 +1,24 @@
+---
+title: "The compact layout"
+description: "The slotsmith FileUploader's compact variant: a Browse button and the limits on one line, with the files listed under it, for tight forms and toolbars."
+---
+
+Set `variant="compact"` and the file uploader is a Browse button and the limits on one line, with no drop zone, and the files listed under it. Use it in tight forms, dialogs and toolbars, where a large drop area does not fit.
+
+{/* Reserved height measured in Chrome: the caption and the button row. */}
+<Demo name="file-uploader/compact" height="9.25rem" fallback />
+
+Attach a PDF: it is listed under the button and uploads as in the other layouts.
+
+## What changes
+
+- The root carries `data-variant="compact"`, for your own styles.
+- There is no drop zone, so nothing takes a drop and no element has `role="button"`. The Browse button, the `Trigger` slot, opens the file dialog.
+- The hint beside the button lists the limits, as in the drop zone.
+- The list, the progress, the actions and the [refused files](../validation/) work as in the default layout.
+
+Under the hood, `FileUploader.Compact` renders the row and `FileUploader.Dropzone` renders nothing in this variant, so the same [compound layout](../../#reference) serves every variant.
+
+## Naming the input
+
+The hidden file input is named by the [`dropzone`](../../api/#label-dropzone) label, and the button's text is the [`browse`](../../api/#label-browse) label. The demo sets them to "Attachments" and "Attach files".

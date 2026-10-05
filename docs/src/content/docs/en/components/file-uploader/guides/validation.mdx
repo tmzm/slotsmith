@@ -1,0 +1,32 @@
+---
+title: "Validation"
+description: "Limit what the slotsmith FileUploader accepts with accept, maxSize, minSize, maxFiles and your own validate rule; refused files are explained and announced."
+---
+
+The file uploader checks every picked or dropped file against `accept`, `maxSize`, `minSize`, `maxFiles` and your own `validate` rule. A refused file is never added; its reason is listed under the uploader, in a polite live region.
+
+{/* Reserved height measured in Chrome: the try buttons, the drop zone and room for the refusals. */}
+<Demo name="file-uploader/validation" height="23.25rem" fallback />
+
+The buttons add made-up files, as a drop would, so each rule can be tried without finding a file. Add a 6 MB photo: it is refused as too large. Add four photos: three fit and the fourth is refused.
+
+## The rules
+
+Each file is checked in this order, and the first rule it breaks is the one reported:
+
+1. **[`maxFiles`](../../api/#prop-maxFiles)**: how many items the list may hold, counting the ones already in it. Without [`multiple`](../../api/#prop-multiple) the limit is 1, and a new file replaces the old one instead of being refused. Dropping twenty files into a list with room for three keeps the first three.
+2. **[`accept`](../../api/#prop-accept)**: the same tokens as the native input, as a string or an array: an extension (`.pdf`), a MIME type (`image/png`) or a wildcard (`image/*`). The browser applies it only to the file dialog, so dropped files are checked here too.
+3. **[`maxSize`](../../api/#prop-maxSize)** and **[`minSize`](../../api/#prop-minSize)**, in bytes: `5 * 1024 * 1024` is 5 MB.
+4. **[`validate`](../../api/#prop-validate)**: your own rule. Return a message to refuse the file, or nothing to allow it.
+
+Sizes are shown with 1024 per step, `5 MB` or `512 KB`, in the hint and in the messages.
+
+## The messages
+
+Refused files are listed by the `Rejections` slot, a `role="status"` region with `aria-live="polite"`. New refusals are added to the list, and the Dismiss button clears it. The region is created with the first refusal, so some screen readers announce only the later ones; this is a known library issue. [`onReject`](../../api/#prop-onReject) is called with each batch, as `{ file, reason, message }`, for your own handling.
+
+The wording comes from the [validation messages](../../api/#validation-labels): `wrongType`, `tooLarge`, `tooSmall` and `tooMany`. Override them with [`validationLabels`](../../api/#prop-validationLabels), or let a locale pack translate them; a pack also writes the sizes in its language's number format.
+
+## The compound parts
+
+This demo is built from the compound parts, so the buttons can reach the uploader: `FileUploader.Provider` holds the state, and `TryFiles` reads `add` from `useFileUploaderContext()`. `FileUploader.Root`, `.Dropzone`, `.List` and `.Rejections` render the same parts as the default layout. The [overview](../../#reference) lists every part.

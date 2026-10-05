@@ -5,7 +5,10 @@
  * signature in the Type column and, under Default, a call with example
  * arguments and what the English default prints for it. Defaults the
  * generator could not read (spread in from another object) come from the
- * library's exported labels object. Each row is `#label-<key>`.
+ * library's exported labels object. Each row is `#label-<key>`. With
+ * `section="validation"` it lists the component's second labels section
+ * instead (the file uploader's validation messages), read from the same
+ * reference.
  */
 import "@/styles/reference.css";
 import * as slotsmith from "slotsmith";
@@ -19,12 +22,18 @@ import { getReference } from "@/lib/reference";
 interface Props {
   slug: ComponentSlug;
   lang?: Lang;
+  /** Which labels: the component's own (the default), or its validation messages. */
+  section?: "labels" | "validation";
 }
 
-const { slug, lang = "en" } = Astro.props;
+const { slug, lang = "en", section = "labels" } = Astro.props;
 const reference = getReference(slug);
-const runtime = (slotsmith as unknown as Record<string, Record<string, unknown> | undefined>)[reference.labelsExport];
-if (!runtime) throw new Error(`slotsmith does not export "${reference.labelsExport}", the ${slug} labels.`);
+const validation = section === "validation";
+const labels = (validation ? reference.validationLabels : reference.labels) ?? [];
+const labelsExport = validation ? reference.validationLabelsExport : reference.labelsExport;
+if (validation && (!labelsExport || labels.length === 0)) throw new Error(`The ${slug} reference has no validation labels.`);
+const runtime = (slotsmith as unknown as Record<string, Record<string, unknown> | undefined>)[labelsExport!];
+if (!runtime) throw new Error(`slotsmith does not export "${labelsExport}", the ${slug} labels.`);
 
 /** What one label's Default cell shows. */
 function describe(name: string, type: string, source: string | undefined): { value?: string; call?: string; output?: string } {
@@ -42,9 +51,9 @@ function describe(name: string, type: string, source: string | undefined): { val
   return {};
 }
 
-const rows = reference.labels.map((label) => ({ label, shown: describe(label.name, label.type, label.default) }));
+const rows = labels.map((label) => ({ label, shown: describe(label.name, label.type, label.default) }));
 ---
-<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, "ref.labelsLabel")}`}>
+<div class="ref-table" role="region" tabindex="0" aria-label={`${reference.exportName} ${t(lang, validation ? "ref.validationLabelsLabel" : "ref.labelsLabel")}`}>
   <table>
     <thead>
       <tr>

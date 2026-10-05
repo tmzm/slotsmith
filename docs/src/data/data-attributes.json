@@ -13,5 +13,11 @@
   "date-picker": {
     "Trigger": ["data-open", "data-disabled", "data-empty"],
     "Popup": ["data-placement"]
+  },
+  "file-uploader": {
+    "Dropzone": ["data-disabled"],
+    "Icon": ["data-dragging"],
+    "Progress": ["data-active"],
+    "Action": ["data-action"]
   }
 }

@@ -1,0 +1,37 @@
+---
+title: "Virtual lists"
+description: "Use VirtualFileUploader from slotsmith/virtual for batches of hundreds of files: only the rows in view are rendered, and the rest works as in FileUploader."
+---
+
+For batches of hundreds of files, use `VirtualFileUploader` from `slotsmith/virtual`: the file uploader with a virtual list. It takes the same props as `FileUploader`, but renders only the rows in view inside a scroll area. The queue, progress, retry and every slot work the same.
+
+{/* Reserved height measured in Chrome: the drop zone and the 320px list. */}
+<Demo name="file-uploader/virtual" height="34.25rem" fallback />
+
+The list holds 300 stored scans and scrolls inside 320px; only about a dozen rows are in the page at a time. Add more files and they upload at the end of the list.
+
+## Install
+
+`VirtualFileUploader` is built on TanStack Virtual, an optional peer dependency. Install it next to `slotsmith`:
+
+```bash
+npm i @tanstack/react-virtual
+```
+
+## The virtual option
+
+The `virtual` prop takes three numbers:
+
+- `estimateSize`: the height of one row in pixels, 56 by default. The rows are not measured, so set it to your row height: a fallback row is 64px, which the demo uses.
+- `maxHeight`: the height of the scroll area in pixels, 400 by default.
+- `overscan`: how many rows to render beyond the visible area, 6 by default.
+
+Rows out of view are replaced by two spacer `<li>` elements, hidden from assistive technology, that keep the scrollbar true to the whole list.
+
+## The list and the stylesheet
+
+The fallback stylesheet lays the list out as a flex column, and in a flex column the spacer rows shrink to nothing, so the list cannot scroll past the rows it has rendered. Until the library fixes this, give the list `display: block` through [`slotProps`](../../api/#prop-slotProps), as the demo does. A replacement `List` that is not a flex container needs nothing.
+
+## Your own layout
+
+The list on its own is `FileUploaderVirtualList`, also from `slotsmith/virtual`. Use it in place of `FileUploader.List` inside the [compound parts](../../#reference), with the same options as props.

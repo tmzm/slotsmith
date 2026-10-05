@@ -12,6 +12,7 @@
  */
 import ComponentPage from "@/components/ComponentPage.astro";
 import Demo from "@/components/Demo.astro";
+import CompoundParts from "@/components/reference/CompoundParts.astro";
 import Faq from "@/components/Faq.astro";
 import Note from "@/components/Note.astro";
 import GuideList from "@/components/reference/GuideList.astro";
@@ -34,6 +35,6 @@ const { slug } = componentMeta(component);
 const prose = await getOptionalProse(lang, `components/${slug}`);
 setComponentContext(Astro.locals, { slug, lang, contentLang: prose && !prose.translated ? "en" : lang, faq: prose?.entry.data.faq });
 
-const components = { Install: InstallBlock, QuickStart, GuideList, Reference: ReferenceLinks, Demo, KeyboardTable, Note, Faq };
+const components = { Install: InstallBlock, QuickStart, GuideList, Reference: ReferenceLinks, CompoundParts, Demo, KeyboardTable, Note, Faq };
 ---
 <ComponentPage lang={lang} component={component} section="index" components={components} />

@@ -1,0 +1,27 @@
+---
+title: "The picker"
+description: "Use the slotsmith FileUploader as a file picker: leave out upload, read the File objects from onFilesChange, and send them with your form."
+---
+
+Leave out the `upload` prop and the file uploader is a picker: nothing is sent, and `onFilesChange` hands you the picked `File` objects. Use it when the files go out with the rest of a form, in one request you write.
+
+{/* Reserved height measured in Chrome: the drop zone, the submit button and the output line. */}
+<Demo name="file-uploader/picker" height="24rem" fallback />
+
+Pick or drop two files, then send the form: the line under it lists what the request would carry. Nothing is uploaded.
+
+## What a picker does
+
+Without [`upload`](../../api/#prop-upload) every item stays `ready`, and the item shows its name and size but no status. Everything else works as in an uploader: the drop zone, the [constraints](../validation/), the image previews and the Remove button.
+
+- [`onFilesChange`](../../api/#prop-onFilesChange) is called with every picked file after each change, removals included.
+- [`onValueChange`](../../api/#prop-onValueChange) gives the full items instead, and `getFiles(items)` turns them into files.
+- [`multiple`](../../api/#prop-multiple) is off by default, like the native input: a second pick replaces the first file.
+
+## Sending the files
+
+The file input has no `name`, so a plain HTML form does not send the files on its own. Build the request from the files you were handed: append each one to a `FormData`, as the demo does in its submit handler, and send it with `fetch` or your form library.
+
+## Custom text
+
+The demo replaces two [labels](../../api/#labels): the zone's [`title`](../../api/#label-title), and the [`hint`](../../api/#label-hint) under it. The hint is a function that receives the limits (`accept`, `maxSize`, `maxFiles`) already formatted; the default joins them, as in "image/\*, .pdf · up to 5 MB".

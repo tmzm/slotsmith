@@ -1,0 +1,40 @@
+---
+/**
+ * The compound parts of a component, read from the library at build time by
+ * `compoundParts()`: each `FileUploader.X` with the named export it is, when
+ * the two names differ. A part the reference does not know fails the build.
+ */
+import type { ComponentSlug } from "@/data/components";
+import { componentContext } from "@/lib/component-context";
+import { compoundParts } from "@/lib/compound-parts";
+
+interface Props {
+  /** Defaults to the component overview the block sits in. */
+  slug?: ComponentSlug;
+}
+
+const { slug = componentContext(Astro.locals, "CompoundParts").slug } = Astro.props;
+const rows = compoundParts(slug);
+---
+<ul class="compound-parts">
+  {rows.map((row) => (
+    <li>
+      <code>{row.member}</code>
+      {row.named !== row.member.replace(".", "") && <span> (<code>{row.named}</code>)</span>}
+    </li>
+  ))}
+</ul>
+
+<style>
+  .compound-parts {
+    display: grid;
+    gap: 0.25rem;
+    margin: 1rem 0 1.5rem;
+    padding-inline-start: 1.25rem;
+  }
+
+  .compound-parts code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+</style>
