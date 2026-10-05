@@ -47,7 +47,10 @@ describe("shadcn/ui", () => {
 
     const bar = within(itemNamed("big.png")).getByRole("progressbar");
     expect(bar).toHaveAttribute("data-slot", "progress");
+    // shadcn's Progress keeps `value` for its indicator; the adapter sets the ARIA value itself.
     expect(bar).toHaveAttribute("aria-valuenow", "55");
+    expect(bar).toHaveAttribute("aria-valuemin", "0");
+    expect(bar).toHaveAttribute("aria-valuemax", "100");
   });
 
   it("removes a file from a ghost icon Button", async () => {
@@ -59,13 +62,18 @@ describe("shadcn/ui", () => {
     expect(items()).toHaveLength(0);
   });
 
-  it("shows a rejection in an Alert and dismisses it", async () => {
+  it("shows a rejection in a polite Alert led by an icon, and dismisses it", async () => {
     const user = renderShadcnUploader({ maxSize: 1 });
 
     await user.upload(fileInput(), makeFile("heavy.png", "image/png", 50));
 
     const alert = screen.getByRole("status");
     expect(alert).toHaveAttribute("data-slot", "alert");
+    expect(alert).toHaveAttribute("aria-live", "polite");
+    expect(screen.queryByRole("alert")).toBeNull();
+    // shadcn's Alert has two real grid columns only when an svg icon leads it.
+    expect(alert.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+    expect(within(alert).getByText(/heavy\.png/)).toBeInTheDocument();
 
     await user.click(within(alert).getByRole("button", { name: "Dismiss" }));
     expect(screen.queryByRole("status")).toBeNull();

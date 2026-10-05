@@ -66,6 +66,15 @@ const X = ({ className = "size-4" }: { className?: string }) => (
   </svg>
 );
 
+/** Stands in for `lucide-react`'s CircleAlert icon. */
+const CircleAlert = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 8v4" />
+    <path d="M12 16h.01" />
+  </svg>
+);
+
 /** Stands in for `lucide-react`'s RotateCw icon. */
 const RotateCw = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden="true">
@@ -154,10 +163,20 @@ const ShadcnItemMeta = ({ item, size, status }: ItemMetaSlotProps) => (
 /**
  * Shadcn progress
  *
- * The `Progress` primitive, spanning the row.
+ * The `Progress` primitive, spanning the row. shadcn's `Progress` keeps
+ * `value` for its indicator and never hands it to Radix's root, so the bar
+ * sets its own `aria-valuenow` for assistive technology.
  */
 const ShadcnProgress = ({ value, active, ...aria }: UploaderProgressSlotProps) => (
-  <Progress value={value} data-active={active || undefined} className="col-span-full" {...aria} />
+  <Progress
+    value={value}
+    aria-valuenow={Math.round(value)}
+    aria-valuemin={0}
+    aria-valuemax={100}
+    data-active={active || undefined}
+    className="col-span-full"
+    {...aria}
+  />
 );
 
 /**
@@ -179,6 +198,38 @@ const ShadcnAction = ({ action, onClick, disabled, ...aria }: UploaderActionSlot
   >
     {action === "remove" ? <X /> : action === "retry" ? <RotateCw /> : <Square />}
   </Button>
+);
+
+/**
+ * Shadcn rejections
+ *
+ * A destructive `Alert` led by an icon, which gives its grid two real columns;
+ * the messages and the Dismiss button share the second, with Dismiss at the
+ * inline end. The role is `status` with `aria-live="polite"` rather than
+ * shadcn's `alert`, to match the uploader's contract: refusals are announced
+ * politely, never assertively.
+ */
+const ShadcnRejections = ({ rejections, onDismiss, dismissLabel }: RejectionsSlotProps) => (
+  <Alert variant="destructive" role="status" aria-live="polite">
+    <CircleAlert />
+    <div className="flex items-start gap-2">
+      <ul className="min-w-0 flex-1 space-y-0.5">
+        {rejections.map((rejection, index) => (
+          <li key={`${rejection.file.name}-${index}`}>{rejection.message}</li>
+        ))}
+      </ul>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="-my-1.5 -me-2 size-7 shrink-0"
+        aria-label={dismissLabel}
+        onClick={onDismiss}
+      >
+        <X />
+      </Button>
+    </div>
+  </Alert>
 );
 
 /**
@@ -222,16 +273,5 @@ export const shadcnFileUploader: Partial<FileUploaderComponents> = {
   ItemMeta: ShadcnItemMeta,
   Progress: ShadcnProgress,
   Action: ShadcnAction,
-  Rejections: ({ rejections, onDismiss, dismissLabel }: RejectionsSlotProps) => (
-    <Alert>
-      <div>
-        {rejections.map((rejection, index) => (
-          <p key={`${rejection.file.name}-${index}`}>{rejection.message}</p>
-        ))}
-      </div>
-      <Button type="button" variant="ghost" size="icon" aria-label={dismissLabel} onClick={onDismiss}>
-        <X />
-      </Button>
-    </Alert>
-  ),
+  Rejections: ShadcnRejections,
 };

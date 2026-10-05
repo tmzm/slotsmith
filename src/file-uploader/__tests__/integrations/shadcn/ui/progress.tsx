@@ -15,29 +15,29 @@ export type ProgressProps = ComponentProps<"div"> & {
 /**
  * Progress
  *
- * shadcn's `components/ui/progress.tsx`. Upstream renders this from Radix's
- * `Progress.Root` / `Progress.Indicator`, which already carry
- * `role="progressbar"` and `aria-valuenow`; this copy sets them by hand so it
- * stays dependency-free.
+ * shadcn's `components/ui/progress.tsx`. Upstream renders Radix's
+ * `Progress.Root` / `Progress.Indicator` and keeps `value` for the indicator
+ * only, so the root carries `role="progressbar"`, `aria-valuemin` and
+ * `aria-valuemax` but no `aria-valuenow`. This copy does the same by hand, so
+ * it stays dependency-free; attributes passed in win, as with Radix.
  *
  * @param props - See {@link ProgressProps}.
  */
-function Progress({ className, value = 0, ...props }: ProgressProps) {
-  const clamped = Math.max(0, Math.min(100, value));
+function Progress({ className, value, ...props }: ProgressProps) {
   return (
     <div
       data-slot="progress"
       role="progressbar"
-      aria-valuenow={clamped}
       aria-valuemin={0}
       aria-valuemax={100}
+      data-state="indeterminate"
       className={cn("relative h-2 w-full overflow-hidden rounded-full bg-primary/20", className)}
       {...props}
     >
       <div
         data-slot="progress-indicator"
-        className="h-full flex-1 rounded-full bg-primary transition-all"
-        style={{ width: `${clamped}%` }}
+        className="h-full w-full flex-1 bg-primary transition-all"
+        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
       />
     </div>
   );
