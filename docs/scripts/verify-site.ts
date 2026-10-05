@@ -68,7 +68,7 @@ const toUrlPath = (file: string) => `/${relative(distDir, file).split("\\").join
 function sampleNames(): string[] {
   return walk(samplesDir)
     .map((file) => relative(samplesDir, file).split("\\").join("/"))
-    .filter((name) => SAMPLE_EXTENSIONS.test(name) && name !== "tsconfig.json" && !name.split("/").includes("__tests__"))
+    .filter((name) => SAMPLE_EXTENSIONS.test(name) && name !== "tsconfig.json" && !name.split("/").some((part) => ["__tests__", "node_modules", ".next", "dist"].includes(part)))
     .map((name) => name.replace(SAMPLE_EXTENSIONS, ""))
     .sort();
 }
@@ -241,7 +241,8 @@ async function main(): Promise<void> {
   const problems = [
     ...findMetaProblems(facts),
     ...findDeadLinks(facts, new Set(files)),
-    ...findUnusedSamples(facts, sampleNames(), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),
+    // The framework examples are whole apps that CI builds; a page shows only the files that matter.
+    ...findUnusedSamples(facts, sampleNames().filter((name) => !name.startsWith("frameworks/")), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),
     ...geoProblems,
   ];
 

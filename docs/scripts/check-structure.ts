@@ -139,7 +139,7 @@ function filesUnder(dir: string): string[] {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-  const files = [...filesUnder(resolve(docsRoot, "src/content")), ...filesUnder(resolve(docsRoot, "samples"))].map((file) =>
+  const files = [...filesUnder(resolve(docsRoot, "src/content")), ...filesUnder(resolve(docsRoot, "samples")).filter((file) => !/[\\/](node_modules|\.next|dist)[\\/]/.test(file))].map((file) =>
     relative(docsRoot, file).replaceAll("\\", "/"),
   );
   // A stub (`draft: true`) is still being written: its opening is checked only in strict mode (DOCS_STRICT=1).

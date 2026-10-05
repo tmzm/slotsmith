@@ -6,5 +6,5 @@
     "types": ["astro/client"]
   },
   "include": ["**/*"],
-  "exclude": []
+  "exclude": ["frameworks/"]
 }

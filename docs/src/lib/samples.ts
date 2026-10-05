@@ -16,7 +16,15 @@ export interface SampleSource {
 
 const LANG_BY_EXTENSION: Record<string, SampleLang> = { tsx: "tsx", ts: "ts", css: "css", json: "json", sh: "bash" };
 
-const files = import.meta.glob<string>(["/samples/**/*.{tsx,ts,css,json,sh}", "!/samples/tsconfig.json", "!/samples/**/__tests__/**"], {
+const files = import.meta.glob<string>([
+    "/samples/**/*.{tsx,ts,css,json,sh}",
+    "!/samples/tsconfig.json",
+    "!/samples/**/__tests__/**",
+    // The framework examples are small apps: their installs and builds are not samples.
+    "!/samples/**/node_modules/**",
+    "!/samples/**/.next/**",
+    "!/samples/**/dist/**",
+  ], {
   query: "?raw",
   import: "default",
   eager: true,

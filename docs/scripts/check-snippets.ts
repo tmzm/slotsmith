@@ -52,7 +52,7 @@ function filesUnder(dir: string): string[] {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   const samples = filesUnder(resolve(docsRoot, "samples"))
-    .filter((file) => !file.endsWith("tsconfig.json") && !/[\\/]__tests__[\\/]/.test(file))
+    .filter((file) => !file.endsWith("tsconfig.json") && !/[\\/](__tests__|node_modules|\.next|dist)[\\/]/.test(file))
     .map((file) => readFileSync(file, "utf8"));
   const pages = filesUnder(resolve(docsRoot, "src/content")).filter((file) => file.endsWith(".mdx"));
   const failures = pages.flatMap((file) =>
