@@ -1,0 +1,11 @@
+/* After slotsmith's stylesheet: one --ss-* value restyles all four components. */
+:root {
+  --ss-accent: #7c3aed;
+  --ss-radius: 12px;
+}
+
+/* A value on :root applies to both palettes, so give the dark one its own. */
+.dark,
+[data-theme="dark"] {
+  --ss-accent: #a78bfa;
+}

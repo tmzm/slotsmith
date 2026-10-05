@@ -1,7 +1,76 @@
 ---
 title: "Getting started"
-description: "The Getting started page of the slotsmith docs."
-draft: true
+description: "Install slotsmith, pick its stylesheet or none, theme it with --ss-* tokens, add dark mode and a language, and use it from CommonJS, Next.js or Vite."
 ---
+import ThemePreview from "@/islands/ThemePreview";
+import { PREVIEW_BASE, PREVIEW_THEMES } from "@/lib/preview-themes";
 
-This page is being written.
+Getting started with slotsmith takes one package and, if you want the default look, one stylesheet import. Then render a component: [`DataTable`](../components/data-table/), [`Autocomplete`](../components/autocomplete/), [`DatePicker`](../components/date-picker/) or [`FileUploader`](../components/file-uploader/). Themes, dark mode and languages are optional steps on top.
+
+## Install
+
+<Tabs id="install" tabs={[{ label: "npm", sample: "install/npm" }, { label: "pnpm", sample: "install/pnpm" }, { label: "yarn", sample: "install/yarn" }, { label: "bun", sample: "install/bun" }]} remember="pm" label="Package manager" lang="en" />
+
+slotsmith works with React 18 and 19. Its peers are optional and per component, so you install only what the components you import need:
+
+- The [data table](../components/data-table/) needs `@tanstack/react-table` 9.
+- The [virtual rows](../components/data-table/guides/virtual-rows/) of `VirtualDataTable` also need `@tanstack/react-virtual` 3.
+- The autocomplete, the date picker and the file uploader need nothing more.
+
+The package itself depends on `@floating-ui/react-dom`, which places the popups; your package manager installs it with slotsmith.
+
+## Styles
+
+Every component renders plain HTML with stable class names, and the stylesheet that styles them is optional. Pick one of three:
+
+- **Everything.** One import styles all four components.
+- **One component.** Each component has its own sheet, `slotsmith/<component>.css`.
+- **None.** When you replace every part with your design system's own, import no stylesheet: the components never reference it.
+
+<SampleCode name="getting-started/styles-all" />
+
+<SampleCode name="getting-started/styles-one" />
+
+## Theming
+
+The stylesheet reads a small set of shared `--ss-*` tokens, so a few values restyle all four components at once: set them on `:root` after the stylesheet. Or import one of the ready-made themes, which set the same tokens. Pick one here to see it on the components:
+
+<ThemePreview client:visible themes={PREVIEW_THEMES} base={PREVIEW_BASE} />
+
+[Theming](../theming/) lists every token, each theme, the per-component tokens, Tailwind and styling without the stylesheet.
+
+## Dark mode
+
+The stylesheet and every theme have a dark palette. It applies under `.dark` or `[data-theme="dark"]`, on `<html>` or on any element above the components, so an app whose dark mode already sets one of those needs nothing more. The preview above follows this site's theme switch the same way. Following the system setting instead is covered in [Theming](../theming/#dark-mode).
+
+## Languages
+
+English is built in. For another language, import its pack and pass it as `locale`, or give a whole app one with `SlotsmithProvider`:
+
+<SampleCode name="getting-started/provider" />
+
+Each pack is its own entry, so an app loads only the languages it imports. The components follow the CSS direction of the page around them, so a right-to-left language also needs `dir="rtl"` on `<html>` or a wrapper. [Languages](../languages/) lists every pack and shows custom locales and one-off labels.
+
+## CommonJS
+
+On ES modules, `import { Autocomplete } from "slotsmith"` already leaves the other components out of the bundle. CommonJS `require()` cannot drop anything, so require each component's own entry:
+
+<SampleCode name="getting-started/cjs" />
+
+`slotsmith/autocomplete`, `slotsmith/date-picker`, `slotsmith/file-uploader`, `slotsmith/provider`, `slotsmith/locale` and `slotsmith/locales/<code>` load without `@tanstack/react-table` installed. `slotsmith/data-table` and the main entry `slotsmith` need it, since the main entry holds the table too.
+
+## Next.js and Vite
+
+Every slotsmith entry but the locale packs starts with `"use client"`, so a server component can render a component directly. A provider holding state is a client component of your own, and the packs are imported there: a pack holds functions, which cannot be passed from a server component. In the Next.js App Router that is one file, `providers.tsx`:
+
+<SampleCode name="frameworks/next-app/app/providers" />
+
+The page stays a server component. Its columns are plain objects, so they can be passed to the table:
+
+<SampleCode name="frameworks/next-app/app/page" />
+
+With Vite there is no server boundary: the provider and the table sit in one component, and the stylesheet is imported in `main.tsx`.
+
+<SampleCode name="frameworks/vite/src/App" />
+
+Both examples are small complete apps in the repository, under [`docs/samples/frameworks/`](https://github.com/tmzm/slotsmith/tree/master/docs/samples/frameworks).

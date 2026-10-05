@@ -1,9 +1,79 @@
 ---
 title: "Theming"
-description: "The Theming page of the slotsmith docs."
-draft: true
+description: "Restyle slotsmith with shared --ss-* tokens or a ready-made theme, add a dark palette, use Tailwind, write your own styles, and lay it out right to left."
 ---
+import ThemePreview from "@/islands/ThemePreview";
+import { PREVIEW_BASE, PREVIEW_THEMES } from "@/lib/preview-themes";
 
-This page is being written.
+Theming slotsmith means setting CSS custom properties. The stylesheet reads eleven shared `--ss-*` tokens, so a few values restyle all four components at once; a ready-made theme sets the same tokens for you. Without the stylesheet, you style the parts yourself, with plain CSS, Tailwind or a design system.
+
+## Tokens
+
+Set the tokens on `:root`, in a stylesheet loaded after slotsmith's:
+
+<SampleCode name="theming/tokens" />
+
+| Token | What it colours or sizes |
+| --- | --- |
+| `--ss-surface` | The background of every component and popup |
+| `--ss-text` | Text |
+| `--ss-muted` | Secondary text: placeholders, captions, counters |
+| `--ss-border` | Borders and dividers |
+| `--ss-accent` | Focus rings, checkboxes, the picked day, tags, upload progress and the drop zone while a file is dragged over it |
+| `--ss-on-accent` | Text on the accent. Only the date picker reads it, for the picked day |
+| `--ss-danger` | Errors |
+| `--ss-hover` | The background of a hovered row, option, day or button |
+| `--ss-selected` | The background of a selected row. Only the data table reads it |
+| `--ss-radius` | Corner radius |
+| `--ss-font-size` | Base font size |
+
+Each component also has its own tokens, which read the shared ones by default: `--sdt-*` for the [data table](../components/data-table/api/#styling), `--sac-*` for the [autocomplete](../components/autocomplete/api/#styling), `--sdp-*` for the [date picker](../components/date-picker/api/#styling) and `--sfu-*` for the [file uploader](../components/file-uploader/api/#styling). Set one of those to restyle one component without the others. Each component's API page lists its tokens.
+
+## Themes
+
+Six themes ship with the library: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast`, a high-contrast palette. Each sets only the shared tokens, with a light and a dark palette. Pick one to try it here; the rest of this page keeps its look:
+
+<ThemePreview client:visible themes={PREVIEW_THEMES} base={PREVIEW_BASE} />
+
+Import a theme after the stylesheet:
+
+<SampleCode name="theming/theme" />
+
+A theme sets its tokens on the same selectors as your own overrides, so the import order decides: import your overrides after the theme to keep them. To write your own theme, set only the shared tokens, on `:root` and again for dark mode, as in [Tokens](#tokens).
+
+## Dark mode
+
+The stylesheet and every theme switch to their dark palette under `.dark` or `[data-theme="dark"]`, set on `<html>` or on any element above the components. Most dark-mode setups already set one of the two, so the components follow with no further code. A token you set on `:root` applies to both palettes, so give its dark value under the same two selectors.
+
+An app that follows the system setting, with no class to toggle, sets the dark values itself in a media query:
+
+<SampleCode name="theming/dark" />
+
+The table's stripes and loading skeletons have no shared token and keep their light colours in that setup; set `--sdt-stripe`, `--sdt-skeleton-bg` and `--sdt-skeleton-bg-2` too if you use them.
 
 ## Tailwind
+
+Tailwind is not needed: the stylesheet is plain CSS. With Tailwind there are two ways.
+
+- **Keep the stylesheet** and point the tokens at your theme: Tailwind 4 exposes its colours as CSS variables, so `--ss-accent: var(--color-violet-600)` works on `:root`.
+- **Drop the stylesheet** and give the parts Tailwind classes. Each element part is a plain element you can replace, and its state is a `data-*` attribute Tailwind can select:
+
+<SampleCode name="theming/tailwind" />
+
+The shadcn/ui adapters do this for every part; see the data table's [adapters](../components/data-table/adapters/).
+
+## Own styles
+
+Without any slotsmith stylesheet, style the built-in parts by their class names. Every component names them the same way: `s` plus its initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state in `data-*` attributes. A part with the same role has the same name in each component: the popups are `__popup`, an empty state is `__message`, an error state `__error`.
+
+<SampleCode name="theming/own-styles" />
+
+Each component's API page lists its classes under Styling.
+
+## RTL
+
+The stylesheets use logical properties only, such as `margin-inline-start` and `inset-inline-end`, so every component mirrors when its page or a wrapper is `dir="rtl"`. The components follow the CSS direction around them; the locale does not set it. Inside `SlotsmithProvider`, `useSlotsmithLocale()` returns the active locale's tag and direction:
+
+<SampleCode name="theming/rtl" />
+
+On a right-to-left page the date picker also points its previous and next month arrows the other way. [Languages](../languages/) lists the right-to-left packs.

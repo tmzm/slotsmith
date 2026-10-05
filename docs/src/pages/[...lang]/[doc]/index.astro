@@ -1,5 +1,13 @@
 ---
+/**
+ * A top-level docs page (`/theming/`). Its MDX may use the blocks below by
+ * name; a live island (the theme preview) is imported in the MDX itself,
+ * since a client directive needs the import there.
+ */
 import DocPage from "@/components/DocPage.astro";
+import Note from "@/components/Note.astro";
+import SampleCode from "@/components/SampleCode.astro";
+import Tabs from "@/components/Tabs.astro";
 import { langFromParam, langPaths } from "@/i18n";
 import { DOC_SLUGS } from "@/lib/pages";
 import { getProse } from "@/lib/prose";
@@ -11,5 +19,6 @@ export function getStaticPaths() {
 const lang = langFromParam(Astro.params.lang);
 const { doc } = Astro.params;
 const prose = await getProse(lang, doc);
+const components = { Note, SampleCode, Tabs };
 ---
-<DocPage lang={lang} path={`/${doc}/`} prose={prose} />
+<DocPage lang={lang} path={`/${doc}/`} prose={prose} components={components} />

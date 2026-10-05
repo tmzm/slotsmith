@@ -40,7 +40,7 @@ const samplesDir = resolve(docsRoot, "samples");
 const referenceDir = resolve(docsRoot, "src/generated/reference");
 
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
-const SAMPLE_EXTENSIONS = /\.(tsx|ts|css|json|sh)$/;
+const SAMPLE_EXTENSIONS = /\.(tsx|ts|cjs|css|json|sh)$/;
 /** Attributes the site, not the library, puts on a demo's elements. */
 const SITE_ATTRIBUTE = /^data-(sample|fallback|view|verify|astro-.*)$/;
 const HYDRATE_MS = 15_000;

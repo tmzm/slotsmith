@@ -261,6 +261,14 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
       }
       case "Faq":
         return faqMarkdown(faq, page.lang, pageUrl);
+      case "Tabs": {
+        // Each tab that shows a sample, as its own fenced block.
+        const tabs = literal<{ label: string; sample?: string }[]>(attrs.tabs) ?? [];
+        return tabs
+          .flatMap((tab) => (tab.sample && SAMPLE_SOURCES[tab.sample] ? [SAMPLE_SOURCES[tab.sample]!] : []))
+          .map((sample) => fence(sample.code, sample.lang))
+          .join("\n\n");
+      }
       default:
         // A wrapper (a note) keeps its text; anything else shows nothing a copy can use.
         return children ? (await replaceBlocks(children, render)).trim() : "";

@@ -1,0 +1,23 @@
+/* No slotsmith stylesheet: style the built-in parts by their class names.
+   Classes are s + the component's initials, __part, --modifier; state is in data-*. */
+.sdt__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sdt__cell {
+  padding: 0.5rem 0.75rem;
+  border-block-end: 1px solid #e4e4e7;
+  text-align: start;
+}
+
+.sdt__row[data-state="selected"] {
+  background: #f5f3ff;
+}
+
+/* A part with the same role has the same name in every component. */
+.sac__popup,
+.sdp__popup {
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+}

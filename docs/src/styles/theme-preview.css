@@ -1,0 +1,66 @@
+/*
+ * The theme preview (islands/ThemePreview.tsx): a segmented radio group over
+ * a stage that shows the library's own look, never the site palette.
+ */
+.theme-preview-demo {
+  margin: 1.5rem 0;
+}
+
+.theme-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0.375rem;
+  border: 0;
+  border-block-end: 1px solid var(--line);
+  font-size: 0.75rem;
+}
+
+.theme-picker__option {
+  position: relative;
+  padding: 0.25rem 0.75rem;
+  border-radius: 3px;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
+}
+
+.theme-picker__option:hover {
+  color: var(--ink);
+}
+
+.theme-picker__option:has(input:checked) {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.theme-picker__option:has(input:focus-visible) {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* The native radio stays in the tab order and the accessibility tree; the label shows its state. */
+.theme-picker__option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.theme-preview {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--sdt-surface);
+  color: var(--sdt-text);
+}
+
+.theme-preview__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}

@@ -7,17 +7,17 @@
  * always the code that runs.
  */
 
-export type SampleLang = "tsx" | "ts" | "css" | "json" | "bash";
+export type SampleLang = "tsx" | "ts" | "js" | "css" | "json" | "bash";
 
 export interface SampleSource {
   code: string;
   lang: SampleLang;
 }
 
-const LANG_BY_EXTENSION: Record<string, SampleLang> = { tsx: "tsx", ts: "ts", css: "css", json: "json", sh: "bash" };
+const LANG_BY_EXTENSION: Record<string, SampleLang> = { tsx: "tsx", ts: "ts", cjs: "js", css: "css", json: "json", sh: "bash" };
 
 const files = import.meta.glob<string>([
-    "/samples/**/*.{tsx,ts,css,json,sh}",
+    "/samples/**/*.{tsx,ts,cjs,css,json,sh}",
     "!/samples/tsconfig.json",
     "!/samples/**/__tests__/**",
     // The framework examples are small apps: their installs and builds are not samples.
