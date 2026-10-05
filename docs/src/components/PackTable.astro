@@ -1,0 +1,41 @@
+---
+/**
+ * The locale packs the library ships, one row each: the language, the entry
+ * to import, the named export and the direction. Read from `src/locales/` at
+ * build (`@/lib/packs`), so the table lists exactly what ships. Each row is
+ * `#pack-<code>`. Language names are in the page's language.
+ */
+import "@/styles/reference.css";
+import Type from "@/components/reference/Type.astro";
+import { t, type Lang } from "@/i18n";
+import { PACKS } from "@/lib/packs";
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = "en" } = Astro.props;
+const names = new Intl.DisplayNames([lang], { type: "language" });
+---
+<div class="ref-table" role="region" tabindex="0" aria-label={t(lang, "packs.label")}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "packs.language")}</th>
+        <th scope="col">{t(lang, "packs.import")}</th>
+        <th scope="col">{t(lang, "packs.export")}</th>
+        <th scope="col">{t(lang, "packs.direction")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {PACKS.map((pack) => (
+        <tr id={`pack-${pack.code}`}>
+          <th scope="row">{lang === "en" ? pack.name : (names.of(pack.code) ?? pack.name)}</th>
+          <td class="ref-type"><Type text={pack.importPath} /></td>
+          <td class="ref-type"><Type text={pack.exportName} /></td>
+          <td class="ref-type"><Type text={pack.dir} /></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

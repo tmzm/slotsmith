@@ -1,0 +1,80 @@
+/*
+ * The languages page's demos (docs/samples/languages/): the language and
+ * count toggles as wrapping segmented controls, the chosen one a gold panel
+ * (docs/DESIGN.md "Demo panel" tab row), and the switcher's stage.
+ */
+.languages-switcher,
+.languages-plurals {
+  display: grid;
+  gap: 1rem;
+  /* Arabic and Persian text uses Noto Sans Arabic; other scripts fall back to the system's fonts. */
+  font-family: "Geist", "Noto Sans Arabic", system-ui, sans-serif;
+}
+
+.languages-switcher [role="group"],
+.languages-plurals [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-self: start;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.languages-switcher [role="group"] button,
+.languages-plurals [role="group"] button {
+  min-block-size: 2.75rem;
+  min-inline-size: 2.75rem;
+  padding: 0.25rem 0.75rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
+}
+
+.languages-switcher [role="group"] button:hover,
+.languages-plurals [role="group"] button:hover {
+  color: var(--ink);
+}
+
+.languages-switcher [role="group"] button[aria-pressed="true"],
+.languages-plurals [role="group"] button[aria-pressed="true"] {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.languages-switcher [role="group"] button:focus-visible,
+.languages-plurals [role="group"] button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.languages-switcher [data-stage] {
+  display: grid;
+  gap: 1rem;
+  min-inline-size: 0;
+}
+
+.languages-switcher__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+}
+
+.languages-plurals output {
+  display: block;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 1.125rem;
+}

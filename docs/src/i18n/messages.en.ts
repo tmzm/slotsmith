@@ -166,6 +166,11 @@ export const en = {
   "ref.layerOwn": "This component",
   "ref.layerShared": "Shared by every component",
   "ref.darkMode": "Every token switches to its dark value under {selector}, on the page or on any element around the component.",
+  "packs.label": "Locale packs",
+  "packs.language": "Language",
+  "packs.import": "Import",
+  "packs.export": "Export",
+  "packs.direction": "Direction",
 
   // The first positioning sentence; [brackets] mark the component names set at poster scale.
   "hero.title":

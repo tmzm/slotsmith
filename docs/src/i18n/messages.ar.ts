@@ -166,6 +166,11 @@ export const ar: Record<MessageKey, string> = {
   "ref.layerOwn": "هذا المكوّن",
   "ref.layerShared": "مشترك بين كل المكوّنات",
   "ref.darkMode": "تنتقل كل المتغيرات إلى قيمها الداكنة تحت {selector}، على الصفحة أو على أي عنصر يحيط بالمكوّن.",
+  "packs.label": "حزم اللغات",
+  "packs.language": "اللغة",
+  "packs.import": "الاستيراد",
+  "packs.export": "التصدير",
+  "packs.direction": "الاتجاه",
 
   "hero.title":
     "[جدول بيانات] و[مربع تحرير وسرد] و[منتقي تاريخ] و[رافع ملفات] جاهزة لـ React، تندمج في أي نظام تصميم: shadcn/ui أو MUI أو Chakra أو Ant Design أو نظامك الخاص.",

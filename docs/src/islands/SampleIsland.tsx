@@ -36,7 +36,15 @@ export interface SampleIslandProps {
 
 type SampleModule = { default: ComponentType };
 
-const loaders = import.meta.glob<SampleModule>(["../../samples/**/*.tsx", "!../../samples/**/__tests__/**", "!../../samples/frameworks/**"]);
+// The framework examples are apps of their own, and the next-intl and i18next
+// bridges are display-only (the docs do not install those libraries): none renders here.
+const loaders = import.meta.glob<SampleModule>([
+  "../../samples/**/*.tsx",
+  "!../../samples/**/__tests__/**",
+  "!../../samples/frameworks/**",
+  "!../../samples/languages/next-intl.tsx",
+  "!../../samples/languages/i18next.tsx",
+]);
 
 const samples = new Map<string, LazyExoticComponent<ComponentType>>();
 

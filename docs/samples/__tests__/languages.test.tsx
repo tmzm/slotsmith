@@ -3,8 +3,14 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ar } from "slotsmith/locales/ar";
 import { fa } from "slotsmith/locales/fa";
+import { he } from "slotsmith/locales/he";
 import { SlotsmithProvider } from "slotsmith/provider";
+import { PACKS } from "@/lib/packs";
 import Languages from "../landing/languages";
+import CustomPack from "../languages/custom-pack";
+import Plurals from "../languages/plurals";
+import Precedence from "../languages/precedence";
+import Switcher from "../languages/switcher";
 
 afterEach(cleanup);
 
@@ -67,5 +73,86 @@ describe("landing/languages", () => {
     fireEvent.click(screen.getByRole("button", { name: "English" }));
     expect(wrapper(container).getAttribute("dir")).toBe("ltr");
     expect(container.textContent).toContain("Rows per page");
+  });
+});
+
+// The /languages/ page's live samples.
+
+/** The element the switcher sets `dir` and `lang` on. */
+const stage = (container: HTMLElement) => container.querySelector<HTMLElement>("[data-stage]")!;
+
+describe("languages/switcher", () => {
+  it("offers English and every shipped pack, each named in its own language", () => {
+    render(<Switcher />);
+    const buttons = screen.getAllByRole("button", { pressed: false }).concat(screen.getAllByRole("button", { pressed: true }));
+    const langs = buttons.map((button) => button.getAttribute("lang")).filter(Boolean);
+    expect([...langs].sort()).toEqual(["en", ...PACKS.map((pack) => pack.code)].sort());
+    expect(screen.getByRole("button", { name: "English" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("flips the direction per pack and shows the pack's labels", () => {
+    const { container } = render(<Switcher />);
+    expect(stage(container).getAttribute("dir")).toBe("ltr");
+    fireEvent.click(container.querySelector('button[lang="ar"]')!);
+    expect(stage(container).getAttribute("dir")).toBe("rtl");
+    expect(stage(container).getAttribute("lang")).toBe("ar");
+    expect(container.textContent).toContain(rowsPerPage(ar));
+    fireEvent.click(container.querySelector('button[lang="de"]')!);
+    expect(stage(container).getAttribute("dir")).toBe("ltr");
+    fireEvent.click(container.querySelector('button[lang="he"]')!);
+    expect(stage(container).getAttribute("dir")).toBe("rtl");
+    expect(container.textContent).toContain(rowsPerPage(he));
+  });
+});
+
+describe("languages/plurals", () => {
+  /** The sentence for each count, with its digits taken out, so only the words are compared. */
+  function forms(language: string, counts: number[]): string[] {
+    const { container } = render(<Plurals />);
+    fireEvent.click(container.querySelector(`button[lang="${language}"]`)!);
+    const words = counts.map((count) => {
+      fireEvent.click(screen.getByRole("button", { name: String(count) }));
+      return container.querySelector("output")!.textContent!.replace(/[\d٠-٩۰-۹]/g, "").trim();
+    });
+    cleanup();
+    return words;
+  }
+
+  it("Russian uses a different form for 1, 2 and 5", () => {
+    expect(new Set(forms("ru", [1, 2, 5])).size).toBe(3);
+  });
+
+  it("Arabic uses a different form for 1, 2, 5 and 11", () => {
+    expect(new Set(forms("ar", [1, 2, 5, 11])).size).toBe(4);
+  });
+
+  it("writes the exact Russian forms", () => {
+    const { container } = render(<Plurals />);
+    fireEvent.click(container.querySelector('button[lang="ru"]')!);
+    fireEvent.click(screen.getByRole("button", { name: "2" }));
+    expect(container.querySelector("output")!.textContent).toBe("Выбраны 2 строки");
+    fireEvent.click(screen.getByRole("button", { name: "5" }));
+    expect(container.querySelector("output")!.textContent).toBe("Выбрано 5 строк");
+  });
+});
+
+describe("languages/precedence", () => {
+  it("resolves labels, then the component's locale, then the provider's", () => {
+    render(<Precedence />);
+    const triggers = screen.getAllByRole("combobox");
+    expect(triggers).toHaveLength(3);
+    const text = (index: number) => triggers[index]!.textContent;
+    expect(text(0)).toContain("Choisir une date");
+    expect(text(1)).toContain("اختر تاريخًا");
+    expect(text(2)).toContain("تاريخ الوصول");
+  });
+});
+
+describe("languages/custom-pack", () => {
+  it("renders the table in the custom Dutch locale", () => {
+    const { container } = render(<CustomPack />);
+    expect(container.textContent).toContain("Rijen per pagina");
+    expect(container.textContent).toContain("Pagina 1 van 3");
+    expect(screen.getByRole("navigation", { name: "Paginering" })).toBeTruthy();
   });
 });

@@ -18,6 +18,7 @@ import { ADAPTER_LIBRARIES } from "@/lib/adapters";
 import { compoundParts } from "@/lib/compound-parts";
 import { canonicalUrl } from "@/lib/page";
 import type { PageInfo } from "@/lib/pages";
+import { PACKS } from "@/lib/packs";
 import { getReference, type ComponentReference } from "@/lib/reference";
 import { SAMPLE_SOURCES, sampleSource } from "@/lib/samples";
 
@@ -261,6 +262,11 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
       }
       case "Faq":
         return faqMarkdown(faq, page.lang, pageUrl);
+      case "PackTable":
+        return markdownTable(
+          [t(contentLang, "packs.language"), t(contentLang, "packs.import"), t(contentLang, "packs.export"), t(contentLang, "packs.direction")],
+          PACKS.map((pack) => [pack.name, code(pack.importPath), code(pack.exportName), pack.dir]),
+        );
       case "Tabs": {
         // Each tab that shows a sample, as its own fenced block.
         const tabs = literal<{ label: string; sample?: string }[]>(attrs.tabs) ?? [];

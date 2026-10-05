@@ -1,7 +1,104 @@
 ---
 title: "Languages"
-description: "The Languages page of the slotsmith docs."
-draft: true
+description: "The 18 locale packs slotsmith ships, how to pass one to a component or a whole app, write your own, override single labels, and bridge next-intl or i18next."
 ---
+import "@/styles/languages.css";
+import Demo from "@/components/Demo.astro";
+import PackTable from "@/components/PackTable.astro";
 
-This page is being written.
+Languages other than English, slotsmith's default, come as locale packs. For another language, import its locale pack and pass it as `locale` to a component, or to `SlotsmithProvider` for a whole app. A pack translates every string the components render and writes numbers and plurals the way its language does.
+
+## Available packs
+
+slotsmith ships one pack per language below. Each is its own entry, `slotsmith/locales/<code>`, so an app bundles only the languages it imports. This table is read from the library's `src/locales/` folder when the site is built, so it lists exactly what ships.
+
+<PackTable lang="en" />
+
+There is no `en` pack: English is every component's default. The regional Arabic packs (`ar-EG`, `ar-IQ`, `ar-SA`) reuse the `ar` text and write numbers the way their region does. The packs other than Arabic were drafted from the English labels; corrections from native speakers are welcome on [the repository's issues](https://github.com/tmzm/slotsmith/issues).
+
+## Try it
+
+Pick a language. The table, the autocomplete, the date picker and the uploader switch together, because they sit inside one `SlotsmithProvider` handed that pack. For the right-to-left packs the stage also flips to `dir="rtl"`. Only the components' own strings change: the rows and the column headers are your data, in your language.
+
+<Demo name="languages/switcher" lang="en" height="46rem" />
+
+The strings you cannot see change too: focus a row's checkbox or the uploader and a screen reader reads its name from the pack.
+
+## Passing a locale
+
+Every component takes `locale`. Hand it a pack as an object, and that component uses it, with or without a provider:
+
+<SampleCode name="languages/object-form" />
+
+For a whole app, give `SlotsmithProvider` the active tag and the packs it may resolve to. `SlotsmithProvider` and `useSlotsmithLocale` come from `slotsmith/provider`.
+
+<SampleCode name="languages/provider-form" />
+
+A tag finds its pack in this order: the exact tag (`ar-EG` finds an `ar-EG` pack), then the bare language (`ar-EG` finds `ar`), then any pack of the same language. The tag is still what `Intl` formats with, so `ar-EG` resolved to the `ar` pack writes Egyptian digits. With no match the labels stay English, numbers and dates follow the tag, and the console warns once per tag during development. A tag whose language is `en` never warns.
+
+The provider renders no element, so it cannot set the direction for you. `useSlotsmithLocale()` reads the active tag and direction back (`en-US` and `ltr` outside a provider) for the element that should carry `lang` and `dir`.
+
+## Your own pack
+
+`defineLocale` from `slotsmith/locale` types a custom locale and fills in its direction from the tag. A locale has one section per component: `table`, `autocomplete`, `datePicker`, `fileUploader`, and `fileValidation` for the uploader's rejection messages. Every section is optional, but one that is present must have every key, so the type checker refuses a half-finished translation.
+
+<Demo name="languages/custom-pack" lang="en" height="17rem" />
+
+A locale written in plain JavaScript, or one that predates a newer key, is still safe: the missing string falls back to English and nothing throws. Register a custom locale with the provider like any pack, `locales={[ar, nl]}`, or hand it straight to a component.
+
+## Overriding labels
+
+The `labels` prop replaces single strings on one component and keeps the rest from its locale:
+
+<SampleCode name="languages/override" />
+
+Each component's labels and their English defaults are listed on its API page, for example the [data table's labels](../components/data-table/api/#labels).
+
+## Precedence
+
+Every string is resolved on its own. Each step overrides the one before it:
+
+1. The English default.
+2. The `locale` of the nearest `SlotsmithProvider`.
+3. The component's own `locale`. It replaces the provider's whole, so one component never mixes two languages.
+4. The component's `labels` prop.
+
+<Demo name="languages/precedence" lang="en" height="11rem" />
+
+## Plurals
+
+`createPlural(code)` from `slotsmith/locale` picks the form a count needs through `Intl.PluralRules` and writes the formatted count into `{count}`. Give one string per category the language uses; only `other` is required. Russian has three forms for whole numbers and Arabic has six. Pick a count:
+
+<Demo name="languages/plurals" lang="en" height="12rem" />
+
+`createNumber(code)` writes a number the way a tag does, and a malformed tag falls back to English instead of throwing. Every shipped pack is written with these two helpers, and a section can be a function of the active tag, as the Dutch table section above is, so one text serves every region of its language.
+
+## Calendars
+
+The date picker is always Gregorian. Month and weekday names come from `Intl` in the active language, but the grid and every date written around it use the Gregorian calendar, even for tags such as `ar-SA` or `fa` whose default calendar is another. The value is a `YYYY-MM-DD` string in every language. Other calendars are on the [roadmap](../roadmap/).
+
+## Next.js
+
+A pack holds functions, its plurals and number formatting, so it cannot be passed as a prop from a server component to a client component. Import packs in a `"use client"` file and let the server pass only the tag. In the App Router that file holds the provider:
+
+<SampleCode name="frameworks/next-app/app/providers" />
+
+The root layout reads the language on the server, sets `lang` and `dir` on `<html>`, and passes the tag down:
+
+<SampleCode name="frameworks/next-app/app/layout" />
+
+[Getting started](../getting-started/#nextjs-and-vite) has the whole example.
+
+## next-intl and i18next
+
+If your app already translates with next-intl or i18next, keep your messages where they are. Build a locale with `defineLocale` whose labels call your `t()`, rebuild it when the language changes, and hand it to the provider. There is no adapter package to install.
+
+With next-intl, write counts as ICU plurals in your messages and next-intl picks the form:
+
+<SampleCode name="languages/next-intl" />
+
+With i18next, plural forms come from your resources' `_one` and `_other` keys when `t()` is given `count`:
+
+<SampleCode name="languages/i18next" />
+
+These two samples are shown, not run: the docs site does not install next-intl or i18next.
