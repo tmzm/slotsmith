@@ -8,48 +8,51 @@
  */
 
 /**
- * Tokens live on the root, like the other components', so an app can override
- * them there and the popup reads them wherever it is mounted.
+ * The tokens are resolved on the component and on its popup, into internal
+ * --_sac-* values the rules read. A custom property is resolved where it is
+ * declared, so resolving them here, rather than on :root, lets --ss-* set on
+ * any wrapper reach the component, and the popup reads them wherever it is
+ * mounted. The public --sac-* token is never declared, only read first, so an
+ * app's value on :root, a wrapper or the component still beats the shared one.
  */
-:root {
-  --sac-surface: var(--ss-surface, #ffffff);
-  --sac-text: var(--ss-text, #111827);
-  --sac-muted: var(--ss-muted, #6b7280);
-  --sac-border: var(--ss-border, #e5e7eb);
-  --sac-accent: var(--ss-accent, #2563eb);
-  --sac-hover: var(--ss-hover, rgb(0 0 0 / 4%));
-  --sac-danger: var(--ss-danger, #dc2626);
-  --sac-radius: var(--ss-radius, 8px);
-  --sac-font-size: var(--ss-font-size, 14px);
-}
-
-.dark,
-[data-theme="dark"] {
-  --sac-surface: var(--ss-surface, #141416);
-  --sac-text: var(--ss-text, #f5f5f5);
-  --sac-muted: var(--ss-muted, #a3a3a3);
-  --sac-border: var(--ss-border, #2a2a2a);
-  --sac-accent: var(--ss-accent, #60a5fa);
-  --sac-hover: var(--ss-hover, rgb(255 255 255 / 6%));
-  --sac-danger: var(--ss-danger, #f87171);
+.sac,
+.sac__popup {
+  --_sac-surface: var(--sac-surface, var(--ss-surface, #ffffff));
+  --_sac-text: var(--sac-text, var(--ss-text, #111827));
+  --_sac-muted: var(--sac-muted, var(--ss-muted, #6b7280));
+  --_sac-border: var(--sac-border, var(--ss-border, #e5e7eb));
+  --_sac-accent: var(--sac-accent, var(--ss-accent, #2563eb));
+  --_sac-hover: var(--sac-hover, var(--ss-hover, rgb(0 0 0 / 4%)));
+  --_sac-danger: var(--sac-danger, var(--ss-danger, #dc2626));
+  --_sac-radius: var(--sac-radius, var(--ss-radius, 8px));
+  --_sac-font-size: var(--sac-font-size, var(--ss-font-size, 14px));
 }
 
 /**
- * So the browser paints the search field and the list's scrollbar dark. Set on
- * the component rather than beside the tokens, so the page element carrying
+ * The dark palette, under a dark ancestor or on the element itself. Its
+ * selectors outrank the light rule's, so they win wherever both match.
+ * `color-scheme` makes the browser paint the search field and the list's
+ * scrollbar dark; it is set on the component, so the page element carrying
  * the theme keeps whatever scheme the app gave it.
  */
 :is(.dark, [data-theme="dark"]) :is(.sac, .sac__popup),
 .sac:is(.dark, [data-theme="dark"]),
 .sac__popup:is(.dark, [data-theme="dark"]) {
   color-scheme: dark;
+  --_sac-surface: var(--sac-surface, var(--ss-surface, #141416));
+  --_sac-text: var(--sac-text, var(--ss-text, #f5f5f5));
+  --_sac-muted: var(--sac-muted, var(--ss-muted, #a3a3a3));
+  --_sac-border: var(--sac-border, var(--ss-border, #2a2a2a));
+  --_sac-accent: var(--sac-accent, var(--ss-accent, #60a5fa));
+  --_sac-hover: var(--sac-hover, var(--ss-hover, rgb(255 255 255 / 6%)));
+  --_sac-danger: var(--sac-danger, var(--ss-danger, #f87171));
 }
 
 .sac {
   position: relative;
   width: 100%;
-  color: var(--sac-text);
-  font-size: var(--sac-font-size);
+  color: var(--_sac-text);
+  font-size: var(--_sac-font-size);
 }
 
 /* ------------------------------------------------------------------ trigger */
@@ -62,22 +65,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 4px 12px;
-  border: 1px solid var(--sac-border);
-  border-radius: var(--sac-radius);
-  background: var(--sac-surface);
+  border: 1px solid var(--_sac-border);
+  border-radius: var(--_sac-radius);
+  background: var(--_sac-surface);
   cursor: pointer;
 }
 
 .sac__trigger:hover {
-  border-color: color-mix(in oklab, var(--sac-border), var(--sac-text) 25%);
+  border-color: color-mix(in oklab, var(--_sac-border), var(--_sac-text) 25%);
 }
 
 .sac__trigger[data-open] {
-  border-color: var(--sac-accent);
+  border-color: var(--_sac-accent);
 }
 
 .sac__trigger:focus-visible {
-  outline: 2px solid var(--sac-accent);
+  outline: 2px solid var(--_sac-accent);
   outline-offset: 2px;
 }
 
@@ -102,7 +105,7 @@
 }
 
 .sac__value--empty {
-  color: var(--sac-muted);
+  color: var(--_sac-muted);
 }
 
 .sac__tag {
@@ -113,7 +116,7 @@
   padding-block: 0.0625rem;
   padding-inline: 0.4rem 0.25rem;
   border-radius: 0.3rem;
-  background: color-mix(in oklab, var(--sac-accent), transparent 88%);
+  background: color-mix(in oklab, var(--_sac-accent), transparent 88%);
   font-size: 0.75rem;
 }
 
@@ -124,7 +127,7 @@
 }
 
 .sac__overflow {
-  color: var(--sac-muted);
+  color: var(--_sac-muted);
   font-size: 0.75rem;
 }
 
@@ -137,7 +140,7 @@
   border: 0;
   border-radius: 0.25rem;
   background: none;
-  color: var(--sac-muted);
+  color: var(--_sac-muted);
   cursor: pointer;
 }
 
@@ -153,13 +156,13 @@
 
 .sac__tag-remove:hover,
 .sac__clear:hover {
-  background: var(--sac-hover);
-  color: var(--sac-text);
+  background: var(--_sac-hover);
+  color: var(--_sac-text);
 }
 
 .sac__tag-remove:focus-visible,
 .sac__clear:focus-visible {
-  color: var(--sac-text);
+  color: var(--_sac-text);
 }
 
 /* -------------------------------------------------------------------- icons */
@@ -178,7 +181,7 @@
 .sac__chevron {
   width: 1rem;
   height: 1rem;
-  stroke: var(--sac-muted);
+  stroke: var(--_sac-muted);
   stroke-width: 2;
   transition: transform 0.15s;
 }
@@ -190,7 +193,7 @@
 .sac__tick {
   width: 1rem;
   height: 1rem;
-  stroke: var(--sac-accent);
+  stroke: var(--_sac-accent);
   stroke-width: 2.5;
 }
 
@@ -210,8 +213,8 @@
   width: 0.9rem;
   height: 0.9rem;
   flex: none;
-  border: 2px solid color-mix(in oklab, var(--sac-muted), transparent 60%);
-  border-top-color: var(--sac-accent);
+  border: 2px solid color-mix(in oklab, var(--_sac-muted), transparent 60%);
+  border-top-color: var(--_sac-accent);
   border-radius: 50%;
   animation: sac-spin 0.7s linear infinite;
 }
@@ -239,11 +242,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--sac-border);
-  border-radius: var(--sac-radius);
-  background: var(--sac-surface);
-  color: var(--sac-text);
-  font-size: var(--sac-font-size);
+  border: 1px solid var(--_sac-border);
+  border-radius: var(--_sac-radius);
+  background: var(--_sac-surface);
+  color: var(--_sac-text);
+  font-size: var(--_sac-font-size);
   box-shadow: 0 10px 30px -12px rgb(0 0 0 / 45%);
 }
 
@@ -252,7 +255,7 @@
   flex: none;
   padding: 8px 12px;
   border: 0;
-  border-bottom: 1px solid var(--sac-border);
+  border-bottom: 1px solid var(--_sac-border);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -280,7 +283,7 @@
 }
 
 .sac__option[data-highlighted] {
-  background: var(--sac-hover);
+  background: var(--_sac-hover);
 }
 
 .sac__option[data-disabled] {
@@ -305,13 +308,13 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 1rem 0.5rem;
-  color: var(--sac-muted);
+  color: var(--_sac-muted);
   text-align: center;
 }
 
 .sac__error {
   flex-direction: column;
-  color: var(--sac-danger);
+  color: var(--_sac-danger);
 }
 
 .sac__button {
@@ -320,16 +323,16 @@
   justify-content: center;
   height: 32px;
   padding: 0 12px;
-  border: 1px solid var(--sac-border);
-  border-radius: var(--sac-radius);
+  border: 1px solid var(--_sac-border);
+  border-radius: var(--_sac-radius);
   background: transparent;
-  color: var(--sac-text);
+  color: var(--_sac-text);
   font: inherit;
   cursor: pointer;
 }
 
 .sac__button:hover:not(:disabled) {
-  background: var(--sac-hover);
+  background: var(--_sac-hover);
 }
 
 .sac__create-button,
@@ -342,20 +345,20 @@
   border: 0;
   border-radius: 0.375rem;
   background: none;
-  color: var(--sac-accent);
+  color: var(--_sac-accent);
   font: inherit;
   cursor: pointer;
 }
 
 .sac__more-button {
   justify-content: center;
-  color: var(--sac-muted);
+  color: var(--_sac-muted);
   font-size: 0.75rem;
 }
 
 .sac__create-button:hover:not(:disabled),
 .sac__more-button:hover:not(:disabled) {
-  background: var(--sac-hover);
+  background: var(--_sac-hover);
 }
 
 .sac__button:disabled,
@@ -368,7 +371,7 @@
 /** Inset on the small tag and clear buttons, so the ring stays inside the trigger and off the next tag. */
 .sac__tag-remove:focus-visible,
 .sac__clear:focus-visible {
-  outline: 2px solid var(--sac-accent);
+  outline: 2px solid var(--_sac-accent);
   outline-offset: -2px;
 }
 
@@ -376,7 +379,7 @@
 .sac__button:focus-visible,
 .sac__create-button:focus-visible,
 .sac__more-button:focus-visible {
-  outline: 2px solid var(--sac-accent);
+  outline: 2px solid var(--_sac-accent);
   outline-offset: 2px;
 }
 

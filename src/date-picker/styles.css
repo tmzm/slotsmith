@@ -15,43 +15,55 @@
  * seven-column grid and adds nothing but colour.
  */
 
+/** The sizing tokens have no shared counterpart and no dark value. */
 :root {
-  --sdp-surface: var(--ss-surface, var(--sdt-surface, #ffffff));
-  --sdp-border: var(--ss-border, var(--sdt-border, #e5e7eb));
-  --sdp-text: var(--ss-text, var(--sdt-text, #111827));
-  --sdp-muted: var(--ss-muted, var(--sdt-muted, #6b7280));
-  --sdp-accent: var(--ss-accent, var(--sdt-accent, #2563eb));
-  /** Text that sits on `--sdp-accent`. Flipped with the theme rather than guessed. */
-  --sdp-on-accent: var(--ss-on-accent, #ffffff);
-  --sdp-hover: var(--ss-hover, var(--sdt-hover, rgb(0 0 0 / 4%)));
-  --sdp-radius: var(--ss-radius, var(--sdt-radius, 8px));
-  --sdp-font-size: var(--ss-font-size, var(--sdt-font-size, 14px));
   /** One day cell. Square, so the column is sized from it rather than stretched. */
   --sdp-cell: 2rem;
   /** The gutter between day cells, on both axes. */
   --sdp-gap: 0.25rem;
 }
 
-.dark,
-[data-theme="dark"] {
-  --sdp-surface: var(--ss-surface, var(--sdt-surface, #141416));
-  --sdp-border: var(--ss-border, var(--sdt-border, #2a2a2a));
-  --sdp-text: var(--ss-text, var(--sdt-text, #f5f5f5));
-  --sdp-muted: var(--ss-muted, var(--sdt-muted, #a3a3a3));
-  --sdp-accent: var(--ss-accent, var(--sdt-accent, #60a5fa));
-  --sdp-on-accent: var(--ss-on-accent, #0b0b0c);
-  --sdp-hover: var(--ss-hover, var(--sdt-hover, rgb(255 255 255 / 6%)));
+/**
+ * The colour, radius and font-size tokens are resolved on the component and
+ * on its popup, into internal --_sdp-* values the rules read. A custom
+ * property is resolved where it is declared, so resolving them here, rather
+ * than on :root, lets --ss-* set on any wrapper reach the component, and the
+ * popup reads them wherever it is mounted. The public --sdp-* token is never
+ * declared, only read first, so an app's value on :root, a wrapper or the
+ * component still beats the shared one.
+ */
+.sdp,
+.sdp__popup {
+  --_sdp-surface: var(--sdp-surface, var(--ss-surface, var(--sdt-surface, #ffffff)));
+  --_sdp-border: var(--sdp-border, var(--ss-border, var(--sdt-border, #e5e7eb)));
+  --_sdp-text: var(--sdp-text, var(--ss-text, var(--sdt-text, #111827)));
+  --_sdp-muted: var(--sdp-muted, var(--ss-muted, var(--sdt-muted, #6b7280)));
+  --_sdp-accent: var(--sdp-accent, var(--ss-accent, var(--sdt-accent, #2563eb)));
+  /** Text that sits on the accent. Flipped with the theme rather than guessed. */
+  --_sdp-on-accent: var(--sdp-on-accent, var(--ss-on-accent, #ffffff));
+  --_sdp-hover: var(--sdp-hover, var(--ss-hover, var(--sdt-hover, rgb(0 0 0 / 4%))));
+  --_sdp-radius: var(--sdp-radius, var(--ss-radius, var(--sdt-radius, 8px)));
+  --_sdp-font-size: var(--sdp-font-size, var(--ss-font-size, var(--sdt-font-size, 14px)));
 }
 
 /**
- * So the browser paints the month/year selects' native popup and scrollbar
- * dark. Set on the component rather than beside the tokens, so the page
- * element carrying the theme keeps whatever scheme the app gave it.
+ * The dark palette, under a dark ancestor or on the element itself. Its
+ * selectors outrank the light rule's, so they win wherever both match.
+ * `color-scheme` makes the browser paint the month and year selects' native
+ * popup and scrollbar dark; it is set on the component, so the page element
+ * carrying the theme keeps whatever scheme the app gave it.
  */
 :is(.dark, [data-theme="dark"]) :is(.sdp, .sdp__popup),
 .sdp:is(.dark, [data-theme="dark"]),
 .sdp__popup:is(.dark, [data-theme="dark"]) {
   color-scheme: dark;
+  --_sdp-surface: var(--sdp-surface, var(--ss-surface, var(--sdt-surface, #141416)));
+  --_sdp-border: var(--sdp-border, var(--ss-border, var(--sdt-border, #2a2a2a)));
+  --_sdp-text: var(--sdp-text, var(--ss-text, var(--sdt-text, #f5f5f5)));
+  --_sdp-muted: var(--sdp-muted, var(--ss-muted, var(--sdt-muted, #a3a3a3)));
+  --_sdp-accent: var(--sdp-accent, var(--ss-accent, var(--sdt-accent, #60a5fa)));
+  --_sdp-on-accent: var(--sdp-on-accent, var(--ss-on-accent, #0b0b0c));
+  --_sdp-hover: var(--sdp-hover, var(--ss-hover, var(--sdt-hover, rgb(255 255 255 / 6%))));
 }
 
 /* ------------------------------------------------------------------- root */
@@ -60,8 +72,8 @@
   position: relative;
   width: 100%;
   max-width: 18rem;
-  color: var(--sdp-text);
-  font-size: var(--sdp-font-size);
+  color: var(--_sdp-text);
+  font-size: var(--_sdp-font-size);
 }
 
 /* ---------------------------------------------------------------- trigger */
@@ -75,25 +87,25 @@
   gap: 0.5rem;
   padding-block: 4px;
   padding-inline: 12px;
-  border: 1px solid var(--sdp-border);
-  border-radius: var(--sdp-radius);
-  background: var(--sdp-surface);
-  color: var(--sdp-text);
+  border: 1px solid var(--_sdp-border);
+  border-radius: var(--_sdp-radius);
+  background: var(--_sdp-surface);
+  color: var(--_sdp-text);
   font: inherit;
   text-align: start;
   cursor: pointer;
 }
 
 .sdp__trigger:hover {
-  border-color: color-mix(in oklab, var(--sdp-border), var(--sdp-text) 25%);
+  border-color: color-mix(in oklab, var(--_sdp-border), var(--_sdp-text) 25%);
 }
 
 .sdp__trigger[data-open] {
-  border-color: var(--sdp-accent);
+  border-color: var(--_sdp-accent);
 }
 
 .sdp__trigger:focus-visible {
-  outline: 2px solid var(--sdp-accent);
+  outline: 2px solid var(--_sdp-accent);
   outline-offset: 2px;
 }
 
@@ -107,14 +119,14 @@
   height: 1rem;
   flex: none;
   fill: none;
-  stroke: var(--sdp-muted);
+  stroke: var(--_sdp-muted);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .sdp__trigger[data-open] .sdp__icon {
-  stroke: var(--sdp-accent);
+  stroke: var(--_sdp-accent);
 }
 
 .sdp__value {
@@ -126,7 +138,7 @@
 }
 
 .sdp__value--empty {
-  color: var(--sdp-muted);
+  color: var(--_sdp-muted);
 }
 
 .sdp__clear {
@@ -139,7 +151,7 @@
   border: 0;
   border-radius: 0.25rem;
   background: none;
-  color: var(--sdp-muted);
+  color: var(--_sdp-muted);
   cursor: pointer;
 }
 
@@ -153,12 +165,12 @@
 }
 
 .sdp__clear:hover {
-  background: var(--sdp-hover);
-  color: var(--sdp-text);
+  background: var(--_sdp-hover);
+  color: var(--_sdp-text);
 }
 
 .sdp__clear:focus-visible {
-  outline: 2px solid var(--sdp-accent);
+  outline: 2px solid var(--_sdp-accent);
   outline-offset: 2px;
 }
 
@@ -173,11 +185,11 @@
   width: 18rem;
   overflow-y: auto;
   padding: 0.5rem;
-  border: 1px solid var(--sdp-border);
-  border-radius: var(--sdp-radius);
-  background: var(--sdp-surface);
-  color: var(--sdp-text);
-  font-size: var(--sdp-font-size);
+  border: 1px solid var(--_sdp-border);
+  border-radius: var(--_sdp-radius);
+  background: var(--_sdp-surface);
+  color: var(--_sdp-text);
+  font-size: var(--_sdp-font-size);
   box-shadow: 0 10px 30px -12px rgb(0 0 0 / 45%);
 }
 
@@ -210,8 +222,8 @@
   padding-inline: 0.25rem;
   border: 1px solid transparent;
   border-radius: 0.375rem;
-  background-color: var(--sdp-surface);
-  color: var(--sdp-text);
+  background-color: var(--_sdp-surface);
+  color: var(--_sdp-text);
   color-scheme: inherit;
   font: inherit;
   font-size: 0.8125rem;
@@ -220,16 +232,16 @@
 }
 
 .sdp__select option {
-  background-color: var(--sdp-surface);
-  color: var(--sdp-text);
+  background-color: var(--_sdp-surface);
+  color: var(--_sdp-text);
 }
 
 .sdp__select:hover {
-  border-color: var(--sdp-border);
+  border-color: var(--_sdp-border);
 }
 
 .sdp__select:focus-visible {
-  outline: 2px solid var(--sdp-accent);
+  outline: 2px solid var(--_sdp-accent);
   outline-offset: 2px;
 }
 
@@ -243,16 +255,16 @@
   border: 0;
   border-radius: 0.375rem;
   background: none;
-  color: var(--sdp-text);
+  color: var(--_sdp-text);
   cursor: pointer;
 }
 
 .sdp__nav:hover:not(:disabled) {
-  background: var(--sdp-hover);
+  background: var(--_sdp-hover);
 }
 
 .sdp__nav:focus-visible {
-  outline: 2px solid var(--sdp-accent);
+  outline: 2px solid var(--_sdp-accent);
   outline-offset: 2px;
 }
 
@@ -302,7 +314,7 @@
 
 .sdp__weekday {
   padding-block: 0.25rem;
-  color: var(--sdp-muted);
+  color: var(--_sdp-muted);
   font-size: 0.6875rem;
   font-weight: 600;
   text-align: center;
@@ -320,7 +332,7 @@
   border: 0;
   border-radius: 0.5rem;
   background: transparent;
-  color: var(--sdp-text);
+  color: var(--_sdp-text);
   font: inherit;
   font-size: 0.8125rem;
   cursor: pointer;
@@ -328,12 +340,12 @@
 
 /** Hover stays out of the way of the picked states rather than fighting them. */
 .sdp__day:hover:not([data-disabled], [data-selected], [data-in-range]) {
-  background: var(--sdp-hover);
+  background: var(--_sdp-hover);
 }
 
 /** Inset, so the ring stays inside the cell instead of spilling over its neighbours and the range band. */
 .sdp__day:focus-visible {
-  outline: 2px solid var(--sdp-accent);
+  outline: 2px solid var(--_sdp-accent);
   outline-offset: -2px;
 }
 
@@ -348,7 +360,7 @@
 }
 
 .sdp__day[data-outside] {
-  color: var(--sdp-muted);
+  color: var(--_sdp-muted);
 }
 
 /** Today is a dot, not a colour, so it survives a selected background. */
@@ -365,8 +377,8 @@
 }
 
 .sdp__day[data-selected] {
-  background: var(--sdp-accent);
-  color: var(--sdp-on-accent);
+  background: var(--_sdp-accent);
+  color: var(--_sdp-on-accent);
   font-weight: 600;
 }
 
@@ -391,11 +403,11 @@
   z-index: -1;
   inset-block: 0;
   inset-inline: calc(var(--sdp-gap) / -2 - 0.5px);
-  background: color-mix(in oklab, var(--sdp-accent), transparent 85%);
+  background: color-mix(in oklab, var(--_sdp-accent), transparent 85%);
 }
 
 .sdp__day[data-in-preview]:not([data-in-range])::before {
-  background: color-mix(in oklab, var(--sdp-accent), transparent 92%);
+  background: color-mix(in oklab, var(--_sdp-accent), transparent 92%);
 }
 
 .sdp__day[data-in-range][data-range-start]::before,
@@ -412,8 +424,8 @@
 }
 
 .sdp__day[data-in-range][data-selected] {
-  background: var(--sdp-accent);
-  color: var(--sdp-on-accent);
+  background: var(--_sdp-accent);
+  color: var(--_sdp-on-accent);
 }
 
 /* ----------------------------------------------------------------- footer */
@@ -425,28 +437,28 @@
   gap: 0.25rem;
   margin-block-start: 0.5rem;
   padding-block-start: 0.5rem;
-  border-block-start: 1px solid var(--sdp-border);
+  border-block-start: 1px solid var(--_sdp-border);
 }
 
 .sdp__preset {
   padding-block: 0.25rem;
   padding-inline: 0.5rem;
-  border: 1px solid var(--sdp-border);
+  border: 1px solid var(--_sdp-border);
   border-radius: 999px;
-  background: var(--sdp-surface);
-  color: var(--sdp-text);
+  background: var(--_sdp-surface);
+  color: var(--_sdp-text);
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
 }
 
 .sdp__preset:hover {
-  border-color: var(--sdp-accent);
-  color: var(--sdp-accent);
+  border-color: var(--_sdp-accent);
+  color: var(--_sdp-accent);
 }
 
 .sdp__preset:focus-visible {
-  outline: 2px solid var(--sdp-accent);
+  outline: 2px solid var(--_sdp-accent);
   outline-offset: 2px;
 }
 
@@ -466,7 +478,7 @@
   border: 1px solid transparent;
   border-radius: 999px;
   background: none;
-  color: var(--sdp-accent);
+  color: var(--_sdp-accent);
   font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
@@ -477,13 +489,13 @@
 .sdp__preset--today:hover,
 .sdp__today:hover {
   border-color: transparent;
-  color: var(--sdp-accent);
-  background: var(--sdp-hover);
+  color: var(--_sdp-accent);
+  background: var(--_sdp-hover);
 }
 
 .sdp__preset--today:focus-visible,
 .sdp__today:focus-visible {
-  outline: 2px solid var(--sdp-accent);
+  outline: 2px solid var(--_sdp-accent);
   outline-offset: 2px;
 }
 

@@ -1,10 +1,12 @@
 /**
  * @vitest-environment node
  *
- * The four stylesheets, read as text. Every component token reads the shared
- * `--ss-*` layer first, light values live on `:root`, dark values on
- * `.dark, [data-theme="dark"]`, and the dark switch never follows the system
- * setting.
+ * The four stylesheets, read as text. Every colour, radius and font-size token
+ * is resolved on the component's own root, into an internal `--_<prefix>-*`
+ * value that reads the app's component token first and the shared `--ss-*`
+ * layer second. Dark values sit on rules scoped to the component under
+ * `.dark` or `[data-theme="dark"]`, and the dark switch never follows the
+ * system setting.
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -54,35 +56,52 @@ const block = (css: string, selector: RegExp) => css.match(new RegExp(`${selecto
 /** Escapes a literal for use inside a regular expression. */
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/**
+ * Token rules
+ *
+ * @param css - A stylesheet without comments.
+ * @param prefix - The component's prefix.
+ * @returns The bodies of the rule that resolves the light values on the
+ * component's root (and popup), and of the rule that resolves the dark ones.
+ */
+const tokenBlocks = (css: string, prefix: string) => {
+  const own = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map((match) => ({ selector: match[1]!.trim().replace(/\s+/g, " "), body: match[2]! }))
+    .filter((entry) => entry.body.includes(`--_${prefix}-`));
+  const light = own.find((entry) => [`.${prefix}`, `.${prefix}, .${prefix}__popup`].includes(entry.selector))?.body ?? "";
+  const dark = own.find((entry) => entry.selector.startsWith(`:is(.dark, [data-theme="dark"]) :is(.${prefix}`))?.body ?? "";
+  return { light, dark };
+};
+
 describe.each(Object.entries(SHEETS))("--%s tokens", (prefix, folder) => {
   const css = read(folder);
-  const light = block(css, /(?:^|\})\s*:root/);
-  const dark = block(css, /\.dark,\s*\[data-theme="dark"\]/);
+  const root = block(css, /(?:^|\})\s*:root/);
+  const { light, dark } = tokenBlocks(css, prefix);
   // A component only has the shared tokens it actually uses.
   const declared = <T extends string>(names: readonly T[]) =>
-    names.filter((name) => light.includes(`--${prefix}-${name}:`));
+    names.filter((name) => light.includes(`--_${prefix}-${name}:`));
 
-  it("declares its tokens on :root", () => {
+  it("resolves its tokens on its own root", () => {
     expect(declared(SHARED).length).toBeGreaterThan(3);
   });
 
-  it.each(SHARED)("reads --ss-%s first in the light block", (name) => {
+  it.each(SHARED)("reads the app's token, then --ss-%s, in the light rule", (name) => {
     if (!declared(SHARED).includes(name)) return;
-    expect(light).toMatch(new RegExp(`--${prefix}-${name}:\\s*var\\(--ss-${escape(name)},`));
+    expect(light).toMatch(new RegExp(`--_${prefix}-${escape(name)}:\\s*var\\(--${prefix}-${escape(name)}, var\\(--ss-${escape(name)},`));
   });
 
-  it.each(COLOURS)("redeclares %s in the dark block, reading the shared token first", (name) => {
+  it.each(COLOURS)("resolves %s again in the dark rule, in the same order", (name) => {
     if (!declared(COLOURS).includes(name)) return;
-    expect(dark).toMatch(new RegExp(`--${prefix}-${name}:\\s*var\\(--ss-${escape(name)},`));
+    expect(dark).toMatch(new RegExp(`--_${prefix}-${escape(name)}:\\s*var\\(--${prefix}-${escape(name)}, var\\(--ss-${escape(name)},`));
   });
 
-  it("redeclares in the dark block every light token that derives from a colour token", () => {
-    // `--x-bg: var(--x-surface)` is resolved where it is declared, so a dark
-    // element below the root would inherit the light surface through it.
-    const derived = [...light.matchAll(new RegExp(`(--${prefix}-[\\w-]+):\\s*var\\(--${prefix}-`, "g"))].map(
-      (match) => match[1],
-    );
-    for (const name of derived) expect(dark, name).toContain(`${name}:`);
+  it("never declares a public token that reads another token, so an app's value always wins", () => {
+    // Declaring `--sdt-accent: var(--ss-accent, …)` anywhere would shadow the
+    // app's own value set above it, or resolve --ss-* out of a wrapper's reach.
+    for (const [, name, value] of css.matchAll(/(?<![\w-])(--[a-z]+-[\w-]+):\s*([^;]+);/g)) {
+      if (!name!.startsWith(`--${prefix}-`) || name!.startsWith(`--${prefix}-size-`)) continue;
+      expect(value, name).not.toMatch(/var\(/);
+    }
   });
 
   it("switches to dark by class or attribute, never by the system setting", () => {
@@ -91,7 +110,7 @@ describe.each(Object.entries(SHEETS))("--%s tokens", (prefix, folder) => {
   });
 
   it("never sets color-scheme on :root", () => {
-    expect(light).not.toMatch(/color-scheme/);
+    expect(root).not.toMatch(/color-scheme/);
   });
 });
 
@@ -118,12 +137,12 @@ it.each(SELECT_SHEETS)(
 
     const selectRule = block(css, new RegExp(`\\.${selectClass}`));
     expect(selectRule).not.toMatch(/background(-color)?:\s*transparent/);
-    expect(selectRule).toMatch(new RegExp(`background(-color)?:\\s*var\\(--${prefix}-surface`));
+    expect(selectRule).toMatch(new RegExp(`background(-color)?:\\s*var\\(--_${prefix}-surface`));
 
     const optionRule = block(css, new RegExp(`\\.${selectClass} option`));
     expect(optionRule).not.toMatch(/color:\s*initial/);
-    expect(optionRule).toMatch(new RegExp(`color:\\s*var\\(--${prefix}-text`));
-    expect(optionRule).toMatch(new RegExp(`background-color:\\s*var\\(--${prefix}-surface`));
+    expect(optionRule).toMatch(new RegExp(`color:\\s*var\\(--_${prefix}-text`));
+    expect(optionRule).toMatch(new RegExp(`background-color:\\s*var\\(--_${prefix}-surface`));
 
     // So the browser paints the native popup and scrollbar dark.
     expect(css).toMatch(/color-scheme:\s*dark/);
@@ -171,11 +190,12 @@ const DENSITY: string[] = ["font-size", "padding-x", "padding-y", "checkbox-size
  *
  * @param prefix - A component's token prefix.
  * @param name - A token name.
- * @returns How a rule reads the token: plainly, or for a data table density
- * token, with its internal size twin as the fallback.
+ * @returns How a rule reads the token: through its internal resolved value,
+ * or for a data table density token, the public token with its internal size
+ * twin as the fallback.
  */
 const tokenRead = (prefix: string, name: string) =>
-  prefix === "sdt" && DENSITY.includes(name) ? `var(--sdt-${name}, var(--sdt-size-${name}))` : `var(--${prefix}-${name})`;
+  prefix === "sdt" && DENSITY.includes(name) ? `var(--sdt-${name}, var(--sdt-size-${name}))` : `var(--_${prefix}-${name})`;
 
 /** The shared tokens every component reads, whatever else it declares. */
 const CORE = ["surface", "text", "muted", "border", "accent", "hover", "radius", "font-size"] as const;
@@ -207,52 +227,51 @@ const value = (body: string, property: string) =>
 
 describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) => {
   const css = read(folder);
-  const light = block(css, /(?:^|\})\s*:root/);
-  const dark = block(css, /\.dark,\s*\[data-theme="dark"\]/);
+  const root = block(css, /(?:^|\})\s*:root/);
+  const { light, dark } = tokenBlocks(css, prefix);
 
   it.each(CORE)("declares --%s", (name) => {
-    // The data table's density tokens are the app's to set; it declares an internal twin instead.
-    const declared = prefix === "sdt" && DENSITY.includes(name) ? `--sdt-size-${name}:` : `--${prefix}-${name}:`;
-    expect(light).toContain(declared);
+    // The data table's density tokens are the app's to set; it declares an internal twin on :root instead.
+    if (prefix === "sdt" && DENSITY.includes(name)) expect(root).toContain(`--sdt-size-${name}:`);
+    else expect(light).toContain(`--_${prefix}-${name}:`);
   });
 
   /**
-   * The expected declaration: the shared token, then (for the components that
-   * have always borrowed them) the data table's, then the one literal.
+   * The expected declaration: the app's component token, the shared token,
+   * then (for the components that have always borrowed them) the data
+   * table's, then the one literal.
    */
   const expected = (name: (typeof SHARED)[number], literal: string | undefined) =>
     BORROWS_TABLE.includes(prefix) && TABLE_TOKENS.includes(name)
-      ? `var(--ss-${name}, var(--sdt-${name}, ${literal}))`
-      : `var(--ss-${name}, ${literal})`;
+      ? `var(--${prefix}-${name}, var(--ss-${name}, var(--sdt-${name}, ${literal})))`
+      : `var(--${prefix}-${name}, var(--ss-${name}, ${literal}))`;
 
   it.each(SHARED)("falls back to the shared light literal for %s", (name) => {
-    const token = value(light, `--${prefix}-${name}`);
+    const token = value(light, `--_${prefix}-${name}`);
     if (token === undefined) return;
     expect(token).toBe(expected(name, PALETTE[name].light));
   });
 
   it.each(COLOURS)("falls back to the shared dark literal for %s", (name) => {
-    if (value(light, `--${prefix}-${name}`) === undefined) return;
-    expect(value(dark, `--${prefix}-${name}`)).toBe(expected(name, PALETTE[name].dark));
+    if (value(light, `--_${prefix}-${name}`) === undefined) return;
+    expect(value(dark, `--_${prefix}-${name}`)).toBe(expected(name, PALETTE[name].dark));
   });
 
-  it("keeps the data table's tokens as the second fallback, so a theme written against the table still applies", () => {
+  it("keeps the data table's tokens as the fallback after the shared ones, so a theme written against the table still applies", () => {
     if (!BORROWS_TABLE.includes(prefix)) return;
     for (const block of [light, dark]) {
       for (const name of TABLE_TOKENS) {
-        const token = value(block, `--${prefix}-${name}`);
+        const token = value(block, `--_${prefix}-${name}`);
         if (token === undefined) continue;
-        expect(token.startsWith(`var(--ss-${name}, var(--sdt-${name}, `), `--${prefix}-${name}`).toBe(true);
+        expect(token.startsWith(`var(--${prefix}-${name}, var(--ss-${name}, var(--sdt-${name}, `), `--${prefix}-${name}`).toBe(true);
       }
     }
-    if (prefix === "sfu") {
-      expect(value(light, "--sfu-bg")).toBe("var(--sdt-bg, var(--sfu-surface))");
-      expect(value(dark, "--sfu-bg")).toBe("var(--sdt-bg, var(--sfu-surface))");
-    }
+    if (prefix === "sfu") expect(value(light, "--_sfu-bg")).toBe("var(--sfu-bg, var(--sdt-bg, var(--_sfu-surface)))");
   });
 
   it("sets color-scheme on its own elements, not on the element carrying the theme", () => {
-    expect(dark).not.toMatch(/color-scheme/);
+    expect(block(css, /\.dark,\s*\[data-theme="dark"\]/)).not.toMatch(/color-scheme/);
+    expect(value(dark, "color-scheme")).toBe("dark");
     const scoped = rules(css).find(
       (entry) =>
         new RegExp(`:is\\(\\.dark, \\[data-theme="dark"\\]\\) :is\\(\\.${prefix}[,)]`).test(entry.selector) &&
@@ -264,7 +283,7 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
   it("draws every focus ring the same way", () => {
     const outlines = [...css.matchAll(/(?<![-\w])outline:\s*([^;]+);/g)].map((match) => match[1]!.trim());
     expect(outlines.length).toBeGreaterThan(0);
-    for (const outline of outlines) if (outline !== "none") expect(outline).toBe(`2px solid var(--${prefix}-accent)`);
+    for (const outline of outlines) if (outline !== "none") expect(outline).toBe(`2px solid ${tokenRead(prefix, "accent")}`);
     for (const entry of rules(css)) {
       const offset = value(entry.body, "outline-offset");
       if (offset === undefined) continue;
@@ -292,7 +311,7 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
   it("paints every hover background with the hover token", () => {
     for (const entry of rules(css).filter((candidate) => candidate.selector.includes(":hover"))) {
       const background = value(entry.body, "background") ?? value(entry.body, "background-color");
-      if (background !== undefined) expect(background, entry.selector).toBe(`var(--${prefix}-hover)`);
+      if (background !== undefined) expect(background, entry.selector).toBe(tokenRead(prefix, "hover"));
     }
   });
 
@@ -311,6 +330,8 @@ it("maps the autocomplete's tokens to the table's inside the table", () => {
   for (const name of [...COLOURS.filter((colour) => colour !== "on-accent" && colour !== "selected"), "radius", "font-size"]) {
     expect(value(body, `--sac-${name}`), name).toBe(tokenRead("sdt", name));
   }
+  // The public tokens, so the autocomplete's own rules, popup included, read them first.
+  expect(body).not.toContain("--_sac-");
 });
 
 /** Buttons and triggers: one height, border and radius. */
@@ -325,8 +346,8 @@ const CONTROLS = [
 it.each(CONTROLS)("$selector is a 32px control with the shared border and radius", ({ prefix, folder, selector }) => {
   const body = rule(read(folder), selector);
   expect(value(body, "height") ?? value(body, "min-height")).toBe("32px");
-  expect(value(body, "border")).toBe(`1px solid var(--${prefix}-border)`);
-  expect(value(body, "border-radius")).toBe(`var(--${prefix}-radius)`);
+  expect(value(body, "border")).toBe(`1px solid ${tokenRead(prefix, "border")}`);
+  expect(value(body, "border-radius")).toBe(tokenRead(prefix, "radius"));
   const inline = value(body, "padding-inline") ?? value(body, "padding")?.split(" ")[1];
   expect(inline).toBe("12px");
 });
@@ -337,11 +358,11 @@ it("gives both popups the same surface, border, radius, text and shadow", () => 
     { prefix: "sdp", body: rule(read("date-picker"), ".sdp__popup") },
   ];
   for (const { prefix, body } of popups) {
-    expect(value(body, "border")).toBe(`1px solid var(--${prefix}-border)`);
-    expect(value(body, "border-radius")).toBe(`var(--${prefix}-radius)`);
-    expect(value(body, "background")).toBe(`var(--${prefix}-surface)`);
-    expect(value(body, "color")).toBe(`var(--${prefix}-text)`);
-    expect(value(body, "font-size")).toBe(`var(--${prefix}-font-size)`);
+    expect(value(body, "border")).toBe(`1px solid ${tokenRead(prefix, "border")}`);
+    expect(value(body, "border-radius")).toBe(tokenRead(prefix, "radius"));
+    expect(value(body, "background")).toBe(tokenRead(prefix, "surface"));
+    expect(value(body, "color")).toBe(tokenRead(prefix, "text"));
+    expect(value(body, "font-size")).toBe(tokenRead(prefix, "font-size"));
     expect(value(body, "box-shadow")).toBe("0 10px 30px -12px rgb(0 0 0 / 45%)");
   }
 });

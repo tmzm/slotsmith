@@ -31,7 +31,7 @@ Each component also reads its own prefix, which overrides the shared token for t
 
 \* The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, on `:root`, a wrapper or the table, and then yours win at every size. `--sdt-font-size` otherwise follows `--ss-font-size` (one pixel smaller at the default `sm` size).
 
-Every other component token is declared on `:root`, so override it there (or on a component's root element for one instance). A value set on `:root`, shared or not, applies to both themes: set its dark value under `.dark, [data-theme="dark"]` too.
+The colour, radius and font-size tokens are not declared on `:root` either: each component resolves them on its own root element (and popup), reading your component token first, then the shared `--ss-*` one, then its default. So set any of them, shared or per component, on `:root` for the whole page or on any wrapper element (or a component's root) for just the components inside it; a component token beats the shared one wherever each is set. The remaining tokens (`stripe`, `skeleton-bg`, `max-height`, `cell`, `gap`, `tile-size`) are declared on `:root`; override them there or on any wrapper. A value you set applies to both themes: set its dark value under `.dark, [data-theme="dark"]` too.
 
 ```css
 :root {

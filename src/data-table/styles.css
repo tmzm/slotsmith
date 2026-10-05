@@ -22,22 +22,10 @@
 @import "../autocomplete/styles.css";
 
 :root {
-  --sdt-surface: var(--ss-surface, #ffffff);
-  --sdt-bg: var(--sdt-surface);
-  /** Must stay opaque: the header is sticky and rows scroll underneath it. */
-  --sdt-header-bg: var(--sdt-surface);
-  --sdt-border: var(--ss-border, #e5e7eb);
-  --sdt-text: var(--ss-text, #111827);
-  --sdt-muted: var(--ss-muted, #6b7280);
-  --sdt-hover: var(--ss-hover, rgb(0 0 0 / 4%));
   --sdt-stripe: rgba(0, 0, 0, 0.025);
-  --sdt-selected: var(--ss-selected, rgb(37 99 235 / 8%));
-  --sdt-accent: var(--ss-accent, #2563eb);
-  --sdt-danger: var(--ss-danger, #dc2626);
   --sdt-skeleton-bg: #e5e7eb;
   --sdt-skeleton-bg-2: #f3f4f6;
 
-  --sdt-radius: var(--ss-radius, 8px);
   /** Internal: what the rules use when the app sets no density token. */
   --sdt-size-font-size: var(--ss-font-size, 14px);
   --sdt-size-padding-x: 12px;
@@ -46,67 +34,84 @@
   --sdt-max-height: none;
 }
 
-/**
- * Every colour token again, and the ones derived from them: a custom property
- * is resolved where it is declared, so a `.dark` element below the root would
- * otherwise inherit the light values.
- */
+/** The tokens with no shared counterpart, again for the dark palette. */
 .dark,
 [data-theme="dark"] {
-  --sdt-surface: var(--ss-surface, #141416);
-  --sdt-bg: var(--sdt-surface);
-  --sdt-header-bg: var(--sdt-surface);
-  --sdt-border: var(--ss-border, #2a2a2a);
-  --sdt-text: var(--ss-text, #f5f5f5);
-  --sdt-muted: var(--ss-muted, #a3a3a3);
-  --sdt-hover: var(--ss-hover, rgb(255 255 255 / 6%));
   --sdt-stripe: rgba(255, 255, 255, 0.025);
-  --sdt-selected: var(--ss-selected, rgb(96 165 250 / 12%));
-  --sdt-accent: var(--ss-accent, #60a5fa);
-  --sdt-danger: var(--ss-danger, #f87171);
   --sdt-skeleton-bg: #262626;
   --sdt-skeleton-bg-2: #333333;
+}
+
+/** Root */
+
+/**
+ * The tokens that read the shared layer are resolved on the table itself, into
+ * internal --_sdt-* values the rules read. A custom property is resolved where
+ * it is declared, so resolving them here, rather than on :root, lets --ss-*
+ * set on any wrapper reach the table. The public --sdt-* token is never
+ * declared, only read first, so an app's value on :root, a wrapper or the
+ * table still beats the shared one.
+ */
+.sdt {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--sdt-font-size, var(--sdt-size-font-size));
+  color: var(--_sdt-text);
+  background: var(--_sdt-bg);
+  border: 1px solid var(--_sdt-border);
+  border-radius: var(--_sdt-radius);
+  overflow: hidden;
+
+  --_sdt-surface: var(--sdt-surface, var(--ss-surface, #ffffff));
+  /** Must stay opaque: the header is sticky and rows scroll underneath it. */
+  --_sdt-header-bg: var(--sdt-header-bg, var(--_sdt-surface));
+  --_sdt-bg: var(--sdt-bg, var(--_sdt-surface));
+  --_sdt-border: var(--sdt-border, var(--ss-border, #e5e7eb));
+  --_sdt-text: var(--sdt-text, var(--ss-text, #111827));
+  --_sdt-muted: var(--sdt-muted, var(--ss-muted, #6b7280));
+  --_sdt-hover: var(--sdt-hover, var(--ss-hover, rgb(0 0 0 / 4%)));
+  --_sdt-selected: var(--sdt-selected, var(--ss-selected, rgb(37 99 235 / 8%)));
+  --_sdt-accent: var(--sdt-accent, var(--ss-accent, #2563eb));
+  --_sdt-danger: var(--sdt-danger, var(--ss-danger, #dc2626));
+  --_sdt-radius: var(--sdt-radius, var(--ss-radius, 8px));
+}
+
+/**
+ * The dark palette, under a dark ancestor or on a dark table. Its selectors
+ * outrank `.sdt`, so they win wherever both match. `color-scheme` makes the
+ * browser paint the scrollbars and native checkboxes dark; it is set on the
+ * table, so the page element carrying the theme keeps whatever scheme the app
+ * gave it.
+ */
+:is(.dark, [data-theme="dark"]) :is(.sdt),
+.sdt:is(.dark, [data-theme="dark"]) {
+  color-scheme: dark;
+  --_sdt-surface: var(--sdt-surface, var(--ss-surface, #141416));
+  --_sdt-border: var(--sdt-border, var(--ss-border, #2a2a2a));
+  --_sdt-text: var(--sdt-text, var(--ss-text, #f5f5f5));
+  --_sdt-muted: var(--sdt-muted, var(--ss-muted, #a3a3a3));
+  --_sdt-hover: var(--sdt-hover, var(--ss-hover, rgb(255 255 255 / 6%)));
+  --_sdt-selected: var(--sdt-selected, var(--ss-selected, rgb(96 165 250 / 12%)));
+  --_sdt-accent: var(--sdt-accent, var(--ss-accent, #60a5fa));
+  --_sdt-danger: var(--sdt-danger, var(--ss-danger, #f87171));
 }
 
 /**
  * The page-size menu is the autocomplete, and its popup is not portalled, so
  * inside the table its colour, radius and font tokens read the table's. An app
- * that restyles only the table restyles the menu with it. The table's tokens
+ * that restyles only the table restyles the menu with it. The table's values
  * already switch with the theme, so one rule covers light and dark.
  */
 .sdt .sac {
-  --sac-surface: var(--sdt-surface);
-  --sac-text: var(--sdt-text);
-  --sac-muted: var(--sdt-muted);
-  --sac-border: var(--sdt-border);
-  --sac-accent: var(--sdt-accent);
-  --sac-hover: var(--sdt-hover);
-  --sac-danger: var(--sdt-danger);
-  --sac-radius: var(--sdt-radius);
+  --sac-surface: var(--_sdt-surface);
+  --sac-text: var(--_sdt-text);
+  --sac-muted: var(--_sdt-muted);
+  --sac-border: var(--_sdt-border);
+  --sac-accent: var(--_sdt-accent);
+  --sac-hover: var(--_sdt-hover);
+  --sac-danger: var(--_sdt-danger);
+  --sac-radius: var(--_sdt-radius);
   --sac-font-size: var(--sdt-font-size, var(--sdt-size-font-size));
-}
-
-/**
- * So the browser paints the scroll area's scrollbars and the native
- * checkboxes dark. Set on the table itself rather than beside the tokens, so the page
- * element carrying the theme keeps whatever scheme the app gave it.
- */
-:is(.dark, [data-theme="dark"]) :is(.sdt),
-.sdt:is(.dark, [data-theme="dark"]) {
-  color-scheme: dark;
-}
-
-/** Root */
-
-.sdt {
-  width: 100%;
-  font-family: inherit;
-  font-size: var(--sdt-font-size, var(--sdt-size-font-size));
-  color: var(--sdt-text);
-  background: var(--sdt-bg);
-  border: 1px solid var(--sdt-border);
-  border-radius: var(--sdt-radius);
-  overflow: hidden;
 }
 
 /**
@@ -147,7 +152,7 @@
   top: 0;
   /* Above a row being dragged, which scrolls underneath like any other. */
   z-index: 2;
-  background: var(--sdt-header-bg);
+  background: var(--_sdt-header-bg);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -156,7 +161,7 @@
   padding: var(--sdt-padding-y, var(--sdt-size-padding-y)) var(--sdt-padding-x, var(--sdt-size-padding-x));
   text-align: start;
   vertical-align: middle;
-  border-bottom: 1px solid var(--sdt-border);
+  border-bottom: 1px solid var(--_sdt-border);
 }
 
 .sdt__body .sdt__row:last-child .sdt__cell {
@@ -165,8 +170,8 @@
 
 /** The foot is a totals band: a firm rule above it, no rule below. */
 .sdt__foot .sdt__cell {
-  background: var(--sdt-header-bg);
-  border-top: 1px solid var(--sdt-border);
+  background: var(--_sdt-header-bg);
+  border-top: 1px solid var(--_sdt-border);
   border-bottom: none;
   font-weight: 600;
 }
@@ -181,7 +186,7 @@
 }
 
 .sdt__body .sdt__row:hover {
-  background: var(--sdt-hover);
+  background: var(--_sdt-hover);
 }
 
 .sdt[data-striped] .sdt__body .sdt__row:nth-child(even) {
@@ -189,7 +194,7 @@
 }
 
 .sdt__body .sdt__row[data-state="selected"] {
-  background: var(--sdt-selected);
+  background: var(--_sdt-selected);
 }
 
 .sdt__row[data-clickable] {
@@ -250,11 +255,11 @@
   height: 20px;
   border-radius: 4px;
   cursor: pointer;
-  color: var(--sdt-muted);
+  color: var(--_sdt-muted);
 }
 
 .sdt__expand:hover {
-  background: var(--sdt-hover);
+  background: var(--_sdt-hover);
 }
 
 .sdt__expand svg {
@@ -271,7 +276,7 @@
   width: var(--sdt-checkbox-size, var(--sdt-size-checkbox-size));
   height: var(--sdt-checkbox-size, var(--sdt-size-checkbox-size));
   margin: 0;
-  accent-color: var(--sdt-accent);
+  accent-color: var(--_sdt-accent);
   cursor: pointer;
   vertical-align: middle;
 }
@@ -289,16 +294,16 @@
   height: 32px;
   padding: 0 12px;
   font: inherit;
-  color: var(--sdt-text);
+  color: var(--_sdt-text);
   background: transparent;
-  border: 1px solid var(--sdt-border);
-  border-radius: var(--sdt-radius);
+  border: 1px solid var(--_sdt-border);
+  border-radius: var(--_sdt-radius);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
 .sdt__button:hover:not(:disabled) {
-  background: var(--sdt-hover);
+  background: var(--_sdt-hover);
 }
 
 .sdt__button:disabled {
@@ -312,7 +317,7 @@
 }
 
 .sdt :is(button, select, input):focus-visible {
-  outline: 2px solid var(--sdt-accent);
+  outline: 2px solid var(--_sdt-accent);
   outline-offset: 2px;
 }
 
@@ -361,11 +366,11 @@
   gap: 12px;
   padding: 32px 0;
   text-align: center;
-  color: var(--sdt-muted);
+  color: var(--_sdt-muted);
 }
 
 .sdt__error {
-  color: var(--sdt-danger);
+  color: var(--_sdt-danger);
 }
 
 /** Pagination */
@@ -377,7 +382,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px var(--sdt-padding-x, var(--sdt-size-padding-x));
-  border-top: 1px solid var(--sdt-border);
+  border-top: 1px solid var(--_sdt-border);
 }
 
 .sdt__pagination-buttons {
@@ -390,7 +395,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--sdt-muted);
+  color: var(--_sdt-muted);
 }
 
 /** The autocomplete fills its container by default; here it sizes to the number it shows. */
@@ -411,7 +416,7 @@
   align-items: center;
   justify-content: center;
   padding: 4px;
-  color: var(--sdt-muted);
+  color: var(--_sdt-muted);
   background: none;
   border: 0;
   border-radius: 4px;
@@ -422,14 +427,14 @@
 
 .sdt__drag:hover:not(:disabled),
 .sdt__drag:focus-visible {
-  color: var(--sdt-text);
-  background: var(--sdt-hover);
+  color: var(--_sdt-text);
+  background: var(--_sdt-hover);
 }
 
 .sdt__drag[data-dragging],
 .sdt__drag[aria-pressed="true"] {
   cursor: grabbing;
-  color: var(--sdt-accent);
+  color: var(--_sdt-accent);
 }
 
 .sdt__drag:disabled {
@@ -471,7 +476,7 @@
  */
 .sdt__body .sdt__row[data-dragging] > *,
 .sdt__body .sdt__row[data-dragging-child] > * {
-  background: linear-gradient(var(--sdt-hover), var(--sdt-hover)) var(--sdt-surface);
+  background: linear-gradient(var(--_sdt-hover), var(--_sdt-hover)) var(--_sdt-surface);
 }
 
 /** Visually hidden, still read by assistive technology: the reorder announcements. */
@@ -508,11 +513,11 @@
   }
 
   .sdt__body .sdt__row[data-drop-edge="before"] > * {
-    box-shadow: inset 0 2px 0 0 var(--sdt-accent);
+    box-shadow: inset 0 2px 0 0 var(--_sdt-accent);
   }
 
   .sdt__body .sdt__row[data-drop-edge="after"] > * {
-    box-shadow: inset 0 -2px 0 0 var(--sdt-accent);
+    box-shadow: inset 0 -2px 0 0 var(--_sdt-accent);
   }
 
   .sdt__skeleton {
