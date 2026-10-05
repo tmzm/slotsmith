@@ -1,0 +1,105 @@
+---
+title: "Date picker"
+description: "A React date picker for one date, several dates or a range, with bounds, blocked days, presets and a full keyboard grid. Every part is replaceable."
+faq:
+  - q: "What format are the date picker's values?"
+    a: "Strings in YYYY-MM-DD form, never Date objects. A calendar date has no time and no time zone, so nothing shifts when it crosses one, and the string goes into a form, a URL or a database column unchanged. toISODate and fromISODate convert to and from a Date."
+    link: "/components/date-picker/guides/modes/"
+  - q: "Can the date picker select a range or several dates?"
+    a: "Yes. The mode prop is single (the default), multiple or range. It also sets the shape of value and onChange: one date or null, an array of dates, or an object with from and to."
+    link: "/components/date-picker/guides/modes/"
+  - q: "How do I block weekends or booked days?"
+    a: "Pass disabledDates, a function that receives a date and returns true to block it. minDate and maxDate set the earliest and latest date. Blocked days get aria-disabled and stay focusable, so the arrow keys cross them and a screen reader announces them."
+    link: "/components/date-picker/guides/bounds-and-blocked-days/"
+  - q: "Does the Go to today button pick today?"
+    a: "No. It shows today's month and makes today the day that takes focus, without changing the value. To pick today in one click, add a preset whose value is today."
+    link: "/components/date-picker/guides/presets/"
+  - q: "Does the date picker work in Arabic and right to left?"
+    a: "Yes. Month and weekday names come from Intl in the locale you pass, and the labels from a locale pack. Inside a right-to-left ancestor the grid mirrors and the left and right arrow keys swap, so they follow what is on screen. The calendar itself is Gregorian."
+    link: "/components/date-picker/#accessibility"
+---
+
+The slotsmith DatePicker is a React date picker for one date, several dates or a range. Values are `YYYY-MM-DD` strings. It has bounds, blocked days, presets, a full keyboard grid and right-to-left support, and every part it renders is a slot you can replace.
+
+## Overview
+
+The demo below uses the fallbacks only. Open a picker with the mouse or with <kbd>↓</kbd>, move through the days with the arrow keys, and pick with <kbd>Enter</kbd>. The stay is a range that cannot start before today; its two shortcuts sit under the grid.
+
+{/* Reserved height measured in Chrome: the two labelled pickers and the two output lines. */}
+<Demo name="date-picker/overview" height="23.25rem" fallback />
+
+Each feature has a guide with its own live demo: [single, range and multiple](./guides/modes/), [bounds and blocked days](./guides/bounds-and-blocked-days/), [presets](./guides/presets/) and the "Go to today" control, [day content](./guides/day-content/) such as a price under each date, and [the compound parts](./guides/compound-parts/) for your own layout.
+
+## Install
+
+<Install />
+
+## Quick start
+
+Pass `value` and `onChange`, and name the combobox with `aria-label` or `aria-labelledby`. A date is a `YYYY-MM-DD` string, or `null` when nothing is picked.
+
+<QuickStart height="4.25rem" />
+
+## Guides
+
+<GuideList />
+
+## Reference
+
+The [API page](./api/) is generated from the library's source, so it lists every slot, prop and label the installed version has.
+
+<Reference />
+
+## Adapters
+
+The date picker works with any design system. Each slot takes a component, so a library's own surface, buttons and selects can replace the fallbacks while the grid, the keyboard and the range logic stay the same. The [Adapters page](./adapters/) has ready slot maps for shadcn/ui, MUI, Chakra, Ant Design and Radix Themes, as examples of well-known libraries; the same approach works with your own.
+
+## Accessibility
+
+The date picker follows the ARIA date picker dialog pattern: a combobox that opens a dialog holding a grid.
+
+- **The trigger** is the element with `role="combobox"`. It is in the tab order, and carries `aria-haspopup="dialog"`, `aria-expanded` and, while open, `aria-controls` pointing at the popup. The naming and validation attributes you pass to `DatePicker` (`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and the like, plus `id`) go to this element, not to the wrapper. With no name given, the [`placeholder`](./api/#label-placeholder) label names it.
+- **The popup** has `role="dialog"` and is not modal (`aria-modal="false"`): focus is not trapped. It is named by the [`dialog`](./api/#label-dialog) label. Opening it moves focus to the picked day, or to today.
+- **The month** is a `role="grid"` named by the month and year ("March 2026"), with `row`, `columnheader` and `gridcell` inside. Each column header is named with the full weekday, so a one-letter header is still read as "Monday". In [multiple and range mode](./guides/modes/) the grid has `aria-multiselectable="true"`.
+- **Each day** is a button named with its full date ("Monday, March 16, 2026"). Its cell has `aria-selected`, and today has `aria-current="date"`. One day at a time is in the tab order (a roving `tabindex`); the arrow keys move it.
+- **Blocked days** have `aria-disabled="true"`, not the `disabled` attribute. They stay focusable, so the arrow keys cross them and a screen reader announces them, but they cannot be picked. See [bounds and blocked days](./guides/bounds-and-blocked-days/).
+- **The header** has a previous and a next button, named by the [`previous`](./api/#label-previous) and [`next`](./api/#label-next) labels and disabled at the bounds, and month and year selects named by [`month`](./api/#label-month) and [`year`](./api/#label-year). The clear button is named by [`clear`](./api/#label-clear).
+- **Right to left.** Inside a right-to-left ancestor the grid and the header mirror, and <kbd>←</kbd> and <kbd>→</kbd> swap: <kbd>←</kbd> moves to the next day, because that is the day on the left.
+
+With focus on the trigger:
+
+<KeyboardTable rows={[
+  { keys: ["Enter", "Space", "↓", "↑"], action: "Open the calendar, with focus on the picked day or on today." },
+  { keys: ["Enter", "Space", "Esc"], action: "With the calendar open: close it." },
+]} />
+
+With focus in the grid:
+
+<KeyboardTable rows={[
+  { keys: ["←", "→"], action: "Move one day. In right-to-left the two swap, so each arrow moves the way it points." },
+  { keys: ["↑", "↓"], action: "Move one week." },
+  { keys: ["Home", "End"], action: "Move to the first or the last day of the week." },
+  { keys: ["PgUp", "PgDn"], action: "Move one month. The month on screen follows." },
+  { keys: ["Shift+PgUp", "Shift+PgDn"], action: "Move one year." },
+  { keys: ["Enter", "Space"], action: "Pick the focused day. A blocked day is not picked." },
+  { keys: ["Esc"], action: "Close, and move focus back to the trigger." },
+  { keys: ["Tab"], action: "Move to the footer buttons and then out of the control, which closes the calendar." },
+]} />
+
+Movement stops at `minDate` and `maxDate`. Picking a day in single mode closes the calendar and returns focus to the trigger; in multiple and range mode it stays open. A pointer press outside the control closes it. Every label can be translated or replaced; see [Labels & locales](./api/#labels).
+
+## Limitations
+
+<Note kind="limitation">
+- Gregorian calendar only. A locale changes the names, the digits and the first day of the week, not the calendar. Hijri and Persian calendars are planned; see the [roadmap](../../roadmap/).
+- Dates only: there is no time of day and no time zone. A value is a `YYYY-MM-DD` string.
+- The trigger is not a text field, so a date cannot be typed. For another shape, such as an inline calendar, build on the [`useDatePicker`](./guides/compound-parts/) hook.
+- One month is shown at a time.
+- No `name` prop: the picker renders no hidden input. In a plain HTML form, render your own from `value`.
+- A range can span blocked days: `disabledDates` stops a blocked day from being picked as an end, not from sitting inside the range. See [bounds and blocked days](./guides/bounds-and-blocked-days/).
+- The popup is not in a portal. It uses `position: fixed`, so it escapes `overflow: hidden`, but an ancestor with a `transform` or `filter` becomes its containing block.
+</Note>
+
+## FAQ
+
+<Faq />

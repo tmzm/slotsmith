@@ -9,5 +9,9 @@
   "autocomplete": {
     "Trigger": ["data-open", "data-disabled", "data-empty"],
     "Popup": ["data-placement"]
+  },
+  "date-picker": {
+    "Trigger": ["data-open", "data-disabled", "data-empty"],
+    "Popup": ["data-placement"]
   }
 }

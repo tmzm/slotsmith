@@ -1,0 +1,33 @@
+---
+title: "Compound parts"
+description: "Lay out the slotsmith DatePicker yourself with DatePicker.Provider and its parts, read its state from the context, or use the useDatePicker hook."
+---
+
+The DatePicker's default layout is a root, a trigger and a popup. To place things between them, such as a visible label or a summary, build the layout yourself from the compound parts inside `DatePicker.Provider`.
+
+{/* Reserved height measured in Chrome: the label, the trigger and the summary line. */}
+<Demo name="date-picker/compound-parts" height="10rem" fallback />
+
+Pick a few days: the line under the picker reads the selection from the context and clears it.
+
+## The parts
+
+`DatePicker.Provider` takes every `DatePicker` prop and renders no markup of its own. Inside it:
+
+- `DatePicker.Root`: the wrapper, carrying `data-mode`, `data-open`, `data-disabled` and `data-empty`. A pointer press outside it, or focus leaving it, closes the popup.
+- `DatePicker.Trigger`: the combobox with the icon, the value or the placeholder, and the clear button. Name it here: `aria-label` or `aria-labelledby` on the trigger itself.
+- `DatePicker.Popup`: the positioned dialog with the header, the grid and the footer. It renders nothing while closed.
+
+For a popup laid out differently, the pieces of the default one are parts too: `DatePicker.Header` (the previous and next buttons and the month and year), `DatePicker.Calendar` (the grid, which owns the arrow keys), `DatePicker.Day` (one day, for a grid of your own) and `DatePicker.Footer` (the [presets](../presets/) and "Go to today").
+
+These are layout parts, not slots: each still renders the slots inside it, so `components` replaces the elements while the parts decide where they go.
+
+## Reading the state
+
+`useDatePickerContext()` returns the picker's state and actions to any component inside the provider: `value`, `selectedDates`, `range`, `open`, `month`, and `pick`, `clear`, `applyPreset`, `goToToday` and `setOpen`, among others. The demo's summary line uses `selectedDates` and `clear`.
+
+To wrap `DatePicker` in a component of your own that takes the same props, `splitDatePickerProps(props)` separates the provider's props from the root's DOM props.
+
+## The hook
+
+`useDatePicker` is the engine underneath, with no markup at all: the value in all three modes, the month on screen, the grid's keyboard path with its roving tab stop, the range preview, the bounds and the ARIA wiring, as prop getters (`getRootProps`, `getTriggerProps`, `getPopupProps`, `getGridProps`, `getCellProps`, `getDayProps`). Use it for a shape the component does not cover, such as an inline calendar with no popup. It takes a locale tag, not a pack, and positioning is separate: `usePopupPosition` from `slotsmith/autocomplete` places a popup against its trigger.

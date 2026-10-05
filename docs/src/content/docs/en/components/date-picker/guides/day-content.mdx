@@ -1,0 +1,32 @@
+---
+title: "Day content"
+description: "Show a price, a dot or a badge in each day of the slotsmith DatePicker with the DayContent slot, or add props to a day with slotProps.day."
+---
+
+To show more than the number in a day of the slotsmith date picker, such as a price, a dot or a badge, replace the `DayContent` slot. It receives the day and its state, and renders inside the day button, so the keyboard and the selection stay as they are.
+
+{/* Reserved height measured in Chrome: the picker and the output line. */}
+<Demo name="date-picker/day-content" height="8.75rem" fallback />
+
+Open the picker: each day you can pick has a price under its number. Pick two dates and the line under the picker adds up the nights.
+
+## The DayContent slot
+
+[`DayContent`](../../api/#slot-DayContent) receives:
+
+- `day`: the date as `day.date`, the number as `day.day`, and `outside` (it belongs to a neighbouring month), `isToday` and `weekend` (a Saturday or Sunday).
+- `selected`, `inRange`, `inPreview` and `disabled`: the day's state.
+
+The demo hides the price on days outside the month and on days that cannot be picked. Whatever the slot renders, the button keeps its accessible name, the full date ("Monday, March 16, 2026"), so put anything a screen reader user needs somewhere other than inside the day alone.
+
+## Why not the Day slot
+
+[`Day`](../../api/#slot-Day) is the button itself. It is an element part: it receives DOM props only, with the state as `data-*` attributes, so a design system's button drops straight in. It is not told which day it is. `DayContent` is, which makes it the place for content that depends on the date.
+
+## Room for the content
+
+A day is 2rem square by default. The demo makes room with two [`slotProps`](../../api/#prop-slotProps): the `--sdp-cell` variable on the root for taller cells, and a wider popup. Other tokens are on the [API page](../../api/#styling).
+
+## Props for one day
+
+To mark a day without replacing anything, `slotProps.day` is a function that receives the day and returns DOM props for its button: a class, a style or a `data-*` attribute. The demo uses it to make the nights under $90 bold; marking public holidays with a class works the same way.

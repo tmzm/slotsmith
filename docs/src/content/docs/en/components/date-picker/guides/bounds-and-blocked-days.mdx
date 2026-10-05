@@ -1,0 +1,32 @@
+---
+title: "Bounds and blocked days"
+description: "Limit the slotsmith DatePicker with minDate and maxDate, block single days with disabledDates, and disable the whole control."
+---
+
+The slotsmith date picker limits what can be picked in two ways: `minDate` and `maxDate` set the earliest and the latest date, and `disabledDates` blocks single days such as weekends or booked nights. Blocked days stay focusable, but cannot be picked.
+
+{/* Reserved height measured in Chrome: the labelled picker with its output line, and the disabled picker. */}
+<Demo name="date-picker/bounds-and-blocked-days" height="19.5rem" fallback />
+
+The appointment can be any weekday from today to two months ahead. Open it and move with the arrow keys: focus crosses the weekends, and stops at today.
+
+## minDate and maxDate
+
+[`minDate`](../../api/#prop-minDate) and [`maxDate`](../../api/#prop-maxDate) are `YYYY-MM-DD` strings, both inclusive. With them set:
+
+- Days outside the bounds cannot be picked.
+- The calendar does not go past the bounds' months: the previous and next buttons are disabled there.
+- The arrow keys, <kbd>PgUp</kbd> and <kbd>PgDn</kbd> stop at the bounds.
+- The year select lists the bounds' years only. Without bounds it lists ten years either side of the year on screen.
+
+## disabledDates
+
+[`disabledDates`](../../api/#prop-disabledDates) is a function that receives a date and returns `true` to block it. The demo blocks Saturdays and Sundays; a set of booked dates works the same way: `(date) => booked.has(date)`.
+
+A blocked day, like a day outside the bounds, gets `aria-disabled="true"` and `data-disabled`, never the `disabled` attribute. It stays focusable, so the arrow keys cross it and a screen reader announces it. A click or <kbd>Enter</kbd> on it does nothing.
+
+In range mode, `disabledDates` stops a blocked day from being picked as the start or the end. It does not stop a range from spanning blocked days. If a stay must not include a booked night, check the range in `onChange`.
+
+## Disabling the whole control
+
+[`disabled`](../../api/#prop-disabled) is separate from `disabledDates`: it turns off the whole picker, like the second one in the demo. The trigger gets `aria-disabled="true"`, leaves the tab order, does not open, and shows no clear button.

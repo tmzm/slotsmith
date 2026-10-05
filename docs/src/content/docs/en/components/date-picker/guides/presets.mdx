@@ -1,0 +1,39 @@
+---
+title: "Presets"
+description: "Add shortcuts such as Next 7 days under the slotsmith DatePicker's grid with the presets prop, and how the Go to today control differs from a preset."
+---
+
+The DatePicker's `presets` prop adds shortcut buttons under the grid, such as "Next 7 days". Each preset has a `label` and a `value`, which is one date or a range. Clicking it sets the value.
+
+{/* Reserved height measured in Chrome: the picker and the output line. */}
+<Demo name="date-picker/presets" height="8.75rem" fallback />
+
+Open the picker and click "Next 7 days": the range is picked and the trigger shows it.
+
+## The presets prop
+
+[`presets`](../../api/#prop-presets) is an array of `{ label, value }`. The labels are your own text, so translate them with the rest of your app. The value is converted to the picker's mode:
+
+- **Range mode.** A range is set as it is. A single date picks that one day as both ends, like "Tomorrow" in the demo.
+- **Single mode.** A date is set as it is. A range sets its first day.
+- **Multiple mode.** A range picks every day in it, up to 366 days. A date picks that one day.
+
+Applying a preset replaces the current value and shows the month of its first day. It closes the calendar when [`closeOnSelect`](../../api/#prop-closeOnSelect) is on, which is the default in single mode only.
+
+A preset's value is not checked against `minDate`, `maxDate` or `disabledDates`, so build presets that fit [your bounds](../bounds-and-blocked-days/).
+
+## Go to today
+
+The footer always ends with a "Go to today" button, set apart from the presets. It is navigation, not a shortcut: it shows today's month and makes today the day that takes focus, and it does not change the value. Its text comes from the [`today`](../../api/#label-today) label.
+
+To pick today in one click, add a preset: `{ label: "Today", value: today() }`.
+
+## Presets and the current date
+
+The demo's presets are built from today's date when it renders. `today()` from `slotsmith/date-picker` returns today as a `YYYY-MM-DD` string in the visitor's own time zone, and `addDays()` and `addMonths()` move it.
+
+On a page that is rendered on a server, today on the server may not be today for the visitor. The demo reads the date through a small `useToday()` hook, shown in its `today.ts` tab: a fixed date on the server and while hydrating, and the real date after that.
+
+## A different footer
+
+The [`Footer`](../../api/#slot-Footer) slot replaces the whole row. It receives `presets`, `onPreset`, `onToday` and `todayLabel`, so a design system's chips or buttons can render them. The [adapters](../../adapters/) do this.

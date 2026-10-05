@@ -1,0 +1,37 @@
+---
+title: "Single, range and multiple"
+description: "Pick one date, several dates or a range with the slotsmith DatePicker: the mode prop, the shape of the value in each mode, and how picking works."
+---
+
+The slotsmith date picker's `mode` prop sets what can be picked: `single` (the default) for one date, `multiple` for any number of dates, or `range` for a start and an end. It also sets the shape of `value`, `defaultValue` and `onChange`.
+
+{/* Reserved height measured in Chrome: three labelled pickers, each with its value line. */}
+<Demo name="date-picker/modes" height="34.5rem" fallback />
+
+Pick in each of the three: the line under each picker shows the value `onChange` received.
+
+## The value in each mode
+
+Every date is a `YYYY-MM-DD` string. A calendar date has no time and no time zone, so it means the same day everywhere, and the strings sort and compare correctly with `<` and `>`.
+
+- **Single.** [`value`](../../api/#prop-value) is a date or `null`. `mode` can be left out.
+- **Multiple.** [`value`](../../api/#prop-value-multiple) is an array of dates, sorted, and empty when nothing is picked.
+- **Range.** [`value`](../../api/#prop-value-range) is `{ from, to }` or `null`. Both ends are inclusive, and `to` is missing while only the start is picked.
+
+`mode` narrows the types, so one mode cannot be given another's value. `toISODate(date)` and `fromISODate(text)` convert to and from a `Date`, and `today()`, `addDays()` and `addMonths()` do the arithmetic on the strings.
+
+## Picking
+
+- **Single.** A click, or <kbd>Enter</kbd> on the focused day, sets the date, closes the calendar and returns focus to the trigger.
+- **Multiple.** Each pick adds the day, or removes it if it is already picked. The calendar stays open.
+- **Range.** The first pick sets the start and the second the end. While the end is missing, the days up to the hovered or focused day are previewed. A pick before the start, or with a complete range, begins a new range. The calendar stays open.
+
+[`closeOnSelect`](../../api/#prop-closeOnSelect) changes whether picking closes the calendar; in range mode it closes once the end is picked. The clear button in the trigger empties the value: `null` in single and range mode, `[]` in multiple. Set [`clearable`](../../api/#prop-clearable) to `false` to leave it out.
+
+## What the trigger shows
+
+The trigger formats each date with `Intl` in the picker's locale: "Mar 20, 2026" by default, and [`format`](../../api/#prop-format) takes other `Intl.DateTimeFormat` options. In multiple mode it lists up to two dates and then says how many, from the [`count`](../../api/#label-count) label. In range mode it joins the two ends with the [`range`](../../api/#label-range) label, and shows the start alone with [`rangeStart`](../../api/#label-rangeStart) until the end is picked.
+
+## Styling the days
+
+Each day carries its state as `data-*` attributes: `data-selected`, `data-range-start`, `data-range-end`, `data-in-range` for every day of a complete range, `data-in-preview` while the end is being chosen, and `data-today`, `data-outside`, `data-weekend` and `data-disabled`. The list is on the [API page](../../api/#slot-Day).
