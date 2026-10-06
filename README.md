@@ -59,8 +59,8 @@ Peer dependencies are per component, so you only install what you use:
 | File uploader | nothing |
 | Any virtualized list | `@tanstack/react-virtual@^3` |
 
-React 18 or 19. Every peer is optional — you are only asked for the one belonging to the
-component you actually import.
+React 18 or 19 is required. The TanStack peers are optional — you are only asked for the one
+belonging to the component you actually import.
 
 The stylesheet is optional too. Import the whole set, or just the component you use:
 
@@ -93,7 +93,7 @@ export function Users({ users }: { users: User[] }) {
 
 Sorting, pagination and selection work immediately, and each piece of state stays **uncontrolled** until you pass its value — so `pagination` / `onPaginationChange` is opt-in, not required boilerplate.
 
-[Getting started](https://slotsmith.dev/getting-started/) covers Next.js, Vite and the other three components.
+[Getting started](https://slotsmith.dev/getting-started/) covers installing, styles, themes, dark mode, languages, CommonJS, and setup in Next.js and Vite. Each component's own docs are linked under [Components](#components).
 
 ### Reordering rows
 
@@ -193,6 +193,8 @@ slotsmith-ai add --all --ui <library>
 | Date picker | `muiDatePicker` | `shadcnDatePicker` | `chakraDatePicker` | `antdDatePicker` | `radixDatePicker` |
 | File uploader | `muiFileUploader` | `shadcnFileUploader` | `chakraFileUploader` | `antdFileUploader` | `radixFileUploader` |
 
+Each component's Adapters page in the docs runs all five, starting with the [data table's](https://slotsmith.dev/components/data-table/adapters/).
+
 ### The shadcn registry
 
 The four shadcn/ui adapters are also built into a [shadcn/ui registry](https://ui.shadcn.com/docs/registry) by `slotsmith-ai`'s own build (`packages/ai/registry/<component>.json`, plus a `registry.json` index; nothing is published from this repo — build it yourself and serve it from any static host you control):
@@ -218,9 +220,9 @@ It lands at the same path `slotsmith-ai add --ui shadcn` writes to, installs its
 }
 ```
 
-Set the tokens on `:root` for the whole page, or on any wrapper element for just the components inside it. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) restyle one component without the others, and a component token beats the shared one wherever each is set (a `--sdt-accent` on `:root` beats a `--ss-accent` on a closer wrapper). The date picker and the uploader also still follow a theme written against the data table's `--sdt-*`. The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, and then yours win at every size.
+Set the tokens on `:root` for the whole page, or on any wrapper element for just the components inside it. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) restyle one component without the others, and a component token beats the shared one wherever each is set (a `--sdt-accent` on `:root` beats a `--ss-accent` on a closer wrapper). The date picker and the uploader also still follow a theme written against the data table's `--sdt-*` when no `--ss-*` value is set for the same thing. The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, and then yours win at every size.
 
-The component tokens are inputs only: the stylesheet never declares them, so `var(--sdt-accent)` in your own CSS is empty unless you set it; read `var(--ss-accent, <default>)` instead. Set a component token on the component or above it, not on an inner part such as `.sdt__row`. A popup rendered outside the wrapper, such as one portalled to `document.body`, does not see the wrapper's `--ss-*` and takes the page's values instead.
+The colour, radius and font-size component tokens are inputs only: the stylesheet does not declare them, so `var(--sdt-accent)` in your own CSS is empty unless you set it; read `var(--ss-accent, <default>)` instead. The few tokens with no shared counterpart do have defaults on `:root`: the table's `--sdt-stripe`, `--sdt-skeleton-bg`, `--sdt-skeleton-bg-2` and `--sdt-max-height`, and the sizes `--sdp-cell`, `--sdp-gap`, `--sfu-gap` and `--sfu-tile-size`. Set a component token on the component or above it, not on an inner part such as `.sdt__row`. A popup rendered outside the wrapper, such as one portalled to `document.body`, does not see the wrapper's `--ss-*` and takes the page's values instead.
 
 Six ready-made themes set only the shared tokens, each with a light and a dark palette: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast`. Import one after the stylesheet:
 
