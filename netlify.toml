@@ -10,11 +10,14 @@
   # (the docs facts step reads ../dist), then builds the docs:
   # reference tables, facts (this runs the library's test suite: 35 seconds
   # measured on a developer machine, likely longer on Netlify's build image),
-  # redirects, astro build, and the verifier (skipped here, see below).
+  # redirects, astro build (which also draws the Open Graph images), the
+  # Pagefind search index (scripts/search-index.ts), and the verifier (skipped
+  # here, see below). DOCS_STRICT=1 fails the build while any page is still a
+  # stub.
   # `git fetch --unshallow` keeps the full history for last-updated dates.
   # `command -v pnpm` is a fallback for PNPM_VERSION below, until a real deploy
   # confirms the pin.
-  command = "git fetch --unshallow || true; command -v pnpm >/dev/null || npm install --global pnpm@11; cd .. && pnpm install --frozen-lockfile && pnpm build && pnpm --filter slotsmith-docs build"
+  command = "git fetch --unshallow || true; command -v pnpm >/dev/null || npm install --global pnpm@11; cd .. && pnpm install --frozen-lockfile && pnpm build && DOCS_STRICT=1 pnpm --filter slotsmith-docs build"
 
 [build.environment]
   # The docs scripts run .ts files directly, which needs Node 22.18 or newer

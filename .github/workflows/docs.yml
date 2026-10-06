@@ -67,8 +67,16 @@ jobs:
       - name: Check
         run: pnpm --filter slotsmith-docs check
 
+      # Strict mode: a page still marked as a stub fails the build.
       - name: Build and verify the site
         run: pnpm --filter slotsmith-docs build
+        env:
+          DOCS_STRICT: "1"
+
+      # Mobile Lighthouse on the built site (docs/lighthouserc.cjs): every
+      # category at 0.95 or more and layout shift at 0.01 or less.
+      - name: Lighthouse
+        run: pnpm --filter slotsmith-docs exec lhci autorun
 
       - name: Upload the site
         if: ${{ !cancelled() }}
@@ -76,3 +84,11 @@ jobs:
         with:
           name: docs-dist
           path: docs/dist
+
+      - name: Upload the Lighthouse reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse
+          path: docs/.lighthouseci
+          include-hidden-files: true
