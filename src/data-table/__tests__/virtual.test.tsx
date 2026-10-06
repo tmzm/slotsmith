@@ -1,5 +1,6 @@
-import { act, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { SlotsmithProvider } from "../../provider";
 import { resetReorderWarnings } from "../core/useDataTable";
 import { VirtualDataTable } from "../virtual";
 import { bodyRows, columns, users, type User } from "./builders";
@@ -87,5 +88,28 @@ describe("VirtualDataTable", () => {
     expect(warn.mock.calls[0]![0]).toContain("VirtualDataTable");
     warn.mockRestore();
     resetReorderWarnings();
+  });
+});
+
+describe("VirtualDataTable under a SlotsmithProvider", () => {
+  const ProviderEmpty = () => <span data-testid="provider-empty" />;
+
+  it("takes the provider's data table slots", () => {
+    render(
+      <SlotsmithProvider components={{ dataTable: { Empty: ProviderEmpty } }}>
+        <VirtualDataTable<User> data={[]} columns={columns} />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByTestId("provider-empty")).toBeInTheDocument();
+  });
+
+  it("lets its own components prop win", () => {
+    render(
+      <SlotsmithProvider components={{ dataTable: { Empty: ProviderEmpty } }}>
+        <VirtualDataTable<User> data={[]} columns={columns} components={{ Empty: () => <span data-testid="own-empty" /> }} />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByTestId("own-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("provider-empty")).not.toBeInTheDocument();
   });
 });

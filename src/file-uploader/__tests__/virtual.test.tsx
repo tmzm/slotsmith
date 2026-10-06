@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { SlotsmithProvider } from "../../provider";
 import { VirtualFileUploader } from "../virtual";
 import { fileInput, items, makeFile } from "./builders";
 
@@ -76,5 +77,28 @@ describe("VirtualFileUploader", () => {
 
     expect(screen.getByText("report.pdf")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove file" })).toBeInTheDocument();
+  });
+});
+
+describe("VirtualFileUploader under a SlotsmithProvider", () => {
+  const ProviderIcon = () => <span data-testid="provider-icon" />;
+
+  it("takes the provider's file uploader slots", () => {
+    render(
+      <SlotsmithProvider components={{ fileUploader: { Icon: ProviderIcon } }}>
+        <VirtualFileUploader />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByTestId("provider-icon")).toBeInTheDocument();
+  });
+
+  it("lets its own components prop win", () => {
+    render(
+      <SlotsmithProvider components={{ fileUploader: { Icon: ProviderIcon } }}>
+        <VirtualFileUploader components={{ Icon: () => <span data-testid="own-icon" /> }} />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByTestId("own-icon")).toBeInTheDocument();
+    expect(screen.queryByTestId("provider-icon")).not.toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import type { RowData } from "@tanstack/react-table";
 import { useContext, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
+import { useSlots } from "../provider/useSlots";
 import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
 import {
   DataTableBody,
@@ -31,7 +32,10 @@ import type { DataTableComponents, DataTableLabels, DataTableSlotProps } from ".
  * @typeParam T - The row data type.
  */
 export interface DataTableProviderProps<T extends RowData> extends UseDataTableOptions<T> {
-  /** Replace any UI slot; the rest fall back to the built-in plain-HTML ones. */
+  /**
+   * Replace any UI slot; the rest fall back to `SlotsmithProvider`'s
+   * `components.dataTable`, then to the built-in plain-HTML ones.
+   */
   components?: Partial<DataTableComponents>;
   /** Override any text, e.g. to translate the table. Wins over `locale`. */
   labels?: Partial<DataTableLabels>;
@@ -91,10 +95,12 @@ export function DataTableProvider<T extends RowData>({
   };
   const virtual = useContext(VirtualTableContext);
   const model = useDataTable(options, { labels: resolvedLabels, virtual });
+  /** The fallbacks, then the provider's slots, then the caller's own. */
+  const parts = useSlots("dataTable", fallbackComponents, components);
 
   const value: DataTableContextValue<T> = {
     ...model,
-    components: { ...fallbackComponents, ...withoutUndefined(components) },
+    components: parts,
     labels: resolvedLabels,
     slotProps: slotProps ?? {},
     locale,

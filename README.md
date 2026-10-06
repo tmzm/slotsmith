@@ -163,6 +163,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 Every component is also exercised, in every library, by an integration suite that fails on any React warning — the tested source lives in each component's `__tests__/integrations/` folder. Copy a finished adapter instead of writing one: see [Ready-made adapters](#ready-made-adapters).
 
+### Once, for the whole app
+
+Set the same maps once on `SlotsmithProvider` instead of on every component: `components` takes one map per component, each the same shape as that component's own `components` prop, so an adapter works in either place.
+
+```tsx
+import { SlotsmithProvider } from "slotsmith/provider";
+
+<SlotsmithProvider
+  components={{
+    dataTable: { Checkbox, Pagination },
+    autocomplete: { Option },
+    datePicker: { Day },
+    fileUploader: { Progress },
+  }}
+>
+  <App />
+</SlotsmithProvider>
+```
+
+Each slot resolves in three layers, the later one winning: the built-in fallback, then the provider's `components`, then the component's own `components` prop. Nested providers merge slot by slot and inherit what they do not name. The table's built-in page-size select is an `Autocomplete`, so it follows `components.autocomplete` unless a `PageSizeSelect` slot replaces it. Define the object outside your component (or memoise it) so it keeps its identity between renders; `slotProps` stay on each component.
+
 Not using a component library? Every fallback also exposes `data-*` state, so Tailwind alone is enough: `[&_tr[data-state=selected]]:bg-muted`.
 
 ## Ready-made adapters
@@ -275,6 +296,7 @@ pnpm test:ai     # the MCP server in packages/ai
 ## Changelog
 
 - **Unreleased** — Behaviour changes: component tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) are inputs only. The stylesheets no longer declare them, so read `var(--ss-accent, <default>)` instead of `var(--sdt-accent)` in your own CSS. `--ss-*` set on any wrapper now applies to the components inside it, and a component token still beats it wherever each is set (a `--sdt-accent` on `:root` beats a `--ss-accent` on a closer wrapper). A component token set on an inner part (for example `.sdt__row`) is no longer read; set it on the component or above. A popup portalled outside the wrapper does not see the wrapper's `--ss-*`; see [Theming](#theming).
+- `SlotsmithProvider` takes `components`: slot overrides for every component below it, one map per component (`dataTable`, `autocomplete`, `datePicker`, `fileUploader`), so a design system is applied once instead of on every component. A component's own `components` prop still wins slot by slot, and nested providers merge. New type `SlotsmithComponents`, from `slotsmith/provider`.
 
 - **1.7.0** — Adapters for Ant Design and Radix Themes are now available through `slotsmith-ai`, alongside the existing MUI, shadcn/ui and Chakra UI ones — twenty ready-made adapters in all, copied into a project with `npx slotsmith-ai add` or buildable as a shadcn/ui registry; see [Ready-made adapters](#ready-made-adapters). Fixes: the data table's page-size menu follows `--sdt-*` token overrides, clicking its "Rows per page" label focuses it and its numbers use the table's locale digits, and the file uploader's size text no longer throws on a malformed locale tag.
 

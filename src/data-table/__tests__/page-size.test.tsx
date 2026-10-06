@@ -157,6 +157,58 @@ describe("page-size control", () => {
     expect(bodyRows()).toHaveLength(25);
   });
 
+  /**
+   * The built-in page-size select is an `Autocomplete`, so it is restyled with
+   * every other one; a `PageSizeSelect` slot replaces it, autocomplete and all.
+   */
+  describe("under a SlotsmithProvider", () => {
+    const ProviderIndicator = () => <span data-testid="provider-indicator" />;
+    const ProviderSize = ({ value }: PageSizeSelectSlotProps) => <div data-testid="provider-size">{value}</div>;
+
+    it("follows the provider's autocomplete slots while it is the fallback", async () => {
+      const events = userEvent.setup();
+      const { container } = render(
+        <SlotsmithProvider components={{ autocomplete: { Indicator: ProviderIndicator } }}>
+          <DataTable<User> data={users(30)} columns={columns} />
+        </SlotsmithProvider>,
+      );
+
+      expect(container.querySelector(".sdt__page-size .sac")).toContainElement(screen.getByTestId("provider-indicator"));
+      await events.click(pageSize());
+      await events.click(screen.getByRole("option", { name: "25" }));
+      expect(bodyRows()).toHaveLength(25);
+    });
+
+    it("is replaced by the provider's PageSizeSelect, which the autocomplete slots then never reach", () => {
+      const { container } = render(
+        <SlotsmithProvider
+          components={{ dataTable: { PageSizeSelect: ProviderSize }, autocomplete: { Indicator: ProviderIndicator } }}
+        >
+          <DataTable<User> data={users(30)} columns={columns} />
+        </SlotsmithProvider>,
+      );
+
+      expect(screen.getByTestId("provider-size")).toHaveTextContent("10");
+      expect(container.querySelector(".sac")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("provider-indicator")).not.toBeInTheDocument();
+    });
+
+    it("lets the table's own PageSizeSelect beat the provider's", () => {
+      render(
+        <SlotsmithProvider components={{ dataTable: { PageSizeSelect: ProviderSize } }}>
+          <DataTable<User>
+            data={users(30)}
+            columns={columns}
+            components={{ PageSizeSelect: () => <div data-testid="own-size" /> }}
+          />
+        </SlotsmithProvider>,
+      );
+
+      expect(screen.getByTestId("own-size")).toBeInTheDocument();
+      expect(screen.queryByTestId("provider-size")).not.toBeInTheDocument();
+    });
+  });
+
   it("has no axe violations with pagination shown, closed or open", async () => {
     const { container, user: events } = renderTable({ data: users(30) });
     expect(await violations(container)).toEqual([]);

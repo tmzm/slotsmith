@@ -3,6 +3,7 @@
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
+import { useSlots } from "../provider/useSlots";
 import { mergeProps } from "../shared/mergeProps";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import { formatDate } from "./core/calendar";
@@ -40,7 +41,7 @@ export interface DatePickerSharedProps
   presets?: DatePickerPreset[];
   /** How the trigger formats a date. Defaults to `{ day: "numeric", month: "short", year: "numeric" }`. */
   format?: Intl.DateTimeFormatOptions;
-  /** Replace any part; the rest stay as fallbacks. */
+  /** Replace any part; the rest fall back to `SlotsmithProvider`'s `components.datePicker`, then to the built-in ones. */
   components?: Partial<DatePickerComponents>;
   /** Override any string. Wins over `locale`. */
   labels?: Partial<DatePickerLabels>;
@@ -226,10 +227,8 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
     }),
     [localeLabels, labelOverrides],
   );
-  const parts = useMemo(
-    () => ({ ...datePickerFallbacks, ...withoutUndefined(components) }) as DatePickerComponents,
-    [components],
-  );
+  /** The fallbacks, then the provider's parts, then the caller's own. */
+  const parts = useSlots<DatePickerComponents>("datePicker", datePickerFallbacks, components);
 
   /** The headless hook takes a tag, never a pack. */
   const model = useDatePicker({ ...engineOptions, locale: code ?? "en-US" } as UseDatePickerOptions);

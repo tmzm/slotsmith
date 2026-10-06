@@ -3,6 +3,7 @@
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
+import { useSlots } from "../provider/useSlots";
 import type { UploadItem } from "./core/types";
 import {
   useFileUploader,
@@ -57,7 +58,7 @@ export type FileUploaderVariant = "dropzone" | "tile" | "compact";
 export interface FileUploaderProviderProps<TData = unknown> extends UseFileUploaderOptions<TData> {
   /** How the component is laid out. Defaults to `dropzone`. */
   variant?: FileUploaderVariant;
-  /** Replace any part; the rest stay as fallbacks. */
+  /** Replace any part; the rest fall back to `SlotsmithProvider`'s `components.fileUploader`, then to the built-in ones. */
   components?: Partial<FileUploaderComponents>;
   /** Override any text. Wins over `locale`. */
   labels?: Partial<FileUploaderLabels>;
@@ -152,10 +153,8 @@ export function FileUploaderProvider<TData = unknown>({
   );
   const model = useFileUploader<TData>({ ...options, validationLabels: validation });
 
-  const parts = useMemo(
-    () => ({ ...fileUploaderFallbacks, ...withoutUndefined(components) }),
-    [components],
-  );
+  /** The fallbacks, then the provider's parts, then the caller's own. */
+  const parts = useSlots<FileUploaderComponents>("fileUploader", fileUploaderFallbacks, components);
   /** English, then the locale, then the caller's own overrides. */
   const labels = useMemo(
     () => ({ ...defaultFileUploaderLabels, ...withoutUndefined(localeLabels), ...withoutUndefined(labelOverrides) }),

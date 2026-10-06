@@ -344,6 +344,26 @@ describe.skipIf(!built)("the provider entry point", () => {
     for (const marker of Object.values(MARKERS)) expect(code).not.toContain(marker);
   });
 
+  /**
+   * The provider's `components` prop is typed by every component's slot map,
+   * through type-only imports. Using the prop must load no component: the
+   * maps are data the provider carries, never code it runs.
+   */
+  it("keeps components out of slotsmith/provider when its components prop is used", async () => {
+    const code = await bundle(`
+      import { createElement } from "react";
+      import { SlotsmithProvider } from "slotsmith/provider";
+      const Day = () => null;
+      console.log(createElement(SlotsmithProvider, { components: { datePicker: { Day }, dataTable: { Checkbox: Day } } }));
+    `);
+    for (const marker of Object.values(MARKERS)) expect(code).not.toContain(marker);
+    for (const file of ["provider.js", "provider.cjs"]) {
+      const entry = readFileSync(dist(file), "utf8");
+      for (const marker of Object.values(MARKERS)) expect(entry).not.toContain(marker);
+      expect(entry).not.toMatch(/(autocomplete|data-table|date-picker|file-uploader)\.(js|cjs)/);
+    }
+  });
+
   it("ships dist/provider.js with the client directive", () => {
     expect(readFileSync(dist("provider.js"), "utf8").startsWith('"use client"')).toBe(true);
   });

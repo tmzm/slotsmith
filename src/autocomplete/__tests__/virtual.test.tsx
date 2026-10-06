@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { SlotsmithProvider } from "../../provider";
 import { VirtualAutocomplete } from "../virtual";
 
 /** jsdom has no layout: give every element a 320px-tall box so rows can be measured. */
@@ -125,5 +126,32 @@ describe("the virtual layout's props", () => {
     renderVirtual({ "aria-label": "City" } as never);
 
     expect(screen.getByRole("combobox", { name: "City" })).toBeInTheDocument();
+  });
+});
+
+describe("VirtualAutocomplete under a SlotsmithProvider", () => {
+  const ProviderIndicator = () => <span data-testid="provider-indicator" />;
+
+  it("takes the provider's autocomplete slots", () => {
+    render(
+      <SlotsmithProvider components={{ autocomplete: { Indicator: ProviderIndicator } }}>
+        <VirtualAutocomplete<City> options={CITIES} getOptionLabel={(city) => city.name} />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByTestId("provider-indicator")).toBeInTheDocument();
+  });
+
+  it("lets its own components prop win", () => {
+    render(
+      <SlotsmithProvider components={{ autocomplete: { Indicator: ProviderIndicator } }}>
+        <VirtualAutocomplete<City>
+          options={CITIES}
+          getOptionLabel={(city) => city.name}
+          components={{ Indicator: () => <span data-testid="own-indicator" /> }}
+        />
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByTestId("own-indicator")).toBeInTheDocument();
+    expect(screen.queryByTestId("provider-indicator")).not.toBeInTheDocument();
   });
 });

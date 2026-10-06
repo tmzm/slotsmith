@@ -14,7 +14,7 @@
  * - `locale` — `defineLocale`; the ready-made packs are their own entry
  *   points (`slotsmith/locales/ar`), not re-exported here.
  * - `provider` — `SlotsmithProvider`, the home of any setting shared across
- *   components; only the locale lives there for now.
+ *   components: the locale, and slot overrides for every component below it.
  *
  * @example
  * ```tsx

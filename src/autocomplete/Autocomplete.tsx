@@ -3,6 +3,7 @@
 import { useMemo, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
+import { useSlots } from "../provider/useSlots";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import type { OptionValue } from "./core/types";
 import { useAutocomplete, type UseAutocompleteOptions } from "./core/useAutocomplete";
@@ -42,7 +43,7 @@ type EngineOptions<TOption> = Omit<
  * @typeParam TOption - The option type.
  */
 export interface AutocompleteSharedProps<TOption> extends EngineOptions<TOption> {
-  /** Replace any part; the rest stay as fallbacks. */
+  /** Replace any part; the rest fall back to `SlotsmithProvider`'s `components.autocomplete`, then to the built-in ones. */
   components?: Partial<AutocompleteComponents<TOption>>;
   /** Override any string. Wins over `locale`. */
   labels?: Partial<AutocompleteLabels>;
@@ -219,10 +220,8 @@ export function AutocompleteProvider<TOption>(props: AutocompleteProviderProps<T
     }),
     [localeLabels, labelOverrides],
   );
-  const parts = useMemo(
-    () => ({ ...autocompleteFallbacks, ...withoutUndefined(components) }) as AutocompleteComponents<TOption>,
-    [components],
-  );
+  /** The fallbacks, then the provider's parts, then the caller's own. */
+  const parts = useSlots<AutocompleteComponents<TOption>>("autocomplete", autocompleteFallbacks, components);
 
   const model = useAutocomplete<TOption>({
     ...engineOptions,
