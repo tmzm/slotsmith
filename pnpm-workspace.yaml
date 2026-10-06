@@ -1,5 +1,6 @@
 packages:
   - "packages/*"
   - "docs"
+  - "docs/samples/frameworks/*"
 allowBuilds:
   esbuild: true
