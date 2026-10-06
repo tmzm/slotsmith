@@ -21,6 +21,7 @@
 /* ---------- Exploded view ---------- */
 
 .explode {
+  position: relative;
   display: grid;
   gap: 1.25rem;
 }
@@ -30,10 +31,26 @@
   min-inline-size: 0;
 }
 
-/* Room inside the demo box for the parts that move up and toward the start side. */
+/* Room inside the demo box for the parts that move up (the header row, its
+   cells and sort icons lift 5.25rem in all, under the header row's label) and
+   toward the start side. */
 .explode:not([data-static]) .swap__box {
-  padding-block-start: 3.75rem;
+  padding-block-start: 5.75rem;
   padding-inline-start: 3.75rem;
+}
+
+/* The live view sits on the page's scroll path (the landing pins it mid-
+   viewport), so the box passes the wheel on at its ends. From the moment it
+   scrolls into view until the pin lets go (`data-driven`) it does not scroll
+   at all: the page's scroll drives the view. The gutter is kept so the table
+   does not reflow when the scrollbar goes. */
+.explode:not([data-static]) .swap__box {
+  overscroll-behavior: auto;
+  scrollbar-gutter: stable;
+}
+
+.explode[data-driven] .swap__box {
+  overflow: hidden;
 }
 
 /* The box is the one scroller; the table's own wrappers (the fallback's
@@ -93,8 +110,18 @@
 
 /* The static figure: the same parts as a small assembly drawing, each a
    schematic of its shape on a leader to its label. */
+/* Once the parts carry their own labels the figure leaves the screen but
+   stays in the accessibility tree: the floating labels are decoration. */
 .explode:not([data-static]) .explode__diagram {
-  display: none;
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .explode__diagram {

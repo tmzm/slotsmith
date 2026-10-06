@@ -37,14 +37,41 @@ interface LabelPosition {
   sign: number;
 }
 
+/** A part's box as it sits with the view assembled. */
+interface RestRect {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  width: number;
+}
+
 /**
- * The element a part's label points at: the middle one of its matches that is
- * in view inside the stage (the table scrolls in its box), so labels spread
- * over the table and none points at a part scrolled out of sight.
+ * An element's box at rest. While the view is open (`scale` is `--explode`
+ * times one rem, in px) the element has moved by its own `--dx` / `--dy` plus
+ * those of every part it sits inside; that is taken back out, so a measure
+ * taken mid-explosion (a swap or a selection lands on an open view) gives the
+ * same answer as one taken closed.
  */
-function anchor(matches: HTMLElement[], box: DOMRect): DOMRect | undefined {
+function restRect(element: HTMLElement, root: HTMLElement, scale: number): RestRect {
+  const rect = element.getBoundingClientRect();
+  let x = 0;
+  let y = 0;
+  for (let node: HTMLElement | null = element; scale && node && node !== root; node = node.parentElement) {
+    x += Number.parseFloat(node.style.getPropertyValue("--dx")) || 0;
+    y += Number.parseFloat(node.style.getPropertyValue("--dy")) || 0;
+  }
+  return { top: rect.top - y * scale, bottom: rect.bottom - y * scale, left: rect.left - x * scale, right: rect.right - x * scale, width: rect.width };
+}
+
+/**
+ * The box a part's label points at: the middle one of its matches that is in
+ * view inside the stage (the table scrolls in its box), so labels spread over
+ * the table and none points at a part scrolled out of sight.
+ */
+function anchor(matches: HTMLElement[], box: DOMRect, root: HTMLElement, scale: number): RestRect | undefined {
   const inView = matches
-    .map((element) => element.getBoundingClientRect())
+    .map((element) => restRect(element, root, scale))
     .filter((rect) => rect.width > 0 && rect.top >= box.top && rect.bottom <= box.bottom && rect.left >= box.left && rect.right <= box.right);
   return inView[Math.floor((inView.length - 1) / 2)];
 }
@@ -64,15 +91,22 @@ export default function ExplodedView({ parts, caption, live = false, children }:
         // Offsets are written for left-to-right; right-to-left mirrors them.
         const sign = getComputedStyle(root).direction === "rtl" ? -1 : 1;
         const box = root.getBoundingClientRect();
-        const next: Record<string, LabelPosition | undefined> = {};
-        for (const part of parts) {
+        // The parts may be mid-explosion (a swap lands on an open view): `--explode` times one rem, in px.
+        const open = Number.parseFloat(getComputedStyle(root).getPropertyValue("--explode")) || 0;
+        const scale = open ? open * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) : 0;
+        // Every part gets its offset before any is measured: a part's resting box depends on the parts around it.
+        const found = parts.map((part) => {
           const matches = [...root.querySelectorAll<HTMLElement>(part.selector)].filter((element) => !element.closest(".explode__label"));
           for (const element of matches) {
             element.style.setProperty("--dx", String(part.dx * sign));
             element.style.setProperty("--dy", String(part.dy));
           }
-          // Measured at rest: labels ride along with their part through the same --dx/--dy.
-          const rect = anchor(matches, box);
+          return { part, matches };
+        });
+        const next: Record<string, LabelPosition | undefined> = {};
+        for (const { part, matches } of found) {
+          // Stored at rest: labels ride along with their part through the same --dx/--dy.
+          const rect = anchor(matches, box, root, scale);
           // x is the part's start edge: its left in left-to-right, its right in right-to-left.
           next[part.slot] = rect ? { x: (sign > 0 ? rect.left : rect.right) - box.left, y: rect.top - box.top, sign } : undefined;
         }

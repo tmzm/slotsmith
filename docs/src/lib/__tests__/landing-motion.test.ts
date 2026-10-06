@@ -1,16 +1,23 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Evaluating the real module would flip this flag. GSAP is not installed yet,
-// so the mocks are virtual; they only record whether anything loaded them.
-const loaded = vi.hoisted(() => ({ gsap: false }));
+// Stand-ins for GSAP: evaluating either module flips its flag, and the stub
+// records what the motion module asks of it. `matchMedia().add` runs nothing,
+// as on a screen below the pin's breakpoint.
+const loaded = vi.hoisted(() => ({ gsap: false, scrollTrigger: false }));
+const stub = vi.hoisted(() => ({
+  registerPlugin: vi.fn(),
+  matchMedia: vi.fn(() => ({ add: vi.fn(), revert: vi.fn() })),
+  fromTo: vi.fn(() => ({ revert: vi.fn() })),
+  ScrollTrigger: { refresh: vi.fn() },
+}));
 vi.mock("gsap", () => {
   loaded.gsap = true;
-  return { gsap: {}, default: {} };
+  return { gsap: stub, default: stub };
 });
 vi.mock("gsap/ScrollTrigger", () => {
-  loaded.gsap = true;
-  return { ScrollTrigger: {} };
+  loaded.scrollTrigger = true;
+  return { ScrollTrigger: stub.ScrollTrigger };
 });
 
 import { startLandingMotion, WAVE_SESSION_KEY } from "@/lib/landing-motion";
@@ -43,7 +50,18 @@ beforeEach(() => {
 afterEach(() => {
   document.body.innerHTML = "";
   vi.restoreAllMocks();
+  vi.clearAllMocks();
 });
+
+/** The landing's hooks: the swap section in its static state and the languages demo. */
+function landing(): { explode: HTMLElement; table: HTMLElement } {
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `<section data-motion="swap"><div class="swap"><div class="explode" data-static=""><div class="swap__frame"></div></div></div></section>
+     <figure data-sample="landing/languages"><div dir="ltr" id="orders"></div></figure>`,
+  );
+  return { explode: document.querySelector<HTMLElement>(".explode")!, table: document.querySelector<HTMLElement>("#orders")! };
+}
 
 describe("startLandingMotion", () => {
   it("does nothing under reduced motion and never loads GSAP", async () => {
@@ -51,16 +69,58 @@ describe("startLandingMotion", () => {
     const cleanup = await startLandingMotion(document, { reducedMotion: true, rtl: false });
     expect(typeof cleanup).toBe("function");
     expect(() => cleanup()).not.toThrow();
-    expect(loaded.gsap).toBe(false);
+    landing();
+    const again = await startLandingMotion(document, { reducedMotion: true, rtl: false });
+    again();
+    expect(loaded).toEqual({ gsap: false, scrollTrigger: false });
     expect(animate).not.toHaveBeenCalled();
     expect(sessionStorage.getItem(WAVE_SESSION_KEY)).toBeNull();
   });
 
-  it("does not load GSAP on the motion path either, until it is installed", async () => {
+  it("does not load GSAP on a page without the landing's hooks", async () => {
     panels([{ top: 100, left: 0, right: 100 }]);
     const cleanup = await startLandingMotion(document, { reducedMotion: false, rtl: false });
     cleanup();
-    expect(loaded.gsap).toBe(false);
+    expect(loaded).toEqual({ gsap: false, scrollTrigger: false });
+    expect(stub.registerPlugin).not.toHaveBeenCalled();
+  });
+
+  it("loads GSAP and ScrollTrigger with import() on the landing's motion path", async () => {
+    const { explode } = landing();
+    const cleanup = await startLandingMotion(document, { reducedMotion: false, rtl: false });
+    expect(loaded).toEqual({ gsap: true, scrollTrigger: true });
+    expect(stub.registerPlugin).toHaveBeenCalledWith(stub.ScrollTrigger);
+    // The pinned view is set up behind a media query; below it the static state stays.
+    const media = stub.matchMedia.mock.results[0]!.value as { add: Animate; revert: Animate };
+    expect(media.add).toHaveBeenCalledWith(expect.stringContaining("min-width"), expect.any(Function));
+    expect(explode.hasAttribute("data-static")).toBe(true);
+    cleanup();
+    expect(media.revert).toHaveBeenCalled();
+  });
+
+  it("sweeps the languages demo in the new reading direction when it turns", async () => {
+    const { table } = landing();
+    const cleanup = await startLandingMotion(document, { reducedMotion: false, rtl: false });
+    table.dir = "rtl";
+    await Promise.resolve();
+    expect(stub.fromTo).toHaveBeenLastCalledWith(table, { clipPath: "inset(0% 0% 0% 100%)" }, expect.objectContaining({ clipPath: "inset(0% 0% 0% 0%)", duration: 0.28 }));
+    table.dir = "ltr";
+    await Promise.resolve();
+    expect(stub.fromTo).toHaveBeenLastCalledWith(table, { clipPath: "inset(0% 100% 0% 0%)" }, expect.objectContaining({ duration: 0.28 }));
+    cleanup();
+    table.dir = "rtl";
+    await Promise.resolve();
+    expect(stub.fromTo).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves the page static when GSAP fails to set up", async () => {
+    const { explode } = landing();
+    stub.matchMedia.mockImplementationOnce(() => {
+      throw new Error("no matchMedia");
+    });
+    const cleanup = await startLandingMotion(document, { reducedMotion: false, rtl: false });
+    expect(explode.hasAttribute("data-static")).toBe(true);
+    expect(() => cleanup()).not.toThrow();
   });
 
   it("raises the panels above the fold in wave order, once per session", async () => {

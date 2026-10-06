@@ -10,14 +10,15 @@
  * Two parts:
  * - The first-load wave, with the Web Animations API (no library).
  * - The GSAP work (pinned exploded view, the switch's mini explode, the
- *   languages sweep) in {@link runGsap}, still to be written: `gsap` is not
- *   installed yet (docs/LAUNCH-REPORT.md, "Deferred"). It is the only place
- *   GSAP may be imported.
+ *   languages sweep) in {@link runGsap}, the only place GSAP is imported.
  *
  * Only transform, clip-path and the border colour flash are animated, and
  * every directional motion mirrors under `dir="rtl"`.
  */
 import { waveOrder } from "@/lib/wave";
+
+type Gsap = typeof import("gsap").gsap;
+type ScrollTriggerStatic = typeof import("gsap/ScrollTrigger").ScrollTrigger;
 
 /** Options for {@link startLandingMotion}. */
 export interface LandingMotionOptions {
@@ -48,6 +49,19 @@ const WAVE_LATEST = 2000;
 /** `--ease-out` from docs/DESIGN.md section 2. */
 const EASE_OUT = "cubic-bezier(0.16, 1, 0.3, 1)";
 
+/** The pinned exploded view needs the side-by-side layout and a viewport that holds the control and the demo box under the header. */
+const PIN_QUERY = "(min-width: 1024px) and (min-height: 660px)";
+/** How far the switch's mini explode opens (`--explode`). */
+const MINI_PEAK = 0.6;
+/** The mini explode's opening, in seconds. */
+const MINI_OUT = 0.24;
+/** The mini explode's reassembly, in seconds. With `MINI_OUT` and `MINI_ORPHAN` it stays within 700ms. */
+const MINI_BACK = 0.36;
+/** How long an opened mini explode waits for its `swap:after` before it reassembles anyway, in ms. */
+const MINI_ORPHAN = 100;
+/** The languages demo's sweep, in seconds. */
+const SWEEP = 0.28;
+
 const noop = () => {};
 
 /**
@@ -61,7 +75,7 @@ export async function startLandingMotion(root: Document, opts: LandingMotionOpti
   if (opts.reducedMotion) return noop;
   const cleanups = [playWave(root, opts.rtl)];
   try {
-    cleanups.push(await runGsap(root, opts));
+    cleanups.push(await runGsap(root));
   } catch {
     // The page is complete without motion: leave it in its static state.
   }
@@ -136,37 +150,245 @@ function playWave(root: Document, rtl: boolean): () => void {
 }
 
 /**
- * The GSAP choreography. TODO(gsap): write this once `gsap` is installed
- * (docs/LAUNCH-REPORT.md, "Deferred"). Until then it starts nothing, and the
- * swap section keeps its static state (the table beside the labelled
- * diagram), which is also its reduced-motion and no-JS state.
+ * The GSAP choreography (plan 02 Task 6, DESIGN.md sections 6 and 7). `gsap`
+ * and `gsap/ScrollTrigger` are imported here with `import()` and nowhere
+ * else, and only when the page has something for them to drive, so a page
+ * without the landing's hooks never fetches them.
  *
- * What it must do (plan 02 Task 6, DESIGN.md sections 6 and 7):
- * 1. Import `gsap` and `gsap/ScrollTrigger` here with `import()`, and register
- *    the plugin. Nowhere else imports them.
- * 2. **Exploded view.** On `[data-motion="swap"]`, remove `data-static` from
- *    its `.explode` element (the static figure hides, the demo box makes room;
- *    do it while pinned so the layout change stays out of CLS), pin the
- *    section for about one viewport of scroll, and tween `--explode` on the
- *    `.explode` element 0 → 1 → 0 with `scrub`. CSS computes every transform
- *    and label opacity from `--explode` (`styles/explode.css`); animate
- *    nothing else. ExplodedView already negates `--dx` under `dir="rtl"`.
- * 3. **Switch.** Listen for `swap:before` on the `.swap` root and call
- *    `event.detail.waitUntil(promise)` with a promise that resolves when
- *    `--explode` has reached 0.6 (the island holds the switch until then,
- *    700ms at most); on `swap:after`, tween `--explode` back to 0. The whole
- *    explode, swap and reassemble takes 700ms at most. A `swap:before` may
- *    get no `swap:after` (a later choice replaced it): reassemble anyway.
- * 4. **Languages sweep.** Watch the languages demo (`[data-sample=
- *    "landing/languages"]`) for its table's `dir` changing and play a 280ms
- *    `clip-path` sweep in the new reading direction (from the right edge for
- *    `rtl`, from the left for `ltr`).
- * 5. If anything fails, put `data-static` back and kill every trigger. The
- *    returned cleanup kills every tween, ScrollTrigger and listener it made
- *    (`gsap.context(...).revert()`).
+ * - {@link explodedView}: the pinned exploded view and the switch's mini
+ *   explode, on screens that match {@link PIN_QUERY}. Smaller screens keep the
+ *   static state (the table beside the labelled diagram, an instant switch).
+ * - {@link languagesSweep}: the languages demo's sweep, at every size.
  *
- * @returns A cleanup for everything it started.
+ * If anything fails, everything started so far is undone and the error goes
+ * to the caller, which leaves the page static.
+ *
+ * @returns A cleanup that kills every tween, ScrollTrigger, observer and listener it made and puts `data-static` back.
  */
-async function runGsap(_root: Document, _opts: LandingMotionOptions): Promise<() => void> {
-  return noop;
+async function runGsap(root: Document): Promise<() => void> {
+  const view = root.defaultView;
+  const section = root.querySelector<HTMLElement>('[data-motion="swap"]');
+  const languages = root.querySelector<HTMLElement>('[data-sample="landing/languages"]');
+  if (!view || (!section && !languages)) return noop;
+
+  const [{ gsap }, { ScrollTrigger }] = await Promise.all([import("gsap"), import("gsap/ScrollTrigger")]);
+  gsap.registerPlugin(ScrollTrigger);
+
+  const cleanups: (() => void)[] = [];
+  const cleanup = () => {
+    for (const undo of cleanups.splice(0).reverse()) undo();
+  };
+  try {
+    if (section) {
+      const media = gsap.matchMedia();
+      cleanups.push(() => media.revert());
+      media.add(PIN_QUERY, () => explodedView(gsap, ScrollTrigger, view, section));
+    }
+    if (languages) cleanups.push(languagesSweep(gsap, languages));
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
+  return cleanup;
+}
+
+/**
+ * The exploded view (DESIGN.md section 6, item 2).
+ *
+ * **Taking over.** Removing `data-static` from `.explode` takes the static
+ * figure off screen and gives the demo box room for the parts, which moves
+ * the table. To keep that out of the layout-shift score it happens only while
+ * `.explode` is outside the viewport, and once the island has hydrated, so
+ * the floating labels exist. A reader who loads the page with the demo in
+ * view keeps the static state until it scrolls out. The figure stays in the
+ * accessibility tree afterwards (`styles/explode.css`).
+ *
+ * **Pin.** The section is pinned for one viewport of scroll with the demo box
+ * centred under the header, and `--explode` on `.explode` goes 0 → 1 → 0 with
+ * `scrub`. CSS computes every transform and label opacity from it. The pin's
+ * spacer reserves the scroll distance, and the page is measured again when
+ * its height changes. From one viewport before the pin until it lets go,
+ * `.explode` carries `data-driven`: the demo box goes back to its top and
+ * stops scrolling on its own, so the wheel over it keeps moving the page and
+ * the table explodes whole. Its controls still take clicks and focus, and it
+ * scrolls again once the pin has let go.
+ *
+ * **Switch.** `swap:before` holds the island's switch (`detail.waitUntil`)
+ * until `--explode` reaches {@link MINI_PEAK}; `swap:after` reassembles. A
+ * `swap:before` that gets no `swap:after` (a later choice replaced it)
+ * reassembles after {@link MINI_ORPHAN} ms. The scroll and the switch each
+ * hold a value and `--explode` is the larger, so neither fights the other and
+ * the demo stays usable while pinned.
+ *
+ * @returns A cleanup that restores the static state.
+ */
+function explodedView(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, view: Window, section: HTMLElement): () => void {
+  const explode = section.querySelector<HTMLElement>(".explode");
+  const swap = section.querySelector<HTMLElement>(".swap");
+  const frame = section.querySelector<HTMLElement>(".swap__frame");
+  if (!explode || !swap || !frame || !explode.hasAttribute("data-static")) return noop;
+  const root = section.ownerDocument;
+  const control = swap.querySelector<HTMLElement>(".swap__control");
+  const header = root.querySelector<HTMLElement>(".site-header");
+  const box = frame.querySelector<HTMLElement>(".swap__box");
+  const island = swap.closest("astro-island");
+
+  const state = { scroll: 0, mini: 0 };
+  const apply = () => explode.style.setProperty("--explode", String(Math.round(Math.max(state.scroll, state.mini) * 1000) / 1000));
+
+  let live = false;
+  let timeline: gsap.core.Timeline | undefined;
+  let driven: ScrollTrigger | undefined;
+  let rewind: gsap.core.Tween | undefined;
+  let mini: gsap.core.Tween | undefined;
+  let orphan: ReturnType<typeof setTimeout> | undefined;
+  let refresh: ReturnType<typeof setTimeout> | undefined;
+  let height = 0;
+
+  /** Where the demo box's centre sits while pinned: mid-viewport under the header, lower when the control would slide under it. */
+  const pinAt = () => {
+    const top = header?.offsetHeight ?? 0;
+    const above = control ? frame.getBoundingClientRect().top - control.getBoundingClientRect().top : 0;
+    return Math.round(Math.max((view.innerHeight + top) / 2, top + 16 + above + frame.offsetHeight / 2));
+  };
+
+  const takeOver = () => {
+    live = true;
+    explode.removeAttribute("data-static");
+    timeline = gsap
+      .timeline({
+        defaults: { ease: "power1.inOut" },
+        onUpdate: apply,
+        scrollTrigger: {
+          trigger: frame,
+          pin: section,
+          start: () => `center ${pinAt()}px`,
+          end: () => `+=${view.innerHeight}`,
+          scrub: 0.4,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onRefresh: () => {
+            height = root.body.scrollHeight;
+          },
+        },
+      })
+      .to(state, { scroll: 1, duration: 0.4 })
+      .to(state, { scroll: 1, duration: 0.2 })
+      .to(state, { scroll: 0, duration: 0.4 });
+    const pin = timeline.scrollTrigger!;
+    driven = ScrollTrigger.create({
+      start: () => Math.max(0, pin.start - view.innerHeight),
+      end: () => pin.end,
+      onToggle: (self) => {
+        explode.toggleAttribute("data-driven", self.isActive);
+        if (self.isActive && box && box.scrollTop > 0) rewind = gsap.to(box, { scrollTop: 0, duration: 0.25, ease: "power2.out", overwrite: true });
+      },
+    });
+    height = root.body.scrollHeight;
+  };
+
+  // Take over when the island has hydrated and the view is out of sight.
+  const sight = new IntersectionObserver(([entry]) => {
+    if (!entry || entry.isIntersecting || live) return;
+    sight.disconnect();
+    takeOver();
+  });
+  const watch = () => sight.observe(explode);
+  if (island?.hasAttribute("ssr")) island.addEventListener("astro:hydrate", watch, { once: true });
+  else watch();
+
+  // The page's height changing (fonts, an opened answer, a loaded demo) moves the pin's start.
+  const resize = new ResizeObserver(() => {
+    if (!live || root.body.scrollHeight === height) return;
+    clearTimeout(refresh);
+    refresh = setTimeout(() => ScrollTrigger.refresh(), 200);
+  });
+  resize.observe(root.body);
+
+  const reassemble = () => {
+    clearTimeout(orphan);
+    mini?.kill();
+    mini = gsap.to(state, { mini: 0, duration: MINI_BACK, ease: "power2.inOut", onUpdate: apply });
+  };
+  const onBefore = (event: Event) => {
+    const detail = (event as CustomEvent<{ waitUntil?: (promise: Promise<unknown>) => void } | undefined>).detail;
+    if (!live || typeof detail?.waitUntil !== "function") return;
+    clearTimeout(orphan);
+    mini?.kill();
+    // Already open this far (mid-scroll, or a switch right after another): nothing to wait for.
+    if (Math.max(state.scroll, state.mini) >= MINI_PEAK) {
+      if (state.mini > 0) orphan = setTimeout(reassemble, MINI_ORPHAN);
+      return;
+    }
+    detail.waitUntil(
+      new Promise<void>((resolve) => {
+        state.mini = Math.max(state.scroll, state.mini);
+        mini = gsap.to(state, {
+          mini: MINI_PEAK,
+          duration: MINI_OUT,
+          ease: "power2.out",
+          onUpdate: apply,
+          onComplete: () => {
+            orphan = setTimeout(reassemble, MINI_ORPHAN);
+            resolve();
+          },
+          // Replaced by a later switch: let this one go.
+          onInterrupt: () => resolve(),
+        });
+      }),
+    );
+  };
+  const onAfter = () => {
+    if (live && state.mini > 0) reassemble();
+  };
+  swap.addEventListener("swap:before", onBefore);
+  swap.addEventListener("swap:after", onAfter);
+
+  return () => {
+    sight.disconnect();
+    resize.disconnect();
+    island?.removeEventListener("astro:hydrate", watch);
+    swap.removeEventListener("swap:before", onBefore);
+    swap.removeEventListener("swap:after", onAfter);
+    clearTimeout(orphan);
+    clearTimeout(refresh);
+    mini?.kill();
+    rewind?.kill();
+    driven?.kill();
+    timeline?.scrollTrigger?.kill(true);
+    timeline?.kill();
+    explode.style.removeProperty("--explode");
+    explode.removeAttribute("data-driven");
+    explode.setAttribute("data-static", "");
+    live = false;
+  };
+}
+
+/**
+ * The languages demo's sweep (DESIGN.md section 6, item 6): when the demo's
+ * table changes direction, it is revealed again by a 280ms `clip-path` sweep
+ * in the new reading direction, from the right edge for `rtl` and from the
+ * left for `ltr`. A change of language that keeps the direction plays nothing.
+ *
+ * @returns A cleanup that stops watching and clears a sweep in flight.
+ */
+function languagesSweep(gsap: Gsap, demo: HTMLElement): () => void {
+  let sweep: gsap.core.Tween | undefined;
+  const observer = new MutationObserver((records) => {
+    const turned = records.flatMap((record) => (record.target instanceof HTMLElement && record.target.dir !== record.oldValue ? [record.target] : []));
+    // The outermost element that turned carries the rest.
+    const target = turned.find((element) => !turned.some((other) => other !== element && other.contains(element)));
+    if (!target || (target.dir !== "rtl" && target.dir !== "ltr")) return;
+    sweep?.revert();
+    sweep = gsap.fromTo(
+      target,
+      { clipPath: target.dir === "rtl" ? "inset(0% 0% 0% 100%)" : "inset(0% 100% 0% 0%)" },
+      { clipPath: "inset(0% 0% 0% 0%)", duration: SWEEP, ease: "power3.out", clearProps: "clipPath" },
+    );
+  });
+  observer.observe(demo, { attributes: true, attributeFilter: ["dir"], attributeOldValue: true, subtree: true });
+  return () => {
+    observer.disconnect();
+    sweep?.revert();
+  };
 }
