@@ -76,3 +76,55 @@ describe("Tabs script", () => {
     expect(document.getElementById("install")?.tagName).toBe("H2");
   });
 });
+
+describe("Tabs copy button", () => {
+  /** The tabs with their copy button, on a page whose clipboard write resolves or rejects. */
+  async function withClipboard(writeText: (text: string) => Promise<void>) {
+    const tabs = await container.renderToString(Tabs, { props: { id: "install", tabs: INSTALL_TABS, lang: "en" } });
+    const dom = new JSDOM(`<!doctype html><html><body>${tabs}</body></html>`, { runScripts: "dangerously", url: "http://localhost/" });
+    Object.defineProperty(dom.window.navigator, "clipboard", { value: { writeText }, configurable: true });
+    const document = dom.window.document as Document;
+    const button = document.querySelector<HTMLElement>("[data-tabs-copy]")!;
+    const status = document.querySelector<HTMLElement>('[role="status"]')!;
+    const settle = () => new Promise((done) => setTimeout(done, 0));
+    return { button, status, settle };
+  }
+
+  it("says the shown panel was copied, in the button and in the status region", async () => {
+    const written: string[] = [];
+    const { button, status, settle } = await withClipboard(async (text) => void written.push(text));
+    button.click();
+    await settle();
+    expect(written).toHaveLength(1);
+    expect(written[0]).toContain("npm");
+    expect(button.textContent?.trim()).toBe("Copied");
+    expect(status.textContent).toBe("Copied");
+    expect(button.hasAttribute("data-failed")).toBe(false);
+  });
+
+  it("says so when the clipboard write fails", async () => {
+    const { button, status, settle } = await withClipboard(() => Promise.reject(new Error("denied")));
+    button.click();
+    await settle();
+    expect(button.textContent?.trim()).toBe("Could not copy");
+    expect(status.textContent).toBe("Could not copy");
+    expect(button.hasAttribute("data-failed")).toBe(true);
+    expect(button.hasAttribute("data-copied")).toBe(false);
+  });
+});
+
+describe("Tabs without JavaScript", () => {
+  it("writes the noscript rules once for a page with several tabs", async () => {
+    const locals = {};
+    const first = await container.renderToString(Tabs, { locals, props: { id: "one", tabs: INSTALL_TABS } });
+    const second = await container.renderToString(Tabs, { locals, props: { id: "two", tabs: INSTALL_TABS } });
+    expect(first.match(/<noscript>/g)).toHaveLength(1);
+    expect(second).not.toContain("<noscript>");
+    // Each still brings its own script, and that script still finds its own tabs.
+    const dom = new JSDOM(`<!doctype html><html><body>${first}${second}</body></html>`, { runScripts: "dangerously", url: "http://localhost/" });
+    const document = dom.window.document as Document;
+    document.querySelector<HTMLElement>("#two-tab-1")!.click();
+    expect(document.getElementById("two-panel-1")!.hidden).toBe(false);
+    expect(document.getElementById("one-panel-1")!.hidden).toBe(true);
+  });
+});

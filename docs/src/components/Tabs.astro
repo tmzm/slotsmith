@@ -5,7 +5,13 @@
  * the row's visual direction; Home and End jump to the ends. With `remember`,
  * the choice is kept under `localStorage["slotsmith-tab-" + remember]` and
  * shared by every Tabs on the page with the same key, so a package-manager
- * choice carries across pages. Without JS every panel shows, stacked.
+ * choice carries across pages. Without JS every panel shows, stacked: the
+ * `<noscript>` rules that do it are written once per page, by the first Tabs
+ * that renders on it.
+ *
+ * The copy button says what happened in its own text and in a status region
+ * next to it: "Copied", or that the copy failed (no clipboard permission, an
+ * insecure page).
  *
  * The script finds its tabs as the element before it, not by `id`: an MDX
  * heading's slug can equal the id (`## Install` over `id="install"`), and
@@ -32,6 +38,12 @@ export interface Props {
 const { id, tabs, remember, label, lang } = Astro.props;
 const tabId = (index: number) => `${id}-tab-${index}`;
 const panelId = (index: number) => `${id}-panel-${index}`;
+
+/** Set on the page's locals by its first Tabs, so the no-JS rules are in the page once. */
+const NOSCRIPT = Symbol.for("slotsmith-docs.tabs-noscript");
+const locals = Astro.locals as Record<symbol, boolean | undefined>;
+const firstOnPage = !locals[NOSCRIPT];
+locals[NOSCRIPT] = true;
 ---
 <div class="tabs panel" data-tabs data-remember={remember}>
   <div class="tabs__bar">
@@ -51,10 +63,18 @@ const panelId = (index: number) => `${id}-panel-${index}`;
       ))}
     </div>
     {lang && (
-      <button type="button" class="tabs__copy" data-tabs-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>
+      <button
+        type="button"
+        class="tabs__copy"
+        data-tabs-copy
+        data-label={t(lang, "common.copy")}
+        data-label-copied={t(lang, "common.copied")}
+        data-label-failed={t(lang, "common.copyFailed")}
+      >
         {t(lang, "common.copy")}
       </button>
     )}
+    {lang && <span class="visually-hidden" role="status" data-tabs-status />}
   </div>
   {tabs.map((tab, index) => (
     <div class="tabs__panel" role="tabpanel" id={panelId(index)} aria-labelledby={tabId(index)} hidden={index !== 0}>
@@ -62,7 +82,9 @@ const panelId = (index: number) => `${id}-panel-${index}`;
     </div>
   ))}
 </div>
-<noscript><style is:inline>[data-tabs] [role="tabpanel"][hidden] { display: block !important; } [data-tabs] .tabs__bar { display: none !important; } [data-tabs] .tabs__panel + .tabs__panel { border-block-start: 1px solid var(--line); }</style></noscript>
+{firstOnPage && (
+  <noscript><style is:inline>[data-tabs] [role="tabpanel"][hidden] { display: block !important; } [data-tabs] .tabs__bar { display: none !important; } [data-tabs] .tabs__panel + .tabs__panel { border-block-start: 1px solid var(--line); }</style></noscript>
+)}
 <script is:inline define:vars={{ remember }}>
   (() => {
     let root = document.currentScript?.previousElementSibling;
@@ -119,21 +141,28 @@ const panelId = (index: number) => `${id}-panel-${index}`;
       });
     });
     const copy = root.querySelector("[data-tabs-copy]");
+    const status = root.querySelector("[data-tabs-status]");
     let timer;
     copy?.addEventListener("click", async () => {
       const shown = panels.find((panel) => panel && !panel.hidden);
+      let copied = true;
       try {
         await navigator.clipboard.writeText((shown?.querySelector("pre")?.textContent ?? "").trim());
       } catch {
-        return;
+        copied = false;
       }
-      copy.textContent = copy.dataset.labelCopied;
-      copy.toggleAttribute("data-copied", true);
+      const label = copied ? copy.dataset.labelCopied : copy.dataset.labelFailed;
+      copy.textContent = label;
+      if (status) status.textContent = label;
+      copy.toggleAttribute("data-copied", copied);
+      copy.toggleAttribute("data-failed", !copied);
       clearTimeout(timer);
       timer = setTimeout(() => {
         copy.textContent = copy.dataset.label;
+        if (status) status.textContent = "";
         copy.removeAttribute("data-copied");
-      }, 1500);
+        copy.removeAttribute("data-failed");
+      }, copied ? 1500 : 3000);
     });
   })();
 </script>
@@ -197,6 +226,11 @@ const panelId = (index: number) => `${id}-panel-${index}`;
   .tabs__copy[data-copied] {
     border-color: var(--gold);
     color: var(--gold-text);
+  }
+
+  .tabs__copy[data-failed] {
+    border-color: var(--danger);
+    color: var(--ink);
   }
 
   /* SampleCode brings its own panel; inside the tabs it is the panel's body. */

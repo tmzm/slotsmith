@@ -27,6 +27,7 @@ export const en = {
   "common.search": "Search",
   "common.copy": "Copy",
   "common.copied": "Copied",
+  "common.copyFailed": "Could not copy",
   "common.editPage": "Edit this page",
   "common.onThisPage": "On this page",
   "common.untranslated": "This page is not translated yet. It is shown in English.",

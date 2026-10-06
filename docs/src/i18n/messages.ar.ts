@@ -29,6 +29,7 @@ export const ar: Record<MessageKey, string> = {
   "common.search": "بحث",
   "common.copy": "نسخ",
   "common.copied": "تم النسخ",
+  "common.copyFailed": "تعذّر النسخ",
   "common.editPage": "عدّل هذه الصفحة",
   "common.onThisPage": "في هذه الصفحة",
   "common.untranslated": "هذه الصفحة غير مترجمة بعد، وهي معروضة بالإنجليزية.",
