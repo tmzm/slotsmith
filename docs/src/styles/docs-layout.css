@@ -1,6 +1,7 @@
-/* Collapsible sidebar column on docs pages (from 1024px). The header's menu
-   button hides and shows the column; `data-sidebar-collapsed` on <html> is
-   set before first paint from the stored choice (see ThemeScript.astro). */
+/* Docs layout on wide screens: the collapsible sidebar column and a wider
+   page container. `data-sidebar-collapsed` on <html> is set before first
+   paint from the stored choice (see ThemeScript.astro); the header's menu
+   button toggles it from 1024px. */
 
 @media (min-width: 1024px) {
   .site-header .menu-button:not([data-sheet-only]) {
@@ -17,5 +18,33 @@
 
   html[data-sidebar-collapsed] .sidebar:not([data-sheet-only]) {
     display: none;
+  }
+
+  /* With the sidebar hidden the article takes the freed width. */
+  html[data-sidebar-collapsed] .docs__article {
+    max-inline-size: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  html[data-sidebar-collapsed] .docs[data-toc] {
+    grid-template-columns: minmax(0, 1fr) var(--toc-w);
+  }
+}
+
+/* A wider container on very large screens (90rem below). */
+@media (min-width: 1680px) {
+  .site-header__inner,
+  .shell,
+  .site-footer__inner {
+    max-inline-size: 100rem;
+  }
+}
+
+@media (min-width: 2160px) {
+  .site-header__inner,
+  .shell,
+  .site-footer__inner {
+    max-inline-size: 120rem;
   }
 }
