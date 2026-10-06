@@ -24,6 +24,6 @@ For children that load later, [`getRowCanExpand`](../../api/#props) decides whic
 
 ## The parts
 
-The toggle is the [`ExpandToggle`](../../api/#slot-ExpandToggle) slot: a `<button>` with `aria-expanded`, named by the [`expandRow`](../../api/#label-expandRow) or [`collapseRow`](../../api/#label-collapseRow) label. It receives `expanded`, `depth` and `onToggle`, and a click on it does not run `onRowClick`. A row with no children gets a spacer in its place, so the names line up.
+The toggle is the [`ExpandToggle`](../../api/#slot-ExpandToggle) slot: a `<button>` with `aria-expanded`, named by the [`expandRow`](../../api/#label-expandRow) or [`collapseRow`](../../api/#label-collapseRow) label. It receives `expanded`, `depth` and `onToggle`, and a click on it does not run `onRowClick`. A row with no children gets a spacer in its place, so the names line up. The built-in toggle also sets an empty `data-expanded` on itself while open, which its stylesheet uses to turn the chevron; a toggle of your own gets `expanded` and sets whatever it needs.
 
 Each [`Row`](../../api/#slot-Row) carries `data-depth` (`0` for top-level rows) and, when it can expand, `data-expanded` (`"true"` or `"false"`), so a stylesheet can mark the levels.

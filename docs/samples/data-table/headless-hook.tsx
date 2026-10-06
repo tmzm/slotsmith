@@ -26,6 +26,7 @@ const labels: Partial<DataTableLabels> = {
 };
 
 const cellStyle: CSSProperties = { padding: "0.375rem 0.5rem", borderBlockEnd: "1px solid", textAlign: "start" };
+// No `outline` here: the handle keeps the browser's focus ring, so keyboard users can see which handle has focus.
 const handleStyle: CSSProperties = { font: "inherit", color: "inherit", background: "none", border: 0, padding: "0 0.25rem" };
 const hidden: CSSProperties = { position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap" };
 

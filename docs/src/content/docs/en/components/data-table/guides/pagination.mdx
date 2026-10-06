@@ -21,7 +21,7 @@ The state is `{ pageIndex, pageSize }`, with `pageIndex` counting from 0.
 ## Turning it off
 
 - [`enablePagination`](../../api/#props) set to `false` renders every row and no controls.
-- [`hidePagination`](../../api/#props) hides the controls but still shows one page, for a table that pages from controls of your own.
+- [`hidePagination`](../../api/#props) hides the controls but keeps paging: the table shows only the current page, so drive `pagination` from controls of your own.
 
 For data that is paged on a server, set [`manualPagination`](../../api/#props), pass the current page as `data` and the total as [`rowCount`](../../api/#props). The [server data](../server-data/) guide covers it.
 

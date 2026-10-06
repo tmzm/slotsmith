@@ -8,15 +8,16 @@ The data table sorts when you click a column header and selects rows with a chec
 {/* Reserved height measured in Chrome: 35rem up to 400px, where cells wrap, 26.5rem from 420px. */}
 <Demo name="data-table/sorting-and-selection" height="clamp(26.5rem, 202.9rem - 672vw, 35rem)" fallback />
 
-Click a header to sort by it; click again to reverse, and a third time to clear. Shift-click a second header to add it to the sort. Tick rows to select them: the text under the table lists them. Chloe Martin is on leave, so her checkbox is disabled.
+Click a header to sort it ascending; click again for descending, and a third time to clear. Shift-click a second header to add it to the sort. Tick rows to select them: the text under the table lists them. Chloe Martin is on leave, so her checkbox is disabled.
 
 ## Sorting
 
-Every column sorts unless its column definition sets `enableSorting: false`, as the Status column does. The header holds a button, and its `<th>` carries `aria-sort`, so screen readers announce the order.
+Every data column, one with an `accessorKey` or `accessorFn`, sorts unless its definition sets `enableSorting: false`, as the Status column does. A display column, such as one that only holds buttons, has no value to sort by and never sorts. The header holds a button, and its `<th>` carries `aria-sort`, so screen readers announce the order.
 
 - [`sorting`](../../api/#props) and [`onSortingChange`](../../api/#props) control the sort. The state is a list of `{ id, desc }`, one per sorted column, in priority order. Leave them out and use [`defaultSorting`](../../api/#props) for a starting sort the table keeps itself.
 - [`enableMultiSort`](../../api/#props) lets shift-click add columns to the sort.
-- [`manualSorting`](../../api/#props) says the rows arrive already sorted, for sorting on the server; the table then only reports the clicks.
+- Each column sorts ascending first. Set `sortDescFirst: true` in a column definition to start that column descending, as you might for numbers and dates.
+- [`manualSorting`](../../api/#props) says the rows arrive already sorted, for sorting on the server; the table then only reports the clicks. The [server data](../server-data/) guide sorts this way.
 
 The header button and the arrow are the [`SortTrigger`](../../api/#slot-SortTrigger) and [`SortIcon`](../../api/#slot-SortIcon) slots, so a design system's own can replace them.
 

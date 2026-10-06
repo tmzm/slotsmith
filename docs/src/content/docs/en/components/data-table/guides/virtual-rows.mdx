@@ -36,4 +36,4 @@ Everything else works as in `DataTable`: [sorting](../sorting-and-selection/), s
 
 ## Your own layout
 
-`VirtualDataTable` is `DataTable.Provider` with a virtual body. To place the parts yourself, render `DataTableVirtualBody` from `slotsmith/virtual` as the `body` of `DataTable.Table`, and pass it the scroll area through `scrollRef`.
+`VirtualDataTable` is `DataTable.Provider` with a virtual body. To place the parts yourself, render `DataTableVirtualBody` from `slotsmith/virtual` as the `body` of `DataTable.Table`. Keep the scroll area in state with the table's `scrollRef` (a callback ref such as a state setter), and pass that element to the body as `scrollElement`.
