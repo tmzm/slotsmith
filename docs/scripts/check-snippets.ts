@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { APP_FOLDERS, filesUnder } from "./lib/walk.ts";
 
 /** Fenced languages whose blocks must be copied from a sample. */
 const CHECKED = new Set(["tsx", "ts", "jsx", "css"]);
@@ -42,16 +43,9 @@ export function findUnbackedSnippets(mdx: string, samples: string[]): string[] {
   return unbacked;
 }
 
-/** Every file under a folder, recursively. */
-function filesUnder(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true, recursive: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath, entry.name));
-}
-
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-  const samples = filesUnder(resolve(docsRoot, "samples"))
+  const samples = filesUnder(resolve(docsRoot, "samples"), APP_FOLDERS)
     .filter((file) => !file.endsWith("tsconfig.json") && !/[\\/](__tests__|node_modules|\.next|dist)[\\/]/.test(file))
     .map((file) => readFileSync(file, "utf8"));
   const pages = filesUnder(resolve(docsRoot, "src/content")).filter((file) => file.endsWith(".mdx"));

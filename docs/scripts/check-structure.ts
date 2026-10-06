@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { APP_FOLDERS, filesUnder } from "./lib/walk.ts";
 
 /** The `##` headings of a component overview, in the order the page template promises. */
 export const OVERVIEW_HEADINGS = ["Overview", "Install", "Quick start", "Guides", "Reference", "Adapters", "Accessibility", "Limitations", "FAQ"] as const;
@@ -130,16 +131,9 @@ export function findAnswerFirstProblems(file: string, mdx: string): string[] {
   return problems;
 }
 
-/** Every file under a folder, recursively. */
-function filesUnder(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true, recursive: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath, entry.name));
-}
-
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-  const files = [...filesUnder(resolve(docsRoot, "src/content")), ...filesUnder(resolve(docsRoot, "samples")).filter((file) => !/[\\/](node_modules|\.next|dist)[\\/]/.test(file))].map((file) =>
+  const files = [...filesUnder(resolve(docsRoot, "src/content")), ...filesUnder(resolve(docsRoot, "samples"), APP_FOLDERS).filter((file) => !/[\\/](node_modules|\.next|dist)[\\/]/.test(file))].map((file) =>
     relative(docsRoot, file).replaceAll("\\", "/"),
   );
   // A stub (`draft: true`) is still being written: its opening is checked only in strict mode (DOCS_STRICT=1).

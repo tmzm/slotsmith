@@ -33,6 +33,7 @@ import { chromium, type Page } from "playwright";
 import type { ComponentReference } from "../src/lib/reference.ts";
 import { findDeadLinks, findGeoProblems, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
 import { serveDir } from "./lib/serve.ts";
+import { APP_FOLDERS, filesUnder } from "./lib/walk.ts";
 import { sortViolations } from "./lib/axe-allowlist.ts";
 import { A11Y_END_MARKER, A11Y_MARKER, injectA11y, renderA11yTable, type A11yResult } from "./lib/a11y-report.ts";
 import type { Lang } from "../src/i18n/index.ts";
@@ -103,7 +104,7 @@ const toUrlPath = (file: string) => `/${relative(distDir, file).split("\\").join
 
 /** Every sample name: the path under `samples/` without extension, as `lib/samples.ts` names them. */
 function sampleNames(): string[] {
-  return walk(samplesDir)
+  return filesUnder(samplesDir, APP_FOLDERS)
     .map((file) => relative(samplesDir, file).split("\\").join("/"))
     .filter((name) => SAMPLE_EXTENSIONS.test(name) && name !== "tsconfig.json" && !name.split("/").some((part) => ["__tests__", "node_modules", ".next", "dist"].includes(part)))
     .map((name) => name.replace(SAMPLE_EXTENSIONS, ""))
@@ -115,7 +116,7 @@ function sampleImports(): Record<string, string[]> {
   const imports: Record<string, string[]> = {};
   const names = new Set(sampleNames());
   for (const name of names) {
-    const file = walk(samplesDir).find((f) => relative(samplesDir, f).split("\\").join("/").replace(SAMPLE_EXTENSIONS, "") === name);
+    const file = filesUnder(samplesDir, APP_FOLDERS).find((f) => relative(samplesDir, f).split("\\").join("/").replace(SAMPLE_EXTENSIONS, "") === name);
     if (!file || !/\.tsx?$/.test(file)) continue;
     const found: string[] = [];
     for (const match of readFileSync(file, "utf8").matchAll(/(?:from|import)\s+["'](\.\.?\/[^"']+)["']/g)) {
