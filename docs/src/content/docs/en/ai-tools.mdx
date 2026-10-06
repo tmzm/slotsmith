@@ -1,7 +1,63 @@
 ---
 title: "AI tools"
-description: "The AI tools page of the slotsmith docs."
-draft: true
+description: "slotsmith-ai is an MCP server that gives coding agents slotsmith's real props, slots and adapters. Set it up in Claude Code, Cursor, VS Code or Claude Desktop."
 ---
+import McpTable from "@/components/McpTable.astro";
 
-This page is being written.
+slotsmith's AI tools are `slotsmith-ai`, an MCP server that gives coding agents the real API: every prop, slot, fallback and label, plus ready-made adapters. Add it to your agent with one command or one config file, and the agent reads the API instead of guessing prop names.
+
+## What
+
+Everything the server knows is generated from the library's source, so it describes the props and slots of an actual release. Nothing is installed in your project: the client runs the server with `npx` and talks to it over stdio. It needs Node 20 or later.
+
+It covers the four components, the [data table](../components/data-table/), the [autocomplete](../components/autocomplete/), the [date picker](../components/date-picker/) and the [file uploader](../components/file-uploader/), and twenty ready-made adapters: each component for MUI, shadcn/ui, Chakra UI, Ant Design and Radix Themes. The adapters are generated from the integration suites the library is tested with. Each component's Adapters page shows the five libraries live, for example [the date picker's](../components/date-picker/adapters/).
+
+The same package copies an adapter into your project as source you own, with no agent involved:
+
+<SampleCode name="ai/add" />
+
+## Setup
+
+Pick your client. Every one of them starts the same command, `npx -y slotsmith-ai mcp`.
+
+<Tabs id="mcp-clients" tabs={[{ label: "Claude Code", sample: "ai/claude-code" }, { label: "Cursor", sample: "ai/cursor" }, { label: "VS Code", sample: "ai/vscode" }, { label: "Claude Desktop", sample: "ai/claude-desktop" }]} remember="mcp-client" label="MCP client" lang="en" />
+
+- **Claude Code:** run the command in your project. Add `--scope project` before the `--` to write the server to the project's `.mcp.json` and share it with your team.
+- **Cursor:** save the file as `.cursor/mcp.json` in your project, or as `~/.cursor/mcp.json` for every project.
+- **VS Code:** save the file as `.vscode/mcp.json` in your project. VS Code reads a `servers` key, not `mcpServers`, and each server names its `type`.
+- **Claude Desktop:** Settings, then Developer, then Edit Config opens `claude_desktop_config.json`. Add the server and restart the app. On Windows, if the app cannot start `npx`, use `"command": "cmd"` with `"args": ["/c", "npx", "-y", "slotsmith-ai", "mcp"]`.
+
+Then ask for a feature as you usually would. The server tells the agent to look up props and slots before it writes slotsmith code.
+
+## Tools
+
+The agent calls these on its own. `component` is one of `data-table`, `autocomplete`, `date-picker` and `file-uploader`. `library` is one of `mui`, `shadcn`, `chakra`, `antd` and `radix`.
+
+<McpTable kind="tools" lang="en" />
+
+Every result is Markdown for the model, with the same facts as structured JSON for clients that read it. `radix` means Radix Themes (`@radix-ui/themes`); an app built on the bare Radix primitives should ask for `shadcn`, which is built on them. A slot name that does not exist returns an error that lists the component's real slots, so the agent can correct itself.
+
+## Resources
+
+Resources are documents a client can list and add to a conversation. The server has two kinds, both Markdown:
+
+- `slotsmith://components/{name}`: a component's full reference, with its import, API, labels and slots. `{name}` is a component, such as `date-picker`.
+- `slotsmith://guides/{name}`: the hand-written guides: `setup`, `slots`, `theming`, `i18n`, `adapters`, and one per component.
+
+The tools reach the same facts, so an agent does not need the resources to work.
+
+## Prompts
+
+Prompts are ready-made requests you start yourself. In Claude Code they are slash commands, for example `/mcp__slotsmith__adapt-slots-to-library date-picker mui`.
+
+<McpTable kind="prompts" lang="en" />
+
+`build-component` also takes `none` as its `library`, for the built-in fallbacks. Both prompts include the component's reference, so the agent starts from the real API.
+
+## Versions
+
+`slotsmith-ai` shares its major and minor version with `slotsmith`: `slotsmith-ai` 1.7 describes `slotsmith` 1.7. When the server starts, it looks for `node_modules/slotsmith` in the directory the client starts it in, then in each parent directory, the way Node finds a package.
+
+If the installed major or minor version differs from the one the server describes, every tool result starts with a one-line warning that names both versions. The agent then knows to check the installed types, or to suggest installing the matching `slotsmith`. A different patch version never warns, because patch releases do not change the API. When the server finds no `slotsmith` at all, for example because the client started it outside your project, it does not warn.
+
+To keep the server on the release your project uses, put the version in its arguments, for example `"slotsmith-ai@1.7"` in place of `"slotsmith-ai"`.

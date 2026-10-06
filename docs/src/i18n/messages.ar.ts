@@ -171,6 +171,16 @@ export const ar: Record<MessageKey, string> = {
   "packs.import": "الاستيراد",
   "packs.export": "التصدير",
   "packs.direction": "الاتجاه",
+  "mcp.tools": "أدوات MCP",
+  "mcp.prompts": "قوالب أوامر MCP",
+  "mcp.resources": "موارد MCP",
+  "mcp.tool": "الأداة",
+  "mcp.prompt": "قالب الأمر",
+  "mcp.resource": "المورد",
+  "mcp.args": "المعاملات",
+  "mcp.does": "ما تعطيه للوكيل",
+  "mcp.none": "لا شيء",
+  "mcp.optional": "اختياري",
 
   "hero.title":
     "[جدول بيانات] و[مربع تحرير وسرد] و[منتقي تاريخ] و[رافع ملفات] جاهزة لـ React، تندمج في أي نظام تصميم: shadcn/ui أو MUI أو Chakra أو Ant Design أو نظامك الخاص.",

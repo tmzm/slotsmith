@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "slotsmith": {
+      "command": "npx",
+      "args": ["-y", "slotsmith-ai", "mcp"]
+    }
+  }
+}

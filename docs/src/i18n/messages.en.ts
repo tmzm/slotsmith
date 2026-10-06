@@ -171,6 +171,16 @@ export const en = {
   "packs.import": "Import",
   "packs.export": "Export",
   "packs.direction": "Direction",
+  "mcp.tools": "MCP tools",
+  "mcp.prompts": "MCP prompts",
+  "mcp.resources": "MCP resources",
+  "mcp.tool": "Tool",
+  "mcp.prompt": "Prompt",
+  "mcp.resource": "Resource",
+  "mcp.args": "Arguments",
+  "mcp.does": "What it gives the agent",
+  "mcp.none": "none",
+  "mcp.optional": "optional",
 
   // The first positioning sentence; [brackets] mark the component names set at poster scale.
   "hero.title":

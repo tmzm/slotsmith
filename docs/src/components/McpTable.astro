@@ -1,0 +1,64 @@
+---
+/**
+ * The `slotsmith-ai` MCP server's tools or prompts, one row each: the name,
+ * its arguments (optional ones marked) and what it gives the agent. Read
+ * from `@/data/mcp`, which a test keeps equal to the server's source. Each
+ * row is `#tool-<name>` or `#prompt-<name>`. The descriptions are English.
+ */
+import "@/styles/reference.css";
+import { t, type Lang } from "@/i18n";
+import { MCP_PROMPTS, MCP_TOOLS } from "@/data/mcp";
+
+interface Props {
+  kind: "tools" | "prompts";
+  lang?: Lang;
+}
+
+const { kind, lang = "en" } = Astro.props;
+const rows = kind === "tools" ? MCP_TOOLS : MCP_PROMPTS;
+const descLang = lang === "en" ? undefined : "en";
+/** Splits a description into text and `code` runs. */
+const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ text: run, code: index % 2 === 1 }));
+---
+<div class="ref-table" role="region" tabindex="0" aria-label={t(lang, kind === "tools" ? "mcp.tools" : "mcp.prompts")}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, kind === "tools" ? "mcp.tool" : "mcp.prompt")}</th>
+        <th scope="col">{t(lang, "mcp.args")}</th>
+        <th scope="col">{t(lang, "mcp.does")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr id={`${kind === "tools" ? "tool" : "prompt"}-${row.name}`}>
+          <th scope="row" class="ref-name"><code dir="ltr">{row.name}</code></th>
+          <td class="ref-type">
+            {row.args.length === 0 ? (
+              <span class="mcp-none">{t(lang, "mcp.none")}</span>
+            ) : (
+              row.args.map((arg, index) => (
+                <>
+                  {index > 0 && ", "}
+                  <code dir="ltr">{arg}</code>
+                  {row.optional?.includes(arg) && <span class="mcp-optional"> ({t(lang, "mcp.optional")})</span>}
+                </>
+              ))
+            )}
+          </td>
+          <td class="ref-desc-cell ref-desc" lang={descLang} dir={descLang && "ltr"}>
+            {runs(row.description).map((run) => (run.code ? <code>{run.text}</code> : run.text))}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .mcp-none,
+  .mcp-optional {
+    color: var(--muted);
+    font-family: var(--font-body);
+  }
+</style>

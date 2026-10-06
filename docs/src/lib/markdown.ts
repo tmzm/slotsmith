@@ -5,7 +5,8 @@
  * title, the description as a quote, then the page's content. Prose comes
  * from the MDX with its blocks turned into what they show: a demo becomes its
  * sample's code, the install block its commands, a keyboard table a Markdown
- * table, `<CompoundParts />` a list of the parts, `<Faq />` the
+ * table, `<CompoundParts />` a list of the parts, `<McpTable />` the MCP
+ * tools or prompts as a table, `<Faq />` the
  * frontmatter's questions. Generated pages (API, Adapters) are written from
  * the reference and the adapter samples. Links become absolute, so a copy
  * reads the same wherever it is pasted.
@@ -13,6 +14,7 @@
 import { SITE } from "../../site.config.ts";
 import { COMPONENTS, componentMeta, type ComponentSlug } from "@/data/components";
 import { landingFaq, type FaqItem } from "@/data/faq";
+import { MCP_PROMPTS, MCP_TOOLS } from "@/data/mcp";
 import { localePath, t, type Lang, type MessageKey } from "@/i18n";
 import { ADAPTER_LIBRARIES } from "@/lib/adapters";
 import { compoundParts } from "@/lib/compound-parts";
@@ -267,6 +269,19 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
           [t(contentLang, "packs.language"), t(contentLang, "packs.import"), t(contentLang, "packs.export"), t(contentLang, "packs.direction")],
           PACKS.map((pack) => [pack.name, code(pack.importPath), code(pack.exportName), pack.dir]),
         );
+      case "McpTable": {
+        const rows = attrs.kind === "prompts" ? MCP_PROMPTS : MCP_TOOLS;
+        return markdownTable(
+          [t(contentLang, attrs.kind === "prompts" ? "mcp.prompt" : "mcp.tool"), t(contentLang, "mcp.args"), t(contentLang, "mcp.does")],
+          rows.map((row) => [
+            code(row.name),
+            row.args.length === 0
+              ? t(contentLang, "mcp.none")
+              : row.args.map((arg) => `${code(arg)}${row.optional?.includes(arg) ? ` (${t(contentLang, "mcp.optional")})` : ""}`).join(", "),
+            row.description,
+          ]),
+        );
+      }
       case "Tabs": {
         // Each tab that shows a sample, as its own fenced block.
         const tabs = literal<{ label: string; sample?: string }[]>(attrs.tabs) ?? [];
