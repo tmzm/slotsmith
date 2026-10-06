@@ -13,7 +13,7 @@ import type { DatePickerComponents } from "../../date-picker/slots/types";
 import { FileUploader } from "../../file-uploader/FileUploader";
 import { useFileUploaderContext } from "../../file-uploader/slots/context";
 import type { FileUploaderComponents } from "../../file-uploader/slots/types";
-import type { SlotsmithComponents } from "../components";
+import { mergeComponents, NO_COMPONENTS, type SlotsmithComponents } from "../components";
 import { SlotsmithContext, SlotsmithProvider } from "../context";
 
 /**
@@ -253,6 +253,97 @@ describe("nested providers", () => {
       </SlotsmithProvider>,
     );
     expect(merged).toBe(everywhere);
+  });
+});
+
+/**
+ * The merge is what keeps a consumer from re-rendering: wherever a provider
+ * adds nothing, the object that comes out is the one that went in.
+ */
+describe("mergeComponents", () => {
+  const Skeleton = marker("skeleton");
+  const Day = marker("day");
+
+  it("returns the outer components when the provider sets none", () => {
+    expect(mergeComponents(everywhere, undefined)).toBe(everywhere);
+    expect(mergeComponents(NO_COMPONENTS, undefined)).toBe(NO_COMPONENTS);
+  });
+
+  it("returns the provider's own object when there is no outer provider", () => {
+    const inner: SlotsmithComponents = { dataTable: { Skeleton } };
+    const empty: SlotsmithComponents = {};
+    expect(mergeComponents(NO_COMPONENTS, inner)).toBe(inner);
+    expect(mergeComponents(NO_COMPONENTS, empty)).toBe(empty);
+  });
+
+  it("returns the outer components for an empty object", () => {
+    expect(mergeComponents(everywhere, {})).toBe(everywhere);
+  });
+
+  it("returns the outer components when a component is named but no slot is set", () => {
+    expect(mergeComponents(everywhere, { dataTable: {} })).toBe(everywhere);
+    expect(mergeComponents(everywhere, { dataTable: undefined })).toBe(everywhere);
+    expect(mergeComponents(everywhere, { dataTable: { Empty: undefined }, datePicker: {} })).toBe(everywhere);
+  });
+
+  it("keeps an empty map for a component the outer provider does not name", () => {
+    const outer: SlotsmithComponents = { datePicker: { Day } };
+    const merged = mergeComponents(outer, { dataTable: {} });
+    expect(merged).toEqual({ datePicker: { Day }, dataTable: {} });
+    expect(merged.datePicker).toBe(outer.datePicker);
+  });
+
+  it("copies only the component a provider changes, and neither input", () => {
+    const inner: SlotsmithComponents = { dataTable: { Skeleton } };
+    const merged = mergeComponents(everywhere, inner);
+    expect(merged).not.toBe(everywhere);
+    expect(merged.dataTable).toEqual({ Empty: ProviderEmpty, Skeleton });
+    expect(merged.autocomplete).toBe(everywhere.autocomplete);
+    expect(merged.datePicker).toBe(everywhere.datePicker);
+    expect(merged.fileUploader).toBe(everywhere.fileUploader);
+    expect(everywhere.dataTable).toEqual({ Empty: ProviderEmpty });
+    expect(inner.dataTable).toEqual({ Skeleton });
+  });
+
+  it("merges three levels, each inheriting what it does not name", () => {
+    const top: SlotsmithComponents = { dataTable: { Empty: ProviderEmpty, Skeleton: marker("top-skeleton") } };
+    const middle: SlotsmithComponents = { datePicker: { Day } };
+    const bottom: SlotsmithComponents = { dataTable: { Skeleton }, datePicker: { Icon: ProviderDateIcon } };
+
+    const first = mergeComponents(NO_COMPONENTS, top);
+    const second = mergeComponents(first, middle);
+    const third = mergeComponents(second, bottom);
+
+    expect(first).toBe(top);
+    expect(second.dataTable).toBe(top.dataTable);
+    expect(second.datePicker).toBe(middle.datePicker);
+    expect(third).toEqual({
+      dataTable: { Empty: ProviderEmpty, Skeleton },
+      datePicker: { Day, Icon: ProviderDateIcon },
+    });
+    expect(top.dataTable).not.toHaveProperty("Skeleton", Skeleton);
+    expect(middle.datePicker).toEqual({ Day });
+  });
+
+  it("merges three nested providers the same way", () => {
+    const top: SlotsmithComponents = { dataTable: { Empty: ProviderEmpty, Skeleton: marker("top-skeleton") } };
+    const middle: SlotsmithComponents = { datePicker: { Icon: ProviderDateIcon } };
+    const bottom: SlotsmithComponents = { dataTable: { Skeleton: marker("bottom-skeleton") } };
+    render(
+      <SlotsmithProvider components={top}>
+        <SlotsmithProvider components={middle}>
+          <SlotsmithProvider components={bottom}>
+            <DataTable data={[]} columns={columns} />
+            <DataTable data={[]} columns={columns} loading />
+            <DatePicker />
+          </SlotsmithProvider>
+        </SlotsmithProvider>
+      </SlotsmithProvider>,
+    );
+    expect(screen.getByTestId("provider-empty")).toBeInTheDocument();
+    expect(screen.getAllByTestId("bottom-skeleton").length).toBeGreaterThan(0);
+    expect(screen.queryByTestId("top-skeleton")).not.toBeInTheDocument();
+    expect(screen.getByTestId("provider-date-icon")).toBeInTheDocument();
   });
 });
 

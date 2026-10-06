@@ -54,7 +54,9 @@ export const NO_COMPONENTS: SlotsmithComponents = {};
  *
  * Lays a provider's components over the outer provider's: component by
  * component, then slot by slot. A component the inner provider does not name
- * keeps the outer map itself, not a copy, so its identity survives.
+ * keeps the outer map itself, not a copy, so its identity survives. So does
+ * one it names without setting a slot (`{ dataTable: {} }`, or every slot
+ * `undefined`).
  *
  * @param outer - The outer provider's merged components.
  * @param inner - The inner provider's `components` prop.
@@ -69,7 +71,9 @@ export function mergeComponents(outer: SlotsmithComponents, inner: SlotsmithComp
   for (const [name, slots] of Object.entries(inner) as [SlotsmithComponentName, object | undefined][]) {
     if (!slots) continue;
     const below = outer[name];
-    merged[name] = below ? { ...below, ...withoutUndefined(slots) } : slots;
+    const defined = withoutUndefined(slots);
+    if (below && Object.keys(defined).length === 0) continue;
+    merged[name] = below ? { ...below, ...defined } : slots;
     changed = true;
   }
   return changed ? (merged as SlotsmithComponents) : outer;
