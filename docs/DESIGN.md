@@ -65,8 +65,10 @@ brackets, the swap control, and one drenched close). Docs pages: Restrained
 
 **Library demos** use slotsmith's own `--ss-*` tokens mapped to this palette
 (`--ss-surface: var(--panel)`, `--ss-accent: var(--gold)`, …), which is also
-a live proof of theming. Exception: the swap demo's "Fallback" state uses the
-library's stock tokens, so it shows exactly what ships.
+a live proof of theming. In light mode the demos' accent is `--gold-text`
+(with `--ss-on-accent: var(--panel)`), because Gold on the Vellum panel is
+below 3:1. Exception: the swap demo's "Fallback" state uses the library's
+stock tokens, so it shows exactly what ships.
 
 **Rules.** No second accent hue. No gradients, no gradient text, no glow, no
 glassmorphism. If a new gold makes the portfolio's logo look off, it is wrong.
@@ -112,7 +114,12 @@ page, and wraps notes. Never decorative corner brackets on every panel.
 - **Sidebar.** An indexed list. Group names in Geist 600 (not mono, not
   uppercase). The current page renders as a gold mono tag `<Theming />`;
   hover reveals faint brackets around any item. Collapses to a sheet below
-  1024px.
+  1024px. From 1024px the header's menu button hides or shows the column
+  (the choice is stored and applied before first paint, and the change is a
+  320ms view transition); the article then takes the freed width.
+- **Page width.** The header, shell and footer share one container: 90rem,
+  100rem from 1680px, 120rem from 2160px. The article fills the column beside
+  the sidebar and "On this page".
 - **Mobile dock.** Below 768px, a bottom dock with Menu, Search, Theme (as
   the portfolio's mobile dock), respecting safe-area insets.
 - **Page header (docs).** Title in display type (≤ 4.5rem), then the
@@ -147,7 +154,7 @@ Order is fixed by the spec. Composition per section:
    The live table separates into its parts (header row, body rows, the
    checkbox column, sort triggers, pagination, page-size select), each
    labelled `<Name>` or `{Name}` on a hairline leader, then reassembles. The
-   segmented control (Fallback / shadcn / MUI / Chakra) then appears; each
+   segmented control (Fallback / shadcn / MUI / Chakra / Ant Design) then appears; each
    switch plays a short explode–swap–reassemble (≤ 700ms) and the code panel
    highlights the changed lines. Reduced motion or no JS: no pin; the table
    and a static labelled diagram sit side by side, the control swaps instantly.

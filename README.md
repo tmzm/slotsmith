@@ -2,16 +2,14 @@
 
 # slotsmith
 
-**React components you can take apart.**
-
-Headless logic with finished fallbacks: ship a component as it comes, then replace any part of it — one prop at a time — with your own design system.
+Finished data table, combobox, date picker and file uploader for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own. Every part is a slot; what you don't replace still looks finished.
 
 [![npm](https://img.shields.io/npm/v/slotsmith?color=e0a11b&label=npm)](https://www.npmjs.com/package/slotsmith)
 [![bundle](https://img.shields.io/bundlephobia/minzip/slotsmith?color=e0a11b)](https://bundlephobia.com/package/slotsmith)
 [![types](https://img.shields.io/npm/types/slotsmith?color=e0a11b)](https://www.npmjs.com/package/slotsmith)
 [![stars](https://img.shields.io/github/stars/tmzm/slotsmith?color=e0a11b)](https://github.com/tmzm/slotsmith)
 
-**[Documentation and live examples → slotsmith.dev](https://slotsmith.dev)**
+**[Documentation and live examples → slotsmith.dev](https://slotsmith.dev/)**
 
 </div>
 
@@ -67,10 +65,10 @@ component you actually import.
 The stylesheet is optional too. Import the whole set, or just the component you use:
 
 ```tsx
-import "slotsmith/styles.css";            // all components — 24.4 KB
-import "slotsmith/autocomplete.css";      // just this one — 5.5 KB
+import "slotsmith/styles.css";            // all components
+import "slotsmith/autocomplete.css";      // just this one
 import "slotsmith/data-table.css";        // includes the autocomplete's rules, for its page-size menu
-import "slotsmith/date-picker.css";       // 7.0 KB
+import "slotsmith/date-picker.css";
 import "slotsmith/file-uploader.css";
 ```
 
@@ -95,6 +93,8 @@ export function Users({ users }: { users: User[] }) {
 
 Sorting, pagination and selection work immediately, and each piece of state stays **uncontrolled** until you pass its value — so `pagination` / `onPaginationChange` is opt-in, not required boilerplate.
 
+[Getting started](https://slotsmith.dev/getting-started/) covers Next.js, Vite and the other three components.
+
 ### Reordering rows
 
 Rows can be dragged into a new order by pointer, touch or keyboard (Space to lift, the arrow keys to move, Space to drop, Escape to cancel). The order is yours: the table reports each move, and you store it.
@@ -111,7 +111,7 @@ const [rows, setRows] = useState(initialRows);
 />;
 ```
 
-Store the new order in the same event, and save it to a server afterwards; a table that waits for the reply shows the row slide back, then jump. In a tree table a row moves among its siblings, with its sub-rows; for a sub-row, store `change.siblings` as the children of `change.parent`.
+Store the new order in the same event, and save it to a server afterwards; a table that waits for the reply shows the row slide back, then jump. In a tree table a row moves among its siblings, with its sub-rows; for a sub-row, store `change.siblings` as the children of `change.parent`. The [row reorder guide](https://slotsmith.dev/components/data-table/guides/row-reorder/) has live examples.
 
 ## Components
 
@@ -128,64 +128,22 @@ Store the new order in the same event, and save it to a server afterwards; a tab
 Every component takes a `locale`: a ready-made pack, the tag of one registered with a provider, or a custom locale from `defineLocale`. `labels` still wins over any of them, one string at a time.
 
 ```tsx
-// 1. A ready-made pack, passed as an object. No provider needed.
-import { ar } from "slotsmith/locales/ar";
-<DatePicker locale={ar} />
-
-// 2. A provider for the whole app. Strings resolve against the packs it was given.
 import { SlotsmithProvider } from "slotsmith/provider";
 import { ar } from "slotsmith/locales/ar";
 import { fr } from "slotsmith/locales/fr";
+
 <SlotsmithProvider locale={lang} locales={[ar, fr]}>…</SlotsmithProvider>
-
-// 3. A custom locale. Each section that is present must be complete.
-import { defineLocale } from "slotsmith/locale";
-const ku = defineLocale({ code: "ckb", table: { /* every DataTableLabels key */ } });
-<DataTable locale={ku} />
-
-// 4. One-off overrides still win.
-<DataTable locale={ar} labels={{ empty: "لا توجد طلبات" }} />
 ```
 
-Precedence per string: `labels` on the component beats its own `locale`, which beats the provider's `locale`, which beats the English default.
+18 packs ship, 15 languages, each its own import under `slotsmith/locales/`: `ar`, `ar-EG`, `ar-SA`, `ar-IQ`, `fa`, `he`, `tr`, `fr`, `de`, `es`, `pt-BR`, `it`, `ru`, `zh-CN`, `ja`, `ko`, `hi` and `id`. There is no `en` pack, because English lives in each component's own defaults.
 
-A section can also be a function of the active tag, built with `createNumber` and `createPlural` from `slotsmith/locale` — the same two helpers every pack above uses to format numbers and pick plural forms.
-
-18 packs ship, 15 languages. "Drafted" means translated from the English labels and not yet checked by a native speaker; "reviewed by Tareq" means a native speaker checked it; "same text as `ar`" means the region pack reuses the `ar` pack's text, formatted for its own tag.
-
-| Import | Language | Direction | Status |
-| --- | --- | --- | --- |
-| `slotsmith/locales/ar` | Arabic | rtl | reviewed by Tareq |
-| `slotsmith/locales/ar-EG` | Arabic, Egypt | rtl | same text as `ar` |
-| `slotsmith/locales/ar-SA` | Arabic, Saudi Arabia | rtl | same text as `ar` |
-| `slotsmith/locales/ar-IQ` | Arabic, Iraq | rtl | same text as `ar` |
-| `slotsmith/locales/fa` | Persian | rtl | drafted |
-| `slotsmith/locales/he` | Hebrew | rtl | drafted |
-| `slotsmith/locales/tr` | Turkish | ltr | drafted |
-| `slotsmith/locales/fr` | French | ltr | drafted |
-| `slotsmith/locales/de` | German | ltr | drafted |
-| `slotsmith/locales/es` | Spanish | ltr | drafted |
-| `slotsmith/locales/pt-BR` | Portuguese, Brazil | ltr | drafted |
-| `slotsmith/locales/it` | Italian | ltr | drafted |
-| `slotsmith/locales/ru` | Russian | ltr | drafted |
-| `slotsmith/locales/zh-CN` | Chinese, simplified | ltr | drafted |
-| `slotsmith/locales/ja` | Japanese | ltr | drafted |
-| `slotsmith/locales/ko` | Korean | ltr | drafted |
-| `slotsmith/locales/hi` | Hindi | ltr | drafted |
-| `slotsmith/locales/id` | Indonesian | ltr | drafted |
-
-There is no `en` pack — English lives in each component's own defaults — and no bundled "all packs" entry; import only the languages an app ships. The date picker's calendar grid is always Gregorian, whatever the locale.
+The [Languages page](https://slotsmith.dev/languages/) lists each pack's direction and review status, and covers custom packs, precedence, plurals and Next.js.
 
 ## How it compares
 
-|  | Styled kits (MUI, Chakra) | Headless kits (Radix, TanStack) | **slotsmith** |
-| --- | --- | --- | --- |
-| Works on day one | ✅ | ❌ you build the UI | ✅ fallbacks are finished |
-| Matches your design system | ⚠️ theme overrides | ✅ you wrote it | ✅ replace only the parts that differ |
-| Escape hatch | eject or fight the theme | n/a | every part is a prop |
-| Runtime dependencies | many | few | one, and only for the components that need it |
+Styled kits such as MUI and Chakra work on day one but tie you to their design language. Headless kits such as Radix and TanStack leave the interface to you. slotsmith ships finished fallbacks and makes every part a prop, so you replace only the parts that differ.
 
-slotsmith isn't a replacement for TanStack Table or Radix — the table is *built on* TanStack v9. It's the layer those libraries leave to you, written once and made replaceable.
+slotsmith isn't a replacement for TanStack Table or Radix: the table is *built on* TanStack v9. The [comparison page](https://slotsmith.dev/comparison/) sets it beside other libraries, with a source for every cell.
 
 ## Bring your own UI
 
@@ -260,91 +218,37 @@ It lands at the same path `slotsmith-ai add --ui shadcn` writes to, installs its
 }
 ```
 
-The shared tokens are `--ss-surface`, `--ss-text`, `--ss-muted`, `--ss-border`, `--ss-accent`, `--ss-on-accent`, `--ss-danger`, `--ss-hover`, `--ss-selected`, `--ss-radius` and `--ss-font-size`. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) still work, for restyling one component without the others. Any token, shared or per component, can be set on `:root` for the whole page or on any wrapper element for just the components inside it, and a component token beats the shared one wherever each is set (a `--sdt-accent` on `:root` beats a `--ss-accent` on a closer wrapper); the date picker and the uploader also still follow a theme written against the data table's `--sdt-*`. A value set on `:root` applies to both themes, so set its dark value under `.dark, [data-theme="dark"]` too. The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, on `:root`, a wrapper or the table, and then yours win at every size. `--sdt-font-size` otherwise follows `--ss-font-size` (one pixel smaller at the default `sm` size).
+Set the tokens on `:root` for the whole page, or on any wrapper element for just the components inside it. Each component's own tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) restyle one component without the others, and a component token beats the shared one wherever each is set (a `--sdt-accent` on `:root` beats a `--ss-accent` on a closer wrapper). The date picker and the uploader also still follow a theme written against the data table's `--sdt-*`. The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, and then yours win at every size.
 
 The component tokens are inputs only: the stylesheet never declares them, so `var(--sdt-accent)` in your own CSS is empty unless you set it; read `var(--ss-accent, <default>)` instead. Set a component token on the component or above it, not on an inner part such as `.sdt__row`. A popup rendered outside the wrapper, such as one portalled to `document.body`, does not see the wrapper's `--ss-*` and takes the page's values instead.
 
-Every component names its classes the same way: `s` plus the component's initials (`sdt`, `sac`, `sdp`, `sfu`), then `__part`, then `--modifier`, with state as `data-*` attributes. A part that plays the same role in several components has the same name in each: the popups are `__popup`, the triggers `__trigger`, an empty state `__message`, an error state `__error`, text for screen readers only `__sr-only`. Select `.sdt__message, .sdt__error` to style both states of the data table at once.
-
-Six ready-made themes set only the shared `--ss-*` tokens, each with a light and a dark palette: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast` (a high-contrast palette for accessibility). Import one after the stylesheet:
+Six ready-made themes set only the shared tokens, each with a light and a dark palette: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast`. Import one after the stylesheet:
 
 ```ts
 import "slotsmith/styles.css";
 import "slotsmith/themes/soft.css";
 ```
 
-A theme sets the same `--ss-*` tokens on `:root` and `.dark, [data-theme="dark"]` as your own overrides, so import order decides: import your own overrides after the theme to keep them.
-
-Write your own the same way: a stylesheet that sets only the shared `--ss-*` tokens above — nothing else — on `:root` and again under `.dark, [data-theme="dark"]`.
+The [Theming page](https://slotsmith.dev/theming/) lists every shared token and covers dark mode, Tailwind, class names for your own styles, and right-to-left layout.
 
 ## You ship only what you import
 
-Each component is independent, and the build is arranged so your bundler can prove it.
-Measured on the published output, bundling a single component:
+Each component is independent, and the build is arranged so your bundler can prove it: `import { Autocomplete } from "slotsmith"` already drops the other three. The one exception is deliberate: the data table's page-size control is the autocomplete, so `DataTable` and `VirtualDataTable` bring the autocomplete with them (and `slotsmith/data-table.css` its styles). A test in the suite bundles the real output and fails if anything else leaks in.
 
-| What you import | JavaScript |
-| --- | --- |
-| `Autocomplete` alone | 18.4 KB |
-| `useAutocomplete` alone | 7.9 KB |
-| `DatePicker` alone | 19.1 KB |
-| `useDatePicker` alone | 9.2 KB |
-| all four components | 81.2 KB |
+CommonJS cannot be tree-shaken, because `require()` resolves at run time, so import the component's own entry there: `slotsmith/autocomplete`, `slotsmith/data-table`, `slotsmith/date-picker` or `slotsmith/file-uploader`. Each exports exactly what the main entry does. `slotsmith/provider`, `slotsmith/locale` and `slotsmith/locales/<code>` are separate entries too, so importing a component never pulls in a language pack.
 
-Nothing special is required — `import { Autocomplete } from "slotsmith"` already drops
-the other three. The one exception is deliberate: the data table's page-size control is
-the autocomplete, so `DataTable` and `VirtualDataTable` bring the autocomplete with them
-(and `slotsmith/data-table.css` its styles). Nothing else pulls in another component, and
-the autocomplete never pulls in the table. A test in the suite bundles the real output and fails if any of it leaks
-back in.
-
-Two cases a bundler cannot solve on its own, and what to do about them:
-
-```tsx
-// CommonJS cannot be tree-shaken, because require() resolves at run time.
-// Import the component's own entry and you get 23 KB instead of 81 KB.
-const { Autocomplete } = require("slotsmith/autocomplete");
-
-// CSS has no import graph to follow, so pick the stylesheet you need.
-import "slotsmith/autocomplete.css";
-```
-
-Per-component entries exist for every component — `slotsmith/autocomplete`,
-`slotsmith/data-table`, `slotsmith/date-picker`, `slotsmith/file-uploader` — and they
-export exactly what the main entry does. On ES modules they make no difference at all;
-use them when you are on CommonJS, or when you want the guarantee written down rather
-than inferred.
-
-`slotsmith/provider` (`SlotsmithProvider`), `slotsmith/locale` (`defineLocale`, and
-`SlotsmithProvider` still, for compatibility) and `slotsmith/locales/<code>` (one entry
-per pack, e.g. `slotsmith/locales/ar`) are separate entries too, so importing a
-component never pulls in a language pack, and importing one language never pulls in
-another.
+The [Trust page](https://slotsmith.dev/trust/#sizes) has the size of every import and stylesheet, minified and gzipped, measured at every build.
 
 ## Use with AI agents
 
-[`slotsmith-ai`](https://www.npmjs.com/package/slotsmith-ai) is an MCP server that gives coding agents the real API —
-every prop, slot, fallback and label, generated from this source — plus ready-made
-MUI, shadcn/ui, Chakra UI, Ant Design and Radix Themes adapters. Nothing is installed in your project; the client
-runs it with `npx`.
-
-Its `add` command copies any of those adapters straight into your project as source you own — `npx slotsmith-ai add <component> --ui <library>`; see [Ready-made adapters](#ready-made-adapters).
+[`slotsmith-ai`](https://www.npmjs.com/package/slotsmith-ai) is an MCP server that gives coding agents the real API: every prop, slot, fallback and label, generated from this source. Its `add` command copies the adapters into your project; see [Ready-made adapters](#ready-made-adapters). Nothing is installed in your project; the client runs it with `npx`.
 
 ```bash
 # Claude Code
 claude mcp add slotsmith -- npx -y slotsmith-ai mcp
 ```
 
-```jsonc
-// Cursor: .cursor/mcp.json · Claude Desktop: claude_desktop_config.json
-{ "mcpServers": { "slotsmith": { "command": "npx", "args": ["-y", "slotsmith-ai", "mcp"] } } }
-
-// VS Code: .vscode/mcp.json (note the "servers" key)
-{ "servers": { "slotsmith": { "type": "stdio", "command": "npx", "args": ["-y", "slotsmith-ai", "mcp"] } } }
-```
-
-Tools, resources and prompts are listed in the [package README](https://github.com/tmzm/slotsmith/tree/master/packages/ai#readme);
-the [AI tools guide](https://slotsmith.dev/ai-tools/) walks through
-each client.
+The [AI tools page](https://slotsmith.dev/ai-tools/) has the setup for Cursor, VS Code and Claude Desktop, and lists the tools, resources and prompts.
 
 ## Principles
 

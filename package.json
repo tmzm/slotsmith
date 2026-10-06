@@ -1,7 +1,7 @@
 {
   "name": "slotsmith",
   "version": "1.7.0",
-  "description": "A headless React component library: every part is a slot you can replace, with plain-HTML fallbacks. Starting with the data table.",
+  "description": "Finished data table, combobox, date picker and file uploader for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own. Every part is a slot; what you don't replace still looks finished.",
   "license": "ISC",
   "author": "Tareq Al-Mozayek",
   "type": "module",
@@ -156,7 +156,7 @@
     "type": "git",
     "url": "git+https://github.com/tmzm/slotsmith.git"
   },
-  "homepage": "https://slotsmith.dev",
+  "homepage": "https://slotsmith.dev/",
   "keywords": [
     "react",
     "table",
