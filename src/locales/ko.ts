@@ -1,5 +1,6 @@
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
+import type { SlotsmithLocale } from "../locale/types";
 
 /**
  * Korean
@@ -16,7 +17,7 @@ import { createNumber, createPlural } from "../locale/plural";
  * <DataTable locale={ko} data={rows} columns={columns} />;
  * ```
  */
-export const ko = defineLocale({
+export const ko: SlotsmithLocale = defineLocale({
   code: "ko",
   dir: "ltr",
 

@@ -1,4 +1,5 @@
 import { defineLocale } from "../locale/defineLocale";
+import type { SlotsmithLocale } from "../locale/types";
 import { ar } from "./ar";
 
 /**
@@ -6,4 +7,4 @@ import { ar } from "./ar";
  *
  * The Arabic labels with numbers written for Iraq, in Arabic-Indic digits.
  */
-export const arIQ = defineLocale({ ...ar, code: "ar-IQ" });
+export const arIQ: SlotsmithLocale = defineLocale({ ...ar, code: "ar-IQ" });

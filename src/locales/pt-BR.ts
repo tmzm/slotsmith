@@ -1,5 +1,6 @@
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
+import type { SlotsmithLocale } from "../locale/types";
 
 /**
  * Portuguese, Brazil
@@ -16,7 +17,7 @@ import { createNumber, createPlural } from "../locale/plural";
  * <DataTable locale={ptBR} data={rows} columns={columns} />;
  * ```
  */
-export const ptBR = defineLocale({
+export const ptBR: SlotsmithLocale = defineLocale({
   code: "pt-BR",
   dir: "ltr",
 

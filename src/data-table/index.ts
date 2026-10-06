@@ -51,6 +51,7 @@ export type {
 export { useDataTableContext, useDataTableRow } from "./slots/context";
 export type { DataTableContextValue } from "./slots/context";
 export { fallbackComponents, defaultLabels, cx } from "./slots/fallbacks";
+export type { DataTableSlotProps } from "./slots/slotProps";
 export * from "./slots/types";
 
 export type {

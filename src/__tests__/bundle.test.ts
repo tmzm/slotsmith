@@ -7,7 +7,7 @@
  */
 import { build, type Plugin } from "esbuild";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -389,5 +389,62 @@ describe.skipIf(!built)("the provider entry point", () => {
       createElement(fromProvider.SlotsmithProvider, { locale: "fr" }, createElement(Probe)),
     );
     expect(html).toContain("fr");
+  });
+});
+
+/**
+ * Declaration imports
+ *
+ * Walks the built declaration files the way a type checker does: from one
+ * entry, through every relative import, re-export and `import()` type.
+ *
+ * @param entry - A declaration file, relative to `dist`.
+ * @returns Every package the reachable declarations import, by bare specifier.
+ */
+function declarationImports(entry: string): Set<string> {
+  const packages = new Set<string>();
+  const seen = new Set<string>();
+  const queue = [dist(entry)];
+  while (queue.length > 0) {
+    const file = queue.pop()!;
+    if (seen.has(file)) continue;
+    seen.add(file);
+    /** Comments go first, so an import inside a JSDoc example is not counted. */
+    const source = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const [, specifier] of source.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)["']([^"']+)["']/g)) {
+      if (!specifier!.startsWith(".")) {
+        packages.add(specifier!);
+        continue;
+      }
+      const target = resolve(dirname(file), specifier!);
+      const found = [`${target}.d.ts`, resolve(target, "index.d.ts")].find((candidate) => existsSync(candidate));
+      expect(found, `${specifier} from ${file}`).toBeDefined();
+      queue.push(found!);
+    }
+  }
+  return packages;
+}
+
+/**
+ * The table engine and the virtualizer are optional peers. An app that
+ * installs neither still type-checks the entries below with
+ * `skipLibCheck: false`, so no declaration they reach may import one: not
+ * the provider through its `components` prop, and not any component through
+ * the locale types.
+ */
+describe.skipIf(!built)("the declarations an app without the optional peers loads", () => {
+  it.each([
+    "provider/index.d.ts",
+    "locale/index.d.ts",
+    ...(built ? readdirSync(dist("locales")) : []).filter((file) => file.endsWith(".d.ts")).map((file) => `locales/${file}`),
+    "autocomplete/index.d.ts",
+    "date-picker/index.d.ts",
+    "file-uploader/index.d.ts",
+  ])("keeps the optional peers out of %s", (entry) => {
+    expect([...declarationImports(entry)].filter((name) => name.startsWith("@tanstack/"))).toEqual([]);
+  });
+
+  it("still finds the table engine behind the table's own entry, so the walk is real", () => {
+    expect(declarationImports("data-table/index.d.ts")).toContain("@tanstack/react-table");
   });
 });

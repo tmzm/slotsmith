@@ -3,7 +3,8 @@ import type { RowData } from "@tanstack/react-table";
 import type { LocaleInput } from "../../locale/types";
 import type { DataTableRow } from "../core/features";
 import type { DataTableModel } from "../core/useDataTable";
-import type { DataTableComponents, DataTableLabels, DataTableSlotProps } from "./types";
+import type { DataTableSlotProps } from "./slotProps";
+import type { DataTableComponents, DataTableLabels } from "./types";
 
 /**
  * Data table context value

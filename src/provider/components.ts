@@ -11,7 +11,8 @@ import type { FileUploaderComponents } from "../file-uploader/slots/types";
  * takes, so an adapter written for one works for the other unchanged.
  *
  * The imports above are types only: the provider carries the maps and never
- * loads a component.
+ * loads a component. None of them reaches an optional peer either, so an app
+ * that never installs the table engine still type-checks this file.
  *
  * @example
  * ```tsx

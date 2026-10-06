@@ -1,4 +1,5 @@
 import { defineLocale } from "../locale/defineLocale";
+import type { SlotsmithLocale } from "../locale/types";
 import { ar } from "./ar";
 
 /**
@@ -6,4 +7,4 @@ import { ar } from "./ar";
  *
  * The Arabic labels with numbers written for Saudi Arabia, in Arabic-Indic digits.
  */
-export const arSA = defineLocale({ ...ar, code: "ar-SA" });
+export const arSA: SlotsmithLocale = defineLocale({ ...ar, code: "ar-SA" });

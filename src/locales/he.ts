@@ -1,5 +1,6 @@
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
+import type { SlotsmithLocale } from "../locale/types";
 
 /**
  * Hebrew
@@ -17,7 +18,7 @@ import { createNumber, createPlural } from "../locale/plural";
  * <DataTable locale={he} data={rows} columns={columns} />;
  * ```
  */
-export const he = defineLocale({
+export const he: SlotsmithLocale = defineLocale({
   code: "he",
   dir: "rtl",
 

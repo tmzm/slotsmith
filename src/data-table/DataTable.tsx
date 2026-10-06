@@ -22,7 +22,8 @@ import {
   type DataTableContextValue,
 } from "./slots/context";
 import { defaultLabels, fallbackComponents } from "./slots/fallbacks";
-import type { DataTableComponents, DataTableLabels, DataTableSlotProps } from "./slots/types";
+import type { DataTableSlotProps } from "./slots/slotProps";
+import type { DataTableComponents, DataTableLabels } from "./slots/types";
 
 /**
  * Provider props

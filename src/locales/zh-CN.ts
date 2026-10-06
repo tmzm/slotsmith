@@ -1,5 +1,6 @@
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
+import type { SlotsmithLocale } from "../locale/types";
 
 /**
  * Chinese, simplified
@@ -17,7 +18,7 @@ import { createNumber, createPlural } from "../locale/plural";
  * <DataTable locale={zhCN} data={rows} columns={columns} />;
  * ```
  */
-export const zhCN = defineLocale({
+export const zhCN: SlotsmithLocale = defineLocale({
   code: "zh-CN",
   dir: "ltr",
 
