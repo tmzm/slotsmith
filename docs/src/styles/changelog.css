@@ -1,0 +1,55 @@
+/* The Changelog page: one section per release under a hairline, the version
+   in mono. The Roadmap page shows the unreleased notes with the same list. */
+
+.release {
+  margin-block-start: 2.5rem;
+  padding-block-start: 2rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.release__version {
+  font-size: 1.5rem;
+}
+
+.release__state {
+  margin-block: 0.5rem 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.release__notes {
+  margin-block-start: 1.25rem;
+}
+
+/* Long entries: a list without the indent, each change a row of its own. */
+.release__notes > ul {
+  display: grid;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.release__notes > ul > li {
+  overflow-wrap: anywhere;
+}
+
+.release__notes > ul > li > :first-child {
+  margin-block-start: 0;
+}
+
+.release__notes > ul > li > :last-child {
+  margin-block-end: 0;
+}
+
+.release__notes pre {
+  overflow-x: auto;
+}
+
+.release-earlier {
+  margin-block-start: 2.5rem;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+}

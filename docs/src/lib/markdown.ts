@@ -229,7 +229,6 @@ function referenceLinksMarkdown(slug: ComponentSlug, lang: Lang, contentLang: La
   return links.map(([href, title, lead]) => `- [${t(contentLang, title)}](${SITE.url}${localePath(lang, href)}): ${t(contentLang, lead)}`).join("\n");
 }
 
-/** The MDX body of a prose page as Markdown. */
 /**
  * A Trust page block as Markdown, with the numbers its component shows.
  *
@@ -306,6 +305,7 @@ function trustMarkdown(name: string, attrs: Record<string, string>, lang: Lang, 
   }
 }
 
+/** The MDX body of a prose page as Markdown. */
 async function proseMarkdown(page: PageInfo): Promise<string> {
   const prose = page.prose!;
   const contentLang: Lang = prose.translated ? page.lang : "en";
@@ -362,6 +362,14 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
           ]),
         );
       }
+      case "Changelog": {
+        const { getCollection } = await import("astro:content");
+        const releases = (await getCollection("changelog", (entry) => entry.data.lang === page.lang)).sort((a, b) => a.data.order - b.data.order);
+        // The same notes as the page, one `##` per release; the links are made absolute with the rest of the prose.
+        return releases
+          .map((entry) => `## ${entry.data.unreleased ? t(contentLang, "changelog.unreleased") : entry.data.version}\n\n${entry.body ?? ""}`)
+          .join("\n\n");
+      }
       case "ComparisonTable":
         // One section per subject: each attribute with its statement and the pages it was read from.
         return SUBJECTS.map((subject) => {
@@ -386,6 +394,7 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
         if (trust !== undefined) return trust;
         // A wrapper (a note) keeps its text; anything else shows nothing a copy can use.
         return children ? (await replaceBlocks(children, render)).trim() : "";
+      }
     }
   };
 
@@ -434,7 +443,6 @@ function apiMarkdown(slug: ComponentSlug, lang: Lang): string {
     t(lang, "api.stylingLead", { component }),
     `Classes: ${reference.classes.map(code).join(", ")}`,
     `Tokens: ${reference.tokens.map(code).join(", ")}`,
-      }
   ].join("\n\n");
 }
 

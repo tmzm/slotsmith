@@ -1,0 +1,52 @@
+---
+/**
+ * Every release from the README's changelog, newest first. Each is a section
+ * whose heading has the version as its `id` (`#1.6.0`, `#unreleased`), so
+ * other pages can link to one release. The notes are the README's English
+ * text; `lang` is the language of the few words around them. Links in the
+ * notes follow the language of the page.
+ */
+import "@/styles/changelog.css";
+import { getCollection, render } from "astro:content";
+import H2 from "@/components/prose/H2.astro";
+import { stripLang, t, type Lang } from "@/i18n";
+import { SITE } from "../../site.config.ts";
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = "en" } = Astro.props;
+const pageLang = stripLang(Astro.url.pathname).lang;
+const entries = (await getCollection("changelog", (entry) => entry.data.lang === pageLang)).sort((a, b) => a.data.order - b.data.order);
+const releases = await Promise.all(
+  entries.map(async (entry) => ({
+    id: entry.id.slice(entry.id.indexOf("/") + 1),
+    version: entry.data.version,
+    unreleased: entry.data.unreleased,
+    Content: (await render(entry)).Content,
+  })),
+);
+const oldest = releases.findLast((release) => !release.unreleased);
+const [beforeLink = "", afterLink = ""] = oldest ? t(lang, "changelog.earlier", { version: oldest.version, link: "\u0000" }).split("\u0000") : [];
+---
+{
+  releases.map(({ id, version, unreleased, Content }) => (
+    <section class="release" data-unreleased={unreleased || undefined}>
+      <H2 id={id} class="release__version">{unreleased ? t(lang, "changelog.unreleased") : <span class="mono" dir="ltr">{version}</span>}</H2>
+      {unreleased && <p class="release__state">{t(lang, "changelog.unreleasedNote")}</p>}
+      <div class="release__notes" lang={lang === "en" ? undefined : "en"} dir={lang === "en" ? undefined : "ltr"}>
+        <Content />
+      </div>
+    </section>
+  ))
+}
+{
+  oldest && (
+    <p class="release-earlier">
+      {beforeLink}
+      <a href={`${SITE.repo}/commits/${SITE.branch}/`}>{t(lang, "changelog.earlierLink")}</a>
+      {afterLink}
+    </p>
+  )
+}

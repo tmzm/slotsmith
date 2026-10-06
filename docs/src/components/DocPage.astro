@@ -29,6 +29,8 @@ interface Props {
   meta?: { key: string; value: string }[];
   /** Overrides the prose title (component API and adapters pages). */
   title?: string;
+  /** Overrides the prose description, for one filled in at build (the changelog's names the latest version). */
+  description?: string;
   /** False for a page whose content is generated rather than written in prose, so it is complete without an MDX entry. */
   stub?: boolean;
   /** Headings the page renders itself, listed in "On this page" after the prose's. */
@@ -37,9 +39,9 @@ interface Props {
   components?: Record<string, unknown>;
 }
 
-const { lang, path, prose, fallback, meta, title: titleOverride, stub: stubOverride, headings: own = [], components } = Astro.props;
+const { lang, path, prose, fallback, meta, title: titleOverride, description: descriptionOverride, stub: stubOverride, headings: own = [], components } = Astro.props;
 const title = titleOverride ?? prose?.entry.data.title ?? fallback?.title ?? "";
-const description = prose?.entry.data.description ?? fallback?.description ?? "";
+const description = descriptionOverride ?? prose?.entry.data.description ?? fallback?.description ?? "";
 const sourcePath = prose?.sourcePath;
 // An Arabic page showing English prose: the header and the contents links are English too.
 const contentLang = lang === "ar" && prose && !prose.translated ? "en" : undefined;

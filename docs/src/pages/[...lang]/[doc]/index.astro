@@ -9,11 +9,11 @@ import Note from "@/components/Note.astro";
 import SampleCode from "@/components/SampleCode.astro";
 import Tabs from "@/components/Tabs.astro";
 import { langFromParam, langPaths } from "@/i18n";
-import { DOC_SLUGS } from "@/lib/pages";
+import { DOC_SLUGS, OWN_TEMPLATE_DOCS } from "@/lib/pages";
 import { getProse } from "@/lib/prose";
 
 export function getStaticPaths() {
-  return langPaths().flatMap(({ params }) => DOC_SLUGS.map((doc) => ({ params: { ...params, doc } })));
+  return langPaths().flatMap(({ params }) => DOC_SLUGS.filter((doc) => !OWN_TEMPLATE_DOCS.includes(doc)).map((doc) => ({ params: { ...params, doc } })));
 }
 
 const lang = langFromParam(Astro.params.lang);

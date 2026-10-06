@@ -1,0 +1,31 @@
+---
+/**
+ * The Changelog page. Its prose is `changelog.mdx`, whose `<Changelog />`
+ * block renders the releases from the README. The page adds what the prose
+ * cannot know: each release as an "On this page" entry, and the description
+ * that names the latest version.
+ */
+import { getCollection } from "astro:content";
+import DocPage from "@/components/DocPage.astro";
+import { langFromParam, langPaths, t } from "@/i18n";
+import { allPages } from "@/lib/pages";
+import { getProse } from "@/lib/prose";
+
+export function getStaticPaths() {
+  return langPaths();
+}
+
+const lang = langFromParam(Astro.params.lang);
+const path = "/changelog/";
+const prose = await getProse(lang, "changelog");
+// The headings sit in the prose, so they are in its language: English until the page is translated.
+const proseLang = prose.translated ? lang : "en";
+const releases = (await getCollection("changelog", (entry) => entry.data.lang === lang)).sort((a, b) => a.data.order - b.data.order);
+const headings = releases.map((entry) => ({
+  id: entry.id.slice(entry.id.indexOf("/") + 1),
+  text: entry.data.unreleased ? t(proseLang, "changelog.unreleased") : entry.data.version,
+  depth: 2 as const,
+}));
+const description = (await allPages()).find((page) => page.lang === lang && page.path === path)?.description;
+---
+<DocPage lang={lang} path={path} prose={prose} description={description} headings={headings} />

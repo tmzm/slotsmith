@@ -16,9 +16,11 @@ import type { CollectionEntry } from "astro:content";
 import { COMPONENTS, type ComponentMeta, type ComponentSlug } from "@/data/components";
 import { LANGS, t, type Lang } from "@/i18n";
 import { ADAPTER_LIBRARIES } from "@/lib/adapters";
+import { latestVersion, parseChangelog } from "@/lib/changelog";
 import { findProse, type Prose } from "@/lib/prose";
 import { SAMPLE_SOURCES } from "@/lib/samples";
 import { SITE } from "../../site.config.ts";
+import readme from "../../../README.md?raw";
 
 type DocsEntry = CollectionEntry<"docs">;
 
@@ -64,6 +66,21 @@ export const DOC_SLUGS = [
   "changelog",
   "about",
 ] as const;
+
+/** The top-level pages with a template of their own (`changelog/index.astro`) instead of the shared `[doc]` one. */
+export const OWN_TEMPLATE_DOCS: readonly string[] = ["changelog"];
+
+const LATEST_VERSION = latestVersion(parseChangelog(readme));
+
+/**
+ * A top-level page's description as its head shows it. The changelog's is
+ * written with `{version}`, filled with the latest release the README names.
+ */
+export function docDescription(slug: string, description: string): string {
+  if (slug !== "changelog" || !description.includes("{version}")) return description;
+  if (!LATEST_VERSION) throw new Error("The changelog's description names the latest version, but the README's changelog has no released version.");
+  return description.replace("{version}", LATEST_VERSION);
+}
 
 /** A component page: overview, API, Adapters or one guide. */
 export type ComponentSection = "index" | "api" | "adapters" | `guides/${string}`;
@@ -156,11 +173,12 @@ export function buildPages(lookup: (id: string) => DocsEntry | undefined, docSlu
         path: `/${slug}/`,
         lang,
         title: prose.entry.data.title,
-        description: prose.entry.data.description,
+        description: docDescription(slug, prose.entry.data.description),
         kind: "doc",
         stub: prose.entry.data.draft === true,
         prose,
-        sources: [mdxSource(prose)],
+        // The changelog's notes are the README's, so an edit there dates the page too.
+        sources: slug === "changelog" ? [mdxSource(prose), "README.md"] : [mdxSource(prose)],
       };
     }),
     ...COMPONENTS.flatMap((meta) => [
