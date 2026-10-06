@@ -6,6 +6,7 @@ import RowReorder from "@samples/data-table/row-reorder";
 import RowReorderTree from "@samples/data-table/row-reorder-tree";
 import TreeRows from "@samples/data-table/tree-rows";
 import VirtualRows from "@samples/data-table/virtual-rows";
+import { VirtualDataTable } from "slotsmith/virtual";
 
 afterEach(() => {
   cleanup();
@@ -52,6 +53,18 @@ describe("data-table guide: virtual rows", () => {
   });
 });
 
+describe("data-table guide: virtual rows", () => {
+  it("ignores row reorder: no drag handles, and one warning while developing", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+    const rows = [{ id: "a" }, { id: "b" }];
+    render(<VirtualDataTable data={rows} columns={[{ accessorKey: "id", header: "Id" }]} enableRowReorder onRowOrderChange={() => {}} />);
+    expect(screen.queryByRole("button", { name: "Reorder row" })).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]![0])).toContain("enableRowReorder is ignored in VirtualDataTable");
+  });
+});
+
 describe("data-table guide: row reorder", () => {
   it("moves row 1 below row 2 from the keyboard and announces the drop", () => {
     const error = vi.spyOn(console, "error");
@@ -87,6 +100,26 @@ describe("data-table guide: row reorder", () => {
 
     expect(ids()).toEqual(["t1", "t1.2", "t1.1", "t1.3", "t2", "t3"]);
     expect(screen.getByText(/parentId: "t1"/)).toBeTruthy();
+    expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe("data-table guide: row reorder in a tree", () => {
+  it("moves an open row with its sub-rows", () => {
+    const error = vi.spyOn(console, "error");
+    const { container } = render(<RowReorderTree />);
+    const ids = () => bodyRows(container).map((row) => row.getAttribute("data-row-id"));
+    expect(ids()).toEqual(["t1", "t1.1", "t1.2", "t1.3", "t2", "t3"]);
+
+    const handle = within(bodyRows(container)[0]!).getByRole("button", { name: "Reorder row" });
+    act(() => handle.focus());
+    key(handle, " ");
+    expect(liveRegion()).toHaveProperty("textContent", "Row lifted. Position 1 of 3.");
+    key(handle, "ArrowDown");
+    key(handle, " ");
+
+    expect(ids()).toEqual(["t2", "t1", "t1.1", "t1.2", "t1.3", "t3"]);
+    expect(screen.getByText(/rowId: "t1", targetId: "t2", parentId: null/)).toBeTruthy();
     expect(error).not.toHaveBeenCalled();
   });
 });

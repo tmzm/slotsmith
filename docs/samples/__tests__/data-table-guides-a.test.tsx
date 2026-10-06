@@ -32,6 +32,36 @@ describe("data-table guide: sorting and selection", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
+  it("cycles a header through ascending, descending and unsorted", () => {
+    const { container } = render(<SortingAndSelection />);
+    const header = within(container.querySelector("thead")!).getByRole("button", { name: "Role" });
+    const cell = header.closest("th")!;
+    const orders = [1, 2, 3].map(() => {
+      fireEvent.click(header);
+      return cell.getAttribute("aria-sort");
+    });
+    expect(orders).toEqual(["ascending", "descending", "none"]);
+  });
+
+  it("adds a second column to the sort on shift-click", () => {
+    const error = vi.spyOn(console, "error");
+    const { container } = render(<SortingAndSelection />);
+    const head = within(container.querySelector("thead")!);
+    fireEvent.click(head.getByRole("button", { name: "Team" }));
+    fireEvent.click(head.getByRole("button", { name: "Name" }), { shiftKey: true });
+    expect(screen.getByText("Sorted by: team ascending, name ascending")).toBeTruthy();
+    expect(head.getByRole("button", { name: "Team" }).closest("th")!.getAttribute("aria-sort")).toBe("ascending");
+    expect(head.getByRole("button", { name: "Name" }).closest("th")!.getAttribute("aria-sort")).toBe("ascending");
+    // Rows sort by team first, then by name within a team.
+    const rows = [...container.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((td) => td.textContent));
+    const keys = rows.map((cells) => `${cells[3]}|${cells[1]}`);
+    expect(keys).toEqual([...keys].sort());
+    // A plain click replaces the sort with that one column.
+    fireEvent.click(head.getByRole("button", { name: "Name" }));
+    expect(screen.getByText("Sorted by: name descending")).toBeTruthy();
+    expect(error).not.toHaveBeenCalled();
+  });
+
   it("keeps the rows its rule excludes from being selected", () => {
     const { container } = render(<SortingAndSelection />);
     const disabled = [...container.querySelectorAll<HTMLInputElement>('tbody input[type="checkbox"]')].filter((box) => box.disabled);
