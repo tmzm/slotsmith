@@ -101,8 +101,9 @@ export function renderA11yTable(results: A11yResult[], lang: Lang, axeVersion: s
     const issues = [...new Set((result.knownLibraryIssues ?? []).map((issue) => issue.rule))].map(code);
     return [
       "<tr>",
-      `<td dir="ltr">${code(result.sample)}</td>`,
-      `<td dir="ltr"><a href="${escapeHtml(result.page)}">${escapeHtml(result.page)}</a></td>`,
+      // The Latin text is isolated inside the cell, so the cell still aligns with its header.
+      `<td><bdi dir="ltr">${code(result.sample)}</bdi></td>`,
+      `<td><a dir="ltr" href="${escapeHtml(result.page)}">${escapeHtml(result.page)}</a></td>`,
       `<td>${result.passes}</td>`,
       `<td>${list(found)}</td>`,
       `<td>${list(issues)}</td>`,

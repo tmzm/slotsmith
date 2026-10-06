@@ -27,8 +27,8 @@ describe("renderA11yTable", () => {
   it("has one row per sample, linking to its page", () => {
     const html = renderA11yTable(results, "en", "4.11.0");
     expect(html.match(/<tr>/g)).toHaveLength(results.length + 1);
-    expect(html).toContain('<a href="/components/data-table/">');
-    expect(html).toContain('<a href="/ar/components/file-uploader/">');
+    expect(html).toContain('href="/components/data-table/">');
+    expect(html).toContain('href="/ar/components/file-uploader/">');
     expect(html).toContain("data-table/basic");
     expect(html).toContain("<td>31</td>");
     expect(html).toContain("<code>color-contrast</code> (serious, 2)</span>");
@@ -74,8 +74,8 @@ describe("renderA11yTable", () => {
     expect(arabic).toMatch(/^<div class="a11y-results" lang="ar" dir="rtl">/);
     expect(renderA11yTable(results, "en", "4.11.0")).toMatch(/^<div class="a11y-results" lang="en" dir="ltr">/);
     // Sample names, page paths and axe's rule ids are Latin: left to right inside the Arabic table.
-    expect(arabic).toContain('<td dir="ltr"><code>data-table/basic</code></td>');
-    expect(arabic).toContain('<td dir="ltr"><a href="/components/data-table/">');
+    expect(arabic).toContain('<td><bdi dir="ltr"><code>data-table/basic</code></bdi></td>');
+    expect(arabic).toContain('<td><a dir="ltr" href="/components/data-table/">');
     expect(arabic).toContain('<span lang="en" dir="ltr"><code>color-contrast</code>');
     expect(arabic).toContain('<ul lang="en" dir="ltr">');
   });
