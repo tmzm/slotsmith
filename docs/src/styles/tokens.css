@@ -55,7 +55,11 @@
   --gutter: 1rem;
   --sidebar-w: 16rem;
   --toc-w: 13rem;
-  --prose-w: 68ch;
+  /* One `ch` of body text: the width of Geist's zero. The `ch` unit itself
+     follows the font on screen, so a measure set in `ch` changes when the web
+     font replaces its fallback, and the text wraps again. */
+  --ch: 0.663em;
+  --prose-w: calc(68 * var(--ch));
 }
 
 /* Arabic pages: Alexandria for display, Noto Sans Arabic for body. Both faces

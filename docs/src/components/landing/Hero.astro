@@ -98,7 +98,8 @@ const installTabs = [
   }
 
   .hero__run {
-    max-inline-size: 34ch;
+    /* 34 zeros of the weight-500 body face; see --ch in tokens.css. */
+    max-inline-size: calc(34 * 0.673em);
     color: var(--ink);
   }
 
@@ -148,7 +149,7 @@ const installTabs = [
 
   .hero__lede {
     margin: 0;
-    max-inline-size: 40ch;
+    max-inline-size: calc(40 * var(--ch));
     color: var(--ink-2);
     font-size: 1.25rem;
     line-height: 1.55;

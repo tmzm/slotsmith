@@ -4,7 +4,7 @@
  * end-aligned; suites are hairline disclosures like the FAQ's.
  */
 .trust-summary {
-  max-inline-size: 65ch;
+  max-inline-size: calc(65 * var(--ch));
 }
 
 .trust-table .trust-num {
@@ -182,7 +182,7 @@
 }
 
 .trust-a11y__pending {
-  max-inline-size: 65ch;
+  max-inline-size: calc(65 * var(--ch));
   padding: 0.75rem 1rem;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -192,5 +192,5 @@
 }
 
 .a11y-results > p {
-  max-inline-size: 65ch;
+  max-inline-size: calc(65 * var(--ch));
 }
