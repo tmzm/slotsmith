@@ -5,10 +5,10 @@ description: "Load the slotsmith Autocomplete's options from a server with useAs
 
 The Autocomplete never fetches: it renders the options it is given. For options from a server, the `useAsyncOptions` hook calls your `load` function as the search changes, debounced and cancellable, and returns the props to spread onto `Autocomplete`.
 
-{/* Reserved height measured in Chrome: the checkbox, the picker, the reload button and the first log line; the log grows as you use it. */}
-<Demo name="autocomplete/remote-options" height="11.75rem" fallback />
+{/* Reserved height measured in Chrome: the checkbox, the reload button, the five-line log and the picker. */}
+<Demo name="autocomplete/remote-options" height="16.875rem" fallback />
 
-The demo searches a made-up registry of 144 packages, 12 a page. Each request it makes is listed under the picker. Tick "Slow network" and type quickly: a request that a newer search replaces is marked `cancelled`.
+The demo searches a made-up registry of 144 packages, 12 a page. Each request it makes is listed above the picker, where the open list does not cover it. Tick "Slow network" and type quickly: a request that a newer search replaces is marked `cancelled`.
 
 ## The load function
 

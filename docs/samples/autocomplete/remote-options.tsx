@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { Autocomplete, useAsyncOptions, type AutocompleteOptionLabelSlotProps, type OptionValue } from "slotsmith/autocomplete";
 import { formatDownloads, searchPackages, type Pkg } from "../shared/fake-catalog";
 
@@ -15,6 +15,9 @@ function PackageRow({ option, label }: AutocompleteOptionLabelSlotProps<Pkg>) {
     </span>
   );
 }
+
+// One line per request, cut short with an ellipsis on a narrow screen.
+const clip: CSSProperties = { overflow: "hidden", textOverflow: "ellipsis" };
 
 export default function RemoteOptions() {
   const [open, setOpen] = useState(false);
@@ -34,7 +37,7 @@ export default function RemoteOptions() {
     debounce: 300,
     load: async (query, page, signal) => {
       const id = ++nextId.current;
-      setLog((all) => [{ id, url: `GET /packages?q=${query}&page=${page}`, status: "pending" as const }, ...all].slice(0, 5));
+      setLog((all) => [{ id, url: `GET /packages?q=${encodeURIComponent(query)}&page=${page}`, status: "pending" as const }, ...all].slice(0, 5));
       // A newer search aborts this one; pass the signal to fetch() in a real app.
       signal.addEventListener("abort", () => track(id, "cancelled"));
       const result = await searchPackages(query, page, signal, { latency: slow ? 2000 : 250 });
@@ -48,6 +51,18 @@ export default function RemoteOptions() {
       <label>
         <input type="checkbox" checked={slow} onChange={(event) => setSlow(event.target.checked)} /> Slow network (2 s a request)
       </label>
+      {/* The log sits above the picker, where the open list cannot cover it, with room kept for all five lines so the picker never moves. */}
+      <div>
+        <button type="button" onClick={reload} style={{ background: "transparent" }}>
+          Reload
+        </button>
+        <ul
+          dir="ltr"
+          style={{ margin: "0.5rem 0 0", paddingInlineStart: "1.25rem", fontFamily: "monospace", fontSize: "0.8125rem", lineHeight: 1.5, minBlockSize: "7.5em", whiteSpace: "nowrap" }}
+        >
+          {log.length === 0 ? <li>No requests yet. Open the picker.</li> : log.map((entry) => <li key={entry.id} style={clip}>{`${entry.url} · ${entry.status}`}</li>)}
+        </ul>
+      </div>
       <Autocomplete<Pkg>
         {...packages}
         getOptionLabel={(pkg) => pkg.name}
@@ -58,14 +73,6 @@ export default function RemoteOptions() {
         components={{ OptionLabel: PackageRow }}
         aria-label="Package"
       />
-      <div>
-        <button type="button" onClick={reload} style={{ background: "transparent" }}>
-          Reload
-        </button>
-        <ul dir="ltr" style={{ margin: "0.5rem 0 0", paddingInlineStart: "1.25rem", fontFamily: "monospace", fontSize: "0.8125rem" }}>
-          {log.length === 0 ? <li>No requests yet. Open the picker.</li> : log.map((entry) => <li key={entry.id}>{`${entry.url} · ${entry.status}`}</li>)}
-        </ul>
-      </div>
     </div>
   );
 }
