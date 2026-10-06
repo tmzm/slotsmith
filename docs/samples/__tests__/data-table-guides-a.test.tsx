@@ -144,9 +144,12 @@ describe("data-table guide: server data", () => {
     expect(root(container).getAttribute("data-status")).toBe("ready");
     expect(names(container)).toEqual(firstPage);
     expect(pageInfo(container)).toBe("Page 2 of 10");
+    // The old rows are only a placeholder: the root says the table is busy.
+    expect(root(container).getAttribute("aria-busy")).toBe("true");
 
     await answer();
     expect(names(container)).toEqual(["Lena Martin", "Omar Park", "Omar Haddad", "Omar Reyes", "Omar Tanaka"]);
+    expect(root(container).hasAttribute("aria-busy")).toBe(false);
   });
 
   it("requests the server order when a header is clicked, from the first page", async () => {

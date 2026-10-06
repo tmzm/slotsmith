@@ -24,7 +24,7 @@ The demo goes back to the first page when the sort changes. The table does not d
 
 [`loading`](../../api/#props) set to `true` replaces the body with skeleton rows, one per row of the page size. The root then has `data-status="loading"` and `aria-busy="true"`, and the skeleton rows are hidden from assistive technology. Each skeleton cell is the [`Skeleton`](../../api/#slot-Skeleton) slot.
 
-The demo passes `loading` only while there is nothing to show. With `placeholderData: keepPreviousData`, TanStack Query keeps the last page as `data` while the next one loads, so `isPending` is true on the first load alone. The demo dims the table while `isPlaceholderData` is true. Without the placeholder, every page change would show skeleton rows.
+The demo passes `loading` only while there is nothing to show. With `placeholderData: keepPreviousData`, TanStack Query keeps the last page as `data` while the next one loads, so `isPending` is true on the first load alone. The demo dims the table while `isPlaceholderData` is true, and sets `aria-busy` on the root while any request runs (a root prop you pass replaces the one the table sets). Without the placeholder, every page change would show skeleton rows.
 
 ## Errors and empty results
 

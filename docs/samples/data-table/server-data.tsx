@@ -1,5 +1,5 @@
 import { keepPreviousData, QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DataTable, type DataTablePaginationState, type DataTableSortingState } from "slotsmith/data-table";
 import { fetchPeople } from "../shared/fake-api";
 import { columns } from "../shared/people";
@@ -12,14 +12,20 @@ function PeopleTable() {
   const query = useQuery({
     // A new page or order is a new key, so it is a new request.
     queryKey: ["people", pagination, sorting],
+    // `failing` is left out of the key on purpose: ticking it changes how the next request ends, not which page it asks for.
     queryFn: ({ signal }) => fetchPeople({ ...pagination, sorting }, { signal, fail: failing }),
     // The last page stays on screen while the next one loads.
     placeholderData: keepPreviousData,
+    // A switch back to the tab would refetch and dim the table for no visible change.
+    refetchOnWindowFocus: false,
   });
 
   // A failed request has no total: keep the last one, so the page count stays.
-  const [total, setTotal] = useState(0);
-  if (query.data && query.data.total !== total) setTotal(query.data.total);
+  const [lastTotal, setLastTotal] = useState(0);
+  useEffect(() => {
+    if (query.data) setLastTotal(query.data.total);
+  }, [query.data]);
+  const total = query.data?.total ?? lastTotal;
 
   return (
     <>
@@ -48,8 +54,10 @@ function PeopleTable() {
         loading={query.isPending}
         error={query.error}
         onRetry={() => query.refetch()}
-        // Dim the rows of the last page until the new ones arrive.
+        // Dim the rows of the last page until the new ones arrive, and tell
+        // assistive technology the table is busy while any request runs.
         style={{ opacity: query.isPlaceholderData ? 0.6 : 1 }}
+        aria-busy={query.isFetching || undefined}
       />
       <p dir="ltr">
         {`GET /people?page=${pagination.pageIndex + 1}&size=${pagination.pageSize}`}
