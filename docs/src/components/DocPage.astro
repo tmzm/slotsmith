@@ -10,6 +10,7 @@ import Docs from "@/layouts/Docs.astro";
 import CopyMarkdown from "@/components/CopyMarkdown.astro";
 import PageHeader from "@/components/PageHeader.astro";
 import Prose from "@/components/Prose.astro";
+import { ogUrl } from "@/lib/og";
 import { render } from "astro:content";
 import { localePath, t, type Lang } from "@/i18n";
 import { lastModified } from "@/lib/git-dates";
@@ -69,7 +70,7 @@ const trail = [
 const faq = prose?.entry.data.faq;
 const jsonLd = [
   // `inLanguage` is the text's language: English on an Arabic page that shows English prose.
-  techArticle({ title, description, url: canonicalUrl(lang, path), lang: contentLang ?? lang, dateModified }),
+  techArticle({ title, description, url: canonicalUrl(lang, path), image: ogUrl(lang, path), lang: contentLang ?? lang, dateModified }),
   breadcrumbs(trail),
   ...(faq?.length ? [faqPage(faq)] : []),
 ];

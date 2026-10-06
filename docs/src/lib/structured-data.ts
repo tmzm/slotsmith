@@ -21,14 +21,16 @@ const CONTEXT = "https://schema.org";
  *
  * @param facts - The measured facts (version and license).
  * @param lang - The language of the description. Defaults to English.
+ * @param image - The absolute URL of the landing's social image, when it has one.
  */
-export function softwareSourceCode(facts: Facts, lang: Lang = "en"): object {
+export function softwareSourceCode(facts: Facts, lang: Lang = "en", image?: string): object {
   return {
     "@context": CONTEXT,
     "@type": "SoftwareSourceCode",
     name: "slotsmith",
     description: t(lang, "site.positioning"),
     url: `${SITE.url}/`,
+    ...(image ? { image } : {}),
     codeRepository: SITE.repo,
     programmingLanguage: "TypeScript",
     runtimePlatform: "React",
@@ -39,14 +41,15 @@ export function softwareSourceCode(facts: Facts, lang: Lang = "en"): object {
   };
 }
 
-/** A docs page. `dateModified` is left out when git has no date for the page; it is never guessed. */
-export function techArticle(page: { title: string; description: string; url: string; lang: Lang; dateModified: string | null }): object {
+/** A docs page, with its social image. `dateModified` is left out when git has no date for the page; it is never guessed. */
+export function techArticle(page: { title: string; description: string; url: string; image: string; lang: Lang; dateModified: string | null }): object {
   return {
     "@context": CONTEXT,
     "@type": "TechArticle",
     headline: page.title,
     description: page.description,
     url: page.url,
+    image: page.image,
     inLanguage: page.lang,
     ...(page.dateModified ? { dateModified: page.dateModified } : {}),
     author: { "@type": "Person", name: SITE.author.name, url: SITE.author.url },

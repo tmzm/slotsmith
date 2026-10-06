@@ -15,6 +15,7 @@ import MotionLoader from "@/components/landing/MotionLoader.astro";
 import { landingFaq } from "@/data/faq";
 import { langFromParam, langPaths, t } from "@/i18n";
 import { getFacts } from "@/lib/facts";
+import { ogUrl } from "@/lib/og";
 import { faqPage, softwareSourceCode } from "@/lib/structured-data";
 
 export function getStaticPaths() {
@@ -24,7 +25,7 @@ export function getStaticPaths() {
 const lang = langFromParam(Astro.params.lang);
 // The FAQ and its FAQPage JSON-LD are one list, so the markup says what the page shows.
 const faq = landingFaq(lang);
-const jsonLd = [softwareSourceCode(getFacts(), lang), faqPage(faq)];
+const jsonLd = [softwareSourceCode(getFacts(), lang, ogUrl(lang, "/")), faqPage(faq)];
 ---
 <Base lang={lang} title={null} description={t(lang, "site.positioning")} path="/" jsonLd={jsonLd}>
   {lang === "en" && <HashRedirect />}

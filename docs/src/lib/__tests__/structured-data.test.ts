@@ -36,8 +36,15 @@ describe("softwareSourceCode", () => {
   });
 });
 
+describe("softwareSourceCode image", () => {
+  it("carries the social image only when one is given", () => {
+    expect(softwareSourceCode(fixtureFacts)).not.toHaveProperty("image");
+    expect(softwareSourceCode(fixtureFacts, "en", "https://slotsmith.dev/og/index.png")).toMatchObject({ image: "https://slotsmith.dev/og/index.png" });
+  });
+});
+
 describe("techArticle", () => {
-  const base = { title: "Theming", description: "Tokens.", url: "https://slotsmith.dev/theming/", lang: "en" as const };
+  const base = { title: "Theming", description: "Tokens.", url: "https://slotsmith.dev/theming/", image: "https://slotsmith.dev/og/theming.png", lang: "en" as const };
 
   it("leaves dateModified out when there is no date", () => {
     expect(techArticle({ ...base, dateModified: null })).not.toHaveProperty("dateModified");
@@ -47,6 +54,7 @@ describe("techArticle", () => {
     expect(techArticle({ ...base, dateModified: "2026-10-01T10:00:00+03:00" })).toMatchObject({
       "@type": "TechArticle",
       headline: "Theming",
+      image: "https://slotsmith.dev/og/theming.png",
       inLanguage: "en",
       dateModified: "2026-10-01T10:00:00+03:00",
     });
