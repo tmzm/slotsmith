@@ -192,6 +192,32 @@ export const en = {
   "changelog.earlier": "Releases before {version} have no written notes. {link} has every change.",
   "changelog.earlierLink": "The commit history on GitHub",
 
+  // Roadmap page. Work in progress is the changelog's unreleased notes; planned items come from the source's TODO tags.
+  "roadmap.inProgress": "In progress",
+  "roadmap.inProgressLead": "In the repository and waiting for the next release. {link} has the same notes.",
+  "roadmap.inProgressLink": "The changelog",
+  "roadmap.planned": "Planned",
+  "roadmap.plannedLead": "An item with a `TODO` tag is marked in the library's source; the others are the author's plans. None has a date.",
+  "roadmap.shipped": "Shipped",
+  "roadmap.shippedLead": "Published on npm. Each item links to its page and live demos.",
+  "roadmap.today": "How it works today",
+  "roadmap.excelMode": "Excel mode for the data table",
+  "roadmap.excelModeDetail": "A spreadsheet-style mode where cells are editors, such as an input, a select or a date picker, and the table is controlled with `value` and `onChange`.",
+  "roadmap.renderPerformance": "Data table rendering performance",
+  "roadmap.renderPerformanceDetail": "Fewer re-renders and faster rendering in the data table.",
+  "roadmap.calendars": "Hijri and Persian calendars in the date picker",
+  "roadmap.calendarsDetail": "The date picker draws a Gregorian grid in every language. Hijri and Persian grids are planned.",
+  "roadmap.serverLocales": "Locales that cross the server and client boundary",
+  "roadmap.serverLocalesDetail": "A locale pack holds functions, so a server component cannot pass one to a client component. A serialisable form of a locale is planned.",
+  "roadmap.reorderSorting": "Row reorder while a column is sorted",
+  "roadmap.reorderSortingDetail": "A drop reorders the data, but the view stays sorted and the row slides back. What such a drop should do is still to be decided: block it, or clear the sort.",
+  "roadmap.theming": "Shared tokens and themes",
+  "roadmap.themingDetail": "One set of `--ss-*` tokens restyles every component, and six themes ship with a light and a dark palette each.",
+  "roadmap.languages": "Locale packs and right-to-left",
+  "roadmap.languagesDetail": "Locale packs translate every label, format numbers and plurals, and set the direction.",
+  "roadmap.aiTools": "Adapters and the MCP server",
+  "roadmap.aiToolsDetail": "`slotsmith-ai` copies an adapter for shadcn/ui, MUI, Chakra UI, Ant Design or Radix Themes into your project, and gives coding agents the real API.",
+
   // The first positioning sentence; [brackets] mark the component names set at poster scale.
   "hero.title":
     "Finished [data table], [combobox], [date picker] and [file uploader] for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own.",

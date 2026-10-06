@@ -1,0 +1,100 @@
+---
+/**
+ * The roadmap in three sections. "In progress" is the changelog's unreleased
+ * notes and is left out, heading and all, when there are none. "Planned" and
+ * "Shipped" come from `@/data/roadmap`; a planned item's `id` is its TODO tag
+ * (`#calendars`) or the one it names (`#excel-mode`), and a shipped component lists its finished guides. `lang`
+ * is the language of the roadmap's own text; links follow the page.
+ */
+import "@/styles/changelog.css";
+import "@/styles/roadmap.css";
+import { getEntry, render } from "astro:content";
+import H2 from "@/components/prose/H2.astro";
+import H3 from "@/components/prose/H3.astro";
+import { COMPONENTS } from "@/data/components";
+import { ROADMAP, roadmapId } from "@/data/roadmap";
+import { localePath, stripLang, t, type Lang } from "@/i18n";
+import { allPages } from "@/lib/pages";
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = "en" } = Astro.props;
+const pageLang = stripLang(Astro.url.pathname).lang;
+const href = (path: string) => localePath(pageLang, path);
+/** Splits text into plain and `code` runs. */
+const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ text: run, code: index % 2 === 1 }));
+
+const unreleased = await getEntry("changelog", `${pageLang}/unreleased`);
+const Notes = unreleased ? (await render(unreleased)).Content : undefined;
+const [beforeLink = "", afterLink = ""] = t(lang, "roadmap.inProgressLead", { link: "\u0000" }).split("\u0000");
+
+const planned = ROADMAP.filter((item) => item.status === "planned");
+const finished = new Set((await allPages()).filter((page) => page.lang === pageLang && !page.stub).map((page) => page.path));
+const shipped = ROADMAP.filter((item) => item.status === "shipped").map((item) => {
+  const component = COMPONENTS.find((meta) => item.link === `/components/${meta.slug}/`);
+  const guides = (component?.guides ?? [])
+    .map((guide) => ({ title: t(lang, guide.title), path: `/components/${component!.slug}/guides/${guide.slug}/` }))
+    .filter((guide) => finished.has(guide.path));
+  return { ...item, guides };
+});
+---
+{
+  Notes && (
+    <section class="roadmap-section">
+      <H2 id="in-progress">{t(lang, "roadmap.inProgress")}</H2>
+      <p class="roadmap-lead">
+        {beforeLink}
+        <a href={`${href("/changelog/")}#unreleased`}>{t(lang, "roadmap.inProgressLink")}</a>
+        {afterLink}
+      </p>
+      <div class="release__notes" lang={lang === "en" ? undefined : "en"} dir={lang === "en" ? undefined : "ltr"}>
+        <Notes />
+      </div>
+    </section>
+  )
+}
+
+<section class="roadmap-section">
+  <H2 id="planned">{t(lang, "roadmap.planned")}</H2>
+  <p class="roadmap-lead">{runs(t(lang, "roadmap.plannedLead")).map((run) => (run.code ? <code dir="ltr">{run.text}</code> : run.text))}</p>
+  <ul class="roadmap-list">
+    {
+      planned.map((item) => (
+        <li class="roadmap-item">
+          <H3 id={roadmapId(item)}>{t(lang, item.title)}</H3>
+          {item.detail && <p>{runs(t(lang, item.detail)).map((run) => (run.code ? <code dir="ltr">{run.text}</code> : run.text))}</p>}
+          {(item.link || item.todo) && <p class="roadmap-item__meta">
+            {item.link && <a href={href(item.link)}>{t(lang, "roadmap.today")}</a>}
+            {item.todo && <code dir="ltr">TODO({item.todo})</code>}
+          </p>}
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<section class="roadmap-section">
+  <H2 id="shipped">{t(lang, "roadmap.shipped")}</H2>
+  <p class="roadmap-lead">{t(lang, "roadmap.shippedLead")}</p>
+  <ul class="roadmap-list">
+    {
+      shipped.map((item) => (
+        <li class="roadmap-item">
+          <h3>{item.link ? <a href={href(item.link)}>{t(lang, item.title)}</a> : t(lang, item.title)}</h3>
+          {item.detail && <p>{runs(t(lang, item.detail)).map((run) => (run.code ? <code dir="ltr">{run.text}</code> : run.text))}</p>}
+          {item.guides.length > 0 && (
+            <ul class="roadmap-guides">
+              {item.guides.map((guide) => (
+                <li>
+                  <a href={href(guide.path)}>{guide.title}</a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</section>

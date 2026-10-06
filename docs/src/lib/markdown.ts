@@ -370,6 +370,34 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
           .map((entry) => `## ${entry.data.unreleased ? t(contentLang, "changelog.unreleased") : entry.data.version}\n\n${entry.body ?? ""}`)
           .join("\n\n");
       }
+      case "Roadmap": {
+        // The page's three sections; "In progress" only while the changelog has unreleased notes.
+        const { getEntry } = await import("astro:content");
+        const { ROADMAP } = await import("@/data/roadmap");
+        const unreleased = await getEntry("changelog", `${page.lang}/unreleased`);
+        const link = (path: string) => localePath(page.lang, path);
+        const items = (status: "planned" | "shipped") =>
+          ROADMAP.filter((item) => item.status === status)
+            .map((item) => {
+              const title = t(contentLang, item.title);
+              const detail = item.detail ? `: ${t(contentLang, item.detail)}` : "";
+              if (status === "shipped") return `- ${item.link ? `[${title}](${link(item.link)})` : title}${detail}`;
+              const today = item.link ? ` [${t(contentLang, "roadmap.today")}](${link(item.link)}).` : "";
+              return `- **${title}**${detail}${today}${item.todo ? ` ${code(`TODO(${item.todo})`)}` : ""}`;
+            })
+            .join("\n");
+        return [
+          ...(unreleased
+            ? [`## ${t(contentLang, "roadmap.inProgress")}`, t(contentLang, "roadmap.inProgressLead", { link: `[${t(contentLang, "roadmap.inProgressLink")}](${link("/changelog/")}#unreleased)` }), unreleased.body ?? ""]
+            : []),
+          `## ${t(contentLang, "roadmap.planned")}`,
+          t(contentLang, "roadmap.plannedLead"),
+          items("planned"),
+          `## ${t(contentLang, "roadmap.shipped")}`,
+          t(contentLang, "roadmap.shippedLead"),
+          items("shipped"),
+        ].join("\n\n");
+      }
       case "ComparisonTable":
         // One section per subject: each attribute with its statement and the pages it was read from.
         return SUBJECTS.map((subject) => {

@@ -1,0 +1,33 @@
+---
+/**
+ * The Roadmap page. Its prose is `roadmap.mdx`, whose `<Roadmap />` block
+ * renders the sections. The page adds them to "On this page", which the prose
+ * cannot do: "In progress" is there only while the changelog has unreleased
+ * notes, and each planned item is listed under "Planned".
+ */
+import { getEntry } from "astro:content";
+import DocPage from "@/components/DocPage.astro";
+import { ROADMAP, roadmapId } from "@/data/roadmap";
+import { langFromParam, langPaths, t } from "@/i18n";
+import { getProse } from "@/lib/prose";
+
+export function getStaticPaths() {
+  return langPaths();
+}
+
+const lang = langFromParam(Astro.params.lang);
+const prose = await getProse(lang, "roadmap");
+// The headings sit in the prose, so they are in its language: English until the page is translated.
+const proseLang = prose.translated ? lang : "en";
+const inProgress = (await getEntry("changelog", `${lang}/unreleased`)) !== undefined;
+const headings = [
+  ...(inProgress ? [{ id: "in-progress", text: t(proseLang, "roadmap.inProgress"), depth: 2 as const }] : []),
+  { id: "planned", text: t(proseLang, "roadmap.planned"), depth: 2 as const },
+  ...ROADMAP.flatMap((item) => {
+    const id = item.status === "planned" ? roadmapId(item) : undefined;
+    return id ? [{ id, text: t(proseLang, item.title), depth: 3 as const }] : [];
+  }),
+  { id: "shipped", text: t(proseLang, "roadmap.shipped"), depth: 2 as const },
+];
+---
+<DocPage lang={lang} path="/roadmap/" prose={prose} headings={headings} />

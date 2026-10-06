@@ -67,8 +67,8 @@ export const DOC_SLUGS = [
   "about",
 ] as const;
 
-/** The top-level pages with a template of their own (`changelog/index.astro`) instead of the shared `[doc]` one. */
-export const OWN_TEMPLATE_DOCS: readonly string[] = ["changelog"];
+/** The top-level pages with a template of their own (`changelog/index.astro`, `roadmap/index.astro`) instead of the shared `[doc]` one. */
+export const OWN_TEMPLATE_DOCS: readonly string[] = ["changelog", "roadmap"];
 
 const LATEST_VERSION = latestVersion(parseChangelog(readme));
 
