@@ -399,6 +399,7 @@ describe.skipIf(!built)("the provider entry point", () => {
  * entry, through every relative import, re-export and `import()` type.
  *
  * @param entry - A declaration file, relative to `dist`.
+ * @throws When a relative import resolves to a script, or to nothing.
  * @returns Every package the reachable declarations import, by bare specifier.
  */
 function declarationImports(entry: string): Set<string> {
@@ -417,8 +418,13 @@ function declarationImports(entry: string): Set<string> {
         continue;
       }
       const target = resolve(dirname(file), specifier!);
-      const found = [`${target}.d.ts`, resolve(target, "index.d.ts")].find((candidate) => existsSync(candidate));
-      expect(found, `${specifier} from ${file}`).toBeDefined();
+      /**
+       * A file wins over a folder of the same name, and an entry's script
+       * (`dist/provider.js`) is such a file: reaching it instead of the
+       * folder's declarations leaves the import untyped.
+       */
+      const found = [`${target}.d.ts`, `${target}.js`, resolve(target, "index.d.ts")].find((candidate) => existsSync(candidate));
+      expect(found, `${specifier} from ${file}`).toMatch(/\.d\.ts$/);
       queue.push(found!);
     }
   }
@@ -442,6 +448,15 @@ describe.skipIf(!built)("the declarations an app without the optional peers load
     "file-uploader/index.d.ts",
   ])("keeps the optional peers out of %s", (entry) => {
     expect([...declarationImports(entry)].filter((name) => name.startsWith("@tanstack/"))).toEqual([]);
+  });
+
+  /**
+   * The same walk over every entry: each relative import in the declarations
+   * must land on a declaration file, never on the script the build writes
+   * beside a folder of the same name.
+   */
+  it.each(["index.d.ts", "virtual.d.ts", "data-table/index.d.ts"])("resolves every import of %s to a declaration", (entry) => {
+    expect(declarationImports(entry)).toContain("react");
   });
 
   it("still finds the table engine behind the table's own entry, so the walk is real", () => {

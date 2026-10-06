@@ -25,9 +25,15 @@
  * @packageDocumentation
  */
 
-export * from "./autocomplete";
-export * from "./data-table";
-export * from "./date-picker";
-export * from "./file-uploader";
-export * from "./locale";
-export * from "./provider";
+/**
+ * Each path names the folder's `index` in full. The build also writes a script
+ * per entry (`dist/autocomplete.js`) beside the folder of the same name, and a
+ * type checker reading `./autocomplete` from the declarations finds that
+ * script first and loses every type behind it.
+ */
+export * from "./autocomplete/index";
+export * from "./data-table/index";
+export * from "./date-picker/index";
+export * from "./file-uploader/index";
+export * from "./locale/index";
+export * from "./provider/index";

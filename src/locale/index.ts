@@ -11,17 +11,23 @@
  */
 
 /**
- * @deprecated Import from "slotsmith/provider".
+ * The provider is imported by its `index` in full: in the build output a
+ * `provider.js` script sits beside the `provider` folder, and a bare
+ * `../provider` in the declarations would resolve to the script.
  */
-export { SlotsmithProvider } from "../provider";
+
 /**
  * @deprecated Import from "slotsmith/provider".
  */
-export { useSlotsmithLocale } from "../provider";
+export { SlotsmithProvider } from "../provider/index";
 /**
  * @deprecated Import from "slotsmith/provider".
  */
-export type { SlotsmithProviderProps } from "../provider";
+export { useSlotsmithLocale } from "../provider/index";
+/**
+ * @deprecated Import from "slotsmith/provider".
+ */
+export type { SlotsmithProviderProps } from "../provider/index";
 export { defineLocale } from "./defineLocale";
 export { createNumber, createPlural, type PluralForms } from "./plural";
 export type {
