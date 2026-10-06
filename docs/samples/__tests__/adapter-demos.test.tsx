@@ -49,3 +49,40 @@ describe("SampleIsland with a provider", () => {
     expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
   });
 });
+
+describe("MUI provider direction", () => {
+  const Provider = PROVIDERS.mui;
+  /** The text of every style tag an Emotion cache with this key has written. */
+  const styles = (key: string) => [...document.querySelectorAll(`style[data-emotion^="${key}"]`)].map((tag) => tag.textContent).join("");
+  const cellClasses = (container: HTMLElement) => [...container.querySelector("tbody td.MuiTableCell-root:not(.MuiTableCell-paddingCheckbox)")!.classList];
+
+  it("mirrors MUI's styles on a right-to-left page, in a cache of its own", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container } = render(
+      <Provider theme="dark" dir="rtl">
+        <Mui />
+      </Provider>,
+    );
+    const classes = cellClasses(container);
+    expect(classes.some((name) => name.startsWith("muirtl-"))).toBe(true);
+    expect(classes.some((name) => name.startsWith("css-"))).toBe(false);
+    // MUI writes `text-align: left` for a cell; the cache turns it around.
+    const cell = classes.find((name) => name.startsWith("muirtl-"))!;
+    expect(styles("muirtl")).toMatch(new RegExp(`\.${cell}\{[^}]*text-align:right`));
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("leaves a left-to-right page on Emotion's default cache", () => {
+    const { container } = render(
+      <Provider theme="dark" dir="ltr">
+        <Mui />
+      </Provider>,
+    );
+    const classes = cellClasses(container);
+    expect(classes.some((name) => name.startsWith("css-"))).toBe(true);
+    expect(classes.some((name) => name.startsWith("muirtl-"))).toBe(false);
+    const cell = classes.find((name) => name.startsWith("css-"))!;
+    expect(styles("css")).toMatch(new RegExp(`\.${cell}\{[^}]*text-align:left`));
+  });
+});
