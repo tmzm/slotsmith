@@ -60,6 +60,14 @@ describe("pageMarkdown", () => {
     expect(markdown).toContain("The last paragraph.");
   });
 
+  it("shows each tab's label before its code, for a named sample or inline code", async () => {
+    const body = '<Tabs id="pm" tabs={[{ label: "npm", sample: "install/npm" }, { label: "Shell", code: "echo hi", lang: "bash" }]} />\n';
+    const markdown = await pageMarkdown(prosePage(body));
+    expect(markdown).toContain("npm:\n\n```" + sampleSource("install/npm").lang + "\n" + sampleSource("install/npm").code.trim() + "\n```");
+    expect(markdown).toContain("Shell:\n\n```bash\necho hi\n```");
+    expect(markdown.indexOf("npm:")).toBeLessThan(markdown.indexOf("Shell:"));
+  });
+
   it("says a stub is being written", async () => {
     const stub: PageInfo = { path: "/roadmap/", lang: "en", title: "Roadmap", description: "Next.", kind: "doc", stub: true, sources: [] };
     expect(await pageMarkdown(stub)).toBe("# Roadmap\n\n> Next.\n\nThis page is being written.\n");

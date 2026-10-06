@@ -434,11 +434,13 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
           return `## [${subject.name}](${subject.url})\n\n${about}\n\n${rows.join("\n")}`;
         }).join("\n\n");
       case "Tabs": {
-        // Each tab that shows a sample, as its own fenced block.
-        const tabs = literal<{ label: string; sample?: string }[]>(attrs.tabs) ?? [];
+        // Each tab as its label, then its code: a named sample's source, or the code the tab carries inline.
+        const tabs = literal<{ label: string; sample?: string; code?: string; lang?: string }[]>(attrs.tabs) ?? [];
         return tabs
-          .flatMap((tab) => (tab.sample && SAMPLE_SOURCES[tab.sample] ? [SAMPLE_SOURCES[tab.sample]!] : []))
-          .map((sample) => fence(sample.code, sample.lang))
+          .flatMap((tab) => {
+            const shown = tab.sample ? SAMPLE_SOURCES[tab.sample] : tab.code !== undefined ? { code: tab.code, lang: tab.lang ?? "" } : undefined;
+            return shown ? [`${tab.label}:\n\n${fence(shown.code, shown.lang)}`] : [];
+          })
           .join("\n\n");
       }
       default: {
