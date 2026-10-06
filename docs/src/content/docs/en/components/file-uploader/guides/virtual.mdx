@@ -22,7 +22,7 @@ npm i @tanstack/react-virtual
 
 The `virtual` prop takes three numbers:
 
-- `estimateSize`: the height of one row in pixels, 56 by default. The rows are not measured, so set it to your row height: a fallback row is 64px, which the demo uses.
+- `estimateSize`: the height of one row in pixels, 56 by default. The rows are not measured, so set it to your row height plus the gap between rows: a fallback row is 64.5px and the gap 8px, so the demo uses 72.5.
 - `maxHeight`: the height of the scroll area in pixels, 400 by default.
 - `overscan`: how many rows to render beyond the visible area, 6 by default.
 
@@ -30,7 +30,7 @@ Rows out of view are replaced by two spacer `<li>` elements, hidden from assisti
 
 ## The list and the stylesheet
 
-The fallback stylesheet lays the list out as a flex column, and in a flex column the spacer rows shrink to nothing, so the list cannot scroll past the rows it has rendered. Until the library fixes this, give the list `display: block` through [`slotProps`](../../api/#prop-slotProps), as the demo does. A replacement `List` that is not a flex container needs nothing.
+The fallback stylesheet lays the list out as a flex column, and in a flex column the spacer rows shrink to nothing, so the list cannot scroll past the rows it has rendered. Until the library fixes this, make the list a grid with the same gap, `display: grid` and `gap: 8px`, through [`slotProps`](../../api/#prop-slotProps), as the demo does. Grid rows keep their height, so the spacers do too. A replacement `List` that is not a flex container needs nothing.
 
 ## Your own layout
 

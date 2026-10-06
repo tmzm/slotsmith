@@ -23,11 +23,11 @@ export default function Virtual() {
       maxFiles={500}
       defaultValue={scans}
       upload={fakeUpload}
-      // A fallback row is 64px tall; the list scrolls inside 320px and renders only what is in view.
-      virtual={{ estimateSize: 64, maxHeight: 320 }}
+      // A fallback row is 64.5px tall plus the 8px gap; the list scrolls inside 320px and renders only what is in view.
+      virtual={{ estimateSize: 72.5, maxHeight: 320 }}
       // The stylesheet makes the list a flex column, which shrinks the spacer rows to nothing;
-      // a block list keeps them at their height, so the whole list scrolls (a known library issue).
-      slotProps={{ list: { style: { display: "block" } } }}
+      // a grid keeps them at their height, so the whole list scrolls, and keeps the gap (a known library issue).
+      slotProps={{ list: { style: { display: "grid", gap: 8 } } }}
     />
   );
 }
