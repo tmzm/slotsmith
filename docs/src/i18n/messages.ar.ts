@@ -6,6 +6,10 @@ import type { MessageKey } from "./index";
  * Modern Standard Arabic for developers. Names that belong to the code (props,
  * components, libraries, commands) stay in Latin script. The annotation is the
  * guarantee: a key missing here fails `tsc`.
+ *
+ * Not here: the Arabic labels of the Trust page's axe table, which live in
+ * `LABELS` in `scripts/lib/a11y-report.ts`. Keep their terms in step with
+ * this catalog ("البديل الافتراضي" for a fallback).
  */
 export const ar: Record<MessageKey, string> = {
   "site.name": "slotsmith",

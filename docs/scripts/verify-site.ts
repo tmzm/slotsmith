@@ -15,9 +15,10 @@
  *   that slot's reference;
  * - that an in-page anchor scrolls within the page instead of navigating.
  *
- * Writes `dist/a11y.json`, puts the axe table in place of the Trust pages'
- * `A11Y_MARKER` (`lib/a11y-report.ts`), and exits 1 on any problem. Stub
- * pages are counted, and fail the run only with `DOCS_STRICT=1`.
+ * Writes `dist/a11y.json`, puts the axe table between the Trust pages'
+ * markers (`lib/a11y-report.ts`; a second run on the same `dist` replaces
+ * it), and exits 1 on any problem. Stub pages are counted, and fail the run
+ * only with `DOCS_STRICT=1`.
  *
  * The browser is Playwright's Chromium. `DOCS_BROWSER_CHANNEL` picks an
  * installed channel instead (default `chrome`); set it to `chromium` or empty
@@ -33,7 +34,7 @@ import type { ComponentReference } from "../src/lib/reference.ts";
 import { findDeadLinks, findGeoProblems, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
 import { serveDir } from "./lib/serve.ts";
 import { sortViolations } from "./lib/axe-allowlist.ts";
-import { A11Y_MARKER, injectA11y, renderA11yTable, type A11yResult } from "./lib/a11y-report.ts";
+import { A11Y_END_MARKER, A11Y_MARKER, injectA11y, renderA11yTable, type A11yResult } from "./lib/a11y-report.ts";
 import type { Lang } from "../src/i18n/index.ts";
 import { SLOT_SELECTORS } from "./slot-selectors.ts";
 
@@ -53,28 +54,41 @@ const TRUST_PAGES: Record<Lang, string> = { en: "/trust/", ar: "/ar/trust/" };
 type SlotMap = Record<string, Record<string, string[]>>;
 
 /**
- * Puts the axe table in place of each language's Trust page marker, in `dist`.
- * A Trust page that is still a stub may lack the marker (it is skipped); a
- * finished one must carry it.
+ * Puts the axe table between each language's Trust page markers, in `dist`.
+ * A Trust page that is still a stub may lack the markers (it is skipped); a
+ * finished one, or any with `DOCS_STRICT=1`, must exist and carry both. A run
+ * with no results or no axe version publishes nothing and is a problem.
  *
  * @returns The problems found.
  */
 function injectTrustPages(results: A11yResult[], axeVersion: string, facts: PageFacts[]): string[] {
   const problems: string[] = [];
+  if (results.length === 0) problems.push("axe ran on no fallback demo, so there are no results to publish");
+  else if (!axeVersion) problems.push("axe did not report its version, so the results cannot be published");
+  if (problems.length) return problems;
+  const strict = process.env.DOCS_STRICT === "1";
   for (const [lang, path] of Object.entries(TRUST_PAGES) as [Lang, string][]) {
     const file = resolve(distDir, `.${path}index.html`);
+    const draft = !strict && facts.find((page) => page.path === path)?.stub === true;
+    const skip = (what: string) => {
+      if (draft) console.log(`verify: ${path} is a stub: ${what}, axe results not published there`);
+      else problems.push(`${path}: ${what}, so the axe results are not published there`);
+    };
     if (!existsSync(file)) {
-      console.log(`verify: no ${path} page, axe results not published there`);
+      skip("the page is missing");
       continue;
     }
     const html = readFileSync(file, "utf8");
-    if (!html.includes(A11Y_MARKER)) {
-      if (facts.find((page) => page.path === path)?.stub) console.log(`verify: ${path} is a stub without ${A11Y_MARKER}, axe results not published there`);
-      else problems.push(`${path} has no ${A11Y_MARKER} marker for the axe results`);
+    if (!html.includes(A11Y_MARKER) || !html.includes(A11Y_END_MARKER)) {
+      skip(`no ${A11Y_MARKER}${A11Y_END_MARKER} markers`);
       continue;
     }
-    writeFileSync(file, injectA11y(html, renderA11yTable(results, lang, axeVersion)));
-    console.log(`verify: axe results published on ${path}`);
+    try {
+      writeFileSync(file, injectA11y(html, renderA11yTable(results, lang, axeVersion)));
+      console.log(`verify: axe results published on ${path}`);
+    } catch (error) {
+      problems.push(`${path}: ${(error as Error).message}`);
+    }
   }
   return problems;
 }
@@ -354,7 +368,7 @@ async function main(): Promise<void> {
   }
 
   writeFileSync(resolve(distDir, "a11y.json"), `${JSON.stringify(a11y, null, 2)}\n`);
-  problems.push(...injectTrustPages(a11y, axeVersion || "unknown", facts));
+  problems.push(...injectTrustPages(a11y, axeVersion, facts));
 
   const stubs = facts.filter((page) => page.stub).length;
   if (process.env.DOCS_STRICT === "1" && stubs > 0) {

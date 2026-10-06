@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { A11Y_MARKER, injectA11y, renderA11yTable, type A11yResult } from "../a11y-report.ts";
+import { A11Y_END_MARKER, A11Y_MARKER, injectA11y, renderA11yTable, type A11yResult } from "../a11y-report.ts";
 
 const results: A11yResult[] = [
   { page: "/components/data-table/", sample: "data-table/basic", violations: [], passes: 31 },
@@ -36,14 +36,35 @@ describe("renderA11yTable", () => {
 
   it("lists known library issues with their reasons, escaped", () => {
     const html = renderA11yTable(results, "en", "4.11.0");
-    expect(html).toContain("1 known library issue");
+    expect(html).toContain("1 known library issue on 1 demo,");
     expect(html).toContain("nested-interactive");
     expect(html).toContain("holds the Browse &lt;button&gt;.");
   });
 
+  it("states the known issues right under the summary, above the table", () => {
+    const html = renderA11yTable(results, "en", "4.11.0");
+    expect(html.indexOf("WCAG 2.2 AA")).toBeLessThan(html.indexOf("known library issue"));
+    expect(html.indexOf("known library issue")).toBeLessThan(html.indexOf("<table"));
+    expect(renderA11yTable([results[0]!], "en", "4.11.0")).not.toContain("known library issue");
+  });
+
+  it("counts distinct known issues and the demos they are on, not flagged elements", () => {
+    const zone = results[1]!.knownLibraryIssues![0]!;
+    const clear = { rule: "target-size", target: ".sac__clear", reason: "The clear button is 20px square." };
+    const many: A11yResult[] = [
+      { ...results[1]!, knownLibraryIssues: [zone, { ...zone, target: ".other .sfu__zone" }] },
+      { ...results[1]!, sample: "file-uploader/multiple", knownLibraryIssues: [zone, clear, { ...clear, target: ".x .sac__clear" }] },
+      results[0]!,
+    ];
+    const html = renderA11yTable(many, "en", "4.11.0");
+    expect(html).toContain("2 known library issues on 2 demos,");
+    expect(html.match(/<li>/g)).toHaveLength(2);
+  });
+
   it("writes the Arabic labels on the Arabic page", () => {
     const html = renderA11yTable(results, "ar", "4.11.0");
-    expect(html).toContain("العرض");
+    expect(html).toContain("عروض البدائل الافتراضية: 2");
+    expect(html).toContain("لا يوجد");
     expect(html).toContain("4.11.0");
     expect(html).not.toContain("fallback demos");
   });
@@ -54,8 +75,22 @@ describe("injectA11y", () => {
     expect(() => injectA11y("<main><h2>Tests</h2></main>", "<table></table>")).toThrow(/a11y-results/);
   });
 
-  it("replaces the marker exactly once", () => {
-    const html = `<main>${A11Y_MARKER}<p>${A11Y_MARKER}</p></main>`;
-    expect(injectA11y(html, "<table>$&</table>")).toBe(`<main><table>$&</table><p>${A11Y_MARKER}</p></main>`);
+  const pair = `${A11Y_MARKER}${A11Y_END_MARKER}`;
+
+  it("throws when the end marker is missing", () => {
+    expect(() => injectA11y(`<main>${A11Y_MARKER}</main>`, "<table></table>")).toThrow("/a11y-results");
+    expect(() => injectA11y(`<main>${A11Y_END_MARKER}${A11Y_MARKER}</main>`, "<table></table>")).toThrow("/a11y-results");
+  });
+
+  it("puts the table between the first pair of markers, exactly once, and keeps them", () => {
+    const html = `<main>${pair}<p>${pair}</p></main>`;
+    expect(injectA11y(html, "<table>$&</table>")).toBe(`<main>${A11Y_MARKER}<table>$&</table>${A11Y_END_MARKER}<p>${pair}</p></main>`);
+  });
+
+  it("replaces the first injection on a second run", () => {
+    const first = injectA11y(`<main>${pair}</main>`, "<table>first</table>");
+    const second = injectA11y(first, "<table>second</table>");
+    expect(second).toBe(`<main>${A11Y_MARKER}<table>second</table>${A11Y_END_MARKER}</main>`);
+    expect(injectA11y(second, "<table>second</table>")).toBe(second);
   });
 });

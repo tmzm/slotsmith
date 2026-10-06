@@ -4,6 +4,10 @@
  * The source of truth for every string the layout renders. Keys are flat and
  * dotted. `{name}` marks a placeholder filled by `t()`. The Arabic catalog is
  * typed against this one, so a key added here and forgotten there fails `tsc`.
+ *
+ * Not here: the labels of the Trust page's axe table. The verifier writes it
+ * after the build and cannot load this file; see `LABELS` in
+ * `scripts/lib/a11y-report.ts`.
  */
 export const en = {
   "site.name": "slotsmith",
