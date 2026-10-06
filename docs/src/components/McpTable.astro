@@ -22,7 +22,7 @@ const descLang = lang === "en" ? undefined : "en";
 /** Splits a description into text and `code` runs. */
 const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ text: run, code: index % 2 === 1 }));
 ---
-<div class="ref-table" role="region" tabindex="0" aria-label={t(lang, kind === "tools" ? "mcp.tools" : "mcp.prompts")}>
+<div class="ref-table mcp-table" role="region" tabindex="0" aria-label={t(lang, kind === "tools" ? "mcp.tools" : "mcp.prompts")}>
   <table>
     <thead>
       <tr>
@@ -38,7 +38,7 @@ const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ te
           <td class="ref-desc-cell ref-desc" lang={descLang} dir={descLang && "ltr"}>
             {runs(row.description).map((run) => (run.code ? <code>{run.text}</code> : run.text))}
           </td>
-          <td class="ref-type">
+          <td class="ref-type" data-label={t(lang, "mcp.args")}>
             {row.args.length === 0 ? (
               <span class="mcp-none">{t(lang, "mcp.none")}</span>
             ) : (
@@ -62,5 +62,50 @@ const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ te
   .mcp-optional {
     color: var(--muted);
     font-family: var(--font-body);
+  }
+
+  /*
+   * On phones each row stacks: the name, then what it gives the agent, then
+   * its arguments under their column name, so nothing scrolls sideways.
+   */
+  @media (max-width: 767px) {
+    .mcp-table table {
+      min-inline-size: 0;
+    }
+
+    .mcp-table thead {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .mcp-table tr {
+      display: grid;
+      gap: 0.25rem;
+      padding-block: 0.5rem;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .mcp-table tbody tr:last-child {
+      border-block-end: 0;
+    }
+
+    .mcp-table th,
+    .mcp-table td {
+      display: block;
+      padding-block: 0;
+      border-block-end: 0;
+      max-inline-size: none;
+      min-inline-size: 0;
+    }
+
+    .mcp-table td[data-label]::before {
+      content: attr(data-label) ": ";
+      color: var(--muted);
+      font-family: var(--font-body);
+    }
   }
 </style>
