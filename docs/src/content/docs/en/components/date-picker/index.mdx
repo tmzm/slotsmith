@@ -59,7 +59,7 @@ The date picker works with any design system. Each slot takes a component, so a 
 The date picker follows the ARIA date picker dialog pattern: a combobox that opens a dialog holding a grid.
 
 - **The trigger** is the element with `role="combobox"`. It is in the tab order, and carries `aria-haspopup="dialog"`, `aria-expanded` and, while open, `aria-controls` pointing at the popup. The naming and validation attributes you pass to `DatePicker` (`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and the like, plus `id`) go to this element, not to the wrapper. With no name given, the [`placeholder`](./api/#label-placeholder) label names it.
-- **The popup** has `role="dialog"` and is not modal (`aria-modal="false"`): focus is not trapped. It is named by the [`dialog`](./api/#label-dialog) label. Opening it moves focus to the picked day, or to today.
+- **The popup** has `role="dialog"` and is not modal (`aria-modal="false"`): focus is not trapped. It is named by the [`dialog`](./api/#label-dialog) label. Opening it moves focus to the picked day, or to today. When that day is outside `minDate` and `maxDate`, focus goes to the first day within them in the nearest allowed month.
 - **The month** is a `role="grid"` named by the month and year ("March 2026"), with `row`, `columnheader` and `gridcell` inside. Each column header is named with the full weekday, so a one-letter header is still read as "Monday". In [multiple and range mode](./guides/modes/) the grid has `aria-multiselectable="true"`.
 - **Each day** is a button named with its full date ("Monday, March 16, 2026"). Its cell has `aria-selected`, and today has `aria-current="date"`. One day at a time is in the tab order (a roving `tabindex`); the arrow keys move it.
 - **Blocked days** have `aria-disabled="true"`, not the `disabled` attribute. They stay focusable, so the arrow keys cross them and a screen reader announces them, but they cannot be picked. See [bounds and blocked days](./guides/bounds-and-blocked-days/).
@@ -83,7 +83,7 @@ With focus in the grid:
   { keys: ["Shift+PgUp", "Shift+PgDn"], action: "Move one year." },
   { keys: ["Enter", "Space"], action: "Pick the focused day. A blocked day is not picked." },
   { keys: ["Esc"], action: "Close, and move focus back to the trigger." },
-  { keys: ["Tab"], action: "Move to the footer buttons and then out of the control, which closes the calendar." },
+  { keys: ["Tab"], action: "Move to the footer buttons, then out of the control. The calendar closes when focus lands on another element on the page; it stays open when focus leaves the page, such as for the address bar." },
 ]} />
 
 Movement stops at `minDate` and `maxDate`. Picking a day in single mode closes the calendar and returns focus to the trigger; in multiple and range mode it stays open. A pointer press outside the control closes it. Every label can be translated or replaced; see [Labels & locales](./api/#labels).
