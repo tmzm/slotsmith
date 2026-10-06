@@ -83,10 +83,11 @@
   transform: translateX(-0.75rem);
 }
 
-/* The stage: room above for the header layers, toward the start side for the
+/* The stage: room above for the header layers (the sort icons lift 5.25rem in
+   all, as on the landing), toward the start side for the
    checkbox column and below for the pagination, on a faint drafting grid. */
 .xray__box {
-  padding: 4.5rem 1rem 5rem 3.75rem;
+  padding: 5.75rem 1rem 5rem 3.75rem;
   overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -99,7 +100,7 @@
 }
 
 .xray[dir="rtl"] .xray__box {
-  padding: 4.5rem 3.75rem 5rem 1rem;
+  padding: 5.75rem 3.75rem 5rem 1rem;
 }
 
 /* The box is the one scroller: the table's own wrappers would clip the parts that move out. */
@@ -118,40 +119,9 @@
 /* The slot under the pointer or focus in the list is outlined in the table by
    rules XRay.tsx writes from SLOT_SELECTORS (`data-highlight`). */
 
-/* Narrow screens: the pagination wraps under the page-size select and the
-   rows wrap their names, so the labels that would land on another label or
-   on cell text stay hidden. The list below still names every part. */
-@media (max-width: 40rem) {
-  .xray .explode__label:is([data-slot="PageSizeSelect"], [data-slot="FooterRow"]) {
-    display: none;
-  }
-
-  /* These two slide toward the start side, off the name column, and their
-     leaders move the other way so they still point at the part. */
-  .xray .explode__label[data-slot="Checkbox"] {
-    translate: -1.25rem calc(-100% - 0.625rem);
-  }
-
-  .xray .explode__label[data-slot="Checkbox"]:dir(rtl) {
-    translate: calc(-100% + 1.25rem) calc(-100% - 0.625rem);
-  }
-
-  .xray .explode__label[data-slot="Checkbox"]::after {
-    inset-inline-start: 2.25rem;
-  }
-
-  .xray .explode__label[data-slot="Row"] {
-    translate: -1.5rem calc(-100% - 0.625rem);
-  }
-
-  .xray .explode__label[data-slot="Row"]:dir(rtl) {
-    translate: calc(-100% + 1.5rem) calc(-100% - 0.625rem);
-  }
-
-  .xray .explode__label[data-slot="Row"]::after {
-    inset-inline-start: 2.5rem;
-  }
-}
+/* Each label is placed clear of the table's text by ExplodedView, at every
+   width; one that finds no room on a narrow screen stays hidden, and the
+   list below still names every part. */
 
 .xray__hint {
   margin: 0;

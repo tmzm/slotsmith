@@ -4,8 +4,15 @@
  * The swap demo's assembly drawing (docs/DESIGN.md section 6, item 2). It
  * wraps the live table and, after mount, gives each part's elements its
  * offset as `--dx` / `--dy` custom properties and floats a bracketed label
- * over it. `styles/explode.css` turns `--explode` (0 to 1, driven by
+ * next to it. `styles/explode.css` turns `--explode` (0 to 1, driven by
  * `landing-motion.ts`) into the transforms and the labels' opacity.
+ *
+ * Each label is placed for the open view (`lib/label-placement`): beside its
+ * part on a leader, in the room the explosion opens, never over a cell's
+ * text, a control or another label, and inside the box that clips the view
+ * (the nearest `[data-explode-bounds]`, inside or around the stage). A label
+ * with no free place stays hidden. The place is written as custom properties
+ * and applied as a transform, so moving a label never shifts the layout.
  *
  * The root starts with `data-static`: the table stays assembled and the same
  * labels sit in a separate static figure beside it. That is the whole view
@@ -18,8 +25,9 @@
  * itself and lists every part on its own.
  */
 import "@/styles/explode.css";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { bracketLabel, type ExplodePart } from "@/lib/explode";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { bracketLabel, type ExplodePart, type LabelHint } from "@/lib/explode";
+import { placeLabels, type Box, type LabelRequest } from "@/lib/label-placement";
 
 export interface ExplodedViewProps {
   parts: ExplodePart[];
@@ -30,51 +38,53 @@ export interface ExplodedViewProps {
   children: ReactNode;
 }
 
+/** A placed label: where it sits with the view open, and how its part got there. */
 interface LabelPosition {
+  /** The label's left and top edge in the stage, in px, with the view open. */
   x: number;
   y: number;
-  /** -1 on right-to-left pages, where every `dx` is mirrored. */
-  sign: number;
+  /** The offset of the element it points at, in rem at `--explode: 1`: the label travels with it. */
+  rx: number;
+  ry: number;
+  side: "above" | "below";
+  /** The leader's distance from the label's left edge, and its length, in px. */
+  leaderX: number;
+  leader: number;
 }
 
-/** A part's box as it sits with the view assembled. */
-interface RestRect {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-  width: number;
-}
+/** What a label must not cover, apart from text: the table's controls and icons. */
+const CONTROLS = "input, button, select, textarea, svg, img";
+
+/** The most elements of one part a label is tried against. */
+const MAX_ANCHORS = 16;
 
 /**
- * An element's box at rest. While the view is open (`scale` is `--explode`
- * times one rem, in px) the element has moved by its own `--dx` / `--dy` plus
- * those of every part it sits inside; that is taken back out, so a measure
- * taken mid-explosion (a swap or a selection lands on an open view) gives the
- * same answer as one taken closed.
+ * An element's offset with the view open, in rem: its own `--dx` / `--dy`
+ * plus those of every part it sits inside.
  */
-function restRect(element: HTMLElement, root: HTMLElement, scale: number): RestRect {
-  const rect = element.getBoundingClientRect();
+function offsetOf(element: Element | null, root: HTMLElement): { x: number; y: number } {
   let x = 0;
   let y = 0;
-  for (let node: HTMLElement | null = element; scale && node && node !== root; node = node.parentElement) {
+  for (let node = element; node && node !== root; node = node.parentElement) {
+    if (!(node instanceof HTMLElement)) continue;
     x += Number.parseFloat(node.style.getPropertyValue("--dx")) || 0;
     y += Number.parseFloat(node.style.getPropertyValue("--dy")) || 0;
   }
-  return { top: rect.top - y * scale, bottom: rect.bottom - y * scale, left: rect.left - x * scale, right: rect.right - x * scale, width: rect.width };
+  return { x, y };
 }
 
-/**
- * The box a part's label points at: the middle one of its matches that is in
- * view inside the stage (the table scrolls in its box), so labels spread over
- * the table and none points at a part scrolled out of sight.
- */
-function anchor(matches: HTMLElement[], box: DOMRect, root: HTMLElement, scale: number): RestRect | undefined {
-  const inView = matches
-    .map((element) => restRect(element, root, scale))
-    .filter((rect) => rect.width > 0 && rect.top >= box.top && rect.bottom <= box.bottom && rect.left >= box.left && rect.right <= box.right);
-  return inView[Math.floor((inView.length - 1) / 2)];
+/** A part's elements in the order its label should try them (`LabelHint.anchor`). */
+function byPreference<T extends { box: Box }>(matches: T[], anchor: LabelHint["anchor"]): T[] {
+  if (matches.length < 2 || anchor === "first") return matches;
+  let pick = Math.floor((matches.length - 1) / 2);
+  if (anchor === "row-end") {
+    const top = matches[0]!.box.top;
+    pick = matches.findLastIndex((match) => Math.abs(match.box.top - top) < 1);
+  }
+  return [matches[pick]!, ...matches.filter((_, index) => index !== pick)];
 }
+
+const same = (a: Record<string, LabelPosition | undefined>, b: Record<string, LabelPosition | undefined>) => JSON.stringify(a) === JSON.stringify(b);
 
 export default function ExplodedView({ parts, caption, live = false, children }: ExplodedViewProps) {
   const view = useRef<HTMLDivElement>(null);
@@ -89,12 +99,9 @@ export default function ExplodedView({ parts, caption, live = false, children }:
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         // Offsets are written for left-to-right; right-to-left mirrors them.
-        const sign = getComputedStyle(root).direction === "rtl" ? -1 : 1;
-        const box = root.getBoundingClientRect();
-        // The parts may be mid-explosion (a swap lands on an open view): `--explode` times one rem, in px.
-        const open = Number.parseFloat(getComputedStyle(root).getPropertyValue("--explode")) || 0;
-        const scale = open ? open * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) : 0;
-        // Every part gets its offset before any is measured: a part's resting box depends on the parts around it.
+        const rtl = getComputedStyle(root).direction === "rtl";
+        const sign = rtl ? -1 : 1;
+        // Every part gets its offset before anything is measured: an element's place depends on the parts around it.
         const found = parts.map((part) => {
           const matches = [...root.querySelectorAll<HTMLElement>(part.selector)].filter((element) => !element.closest(".explode__label"));
           for (const element of matches) {
@@ -103,14 +110,73 @@ export default function ExplodedView({ parts, caption, live = false, children }:
           }
           return { part, matches };
         });
-        const next: Record<string, LabelPosition | undefined> = {};
-        for (const { part, matches } of found) {
-          // Stored at rest: labels ride along with their part through the same --dx/--dy.
-          const rect = anchor(matches, box, root, scale);
-          // x is the part's start edge: its left in left-to-right, its right in right-to-left.
-          next[part.slot] = rect ? { x: (sign > 0 ? rect.left : rect.right) - box.left, y: rect.top - box.top, sign } : undefined;
+
+        const origin = root.getBoundingClientRect();
+        const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        // The parts may be mid-explosion (a swap lands on an open view, the X-ray's toggle is in transition).
+        const open = Number.parseFloat(getComputedStyle(root).getPropertyValue("--explode")) || 0;
+        const rest = (1 - open) * rem;
+        /** A box as it will sit with the view open, in the stage's coordinates: what is left of each part's travel is added. */
+        const opened = (rect: DOMRect, offset: { x: number; y: number }): Box => ({
+          left: rect.left - origin.left + offset.x * rest,
+          right: rect.right - origin.left + offset.x * rest,
+          top: rect.top - origin.top + offset.y * rest,
+          bottom: rect.bottom - origin.top + offset.y * rest,
+        });
+
+        const clip = (root.querySelector("[data-explode-bounds]") ?? root.closest("[data-explode-bounds]") ?? root).getBoundingClientRect();
+        const bounds: Box = { left: clip.left - origin.left + 2, right: clip.right - origin.left - 2, top: clip.top - origin.top + 2, bottom: clip.bottom - origin.top - 2 };
+        const inBounds = (box: Box) => box.right > bounds.left && box.left < bounds.right && box.bottom > bounds.top && box.top < bounds.bottom;
+
+        // Everything a label must stay off: each run of text and each control, where the open view puts it.
+        const obstacles: Box[] = [];
+        const add = (rects: Iterable<DOMRect>, owner: Element | null) => {
+          const offset = offsetOf(owner, root);
+          for (const rect of rects) {
+            // A visually hidden note is a 1px box: nothing to cover.
+            if (rect.width < 2 || rect.height < 2) continue;
+            const box = opened(rect, offset);
+            if (inBounds(box)) obstacles.push(box);
+          }
+        };
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const range = document.createRange();
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!node.nodeValue?.trim() || node.parentElement?.closest(".explode__label")) continue;
+          range.selectNodeContents(node);
+          add(range.getClientRects?.() ?? [], node.parentElement);
         }
-        setPositions(next);
+        for (const control of root.querySelectorAll<HTMLElement>(CONTROLS)) add([control.getBoundingClientRect()], control);
+
+        const offsets: Record<string, { x: number; y: number }[]> = {};
+        const requests: LabelRequest[] = found.map(({ part, matches }) => {
+          const label = root.querySelector<HTMLElement>(`.explode__label[data-slot="${part.slot}"]`);
+          const anchors = byPreference(
+            matches
+              .map((element) => {
+                const offset = offsetOf(element, root);
+                return { offset, box: opened(element.getBoundingClientRect(), offset) };
+              })
+              // A part scrolled out of the box, or not laid out, cannot be pointed at.
+              .filter(({ box }) => box.right > box.left && box.top >= bounds.top && box.bottom <= bounds.bottom && box.left >= bounds.left && box.right <= bounds.right),
+            part.label.anchor,
+          ).slice(0, MAX_ANCHORS);
+          offsets[part.slot] = anchors.map((anchor) => anchor.offset);
+          return { id: part.slot, width: label?.offsetWidth ?? 0, height: label?.offsetHeight ?? 0, anchors: anchors.map((anchor) => anchor.box), side: part.label.side };
+        });
+
+        // Narrow parts first: a checkbox or an icon has one place for its leader, a row has its whole width.
+        const width = (request: LabelRequest) => (request.anchors[0] ? request.anchors[0].right - request.anchors[0].left : Infinity);
+        const placed = placeLabels([...requests].sort((a, b) => width(a) - width(b)), obstacles, bounds, { rtl });
+        const next: Record<string, LabelPosition | undefined> = {};
+        for (const { part } of found) {
+          const at = placed[part.slot];
+          const offset = at && offsets[part.slot]?.[at.anchor];
+          if (!at || !offset) continue;
+          const round = (value: number) => Math.round(value * 10) / 10;
+          next[part.slot] = { x: round(at.left), y: round(at.top), rx: offset.x, ry: offset.y, side: at.side, leaderX: round(at.leaderX), leader: at.leaderLength };
+        }
+        setPositions((current) => (same(current, next) ? current : next));
       });
     };
     measure();
@@ -122,6 +188,8 @@ export default function ExplodedView({ parts, caption, live = false, children }:
     const resize = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
     resize?.observe(root);
     root.addEventListener("scroll", measure, true);
+    // Web fonts change every label's width and the table's columns.
+    document.fonts?.ready.then(measure).catch(() => {});
     return () => {
       cancelAnimationFrame(frame);
       mutations.disconnect();
@@ -141,9 +209,13 @@ export default function ExplodedView({ parts, caption, live = false, children }:
               key={part.slot}
               className={`explode__label explode__label--${part.kind}`}
               data-slot={part.slot}
+              data-side={at?.side}
               aria-hidden="true"
-              hidden={!at}
-              style={at ? { left: at.x, top: at.y, ["--dx" as string]: part.dx * at.sign, ["--dy" as string]: part.dy } : undefined}
+              style={
+                at
+                  ? ({ "--lx": at.x, "--ly": at.y, "--rx": at.rx, "--ry": at.ry, "--leader-x": at.leaderX, "--leader": at.leader } as CSSProperties)
+                  : undefined
+              }
             >
               {bracketLabel(part)}
             </span>

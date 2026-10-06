@@ -12,6 +12,20 @@ export type SlotKindsSource = Pick<ComponentReference, "name"> & {
   slots: readonly Pick<ComponentReference["slots"][number], "name" | "kind">[];
 };
 
+/**
+ * Where a part's floating label looks for room first (`lib/label-placement`
+ * moves it on when that spot would cover text).
+ *
+ * `anchor` picks which of the part's elements it points at: the `first` one,
+ * the `middle` one, or the last one on the first one's line (`row-end`: for
+ * cells, the first row's last cell). `side` is the side of that element the
+ * label sits on.
+ */
+export interface LabelHint {
+  anchor: "first" | "middle" | "row-end";
+  side: "above" | "below";
+}
+
 /** One labelled part of the exploded view. `dx`/`dy` are its offset in rem at `--explode: 1`, for a left-to-right page. */
 export interface ExplodePart {
   slot: string;
@@ -19,6 +33,7 @@ export interface ExplodePart {
   selector: string;
   dx: number;
   dy: number;
+  label: LabelHint;
 }
 
 /**
@@ -42,6 +57,28 @@ const OFFSETS: Record<string, { dx: number; dy: number }> = {
 const DEFAULT_OFFSET = { dx: 0, dy: 1 };
 
 /**
+ * Where each label looks first. The explosion opens a band between the header
+ * and the first body row, a column on the start side where the checkboxes
+ * went, and a band above the pagination: the labels of the header's parts
+ * hang under the header, the body's stand on the first row, and the rest sit
+ * in the band next to their part.
+ */
+const LABELS: Record<string, LabelHint> = {
+  HeaderRow: { anchor: "first", side: "above" },
+  HeaderCell: { anchor: "middle", side: "below" },
+  SortIcon: { anchor: "middle", side: "below" },
+  Row: { anchor: "first", side: "above" },
+  Cell: { anchor: "row-end", side: "above" },
+  Checkbox: { anchor: "first", side: "below" },
+  FooterRow: { anchor: "first", side: "below" },
+  Pagination: { anchor: "first", side: "above" },
+  PageSizeSelect: { anchor: "first", side: "above" },
+};
+
+/** A part without a hint of its own: above its middle element. */
+const DEFAULT_LABEL: LabelHint = { anchor: "middle", side: "above" };
+
+/**
  * The parts to explode, in the order picked.
  *
  * @param reference - The component's generated reference; each part's kind comes from its slot there.
@@ -56,7 +93,7 @@ export function explodeParts(reference: SlotKindsSource, selectors: Record<strin
     const selector = selectors[name];
     if (!selector) throw new Error(`Slot "${name}" has no selector in SLOT_SELECTORS["${reference.name}"].`);
     const { dx, dy } = OFFSETS[name] ?? DEFAULT_OFFSET;
-    return { slot: name, kind: slot.kind, selector, dx, dy };
+    return { slot: name, kind: slot.kind, selector, dx, dy, label: LABELS[name] ?? DEFAULT_LABEL };
   });
 }
 

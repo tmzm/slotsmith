@@ -337,7 +337,7 @@ export default function SwapDemo({ lang, messages, sources, loaders, parts = [],
       </div>
       <ExplodedView parts={parts} caption={caption}>
         <div className="swap__frame">
-          <div className="swap__box" aria-busy={loading || undefined}>
+          <div className="swap__box" data-explode-bounds="" aria-busy={loading || undefined}>
             <SiteLocale lang={lang}>
               <div className="sample-stage" dir={dir}>
                 <Settings.Provider value={settings}>

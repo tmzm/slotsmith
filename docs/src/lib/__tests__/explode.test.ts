@@ -25,6 +25,18 @@ describe("explodeParts", () => {
     expect(parts.find((part) => part.slot === "Pagination")!.dy).toBeGreaterThan(0);
   });
 
+  it("says where each part's label looks for room first", () => {
+    const parts = explodeParts(reference, selectors, ["HeaderCell", "Row", "Cell", "Checkbox", "Empty"]);
+    const hint = (slot: string) => parts.find((part) => part.slot === slot)!.label;
+    // The header's parts hang their labels under the header, the body's stand on the first row.
+    expect(hint("HeaderCell")).toEqual({ anchor: "middle", side: "below" });
+    expect(hint("Row")).toEqual({ anchor: "first", side: "above" });
+    expect(hint("Cell")).toEqual({ anchor: "row-end", side: "above" });
+    expect(hint("Checkbox")).toEqual({ anchor: "first", side: "below" });
+    // A part without a hint of its own.
+    expect(hint("Empty")).toEqual({ anchor: "middle", side: "above" });
+  });
+
   it("throws on a slot the reference does not have", () => {
     expect(() => explodeParts(reference, selectors, ["Row", "Rowz"])).toThrow(/"Rowz"/);
   });

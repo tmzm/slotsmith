@@ -7,9 +7,10 @@
  * transform and each label's opacity, from the part's `--dx` / `--dy` (in rem,
  * set by ExplodedView). On the landing, until the motion module takes over,
  * `.explode` carries `data-static`: the table stays assembled and a static
- * labelled figure sits beside it. Only transform and opacity animate. Label
- * placement follows the view's own direction (`:dir()`), not the page's, since
- * the X-ray can show English inside an Arabic page.
+ * labelled figure sits beside it. Only transform and opacity animate. Each
+ * floating label's place comes from ExplodedView as custom properties in
+ * physical px (it measures the view's own direction, not the page's, since
+ * the X-ray can show English inside an Arabic page).
  */
 
 @property --explode {
@@ -65,11 +66,22 @@
   transform: translate(calc(var(--explode, 0) * var(--dx) * 1rem), calc(var(--explode, 0) * var(--dy) * 1rem));
 }
 
-/* Floating labels: bracketed, on a hairline leader down to their part. */
+/* Floating labels: bracketed, on a hairline leader to their part. ExplodedView
+   finds each one a place clear of the table's text for the open view (`--lx`,
+   `--ly`, px from the stage's top left corner) and says how far its part
+   travels to get there (`--rx`, `--ry`, rem), so the label travels with its
+   part and arrives as the view opens. A transform, not `left`/`top`: placing
+   a label again never counts as a layout shift. Without a place (`data-side`
+   is not set) a label stays hidden but keeps its size, which is measured. */
 .explode__label {
   position: absolute;
+  inset-block-start: 0;
+  left: 0;
   z-index: 2;
-  translate: 0.5rem calc(-100% - 0.625rem);
+  transform: translate(
+    calc(var(--lx, 0) * 1px - (1 - var(--explode, 0)) * var(--rx, 0) * 1rem),
+    calc(var(--ly, 0) * 1px - (1 - var(--explode, 0)) * var(--ry, 0) * 1rem)
+  );
   padding: 0.125rem 0.375rem;
   border: 1px solid var(--line);
   border-radius: 3px;
@@ -82,17 +94,25 @@
   opacity: var(--explode, 0);
 }
 
-.explode__label:dir(rtl) {
-  translate: calc(-100% - 0.5rem) calc(-100% - 0.625rem);
+.explode__label:not([data-side]) {
+  visibility: hidden;
 }
 
+/* The leader: from the label's edge to its part, above or below it. */
 .explode__label::after {
   content: "";
   position: absolute;
+  left: calc(var(--leader-x, 0) * 1px - 1px);
+  block-size: calc(var(--leader, 0) * 1px);
+  border-left: 1px solid var(--line-strong);
+}
+
+.explode__label[data-side="above"]::after {
   inset-block-start: 100%;
-  inset-inline-start: 0.5rem;
-  block-size: 0.625rem;
-  border-inline-start: 1px solid var(--line-strong);
+}
+
+.explode__label[data-side="below"]::after {
+  inset-block-end: 100%;
 }
 
 .explode[data-static] .explode__label {
