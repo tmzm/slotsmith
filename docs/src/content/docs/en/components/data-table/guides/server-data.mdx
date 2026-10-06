@@ -1,0 +1,39 @@
+---
+title: "Server data"
+description: "Page and sort the slotsmith data table on a server with manualPagination, manualSorting and rowCount, and show loading, error and empty states."
+---
+
+When a server pages and sorts the rows, give the data table one page at a time: set `manualPagination` and `manualSorting`, pass the page as `data` and the total as `rowCount`. The table reports page and sort changes; you fetch. The demo uses TanStack Query.
+
+{/* Reserved height measured in Chrome: 36.3rem up to 400px, 33.8rem to 460px and 30.95rem at 480px (cells and controls wrap), 26.7rem from 500px. */}
+<Demo name="data-table/server-data" height="clamp(26.7rem, 203.7rem - 566.4vw, 36.3rem)" fallback />
+
+The API here is a stand-in that answers after 300 ms; its code is in the `fake-api.ts` tab. Move to another page or click a header: the line under the table shows the request. Tick the checkbox, change the page, and the table shows the error with a retry button.
+
+## Paging and sorting on the server
+
+The page and the sort are controlled state. Each change is a new request, and the table does no paging or sorting of its own.
+
+- [`manualPagination`](../../api/#props) says `data` is already one page. [`rowCount`](../../api/#props) is the total across all pages; the table needs it to count the pages and to disable the next-page button on the last one.
+- [`pagination`](../../api/#props) and [`onPaginationChange`](../../api/#props) hold `{ pageIndex, pageSize }`, with `pageIndex` counting from 0. See [pagination](../pagination/).
+- [`manualSorting`](../../api/#props) says the rows arrive already sorted. [`sorting`](../../api/#props) and [`onSortingChange`](../../api/#props) hold a list of `{ id, desc }`; the headers still show the order and carry `aria-sort`. See [sorting and selection](../sorting-and-selection/).
+
+The demo goes back to the first page when the sort changes. The table does not do that itself under manual pagination, so `onSortingChange` sets `pageIndex` to 0.
+
+## Loading
+
+[`loading`](../../api/#props) set to `true` replaces the body with skeleton rows, one per row of the page size. The root then has `data-status="loading"` and `aria-busy="true"`, and the skeleton rows are hidden from assistive technology. Each skeleton cell is the [`Skeleton`](../../api/#slot-Skeleton) slot.
+
+The demo passes `loading` only while there is nothing to show. With `placeholderData: keepPreviousData`, TanStack Query keeps the last page as `data` while the next one loads, so `isPending` is true on the first load alone. The demo dims the table while `isPlaceholderData` is true. Without the placeholder, every page change would show skeleton rows.
+
+## Errors and empty results
+
+- [`error`](../../api/#props) set to any value but `null`, `undefined` or `false` shows the [`Error`](../../api/#slot-Error) slot in place of the rows: the [`error`](../../api/#label-error) label in a `role="alert"` element. The root has `data-status="error"`.
+- [`onRetry`](../../api/#props) adds a button named by the [`retry`](../../api/#label-retry) label. The demo calls the query's `refetch`.
+- A page with no rows shows the [`Empty`](../../api/#slot-Empty) slot with the [`empty`](../../api/#label-empty) label, and `data-status="empty"`.
+
+`loading` wins over `error`, and `error` over empty. If a page other than the first comes back empty, for example after its last row was deleted, the table steps back a page and reports it through `onPaginationChange`.
+
+## Other ways to fetch
+
+Nothing in the table depends on TanStack Query. Any code that turns `{ pageIndex, pageSize, sorting }` into `{ rows, total }` fits: a `fetch` in an effect, SWR, or a loader from your framework. Pass its rows, its total, its pending flag and its error to the same four props.
