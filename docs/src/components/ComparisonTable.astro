@@ -4,13 +4,19 @@
  * room the groups sit side by side as columns with the attribute names down
  * the start edge; on a narrow page they stack, each cell under its own
  * label. Every group shows the day it was checked and a link for reporting
- * a correction, and each cell links to the page it was read from. The text
- * is English (`@/data/comparison`).
+ * a correction, and each cell links to the page it was read from. In the
+ * column layout only the names and check dates stay in view while the rows
+ * scroll. The text is English (`@/data/comparison`).
  */
 import { ATTRIBUTES, CORRECTION_URL, SUBJECTS, type Cell } from "@/data/comparison";
 
-/** Splits text into plain and `code` runs. */
-const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ text: run, code: index % 2 === 1 }));
+/**
+ * Splits text into plain and `code` runs. A code run comes in pieces, cut
+ * after a slash, dot, hyphen, underscore or colon and before a capital that
+ * follows a lower-case letter, so a long identifier wraps between its words.
+ */
+const runs = (text: string) =>
+  text.split(/`([^`]+)`/).map((run, index) => ({ text: run, code: index % 2 === 1, pieces: run.split(/(?<=[/._:-])(?=.)|(?<=[a-z])(?=[A-Z])/) }));
 /** A cell's sources: its own docs pages for slotsmith (relative, so they keep the page's language), https URLs otherwise. */
 const sources = (cell: Cell) =>
   [cell.source, ...(cell.also ?? [])].filter((url): url is string => url !== undefined).map((url) => ({ href: url.startsWith("/") ? `..${url}` : url, own: url.startsWith("/") }));
@@ -20,6 +26,7 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
   <div class="cmp">
     <div class="cmp__labels" aria-hidden="true">
       <div class="cmp__corner"></div>
+      <div class="cmp__label"></div>
       {ATTRIBUTES.map((attribute) => <div class="cmp__label">{attribute.label}</div>)}
       <div class="cmp__foot"></div>
     </div>
@@ -33,8 +40,19 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
             <p class="cmp__checked">
               checked on <time datetime={subject.checked}>{subject.checked}</time>
             </p>
-            {subject.note && <p class="cmp__note">{runs(subject.note).map((run) => (run.code ? <code>{run.text}</code> : run.text))}</p>}
           </header>
+          <div class="cmp__about">
+            {subject.note && <p class="cmp__note">{runs(subject.note).map((run) => (run.code ? <code>{run.pieces.map((piece, i) => (i === 0 ? piece : <><wbr />{piece}</>))}</code> : run.text))}</p>}
+            {subject.also && (
+              <p class="cmp__sources">
+                {subject.also.map((href, index) => (
+                  <a href={href} aria-label={`Source${subject.also!.length > 1 ? ` ${index + 1}` : ""}: ${subject.name}, note`}>
+                    source{subject.also!.length > 1 && ` ${index + 1}`}
+                  </a>
+                ))}
+              </p>
+            )}
+          </div>
           <dl class="cmp__cells">
             {ATTRIBUTES.map((attribute) => {
               const cell = subject.cells[attribute.key];
@@ -43,8 +61,8 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
                 <div class="cmp__cell">
                   <dt class="cmp__term">{attribute.label}</dt>
                   <dd class="cmp__value">
-                    <p>{runs(cell.text).map((run) => (run.code ? <code>{run.text}</code> : run.text))}</p>
-                    {cell.note && <p class="cmp__note">{runs(cell.note).map((run) => (run.code ? <code>{run.text}</code> : run.text))}</p>}
+                    <p>{runs(cell.text).map((run) => (run.code ? <code>{run.pieces.map((piece, i) => (i === 0 ? piece : <><wbr />{piece}</>))}</code> : run.text))}</p>
+                    {cell.note && <p class="cmp__note">{runs(cell.note).map((run) => (run.code ? <code>{run.pieces.map((piece, i) => (i === 0 ? piece : <><wbr />{piece}</>))}</code> : run.text))}</p>}
                     {links.length > 0 && (
                       <p class="cmp__sources">
                         {links.map((link, index) => (
@@ -61,7 +79,7 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
             })}
           </dl>
           <p class="cmp__foot">
-            <a href={CORRECTION_URL} aria-label={`Wrong about ${subject.name}? Open an issue`}>Wrong? Open an issue</a>
+            <a href={CORRECTION_URL} aria-label={`Wrong? Open an issue about ${subject.name}`}>Wrong? Open an issue</a>
           </p>
         </section>
       ))
@@ -94,7 +112,7 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
     background: var(--panel);
   }
 
-  .cmp__head {
+  .cmp__about {
     padding-block-end: 1rem;
     border-block-end: 1px solid var(--line-strong);
   }
@@ -147,7 +165,7 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
   .cmp__value {
     margin: 0;
     color: var(--ink-2);
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .cmp__value p {
@@ -164,11 +182,11 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
     color: var(--ink);
   }
 
-  .cmp__value .cmp__sources {
+  .cmp__sources {
     display: flex;
     flex-wrap: wrap;
     gap: 0.125rem 0.75rem;
-    margin-block-start: 0.375rem;
+    margin: 0.375rem 0 0;
     font-family: var(--font-mono);
     font-size: 0.75rem;
   }
@@ -200,7 +218,7 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
   @container (min-width: 60rem) {
     .cmp {
       grid-template-columns: 6.5rem repeat(6, minmax(0, 1fr));
-      grid-template-rows: repeat(11, auto);
+      grid-template-rows: repeat(12, auto);
       gap: 0;
       font-size: 0.8125rem;
       line-height: 1.5;
@@ -242,13 +260,20 @@ const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+
       padding: 0.75rem 0.625rem;
       border-block-end: 1px solid var(--line-strong);
       background: var(--bg);
+      min-inline-size: 0;
     }
 
     .cmp__name {
       font-size: 0.9375rem;
     }
 
+    .cmp__about {
+      min-inline-size: 0;
+      overflow-wrap: break-word;
+    }
+
     .cmp__label,
+    .cmp__about,
     .cmp__value,
     .cmp__foot {
       padding: 0.75rem 0.625rem;

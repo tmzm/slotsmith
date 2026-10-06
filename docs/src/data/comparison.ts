@@ -11,6 +11,7 @@
  * library, so they cannot drift from what ships.
  */
 import { PACKS } from "@/lib/packs";
+import { SITE } from "../../site.config.ts";
 
 export type Attribute = "components" | "styling" | "replaceParts" | "builtOn" | "dependencies" | "license" | "rtl" | "virtualisation" | "typescript";
 
@@ -33,6 +34,8 @@ export interface Subject {
   checked: string;
   /** A caveat that applies to the whole subject. */
   note?: string;
+  /** The pages the note was read from. */
+  also?: string[];
   cells: Record<Attribute, Cell>;
 }
 
@@ -53,7 +56,7 @@ export const ATTRIBUTES: { key: Attribute; label: string }[] = [
 export const BANNED_WORDS: string[] = ["best", "powerful", "beautiful", "simple", "easy", "blazing", "modern", "lightweight", "robust", "seamless", "elegant", "intuitive"];
 
 /** Where a reader reports a cell that is wrong or out of date. */
-export const CORRECTION_URL = "https://github.com/tmzm/slotsmith/issues/new?title=Comparison%20correction";
+export const CORRECTION_URL = `${SITE.repo}/issues/new?title=Comparison%20correction`;
 
 interface LibraryPackage {
   license: string;
@@ -75,23 +78,23 @@ const rtlPacks = PACKS.filter((pack) => pack.dir === "rtl");
 
 const DOCS = {
   mrt: "https://www.material-react-table.com/docs",
-  mrtRepo: "https://raw.githubusercontent.com/KevinVandy/material-react-table/v3",
+  mrtRepo: "https://github.com/KevinVandy/material-react-table/blob/v3",
   mantine: "https://v2.mantine-react-table.com/docs",
-  mantineRepo: "https://raw.githubusercontent.com/KevinVandy/mantine-react-table/v2",
+  mantineRepo: "https://github.com/KevinVandy/mantine-react-table/blob/v2",
   shadcn: "https://ui.shadcn.com/docs",
   aria: "https://react-aria.adobe.com",
-  ariaRepo: "https://raw.githubusercontent.com/adobe/react-spectrum/main/packages/react-aria-components",
+  ariaRepo: "https://github.com/adobe/react-spectrum/blob/main/packages/react-aria-components",
   ark: "https://ark-ui.com/docs",
-  arkRepo: "https://raw.githubusercontent.com/chakra-ui/ark/main",
+  arkRepo: "https://github.com/chakra-ui/ark/blob/main",
   park: "https://park-ui.com/docs",
-  parkRepo: "https://raw.githubusercontent.com/chakra-ui/park-ui/main",
+  parkRepo: "https://github.com/chakra-ui/park-ui/blob/main",
 } as const;
 
 /** The subjects, slotsmith first. */
 export const SUBJECTS: Subject[] = [
   {
     name: "slotsmith",
-    url: "https://slotsmith.dev/",
+    url: `${SITE.url}/`,
     checked: "2026-10-06",
     cells: {
       components: {
@@ -137,7 +140,7 @@ export const SUBJECTS: Subject[] = [
     note: "Read from the repository's `v3` branch (package version 3.2.1) and the V3 docs.",
     cells: {
       components: {
-        text: "Data table. Combobox, date picker and file uploader are not part of the package.",
+        text: "Data table only; the README describes no standalone combobox, date picker or file uploader.",
         source: `${DOCS.mrtRepo}/README.md`,
       },
       styling: {
@@ -177,10 +180,11 @@ export const SUBJECTS: Subject[] = [
     name: "Mantine React Table",
     url: "https://www.mantine-react-table.com/",
     checked: "2026-10-06",
-    note: "The repository's default branch is `v2` (package version 2.0.0-beta.9, for Mantine V7), while www.mantine-react-table.com documents V1, for Mantine V6. This column follows the repository and the V2 docs.",
+    note: "This column describes a pre-release. The repository's default branch is `v2` (package version 2.0.0-beta.9, for Mantine V7), installed as `mantine-react-table@beta`. The `latest` tag on npm is 1.3.4, which is V1, for Mantine V6; www.mantine-react-table.com documents that version. The column follows the repository and the V2 docs.",
+    also: [`${DOCS.mantine}/getting-started/install`, "https://registry.npmjs.org/-/package/mantine-react-table/dist-tags", "https://www.mantine-react-table.com/docs/getting-started/install"],
     cells: {
       components: {
-        text: "Data table. Combobox, date picker and file uploader are not part of the package.",
+        text: "Data table only; the README describes no standalone combobox, date picker or file uploader.",
         source: `${DOCS.mantineRepo}/README.md`,
       },
       styling: {
@@ -247,7 +251,7 @@ export const SUBJECTS: Subject[] = [
         source: `${DOCS.shadcn}/components/data-table`,
         also: [`${DOCS.shadcn}/installation/manual`],
       },
-      license: { text: "MIT", source: "https://raw.githubusercontent.com/shadcn-ui/ui/main/LICENSE.md" },
+      license: { text: "MIT", source: "https://github.com/shadcn-ui/ui/blob/main/LICENSE.md" },
       rtl: {
         text: "The guide links to shadcn/ui's RTL guide: with `rtl: true` in `components.json`, the CLI rewrites physical classes as logical ones. That guide says the automatic rewrite is for projects created with `shadcn create` and the new styles, and that Calendar, Pagination and Sidebar need manual migration.",
         source: `${DOCS.shadcn}/rtl`,
@@ -343,9 +347,9 @@ export const SUBJECTS: Subject[] = [
         also: [`${DOCS.parkRepo}/LICENSE`],
       },
       rtl: {
-        text: "Ark UI's `LocaleProvider` is described as setting \"the locale and direction of the app\", and `useLocaleContext` returns `locale` and `dir`. Park UI: Not documented. Its docs navigation has no RTL page.",
-        source: `${DOCS.ark}/utilities/locale`,
-        also: [`${DOCS.park}/installation`],
+        text: "Ark UI's README lists \"RTL support\" under its built-in accessibility. Its `LocaleProvider` is described as setting \"the locale and direction of the app\", and `useLocaleContext` returns `locale` and `dir`. Park UI: Not documented. Its docs navigation has no RTL page.",
+        source: `${DOCS.arkRepo}/README.md`,
+        also: [`${DOCS.ark}/utilities/locale`, `${DOCS.park}/installation`],
       },
       virtualisation: {
         text: "Ark UI has no table component. Its Combobox page has a virtualised example that uses `@tanstack/virtual`. Park UI: Not documented on its Table page.",
@@ -353,9 +357,9 @@ export const SUBJECTS: Subject[] = [
         also: [`${DOCS.park}/components/table`],
       },
       typescript: {
-        text: "Ark UI's README says \"Fully typed with TypeScript\". Park UI: Not documented on the pages checked.",
+        text: "Ark UI's README says \"Fully typed with TypeScript\". Park UI's component source is TypeScript: its Table page shows it with exported prop types.",
         source: `${DOCS.arkRepo}/README.md`,
-        also: [`${DOCS.park}/introduction`],
+        also: [`${DOCS.park}/components/table`],
       },
     },
   },

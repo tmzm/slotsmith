@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ATTRIBUTES, BANNED_WORDS, CORRECTION_URL, SUBJECTS, type Cell } from "@/data/comparison";
 import { PACKS } from "@/lib/packs";
+import { SITE } from "../../../site.config.ts";
 
 const PAGE = readFileSync(new URL("../../content/docs/en/comparison.mdx", import.meta.url), "utf8");
 const PACKAGE = JSON.parse(readFileSync(new URL("../../../../package.json", import.meta.url), "utf8")) as {
@@ -39,6 +40,7 @@ describe("comparison data", () => {
   it("gives every cell of another project an https source", () => {
     for (const subject of SUBJECTS.slice(1)) {
       expect(subject.url, subject.name).toMatch(/^https:\/\//);
+      for (const url of subject.also ?? []) expect(url, subject.name).toMatch(/^https:\/\/\S+$/);
       for (const [key, cell] of Object.entries(subject.cells)) {
         expect(cell.source, `${subject.name} ${key}`).toMatch(/^https:\/\/\S+$/);
         for (const url of sources(cell)) expect(url, `${subject.name} ${key}`).toMatch(/^https:\/\/\S+$/);
@@ -61,7 +63,11 @@ describe("comparison data", () => {
 
   it("uses no word of praise or blame", () => {
     expect(BANNED_WORDS).toEqual(["best", "powerful", "beautiful", "simple", "easy", "blazing", "modern", "lightweight", "robust", "seamless", "elegant", "intuitive"]);
-    const banned = new RegExp(`\b(${BANNED_WORDS.join("|")})\b`, "i");
+    const banned = new RegExp(String.raw`\b(${BANNED_WORDS.join("|")})\b`, "i");
+    // The pattern itself: it finds each word, in any case, and only as a whole word.
+    for (const word of BANNED_WORDS) expect(`the ${word} one`, word).toMatch(banned);
+    expect("The Best one").toMatch(banned);
+    expect("a bestseller, simply put").not.toMatch(banned);
     for (const subject of SUBJECTS) for (const text of words(subject)) expect(text, subject.name).not.toMatch(banned);
     expect(PAGE.replace(/^---[\s\S]*?---/, "")).not.toMatch(banned);
     for (const attribute of ATTRIBUTES) expect(attribute.label).not.toMatch(banned);
@@ -81,6 +87,27 @@ describe("comparison data", () => {
     const rtl = PACKS.filter((pack) => pack.dir === "rtl");
     expect(rtl.length).toBeGreaterThan(0);
     for (const pack of rtl) expect(cells.rtl.text).toContain(`\`${pack.code}\``);
+  });
+});
+
+describe("comparison sources", () => {
+  it("links repository files as pages a reader can open", () => {
+    for (const subject of SUBJECTS) {
+      for (const url of [...(subject.also ?? []), ...Object.values(subject.cells).flatMap(sources)]) expect(url, subject.name).not.toContain("raw.githubusercontent.com");
+    }
+  });
+
+  it("says the Mantine React Table column describes a pre-release", () => {
+    const mantine = SUBJECTS.find((subject) => subject.name === "Mantine React Table")!;
+    expect(mantine.note).toMatch(/pre-release/);
+    expect(mantine.note).toContain("`mantine-react-table@beta`");
+    expect(mantine.note).toContain("1.3.4");
+    expect(mantine.also?.length).toBeGreaterThan(0);
+  });
+
+  it("reads the site and repository addresses from the site config", () => {
+    expect(SUBJECTS[0]!.url).toBe(`${SITE.url}/`);
+    expect(CORRECTION_URL.startsWith(`${SITE.repo}/issues/new`)).toBe(true);
   });
 });
 
