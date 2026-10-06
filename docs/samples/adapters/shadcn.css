@@ -59,8 +59,11 @@
   --radius: 0.625rem;
 }
 
+/* The scope sets shadcn/ui's text colour and paints nothing: it is a
+   full-width block, and a background of its own showed as a band beside a
+   demo narrower than its pane (the autocomplete, the date picker). The
+   components sit on the pane, as they sit on an app's page. */
 .shadcn-scope {
-  background-color: var(--background);
   color: var(--foreground);
 }
 
