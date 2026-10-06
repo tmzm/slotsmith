@@ -7,6 +7,7 @@
 import "@/styles/tokens.css";
 import "@/styles/base.css";
 import "@/styles/site.css";
+import "@/styles/sidebar-collapse.css";
 import "@/styles/library.css";
 import Head from "@/components/Head.astro";
 import Header from "@/components/Header.astro";
@@ -94,8 +95,26 @@ const hasSidebar = Astro.slots.has("sidebar");
         if (open) sheet?.querySelector<HTMLElement>("[data-menu-close], a")?.focus();
         else if (restoreFocus) opener?.focus();
       };
+      // From 1024px a docs page shows the sidebar as a column; there the menu
+      // button hides and shows it instead, remembered under "slotsmith-sidebar".
+      const wide = window.matchMedia("(min-width: 1024px)");
+      const hasColumn = () => wide.matches && Boolean(sheet && !sheet.hasAttribute("data-sheet-only"));
+      const syncExpanded = () => {
+        const expanded = hasColumn() ? !root.hasAttribute("data-sidebar-collapsed") : root.hasAttribute("data-nav-open");
+        for (const button of menuButtons) button.setAttribute("aria-expanded", String(expanded));
+      };
+      const setCollapsed = (collapsed: boolean) => {
+        root.toggleAttribute("data-sidebar-collapsed", collapsed);
+        try {
+          if (collapsed) localStorage.setItem("slotsmith-sidebar", "collapsed");
+          else localStorage.removeItem("slotsmith-sidebar");
+        } catch {}
+        syncExpanded();
+      };
+      syncExpanded();
       for (const button of menuButtons) {
         button.addEventListener("click", () => {
+          if (hasColumn()) return setCollapsed(!root.hasAttribute("data-sidebar-collapsed"));
           opener = button;
           setOpen(!root.hasAttribute("data-nav-open"));
         });
@@ -109,8 +128,9 @@ const hasSidebar = Astro.slots.has("sidebar");
       });
       // Growing past 1024px turns the sheet back into a column (docs pages) or
       // hides the dock button that opened it, so an open sheet closes.
-      window.matchMedia("(min-width: 1024px)").addEventListener("change", (event) => {
+      wide.addEventListener("change", (event) => {
         if (event.matches && root.hasAttribute("data-nav-open")) setOpen(false, false);
+        syncExpanded();
       });
 
       // Search: the search island (plan 08) listens for this event.

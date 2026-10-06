@@ -1,0 +1,21 @@
+/* Collapsible sidebar column on docs pages (from 1024px). The header's menu
+   button hides and shows the column; `data-sidebar-collapsed` on <html> is
+   set before first paint from the stored choice (see ThemeScript.astro). */
+
+@media (min-width: 1024px) {
+  .site-header .menu-button:not([data-sheet-only]) {
+    display: inline-grid;
+  }
+
+  html[data-sidebar-collapsed] .shell[data-has-sidebar] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-sidebar-collapsed] .shell[data-has-sidebar] > main {
+    padding-inline: var(--gutter);
+  }
+
+  html[data-sidebar-collapsed] .sidebar:not([data-sheet-only]) {
+    display: none;
+  }
+}

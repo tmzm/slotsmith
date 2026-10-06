@@ -1,7 +1,8 @@
 ---
 /**
  * Sets `data-theme` on <html> before first paint from the stored choice.
- * Dark is the default. Must stay inline in <head>, ahead of the stylesheets.
+ * Dark is the default. Also restores a collapsed docs sidebar
+ * (`data-sidebar-collapsed`). Must stay inline in <head>, ahead of the stylesheets.
  */
 ---
 <script is:inline>
@@ -13,5 +14,8 @@
     document.documentElement.dataset.theme = theme;
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta && theme === "light") meta.setAttribute("content", "#f4f3ef");
+    try {
+      if (localStorage.getItem("slotsmith-sidebar") === "collapsed") document.documentElement.setAttribute("data-sidebar-collapsed", "");
+    } catch (e) {}
   })();
 </script>
