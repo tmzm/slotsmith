@@ -1,5 +1,6 @@
 import { useContext, useMemo } from "react";
-import { withoutUndefined, type SlotsmithComponentName } from "./components";
+import { withoutUndefined } from "../shared/withoutUndefined";
+import type { SlotsmithComponentName } from "./components";
 import { SlotsmithContext } from "./context";
 
 /**

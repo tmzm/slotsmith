@@ -4,6 +4,7 @@ import { useMemo, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
+import { withoutUndefined } from "../shared/withoutUndefined";
 import type { UploadItem } from "./core/types";
 import {
   useFileUploader,
@@ -68,17 +69,6 @@ export interface FileUploaderProviderProps<TData = unknown> extends UseFileUploa
   slotProps?: FileUploaderSlotProps;
   /** Your layout, built from the compound parts and your own components. */
   children?: ReactNode;
-}
-
-/**
- * Without undefined
- *
- * Drops `undefined` entries, so `{ Icon: undefined }` keeps the fallback.
- */
-function withoutUndefined<O extends object>(object: O | undefined): Partial<O> {
-  return Object.fromEntries(
-    Object.entries(object ?? {}).filter(([, value]) => value !== undefined),
-  ) as Partial<O>;
 }
 
 /**

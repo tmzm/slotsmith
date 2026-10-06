@@ -3,6 +3,7 @@ import { useContext, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
+import { withoutUndefined } from "../shared/withoutUndefined";
 import { useDataTable, type UseDataTableOptions } from "./core/useDataTable";
 import {
   DataTableBody,
@@ -49,14 +50,6 @@ export interface DataTableProviderProps<T extends RowData> extends UseDataTableO
   /** Your layout, built from the compound parts and your own components. */
   children?: ReactNode;
 }
-
-/**
- * Without undefined
- *
- * Drops `undefined` entries, so `{ Row: undefined }` keeps the fallback.
- */
-const withoutUndefined = <O extends object>(object: O | undefined): Partial<O> =>
-  Object.fromEntries(Object.entries(object ?? {}).filter(([, value]) => value !== undefined)) as Partial<O>;
 
 /**
  * DataTable.Provider

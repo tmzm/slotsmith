@@ -4,6 +4,7 @@ import { useMemo, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
+import { withoutUndefined } from "../shared/withoutUndefined";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import type { OptionValue } from "./core/types";
 import { useAutocomplete, type UseAutocompleteOptions } from "./core/useAutocomplete";
@@ -154,19 +155,6 @@ const toArray = <T,>(value: T | T[] | null | undefined): T[] => {
   const list = Array.isArray(value) ? value : [value];
   return list.filter((entry) => entry !== null && entry !== undefined && entry !== ("" as unknown as T));
 };
-
-/**
- * Without undefined
- *
- * Drops `undefined` entries, so `{ Option: undefined }` keeps the fallback
- * instead of erasing it.
- *
- * @typeParam O - The object type.
- * @param object - The overrides, or nothing.
- * @returns The defined entries.
- */
-const withoutUndefined = <O extends object>(object: O | undefined): Partial<O> =>
-  Object.fromEntries(Object.entries(object ?? {}).filter(([, value]) => value !== undefined)) as Partial<O>;
 
 /**
  * Autocomplete.Provider

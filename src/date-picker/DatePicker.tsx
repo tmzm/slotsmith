@@ -6,6 +6,7 @@ import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
 import { mergeProps } from "../shared/mergeProps";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
+import { withoutUndefined } from "../shared/withoutUndefined";
 import { formatDate } from "./core/calendar";
 import type { DatePickerMode, DatePickerPreset, DateRange, ISODate } from "./core/types";
 import { useDatePicker, type UseDatePickerOptions } from "./core/useDatePicker";
@@ -128,19 +129,6 @@ type LooseProps = DatePickerSharedProps & {
   onChange?: (value: never) => void;
   children?: ReactNode;
 };
-
-/**
- * Without undefined
- *
- * Drops `undefined` entries, so `{ Day: undefined }` keeps the fallback
- * instead of erasing it.
- *
- * @typeParam O - The object type.
- * @param object - The overrides, or nothing.
- * @returns The defined entries.
- */
-const withoutUndefined = <O extends object>(object: O | undefined): Partial<O> =>
-  Object.fromEntries(Object.entries(object ?? {}).filter(([, value]) => value !== undefined)) as Partial<O>;
 
 /** The trigger's default format: "Mar 12, 2026" in English. */
 const DEFAULT_FORMAT: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };

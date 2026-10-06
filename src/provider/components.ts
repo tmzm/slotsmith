@@ -2,6 +2,7 @@ import type { AutocompleteComponents } from "../autocomplete/slots/types";
 import type { DataTableComponents } from "../data-table/slots/types";
 import type { DatePickerComponents } from "../date-picker/slots/types";
 import type { FileUploaderComponents } from "../file-uploader/slots/types";
+import { withoutUndefined } from "../shared/withoutUndefined";
 
 /**
  * Provider components
@@ -47,19 +48,6 @@ export type SlotsmithComponentName = keyof SlotsmithComponents;
 
 /** What the context holds outside a provider, and under one that sets no components. */
 export const NO_COMPONENTS: SlotsmithComponents = {};
-
-/**
- * Without undefined
- *
- * Drops `undefined` entries, so `{ Row: undefined }` keeps the layer below
- * instead of erasing it.
- *
- * @typeParam O - The object type.
- * @param object - The overrides, or nothing.
- * @returns The defined entries.
- */
-export const withoutUndefined = <O extends object>(object: O | undefined): Partial<O> =>
-  Object.fromEntries(Object.entries(object ?? {}).filter(([, value]) => value !== undefined)) as Partial<O>;
 
 /**
  * Merge components
