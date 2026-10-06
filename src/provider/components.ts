@@ -25,8 +25,17 @@ import type { FileUploaderComponents } from "../file-uploader/slots/types";
 export interface SlotsmithComponents {
   /** Slots for `DataTable` and `VirtualDataTable`. */
   dataTable?: Partial<DataTableComponents>;
-  /** Slots for `Autocomplete` and `VirtualAutocomplete`, the data table's page-size select included. */
-  autocomplete?: Partial<AutocompleteComponents>;
+  /**
+   * Slots for `Autocomplete` and `VirtualAutocomplete`, the data table's
+   * page-size select included.
+   *
+   * These run for every autocomplete below the provider, whatever its
+   * options are, the table's page sizes (`{ value: number, label: string }`)
+   * among them. So the map is typed for an unknown option: a `Tag` or
+   * `OptionLabel` written for one option shape is a type error here, and
+   * belongs on the autocomplete that has those options instead.
+   */
+  autocomplete?: Partial<AutocompleteComponents<unknown>>;
   /** Slots for `DatePicker`. */
   datePicker?: Partial<DatePickerComponents>;
   /** Slots for `FileUploader` and `VirtualFileUploader`. */

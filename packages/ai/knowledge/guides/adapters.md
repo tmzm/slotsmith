@@ -50,6 +50,7 @@ const components: SlotsmithComponents = {
 - A component's own `components` prop still wins, slot by slot, so one table can swap a single part and keep the rest of the adapter: `<DataTable components={{ Empty: NoOrders }} />`.
 - The virtual variants (`VirtualDataTable`, `VirtualAutocomplete`, `VirtualFileUploader`) and layouts rebuilt from `<Component>.Provider` and the parts read the same maps.
 - The data table's built-in page-size select is the slotsmith `Autocomplete`, so `components.autocomplete` skins it too. An adapter that sets the table's `PageSizeSelect` slot replaces it altogether.
+- Provider-level autocomplete slots receive every option type, including the table's page-size options (`{ value: number, label: string }`). `components.autocomplete` is typed `Partial<AutocompleteComponents<unknown>>` for that reason: the generated adapters fit as they are, while a `Tag` or `OptionLabel` typed for one option shape is a type error at the provider. Put such a part on that autocomplete's own `components` prop.
 - The same provider also sets the language (`locale`, `locales`); see the i18n guide. One provider carries both.
 
 The slots guide has the full precedence rule and how nested providers merge.

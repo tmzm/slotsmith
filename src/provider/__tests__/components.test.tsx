@@ -3,7 +3,7 @@ import { memo, useContext, type ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import { Autocomplete } from "../../autocomplete/Autocomplete";
 import { useAutocompleteContext } from "../../autocomplete/slots/context";
-import type { AutocompleteComponents } from "../../autocomplete/slots/types";
+import type { AutocompleteComponents, AutocompleteOptionLabelSlotProps } from "../../autocomplete/slots/types";
 import { DataTable } from "../../data-table/DataTable";
 import { useDataTableContext } from "../../data-table/slots/context";
 import type { DataTableComponents, EmptySlotProps } from "../../data-table/slots/types";
@@ -315,16 +315,31 @@ describe("context identity", () => {
  * Types
  *
  * Never rendered: the compiler is the assertion. Each key takes the map its
- * component's own `components` prop takes, and nothing else.
+ * component's own `components` prop takes, and nothing else. The autocomplete
+ * is the one narrowing: its provider-level slots meet every option type, so a
+ * map typed for one option is refused.
  */
 export function TypeChecks() {
   const table: Partial<DataTableComponents> = {};
-  const autocomplete: Partial<AutocompleteComponents<{ id: string }>> = {};
+  /** Declared the way the generated adapters are: for any option. */
+  const autocomplete: Partial<AutocompleteComponents> = {};
+  const agnostic: Partial<AutocompleteComponents<unknown>> = {
+    OptionLabel: ({ option, label }: AutocompleteOptionLabelSlotProps<unknown>) => <i>{option === null ? "" : label}</i>,
+  };
+  const forUsers: Partial<AutocompleteComponents<{ id: string }>> = {};
+  const UserLabel = ({ option }: AutocompleteOptionLabelSlotProps<{ id: string }>) => <i>{option.id}</i>;
   const datePicker: Partial<DatePickerComponents> = {};
   const fileUploader: Partial<FileUploaderComponents> = {};
   return (
     <>
       <SlotsmithProvider components={{ dataTable: table, autocomplete, datePicker, fileUploader }} />
+      <SlotsmithProvider components={{ autocomplete: agnostic }} />
+      {/* @ts-expect-error — a map typed for one option would also run against the table's page sizes. */}
+      <SlotsmithProvider components={{ autocomplete: forUsers }} />
+      {/* @ts-expect-error — a slot that reads `option.id` cannot render every autocomplete below. */}
+      <SlotsmithProvider components={{ autocomplete: { OptionLabel: UserLabel } }} />
+      {/* The same slot is fine on the autocomplete that has those options. */}
+      <Autocomplete options={[{ id: "a" }]} components={{ OptionLabel: UserLabel }} />
       {/* @ts-expect-error — the table has no `Day` slot. */}
       <SlotsmithProvider components={{ dataTable: { Day: ProviderEmpty } }} />
       {/* @ts-expect-error — `Empty` receives a message, not a checkbox's props. */}

@@ -70,6 +70,8 @@ export interface SlotsmithProviderProps {
  * The data table's built-in page-size select is an `Autocomplete`, so it
  * follows `components.autocomplete`; a `PageSizeSelect` slot, from
  * `components.dataTable` or the table's own prop, replaces it altogether.
+ * For that reason `components.autocomplete` receives every option type, the
+ * table's page-size options included, and its slots must not assume one.
  *
  * @param props - See {@link SlotsmithProviderProps}.
  *

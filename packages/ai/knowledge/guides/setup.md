@@ -67,7 +67,7 @@ import { SlotsmithProvider } from "slotsmith/provider";
 ```
 
 - `locale` / `locales` set the language; see the i18n guide.
-- `components` replaces parts for every component at once (`{ dataTable, autocomplete, datePicker, fileUploader }`), which is how a design-system adapter is applied once instead of on each component; see the slots and adapters guides.
+- `components` replaces parts for every component at once (`{ dataTable, autocomplete, datePicker, fileUploader }`), which is how a design-system adapter is applied once instead of on each component; see the slots and adapters guides. Provider-level autocomplete slots receive every option type, including the table's page-size options, so they must not assume one option shape.
 
 The provider imports no component, so it adds nothing to the bundle beyond itself. It is a client component like the rest; in a React Server Components framework render it from a `"use client"` file, because the parts in `components` are functions.
 

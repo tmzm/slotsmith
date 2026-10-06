@@ -36,6 +36,7 @@ Each part resolves in three layers, the later one winning, one part at a time:
 - Nested providers merge part by part, the inner one winning, and inherit every component the inner one does not name. A provider that only sets `locale` passes the outer `components` through.
 - It reaches every way of rendering a component: the default layout, the virtual variants in `slotsmith/virtual`, and a layout rebuilt from `<Component>.Provider` and the parts. `use<Component>Context().components` returns the merged result.
 - The data table's fallback page-size select is the slotsmith `Autocomplete`, so it follows `components.autocomplete`. A `PageSizeSelect` part, from `components.dataTable` or the table's own prop, replaces it altogether.
+- Provider-level autocomplete slots receive every option type, including the table's page-size options (`{ value: number, label: string }`), so `components.autocomplete` is typed for an unknown option (`Partial<AutocompleteComponents<unknown>>`). A `Tag` or `OptionLabel` that reads fields of one option type does not type-check there; set it on that autocomplete's own `components` prop, which is typed by its `options`.
 - Only `components` is shared. `slotProps` and `labels` stay on each component (the language is shared through the provider's `locale`).
 - Outside a provider nothing changes.
 
