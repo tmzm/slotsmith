@@ -79,7 +79,7 @@
   transform: translateX(0.75rem);
 }
 
-[dir="rtl"] .xray__toggle[aria-pressed="true"] .xray__switch::after {
+.xray[dir="rtl"] .xray__toggle[aria-pressed="true"] .xray__switch::after {
   transform: translateX(-0.75rem);
 }
 
@@ -98,7 +98,7 @@
   overscroll-behavior-x: contain;
 }
 
-[dir="rtl"] .xray__box {
+.xray[dir="rtl"] .xray__box {
   padding: 4.5rem 3.75rem 5rem 1rem;
 }
 
@@ -115,10 +115,42 @@
   --explode: 1;
 }
 
-/* The slot under the pointer or focus in the list, outlined in the table. */
-.xray__box [data-xray-active] {
-  outline: 2px solid var(--gold);
-  outline-offset: -2px;
+/* The slot under the pointer or focus in the list is outlined in the table by
+   rules XRay.tsx writes from SLOT_SELECTORS (`data-highlight`). */
+
+/* Narrow screens: the pagination wraps under the page-size select and the
+   rows wrap their names, so the labels that would land on another label or
+   on cell text stay hidden. The list below still names every part. */
+@media (max-width: 40rem) {
+  .xray .explode__label:is([data-slot="PageSizeSelect"], [data-slot="FooterRow"]) {
+    display: none;
+  }
+
+  /* These two slide toward the start side, off the name column, and their
+     leaders move the other way so they still point at the part. */
+  .xray .explode__label[data-slot="Checkbox"] {
+    translate: -1.25rem calc(-100% - 0.625rem);
+  }
+
+  .xray .explode__label[data-slot="Checkbox"]:dir(rtl) {
+    translate: calc(-100% + 1.25rem) calc(-100% - 0.625rem);
+  }
+
+  .xray .explode__label[data-slot="Checkbox"]::after {
+    inset-inline-start: 2.25rem;
+  }
+
+  .xray .explode__label[data-slot="Row"] {
+    translate: -1.5rem calc(-100% - 0.625rem);
+  }
+
+  .xray .explode__label[data-slot="Row"]:dir(rtl) {
+    translate: calc(-100% + 1.5rem) calc(-100% - 0.625rem);
+  }
+
+  .xray .explode__label[data-slot="Row"]::after {
+    inset-inline-start: 2.5rem;
+  }
 }
 
 .xray__hint {

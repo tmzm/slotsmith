@@ -11,8 +11,8 @@ function Summary() {
   );
 }
 
-// The default layout is Root > Table + Pagination. Here pagination sits on top
-// and a summary line sits between the parts.
+// The default layout is Root > Table + Pagination. Here the pagination sits on
+// top and a summary line follows the table, all inside the root.
 export default function CompoundParts() {
   return (
     <DataTable.Provider data={people} columns={columns} enableRowSelection defaultPagination={{ pageIndex: 0, pageSize: 4 }}>

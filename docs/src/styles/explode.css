@@ -1,12 +1,15 @@
 /*
  * The swap demo and its exploded view (docs/DESIGN.md section 6, item 2).
  *
- * `--explode` runs from 0 (assembled) to 1 (exploded). Only
- * `landing-motion.ts` changes it; CSS turns it into each part's transform and
- * each label's opacity, from the part's `--dx` / `--dy` (in rem, set by
- * ExplodedView). Until the motion module takes over, `.explode` carries
- * `data-static`: the table stays assembled and a static labelled figure sits
- * beside it. Only transform and opacity animate.
+ * `--explode` runs from 0 (assembled) to 1 (exploded). On the landing
+ * `landing-motion.ts` changes it; on the slot model guide the X-ray's "Show
+ * parts" toggle does (`styles/xray.css`). CSS turns it into each part's
+ * transform and each label's opacity, from the part's `--dx` / `--dy` (in rem,
+ * set by ExplodedView). On the landing, until the motion module takes over,
+ * `.explode` carries `data-static`: the table stays assembled and a static
+ * labelled figure sits beside it. Only transform and opacity animate. Label
+ * placement follows the view's own direction (`:dir()`), not the page's, since
+ * the X-ray can show English inside an Arabic page.
  */
 
 @property --explode {
@@ -60,7 +63,7 @@
   opacity: var(--explode, 0);
 }
 
-[dir="rtl"] .explode__label {
+.explode__label:dir(rtl) {
   translate: calc(-100% - 0.5rem) calc(-100% - 0.625rem);
 }
 

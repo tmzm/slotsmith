@@ -7,8 +7,8 @@ function Row({ className, ...props }: RowSlotProps) {
   return <tr {...props} className={["app-row", className].filter(Boolean).join(" ")} />;
 }
 
-function Cell(props: CellSlotProps) {
-  return <td {...props} className="app-cell" />;
+function Cell({ className, ...props }: CellSlotProps) {
+  return <td {...props} className={["app-cell", className].filter(Boolean).join(" ")} />;
 }
 
 export default function ElementPart() {

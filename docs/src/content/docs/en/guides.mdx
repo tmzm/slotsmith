@@ -50,7 +50,7 @@ Merge the `className` you are given with your own, as the sample does, or the fa
 
 ## Compound parts
 
-`<DataTable>` is a fixed layout: a root holding the table and the pagination. For another layout, build it from the compound parts inside `DataTable.Provider`, which takes every `DataTable` prop and renders no element of its own. The parts are `DataTable.Root`, `DataTable.Table`, `DataTable.Head`, `DataTable.Body`, `DataTable.Foot`, `DataTable.Row`, `DataTable.StatusRows`, `DataTable.Pagination` and `DataTable.DragHandle`. `useDataTableContext()` reads the same model from any component among them.
+`<DataTable>` is a fixed layout: a root holding the table and the pagination. For another layout, build it from the compound parts inside `DataTable.Provider`. The provider takes the data, the state options and `components`, `labels`, `locale`, `slotProps` and `onRowClick`, and renders no element of its own; `size`, `striped` and HTML attributes go on `DataTable.Root`, and `hidePagination` belongs to `<DataTable>` alone (leave `DataTable.Pagination` out instead). The parts are `DataTable.Root`, `DataTable.Table`, `DataTable.Head`, `DataTable.Body`, `DataTable.Foot`, `DataTable.Row`, `DataTable.StatusRows`, `DataTable.Pagination` and `DataTable.DragHandle`. `useDataTableContext()` reads the same model from any component among them.
 
 {/* Reserved height measured in Chrome: 31.4rem up to 420px, 28.9rem to 560px, where the pagination wraps, and 22.8rem from 580px. */}
 <Demo name="guides/compound-parts" lang="en" height="clamp(22.8rem, 38.95rem - 28.57vw, 31.45rem)" fallback />

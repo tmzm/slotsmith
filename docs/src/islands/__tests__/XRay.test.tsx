@@ -41,4 +41,15 @@ describe("XRay", () => {
     expect(toggle.getAttribute("aria-pressed")).toBe("true");
     expect(root.hasAttribute("data-exploded")).toBe(true);
   });
+
+  it("highlights the slot under focus with a selector, so rows rendered later match too", () => {
+    const { container } = render(<XRay slots={slots} lang="en" />);
+    const root = container.querySelector(".xray")!;
+    const link = screen.getAllByRole("link").find((candidate) => candidate.getAttribute("href")?.endsWith("#slot-Row"))!;
+    fireEvent.focus(link);
+    expect(root.getAttribute("data-highlight")).toBe("Row");
+    expect(container.querySelector("style")!.textContent).toContain('.xray[data-highlight="Row"]');
+    fireEvent.blur(link);
+    expect(root.hasAttribute("data-highlight")).toBe(false);
+  });
 });

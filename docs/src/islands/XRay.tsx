@@ -16,7 +16,7 @@
  */
 import "@/styles/explode.css";
 import "@/styles/xray.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { DataTable, type DataTableColumnDef } from "slotsmith/data-table";
 import ExplodedView from "@/islands/ExplodedView";
 import SiteLocale from "@/islands/SiteLocale";
@@ -41,6 +41,16 @@ export interface XRayProps {
 
 /** The parts labelled on the table when it explodes: the landing's, less Cell (its label would sit on Row's), plus the footer row. */
 const PICKS = ["HeaderRow", "HeaderCell", "SortIcon", "Row", "Checkbox", "FooterRow", "Pagination", "PageSizeSelect"];
+
+/**
+ * One rule per slot: while `data-highlight` names a slot, its elements in the
+ * table are outlined. A selector, not attributes set on elements, so rows that
+ * render while a slot is highlighted (a sort, a page change) are outlined too.
+ * The selectors are the fallbacks' own classes; the labels never match them.
+ */
+const HIGHLIGHT_RULES = Object.entries(SLOT_SELECTORS["data-table"])
+  .map(([name, selector]) => `.xray[data-highlight="${name}"] .xray__box :is(${selector}){outline:2px solid var(--gold);outline-offset:-2px}`)
+  .join("");
 
 type Messages = {
   toggle: string;
@@ -92,7 +102,6 @@ export default function XRay({ slots, lang, contentLang = lang }: XRayProps) {
   const messages = MESSAGES[contentLang];
   const [exploded, setExploded] = useState(false);
   const [active, setActive] = useState<string | undefined>();
-  const stage = useRef<HTMLDivElement>(null);
   const selectors = SLOT_SELECTORS["data-table"];
 
   const parts = useMemo(
@@ -109,20 +118,9 @@ export default function XRay({ slots, lang, contentLang = lang }: XRayProps) {
     ];
   }, [messages]);
 
-  // Outline the active slot's elements; the selectors are the fallbacks' own classes.
-  useEffect(() => {
-    const root = stage.current;
-    const selector = active ? selectors[active] : undefined;
-    if (!root || !selector) return;
-    const matches = [...root.querySelectorAll<HTMLElement>(selector)].filter((element) => !element.closest(".explode__label"));
-    for (const element of matches) element.setAttribute("data-xray-active", "");
-    return () => {
-      for (const element of matches) element.removeAttribute("data-xray-active");
-    };
-  }, [active, selectors]);
-
   return (
-    <div className="xray" data-exploded={exploded ? "" : undefined} lang={contentLang} dir={contentLang === "ar" ? "rtl" : "ltr"}>
+    <div className="xray" data-exploded={exploded ? "" : undefined} data-highlight={active} lang={contentLang} dir={contentLang === "ar" ? "rtl" : "ltr"}>
+      <style>{HIGHLIGHT_RULES}</style>
       <div className="xray__bar">
         <button type="button" className="xray__toggle" aria-pressed={exploded} onClick={() => setExploded((value) => !value)}>
           <span className="xray__switch" aria-hidden="true" />
@@ -130,7 +128,7 @@ export default function XRay({ slots, lang, contentLang = lang }: XRayProps) {
         </button>
       </div>
 
-      <div className="xray__box site-demo" ref={stage}>
+      <div className="xray__box site-demo">
         <ExplodedView parts={parts} live>
           <SiteLocale lang={contentLang}>
             <DataTable

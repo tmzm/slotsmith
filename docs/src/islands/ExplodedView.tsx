@@ -106,6 +106,7 @@ export default function ExplodedView({ parts, caption, live = false, children }:
             <span
               key={part.slot}
               className={`explode__label explode__label--${part.kind}`}
+              data-slot={part.slot}
               aria-hidden="true"
               hidden={!at}
               style={at ? { left: at.x, top: at.y, ["--dx" as string]: part.dx * at.sign, ["--dy" as string]: part.dy } : undefined}
