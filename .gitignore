@@ -35,3 +35,6 @@ coverage
 .cache
 *.local
 graphify-out/
+
+# Next.js
+.next

@@ -51,6 +51,13 @@ jobs:
       - name: Build the library
         run: pnpm build
 
+      # The framework examples install the built library, the way an app would.
+      - name: Build the Next.js example
+        run: pnpm --filter example-next build
+
+      - name: Build the Vite example
+        run: pnpm --filter example-vite build
+
       - name: Install Chromium for Playwright
         run: pnpm --filter slotsmith-docs exec playwright install --with-deps chromium
 
