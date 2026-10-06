@@ -67,7 +67,13 @@ describe("buildFacts from a test report", () => {
       kind: "integration",
       tests: ["DataTable with MUI parts renders MUI rows", "DataTable with MUI parts sorts from an MUI header"],
     });
-    expect(suites.find((suite) => suite.file === "src/__tests__/bundle.test.ts")).toMatchObject({ component: "package", library: null, kind: "bundle" });
+    expect(suites.find((suite) => suite.file === "src/__tests__/bundle.test.ts")).toMatchObject({
+      component: "package",
+      library: null,
+      kind: "bundle",
+      // The describe block and the test's own title, as the report records them.
+      groups: [{ name: "what an application bundles", tests: ["drops the date picker from a table import"] }],
+    });
     expect(suites.find((suite) => suite.file.endsWith("a11y.test.tsx"))).toMatchObject({ component: "autocomplete", library: null, kind: "a11y" });
     expect(suites.find((suite) => suite.file.endsWith("reorder.test.ts"))).toMatchObject({ component: "data-table", library: null, kind: "unit" });
   }, 60_000);

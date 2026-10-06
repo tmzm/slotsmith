@@ -17,13 +17,12 @@ import { groupTitles } from "@/lib/trust";
 import { SITE } from "../../../../site.config.ts";
 import { A11Y_END_MARKER, A11Y_MARKER } from "../../../../scripts/lib/a11y-report.ts";
 
-const BUNDLE_TITLES = [
-  "what an app bundles drops everything but DataTable",
-  "what an app bundles keeps what the app imports",
-  "the stylesheets ships the whole set",
-  "locales keeps every pack out of a component's bundle",
-  "locales ships the packs without a client directive",
+const BUNDLE_GROUPS = [
+  { name: "what an app bundles", tests: ["drops everything but DataTable", "keeps what the app imports"] },
+  { name: "the stylesheets", tests: ["ships the whole set"] },
+  { name: "locales", tests: ["keeps every pack out of a component's bundle", "ships the packs without a client directive"] },
 ];
+const BUNDLE_TITLES = BUNDLE_GROUPS.flatMap((group) => group.tests.map((title) => `${group.name} ${title}`));
 
 const facts: Facts = {
   version: "2.3.4",
@@ -46,7 +45,7 @@ const facts: Facts = {
     { component: "total", lines: 97.21, branches: 87.48, functions: 97.61, statements: 95.37 },
   ],
   suites: [
-    { file: "src/__tests__/bundle.test.ts", component: "package", library: null, kind: "bundle", tests: BUNDLE_TITLES },
+    { file: "src/__tests__/bundle.test.ts", component: "package", library: null, kind: "bundle", tests: BUNDLE_TITLES, groups: BUNDLE_GROUPS },
     { file: "src/data-table/__tests__/integrations/chakra.test.tsx", component: "data-table", library: "chakra", kind: "integration", tests: ["Chakra UI v3 renders rows", "Chakra UI v3 sorts <a column>"] },
     { file: "src/data-table/__tests__/integrations/mui.test.tsx", component: "data-table", library: "mui", kind: "integration", tests: ["MUI v7 renders rows"] },
     { file: "src/date-picker/__tests__/integrations/mui.test.tsx", component: "date-picker", library: "mui", kind: "integration", tests: ["MUI v7 picks a day", "MUI v7 picks a range"] },
@@ -113,12 +112,12 @@ describe("SuitesList", () => {
     expect(text(doc.querySelector(".trust-summary"))).toBe("1 integration suite with 1 test, for 1 library.");
   });
 
-  it("lists what the bundle test proves, its titles grouped under the words they share", async () => {
+  it("lists what the bundle test proves, its titles under their describe blocks", async () => {
     const doc = await render(SuitesList, { kind: "bundle" });
-    expect([...doc.querySelectorAll(".trust-titles__group")].map(text)).toEqual(["what an app bundles", "locales"]);
+    expect([...doc.querySelectorAll(".trust-titles__group")].map(text)).toEqual(["what an app bundles", "the stylesheets", "locales"]);
     expect([...doc.querySelectorAll("ul")].map((list) => [...list.querySelectorAll("li")].map(text))).toEqual([
       ["drops everything but DataTable", "keeps what the app imports"],
-      ["the stylesheets ships the whole set"],
+      ["ships the whole set"],
       ["keeps every pack out of a component's bundle", "ships the packs without a client directive"],
     ]);
     expect(text(doc.querySelector(".trust-summary"))).toBe("5 tests in src/__tests__/bundle.test.ts");
@@ -127,14 +126,19 @@ describe("SuitesList", () => {
 });
 
 describe("groupTitles", () => {
-  it("leaves every title at least one word, and a lone title whole", () => {
-    expect(groupTitles(["a b", "a b"])).toEqual([{ prefix: "a", titles: ["b", "b"] }]);
-    expect(groupTitles(["a b c"])).toEqual([{ prefix: "", titles: ["a b c"] }]);
-    expect(groupTitles([])).toEqual([]);
+  it("uses the describe blocks the report recorded, a one-test block included", () => {
+    expect(groupTitles({ tests: BUNDLE_TITLES, groups: BUNDLE_GROUPS }).map((group) => [group.prefix, group.titles.length])).toEqual([
+      ["what an app bundles", 2],
+      ["the stylesheets", 1],
+      ["locales", 2],
+    ]);
   });
 
-  it("starts a new group when the first word changes, and again when it comes back", () => {
-    expect(groupTitles(["the x one", "the x two", "locales a", "the y one", "the y two"]).map((group) => group.prefix)).toEqual(["the x", "", "the y"]);
+  it("keeps the full titles in one unnamed group when no blocks were recorded", () => {
+    expect(groupTitles({ tests: ["the stylesheets ships the whole set", "the stylesheets ships one"] })).toEqual([
+      { prefix: "", titles: ["the stylesheets ships the whole set", "the stylesheets ships one"] },
+    ]);
+    expect(groupTitles({ tests: [] })).toEqual([]);
   });
 });
 
@@ -211,7 +215,7 @@ describe("trustMarkdown", () => {
       [
         "5 tests in `src/__tests__/bundle.test.ts`",
         "- what an app bundles\n  - drops everything but DataTable\n  - keeps what the app imports",
-        "- the stylesheets ships the whole set",
+        "- the stylesheets\n  - ships the whole set",
         "- locales\n  - keeps every pack out of a component's bundle\n  - ships the packs without a client directive",
       ].join("\n\n"),
     );

@@ -274,7 +274,7 @@ export function trustMarkdown({ name, attrs, children }: TrustBlock, lang: Lang,
           .map((suite) =>
             [
               `${t(lang, "trust.bundle.summary", { tests: tests(suite.tests.length) })} ${code(suite.file)}`,
-              ...groupTitles(suite.tests).map((group) =>
+              ...groupTitles(suite).map((group) =>
                 group.prefix ? `- ${group.prefix}\n${group.titles.map((title) => `  - ${title}`).join("\n")}` : group.titles.map((title) => `- ${title}`).join("\n"),
               ),
             ].join("\n\n"),

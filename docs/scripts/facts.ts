@@ -40,7 +40,7 @@ interface TestReport {
     name: string;
     status: string;
     message?: string;
-    assertionResults: { fullName: string; status: string; failureMessages: string[] }[];
+    assertionResults: { fullName: string; status: string; failureMessages: string[]; ancestorTitles?: string[]; title?: string }[];
   }[];
 }
 
@@ -171,9 +171,31 @@ function suitesOf(report: TestReport): Facts["suites"] {
       if (integration) kind = "integration";
       else if (file === "src/__tests__/bundle.test.ts") kind = "bundle";
       else if (name === "a11y.test.tsx" || name.includes("axe") || importsAxe(file)) kind = "a11y";
-      return { file, component, library: integration?.[1] ?? null, kind, tests: result.assertionResults.map((test) => test.fullName) };
+      const tests = result.assertionResults.map((test) => test.fullName);
+      // Only the page's list of what the tree-shaking test asserts shows the titles under their `describe` blocks.
+      return kind === "bundle"
+        ? { file, component, library: null, kind, tests, groups: describeGroups(result.assertionResults) }
+        : { file, component, library: integration?.[1] ?? null, kind, tests };
     })
     .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
+}
+
+/**
+ * A file's tests under their `describe` blocks, in report order: each run of
+ * consecutive tests with the same ancestors is one group, named by those
+ * ancestors (nested blocks joined with a space; empty for a test outside any
+ * block), with each test's own title.
+ */
+function describeGroups(tests: TestReport["testResults"][number]["assertionResults"]): NonNullable<Facts["suites"][number]["groups"]> {
+  const groups: NonNullable<Facts["suites"][number]["groups"]> = [];
+  for (const test of tests) {
+    const name = (test.ancestorTitles ?? []).join(" ");
+    const last = groups.at(-1);
+    const title = test.title ?? test.fullName;
+    if (last && last.name === name) last.tests.push(title);
+    else groups.push({ name, tests: [title] });
+  }
+  return groups;
 }
 
 /** A percentage with two decimals, as the coverage report rounds it; 100 when there is nothing to cover. */

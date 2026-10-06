@@ -72,39 +72,23 @@ export function bundleSuites(facts: Facts): Suite[] {
   return facts.suites.filter((suite) => suite.kind === "bundle");
 }
 
-/** Test titles that share their opening words, which is the `describe` block they sit in. */
+/** The tests of one `describe` block. */
 export interface TitleGroup {
-  /** The shared opening words; empty when the group is one title or shares none. */
+  /** The block's name; empty for tests outside any block. */
   prefix: string;
-  /** Each title without the prefix. */
+  /** Each test's own title. */
   titles: string[];
 }
 
 /**
- * Groups full test titles so a shared opening is written once. The report
- * joins a test's `describe` names and its own name with spaces, so the split
- * is not recorded; this takes each run of consecutive titles that start with
- * the same word and uses the words they all share as the group's prefix,
- * always leaving every title at least one word. A run of `describe("a") →
- * it("b c")`, `it("b d")` therefore reads "a b": "c", "d".
+ * A suite's titles under the `describe` blocks they sit in, as the test
+ * report records them (`groups`). A suite without recorded blocks is one
+ * group of its full titles: the report joins block and test names with
+ * spaces, so the split cannot be told from a title alone.
  */
-export function groupTitles(titles: string[]): TitleGroup[] {
-  const groups: TitleGroup[] = [];
-  let at = 0;
-  while (at < titles.length) {
-    const first = titles[at]!.split(" ");
-    let end = at + 1;
-    while (end < titles.length && titles[end]!.split(" ")[0] === first[0]) end++;
-    const run = titles.slice(at, end).map((title) => title.split(" "));
-    let shared = 0;
-    if (run.length > 1) {
-      const shortest = Math.min(...run.map((words) => words.length));
-      while (shared < shortest - 1 && run.every((words) => words[shared] === first[shared])) shared++;
-    }
-    groups.push({ prefix: first.slice(0, shared).join(" "), titles: run.map((words) => words.slice(shared).join(" ")) });
-    at = end;
-  }
-  return groups;
+export function groupTitles(suite: Pick<Suite, "tests" | "groups">): TitleGroup[] {
+  if (suite.groups) return suite.groups.map((group) => ({ prefix: group.name, titles: group.tests }));
+  return suite.tests.length > 0 ? [{ prefix: "", titles: suite.tests }] : [];
 }
 
 /** How many tests a list of suites holds. */

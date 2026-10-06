@@ -3,7 +3,7 @@
  * Test suites by title. `kind="integration"`: the suites that run each
  * component with a UI library's parts, grouped by library, each suite a
  * disclosure of its test titles. `kind="bundle"`: what the tree-shaking test
- * asserts, as lists under the opening words the titles share. Both come from
+ * asserts, as lists under its `describe` blocks. Both come from
  * the test run's report, so a suite added to the library appears here with
  * no change to the docs. Test titles are English.
  */
@@ -60,7 +60,7 @@ const componentName = (directory: string) => {
   bundle.map((suite) => (
     <>
       <p class="trust-summary">{t(lang, "trust.bundle.summary", { tests: tests(suite.tests.length) })} <code dir="ltr">{suite.file}</code></p>
-      {groupTitles(suite.tests).map((group) => (
+      {groupTitles(suite).map((group) => (
         <>
           {group.prefix && <p class="trust-titles__group" lang="en" dir="ltr">{group.prefix}</p>}
           <ul class="trust-titles trust-titles--open" lang="en" dir="ltr">

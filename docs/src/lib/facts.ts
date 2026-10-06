@@ -33,9 +33,18 @@ export interface Facts {
    * is `integration` under `__tests__/integrations/` (`library` from the file
    * name), `bundle` for the tree-shaking test, `a11y` for `a11y.test.tsx` and
    * file names containing `axe`, otherwise `unit`. `component` is the
-   * `src/<component>/` directory, or `package` for `src/__tests__/`.
+   * `src/<component>/` directory, or `package` for `src/__tests__/`. The
+   * tree-shaking test also has `groups`: its tests under their `describe`
+   * blocks, each with its own title.
    */
-  suites: { file: string; component: string; library: string | null; kind: "integration" | "bundle" | "a11y" | "unit"; tests: string[] }[];
+  suites: {
+    file: string;
+    component: string;
+    library: string | null;
+    kind: "integration" | "bundle" | "a11y" | "unit";
+    tests: string[];
+    groups?: { name: string; tests: string[] }[];
+  }[];
   /** `styles.css` and each component's stylesheet, minified, then gzipped. */
   css: { entry: string; minBytes: number; gzipBytes: number }[];
 }
