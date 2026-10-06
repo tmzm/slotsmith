@@ -42,11 +42,13 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  expect(consoleError).not.toHaveBeenCalled();
+  // Unmount first, so an error logged while tearing down fails the test too.
   cleanup();
+  const errors = [...consoleError.mock.calls];
   vi.useRealTimers();
   vi.restoreAllMocks();
   vi.mocked(catalog.searchPackages).mockClear();
+  expect(errors).toEqual([]);
 });
 
 const key = (element: Element, name: string) => fireEvent.keyDown(element, { key: name });
@@ -135,9 +137,12 @@ describe("autocomplete guide: multiple values", () => {
     const combobox = screen.getByRole("combobox", { name: "Topics" });
     expect(tagLabels(combobox)).toEqual(["Remove Accessibility", "Remove Forms"]);
     expect(screen.queryByRole("listbox")).toBeNull();
-    fireEvent.click(combobox);
+    // Open from the keyboard: focus the trigger, then ArrowDown.
+    act(() => combobox.focus());
+    key(combobox, "ArrowDown");
     expect(screen.getByRole("listbox").getAttribute("aria-multiselectable")).toBe("true");
-    expect(liveRegion(container).textContent).toMatch(/^\d+ results$/);
+    expect(optionTexts()).toHaveLength(13);
+    expect(liveRegion(container).textContent).toBe("13 results");
     const search = screen.getByRole("searchbox");
     key(search, "Backspace");
     expect(tagLabels(combobox)).toEqual(["Remove Accessibility"]);
