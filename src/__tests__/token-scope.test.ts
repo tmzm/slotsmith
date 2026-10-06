@@ -204,7 +204,7 @@ describe("a wrapper's --ss-* tokens", () => {
     expect(computed(LIBRARY, [html(), table], "--_sdt-accent")).toBe("#2563eb");
   });
 
-  it("reach a popup mounted outside its component", () => {
+  it("reach a popup mounted outside its component but inside the wrapper", () => {
     const chain = [html(), wrapper({ "--ss-surface": "#fafafa" }), { classes: ["sac__popup"] }];
     expect(computed(LIBRARY, chain, "--_sac-surface")).toBe("#fafafa");
     expect(computed(LIBRARY, [html(), wrapper({ "--ss-surface": "#fafafa" }), { classes: ["sdp__popup"] }], "--_sdp-surface")).toBe("#fafafa");
@@ -246,6 +246,13 @@ describe("a dark ancestor", () => {
     const chain = [html(), wrapper({ "--ss-accent": "#ffd700" }, { classes: ["dark"] }), table];
     expect(computed(LIBRARY, chain, "--_sdt-accent")).toBe("#ffd700");
   });
+
+  it("is not undone by a light-marked wrapper inside it", () => {
+    // The stylesheet has no light rule to match, so the page's dark palette still applies.
+    const chain = [html({ attrs: { "data-theme": "dark" } }), wrapper({}, { attrs: { "data-theme": "light" } }), table];
+    expect(computed(LIBRARY, chain, "--_sdt-surface")).toBe("#141416");
+    expect(computed(LIBRARY, chain, "--_sdt-accent")).toBe("#60a5fa");
+  });
 });
 
 describe("an app's own component token", () => {
@@ -278,5 +285,10 @@ describe("an app's own component token", () => {
   it("reaches the table's page-size menu", () => {
     const chain = [html(), wrapper({ "--sdt-accent": "#008000" }), table, { classes: ["sac"] }];
     expect(computed(LIBRARY, chain, "--_sac-accent")).toBe("#008000");
+  });
+
+  it("is not read when set on an inner part", () => {
+    const row: Node = { classes: ["sdt__row"], style: { "--sdt-accent": "#008000" } };
+    expect(computed(LIBRARY, [html(), table, row], "--_sdt-accent")).toBe("#2563eb");
   });
 });
