@@ -68,7 +68,7 @@ describe("MUI provider direction", () => {
     expect(classes.some((name) => name.startsWith("css-"))).toBe(false);
     // MUI writes `text-align: left` for a cell; the cache turns it around.
     const cell = classes.find((name) => name.startsWith("muirtl-"))!;
-    expect(styles("muirtl")).toMatch(new RegExp(`\.${cell}\{[^}]*text-align:right`));
+    expect(styles("muirtl")).toMatch(new RegExp(String.raw`\.${cell}\{[^}]*text-align:right`));
     expect(error).not.toHaveBeenCalled();
     error.mockRestore();
   });
@@ -83,7 +83,7 @@ describe("MUI provider direction", () => {
     expect(classes.some((name) => name.startsWith("css-"))).toBe(true);
     expect(classes.some((name) => name.startsWith("muirtl-"))).toBe(false);
     const cell = classes.find((name) => name.startsWith("css-"))!;
-    expect(styles("css")).toMatch(new RegExp(`\.${cell}\{[^}]*text-align:left`));
+    expect(styles("css")).toMatch(new RegExp(String.raw`\.${cell}\{[^}]*text-align:left`));
   });
 });
 
