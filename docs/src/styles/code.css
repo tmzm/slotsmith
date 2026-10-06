@@ -20,6 +20,15 @@
   position: relative;
 }
 
+/*
+ * In prose a code block or a row of code tabs keeps a paragraph's spacing, so
+ * one under a heading, two in a row, or one before a heading never touch.
+ */
+.prose > .sample-code,
+.prose > .tabs {
+  margin-block: 1em;
+}
+
 .sample-code .astro-code {
   margin: 0;
   padding: 1rem 1.25rem;
