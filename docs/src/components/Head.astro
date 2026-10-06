@@ -61,10 +61,15 @@ if (lang === "ar") {
   );
 }
 faces.push(...fallbackFaces(lang).map(fallbackFaceCss));
-// Preload the body and display faces the first screen uses. Arabic pages use
-// the Arabic twins plus Big Shoulders, which sets Latin display text such as
-// the landing name; Geist is left out there, as Latin body runs are rare.
-const preloads = lang === "ar" ? [notoArabic400, alexandria800, bigShoulders900] : [geist400, bigShoulders900];
+// Preload every face the page is sure to use, so each one is ready by the
+// first layout. A face that arrives later is laid out in its fallback first,
+// which costs a second text layout and, for the fallback, opening a local
+// font. The layout's own chrome uses all of these on every page; the weight
+// 500 faces are used by the landing hero and only here and there elsewhere,
+// and a preload the page never uses is a console warning.
+const preloads = [geist400, geist600, bigShoulders900, jetbrains400, jetbrains500];
+if (lang === "ar") preloads.push(notoArabic400, notoArabic700, alexandria800);
+if (title === null) preloads.push(geist500, ...(lang === "ar" ? [notoArabic500] : []));
 
 /** Google's Tag Manager snippet, verbatim apart from the container id. */
 const gtmScript = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
