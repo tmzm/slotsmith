@@ -65,6 +65,7 @@ export default function Switcher() {
 
   return (
     <div className="languages-switcher">
+      {/* Buttons on a wide screen, a native menu on a narrow one (languages.css switches them). */}
       <div role="group" aria-label="Language of the demo">
         {LANGUAGES.map((language) => (
           <button
@@ -79,6 +80,18 @@ export default function Switcher() {
           </button>
         ))}
       </div>
+      <select
+        className="languages-switcher__select"
+        aria-label="Language of the demo"
+        value={code}
+        onChange={(event) => setPack(LANGUAGES.find((language) => (language.pack?.code ?? "en") === event.target.value)!.pack)}
+      >
+        {LANGUAGES.map((language) => (
+          <option key={language.pack?.code ?? "en"} value={language.pack?.code ?? "en"} lang={language.pack?.code ?? "en"}>
+            {language.name}
+          </option>
+        ))}
+      </select>
       {/* The provider renders no element: the direction goes on an element of your own. */}
       <SlotsmithProvider locale={pack ?? "en-US"}>
         <div data-stage dir={dir} lang={code}>

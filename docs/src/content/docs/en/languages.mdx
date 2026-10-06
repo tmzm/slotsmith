@@ -97,7 +97,7 @@ With next-intl, write counts as ICU plurals in your messages and next-intl picks
 
 <SampleCode name="languages/next-intl" />
 
-With i18next, plural forms come from your resources' `_one` and `_other` keys when `t()` is given `count`:
+With i18next, plural forms come from your resources when `t()` is given `count`: one key per `Intl.PluralRules` category the language uses, suffixed with the category. English needs `_one` and `_other`; Arabic also needs `_zero`, `_two`, `_few` and `_many`:
 
 <SampleCode name="languages/i18next" />
 

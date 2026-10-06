@@ -78,3 +78,42 @@
   color: var(--ink);
   font-size: 1.125rem;
 }
+
+/* The counts are numbers: mono, like every other figure on the site. */
+.languages-plurals__counts button {
+  font-family: var(--font-mono);
+}
+
+/*
+ * The switcher's native language menu: hidden while the buttons fit, shown
+ * instead of them below 40rem, where nineteen buttons would wrap into rows.
+ */
+.languages-switcher__select {
+  display: none;
+  justify-self: start;
+  min-block-size: 2.75rem;
+  min-inline-size: 14rem;
+  max-inline-size: 100%;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+}
+
+.languages-switcher__select:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+@media (width < 40rem) {
+  .languages-switcher > [role="group"] {
+    display: none;
+  }
+
+  .languages-switcher__select {
+    display: block;
+  }
+}

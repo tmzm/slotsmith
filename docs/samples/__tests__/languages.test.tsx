@@ -103,6 +103,19 @@ describe("languages/switcher", () => {
     expect(stage(container).getAttribute("dir")).toBe("rtl");
     expect(container.textContent).toContain(rowsPerPage(he));
   });
+
+  it("offers the same languages in a native menu, which switches the stage too", () => {
+    const { container } = render(<Switcher />);
+    const select = screen.getByRole("combobox", { name: "Language of the demo" }) as HTMLSelectElement;
+    const options = [...select.options];
+    expect(options.map((option) => option.getAttribute("lang")).sort()).toEqual(["en", ...PACKS.map((pack) => pack.code)].sort());
+    expect(options.find((option) => option.lang === "ar")!.textContent).toBe("العربية");
+    fireEvent.change(select, { target: { value: "ar" } });
+    expect(stage(container).getAttribute("dir")).toBe("rtl");
+    expect(container.querySelector('button[lang="ar"]')!.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(container.querySelector('button[lang="de"]')!);
+    expect(select.value).toBe("de");
+  });
 });
 
 describe("languages/plurals", () => {

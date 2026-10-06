@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createPlural, type PluralForms } from "slotsmith/locale";
+import { createPlural, defineLocale, type PluralForms } from "slotsmith/locale";
 
 // One string per plural category the language uses; `{count}` is replaced by
 // the number, written the way the tag writes numbers. Only `other` is required.
@@ -38,6 +38,8 @@ export default function Plurals() {
   // createPlural picks the form through Intl.PluralRules for the tag.
   const plural = createPlural(code);
   const { forms } = SELECTED[code]!;
+  // defineLocale fills in the direction from the tag, so Arabic reads right to left.
+  const { dir } = defineLocale({ code });
 
   return (
     <div className="languages-plurals">
@@ -48,14 +50,14 @@ export default function Plurals() {
           </button>
         ))}
       </div>
-      <div role="group" aria-label="Count">
+      <div role="group" aria-label="Count" className="languages-plurals__counts">
         {COUNTS.map((value) => (
           <button key={value} type="button" aria-pressed={value === count} onClick={() => setCount(value)}>
             {value}
           </button>
         ))}
       </div>
-      <output lang={code} dir={code === "ar" ? "rtl" : "ltr"} aria-live="polite">
+      <output lang={code} dir={dir} aria-live="polite">
         {plural(count, forms)}
       </output>
     </div>
