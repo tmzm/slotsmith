@@ -8,7 +8,7 @@
   display: grid;
   gap: 1rem;
   /* Arabic and Persian text uses Noto Sans Arabic; other scripts fall back to the system's fonts. */
-  font-family: "Geist", "Noto Sans Arabic", system-ui, sans-serif;
+  font-family: "Geist", "Noto Sans Arabic", "Geist Fallback", system-ui, sans-serif;
 }
 
 .languages-switcher [role="group"],

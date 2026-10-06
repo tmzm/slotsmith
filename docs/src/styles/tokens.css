@@ -42,9 +42,12 @@
 :root {
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --font-display: "Big Shoulders", "Arial Narrow", sans-serif;
-  --font-body: "Geist", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /* The "Fallback" families are local fonts scaled to the web font's width
+     (lib/font-fallbacks.ts); they hold the layout until the web font loads. */
+  --font-display: "Big Shoulders", "Big Shoulders Fallback", "Big Shoulders Fallback 2", "Arial Narrow", sans-serif;
+  --font-body: "Geist", "Geist Fallback", system-ui, sans-serif;
+  --font-mono:
+    "JetBrains Mono", "JetBrains Mono Fallback", "JetBrains Mono Fallback 2", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --font-latin-display: var(--font-display);
 
   --header-h: 4rem;
@@ -58,10 +61,14 @@
 /* Arabic pages: Alexandria for display, Noto Sans Arabic for body. Both faces
    carry an Arabic unicode-range, so Latin runs fall through to the Latin face. */
 html[lang="ar"] {
-  --font-display: "Alexandria", "Big Shoulders", sans-serif;
-  --font-body: "Noto Sans Arabic", "Geist", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Noto Sans Arabic", ui-monospace, monospace;
-  --font-latin-display: "Big Shoulders", "Arial Narrow", sans-serif;
+  --font-display:
+    "Alexandria", "Big Shoulders", "Alexandria Fallback", "Alexandria Fallback 2", "Big Shoulders Fallback", "Big Shoulders Fallback 2", sans-serif;
+  --font-body:
+    "Noto Sans Arabic", "Geist", "Noto Sans Arabic Fallback", "Noto Sans Arabic Fallback 2", "Geist Fallback", system-ui, sans-serif;
+  --font-mono:
+    "JetBrains Mono", "Noto Sans Arabic", "JetBrains Mono Fallback", "JetBrains Mono Fallback 2", "Noto Sans Arabic Fallback",
+    "Noto Sans Arabic Fallback 2", ui-monospace, monospace;
+  --font-latin-display: "Big Shoulders", "Big Shoulders Fallback", "Big Shoulders Fallback 2", "Arial Narrow", sans-serif;
 }
 
 @media (min-width: 768px) {
