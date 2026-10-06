@@ -97,12 +97,12 @@ export function renderA11yTable(results: A11yResult[], lang: Lang, axeVersion: s
   const list = (items: string[]) => (items.length ? items.join(", ") : labels.none);
 
   const rows = results.map((result) => {
-    const found = result.violations.map((v) => `${code(v.id)} (${escapeHtml(v.impact)}, ${v.nodes})`);
+    const found = result.violations.map((v) => `<span lang="en" dir="ltr">${code(v.id)} (${escapeHtml(v.impact)}, ${v.nodes})</span>`);
     const issues = [...new Set((result.knownLibraryIssues ?? []).map((issue) => issue.rule))].map(code);
     return [
       "<tr>",
-      `<td>${code(result.sample)}</td>`,
-      `<td><a href="${escapeHtml(result.page)}">${escapeHtml(result.page)}</a></td>`,
+      `<td dir="ltr">${code(result.sample)}</td>`,
+      `<td dir="ltr"><a href="${escapeHtml(result.page)}">${escapeHtml(result.page)}</a></td>`,
       `<td>${result.passes}</td>`,
       `<td>${list(found)}</td>`,
       `<td>${list(issues)}</td>`,
@@ -124,7 +124,9 @@ export function renderA11yTable(results: A11yResult[], lang: Lang, axeVersion: s
     : [];
 
   return [
-    `<div class="a11y-results">`,
+    // The page around the table may be in another language (an untranslated Trust page on /ar/ is
+    // English prose, left to right), so the block states its own; names and paths stay left to right.
+    `<div class="a11y-results" lang="${lang}" dir="${lang === "ar" ? "rtl" : "ltr"}">`,
     `<p>${lang === "en" ? escapeHtml(labels.summary(results.length, violations, axeVersion)) : labels.summary(results.length, violations, escapeHtml(axeVersion))}</p>`,
     ...known,
     // The site's reference-table region (styles/reference.css): it scrolls inside itself, never the page.
