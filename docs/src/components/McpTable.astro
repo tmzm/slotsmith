@@ -1,8 +1,10 @@
 ---
 /**
  * The `slotsmith-ai` MCP server's tools or prompts, one row each: the name,
- * its arguments (optional ones marked) and what it gives the agent. Read
- * from `@/data/mcp`, which a test keeps equal to the server's source. Each
+ * what it gives the agent and its arguments (optional ones marked). The
+ * description comes before the arguments, so a phone shows it without
+ * scrolling sideways. Read from `@/data/mcp`, which a test keeps equal to
+ * the server's source. Each
  * row is `#tool-<name>` or `#prompt-<name>`. The descriptions are English.
  */
 import "@/styles/reference.css";
@@ -25,14 +27,17 @@ const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ te
     <thead>
       <tr>
         <th scope="col">{t(lang, kind === "tools" ? "mcp.tool" : "mcp.prompt")}</th>
-        <th scope="col">{t(lang, "mcp.args")}</th>
         <th scope="col">{t(lang, "mcp.does")}</th>
+        <th scope="col">{t(lang, "mcp.args")}</th>
       </tr>
     </thead>
     <tbody>
       {rows.map((row) => (
         <tr id={`${kind === "tools" ? "tool" : "prompt"}-${row.name}`}>
           <th scope="row" class="ref-name"><code dir="ltr">{row.name}</code></th>
+          <td class="ref-desc-cell ref-desc" lang={descLang} dir={descLang && "ltr"}>
+            {runs(row.description).map((run) => (run.code ? <code>{run.text}</code> : run.text))}
+          </td>
           <td class="ref-type">
             {row.args.length === 0 ? (
               <span class="mcp-none">{t(lang, "mcp.none")}</span>
@@ -45,9 +50,6 @@ const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ te
                 </>
               ))
             )}
-          </td>
-          <td class="ref-desc-cell ref-desc" lang={descLang} dir={descLang && "ltr"}>
-            {runs(row.description).map((run) => (run.code ? <code>{run.text}</code> : run.text))}
           </td>
         </tr>
       ))}

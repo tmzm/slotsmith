@@ -31,10 +31,15 @@ function entries(body: string): { key: string; value: string }[] {
     }
   }
   parts.push(body.slice(start));
+  // A key may be quoted. Anything else (a spread, a shorthand, a computed key) fails, so an argument is never skipped silently.
   return parts
-    .map((part) => /^\s*(\w+)\s*:([\s\S]*)$/.exec(part))
-    .filter((match): match is RegExpExecArray => match !== null)
-    .map(([, key = "", value = ""]) => ({ key, value }));
+    .filter((part) => part.trim() !== "")
+    .map((part) => {
+      const match = /^\s*(?:(\w+)|"([^"]+)"|'([^']+)')\s*:([\s\S]*)$/.exec(part);
+      if (!match) throw new Error(`Cannot read this schema entry: ${part.trim()}`);
+      const [, bare, double, single, value = ""] = match;
+      return { key: bare ?? double ?? single ?? "", value };
+    });
 }
 
 /** Every `server.<method>("name", …)` call: its name and the arguments of its `schemaKey` object, if any. */
@@ -52,6 +57,13 @@ function registered(method: string, schemaKey?: string): { name: string; args: s
       };
     });
 }
+
+describe("the schema reader", () => {
+  it("reads bare and quoted keys, and refuses what it cannot read", () => {
+    expect(entries(` component: z.string(), "slot": z.enum(["a", "b"]).optional(), `).map((entry) => entry.key)).toEqual(["component", "slot"]);
+    expect(() => entries(" ...shared, limit: z.number() ")).toThrow(/Cannot read/);
+  });
+});
 
 describe("MCP data", () => {
   it("documents every registered tool, with its arguments", () => {

@@ -25,7 +25,7 @@ Pick your client. Every one of them starts the same command, `npx -y slotsmith-a
 - **Claude Code:** run the command in your project. Add `--scope project` before the `--` to write the server to the project's `.mcp.json` and share it with your team. On Windows (not WSL), start `npx` through `cmd /c`: `claude mcp add slotsmith -- cmd /c npx -y slotsmith-ai mcp`.
 - **Cursor:** save the file as `.cursor/mcp.json` in your project, or as `~/.cursor/mcp.json` for every project.
 - **VS Code:** save the file as `.vscode/mcp.json` in your project. VS Code reads a `servers` key, not `mcpServers`, and each server names its `type`.
-- **Claude Desktop:** Settings, then Developer, then Edit Config opens `claude_desktop_config.json`. Add the server and restart the app. On Windows, if the app cannot start `npx`, use `"command": "cmd"` with `"args": ["/c", "npx", "-y", "slotsmith-ai", "mcp"]`.
+- **Claude Desktop:** Settings, then Developer, then Edit Config opens `claude_desktop_config.json`: `~/Library/Application Support/Claude/` on macOS, `%APPDATA%\Claude\` on Windows. Add the server and restart the app. On Windows, if the app cannot start `npx`, use `"command": "cmd"` with `"args": ["/c", "npx", "-y", "slotsmith-ai", "mcp"]`.
 
 Then ask for a feature as you usually would. The server tells the agent to look up props and slots before it writes slotsmith code.
 
