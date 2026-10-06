@@ -118,6 +118,7 @@ slotsmith-ai add --all --ui <library>
 - `--out` must be inside the project, also after following symbolic links and junctions, and a file that is itself a symbolic link is never written through.
 - `radix` is Radix Themes (`@radix-ui/themes`), the styled library. An app built on the bare Radix primitives uses `shadcn`.
 - Editing the file afterward is expected — from that point on it is the project's own code, not something `slotsmith-ai` still owns.
+- To skin every component of a kind at once, pass the maps to `SlotsmithProvider` instead of to each component: `<SlotsmithProvider components={{ datePicker: muiDatePicker, dataTable: muiDataTable }}>`. The `adapters` and `slots` guides teach agents this.
 
 ## The shadcn registry
 

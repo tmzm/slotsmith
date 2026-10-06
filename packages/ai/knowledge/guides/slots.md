@@ -6,6 +6,39 @@ Every component is behaviour plus a set of named parts. Pass replacements throug
 <DataTable data={users} columns={columns} components={{ Row: TableRow, Checkbox: MyCheckbox }} />
 ```
 
+## Once, for every component: the provider
+
+`SlotsmithProvider` (from `slotsmith/provider`) takes the same maps under one key per component, and applies them to every component below it:
+
+```tsx
+import { SlotsmithProvider, type SlotsmithComponents } from "slotsmith/provider";
+
+// Module scope (or `useMemo`), so the object keeps its identity between renders.
+const components: SlotsmithComponents = {
+  dataTable: { Checkbox, Pagination },
+  autocomplete: { Option },
+  datePicker: { Day },
+  fileUploader: { Progress },
+};
+
+<SlotsmithProvider components={components}>
+  <App />
+</SlotsmithProvider>;
+```
+
+Each part resolves in three layers, the later one winning, one part at a time:
+
+1. the built-in fallback;
+2. the provider's `components.<key>` (`dataTable`, `autocomplete`, `datePicker`, `fileUploader`);
+3. the component's own `components` prop.
+
+- A part set to `undefined` in any layer is treated as not set; it never erases the layer below.
+- Nested providers merge part by part, the inner one winning, and inherit every component the inner one does not name. A provider that only sets `locale` passes the outer `components` through.
+- It reaches every way of rendering a component: the default layout, the virtual variants in `slotsmith/virtual`, and a layout rebuilt from `<Component>.Provider` and the parts. `use<Component>Context().components` returns the merged result.
+- The data table's fallback page-size select is the slotsmith `Autocomplete`, so it follows `components.autocomplete`. A `PageSizeSelect` part, from `components.dataTable` or the table's own prop, replaces it altogether.
+- Only `components` is shared. `slotProps` and `labels` stay on each component (the language is shared through the provider's `locale`).
+- Outside a provider nothing changes.
+
 ## Two kinds of parts
 
 | | Receives | Drop-in for |

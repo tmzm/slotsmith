@@ -22,6 +22,38 @@ slotsmith-ai add --all --ui <library>
 - Each file starts with a one-line comment naming the library and the `slotsmith-ai` version it came from. After writing, the command prints the import and a usage line, one `npm install …` line for whatever the project's `package.json` does not already list, and, for `shadcn`, one `npx shadcn@latest add …` line for the shadcn/ui components the adapter uses. It never installs anything itself.
 - **Editing an adapter afterward is expected — it is the project's own code from that point on.** Running `add` again on an untouched file reports `unchanged` and leaves it alone (the header line is not compared, so a file from an older `slotsmith-ai` whose body is untouched still counts as unchanged). A file that has been edited is left as is: the command names it, says how many lines differ from the adapter `slotsmith-ai` would write, and exits with code `1`. Pass `--force` to replace it anyway. `--dry-run` prints what would happen and writes nothing, exiting the same way the real run would (`1` when it would refuse).
 
+## Applying adapters once, at the provider
+
+An adapter map can go on each component (`<DatePicker components={muiDatePicker} />`), or once on `SlotsmithProvider`, which hands it to every component of that kind below it. **Prefer the provider when an app uses a component in more than one place**: a new `<DataTable>` anywhere in the tree is then already skinned, with nothing to remember.
+
+```tsx
+import { SlotsmithProvider, type SlotsmithComponents } from "slotsmith/provider";
+import { muiAutocomplete } from "@/components/slotsmith/autocomplete";
+import { muiDataTable } from "@/components/slotsmith/data-table";
+import { muiDatePicker } from "@/components/slotsmith/date-picker";
+import { muiFileUploader } from "@/components/slotsmith/file-uploader";
+
+// Module scope, so the object keeps its identity between renders.
+const components: SlotsmithComponents = {
+  dataTable: muiDataTable,
+  autocomplete: muiAutocomplete,
+  datePicker: muiDatePicker,
+  fileUploader: muiFileUploader,
+};
+
+<SlotsmithProvider components={components}>
+  <App />
+</SlotsmithProvider>;
+```
+
+- The keys are `dataTable`, `autocomplete`, `datePicker` and `fileUploader`. Each takes exactly what that component's own `components` prop takes, so every adapter fits unchanged; name only the components the app uses.
+- A component's own `components` prop still wins, slot by slot, so one table can swap a single part and keep the rest of the adapter: `<DataTable components={{ Empty: NoOrders }} />`.
+- The virtual variants (`VirtualDataTable`, `VirtualAutocomplete`, `VirtualFileUploader`) and layouts rebuilt from `<Component>.Provider` and the parts read the same maps.
+- The data table's built-in page-size select is the slotsmith `Autocomplete`, so `components.autocomplete` skins it too. An adapter that sets the table's `PageSizeSelect` slot replaces it altogether.
+- The same provider also sets the language (`locale`, `locales`); see the i18n guide. One provider carries both.
+
+The slots guide has the full precedence rule and how nested providers merge.
+
 ## The shadcn registry
 
 The same shadcn/ui adapters are also published as a [shadcn/ui registry](https://ui.shadcn.com/docs/registry): `pnpm build` (or `pnpm registry` on its own) writes one `registry-item.json`-shaped file per component into `packages/ai/registry/`, plus a `registry.json` index. Nothing under `registry/` is committed; it is rebuilt from the generated knowledge on demand.

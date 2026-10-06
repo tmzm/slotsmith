@@ -54,6 +54,23 @@ import "slotsmith/file-uploader.css";
 
 When every part is replaced by your own design system, import no stylesheet at all; the components never reference it.
 
+## One provider for the whole app
+
+`SlotsmithProvider`, from `slotsmith/provider`, is optional. Put one near the root when the app wants either of the two settings it shares with every component below it:
+
+```tsx
+import { SlotsmithProvider } from "slotsmith/provider";
+
+<SlotsmithProvider locale={language} locales={[ar, fr]} components={components}>
+  <App />
+</SlotsmithProvider>;
+```
+
+- `locale` / `locales` set the language; see the i18n guide.
+- `components` replaces parts for every component at once (`{ dataTable, autocomplete, datePicker, fileUploader }`), which is how a design-system adapter is applied once instead of on each component; see the slots and adapters guides.
+
+The provider imports no component, so it adds nothing to the bundle beyond itself. It is a client component like the rest; in a React Server Components framework render it from a `"use client"` file, because the parts in `components` are functions.
+
 ## Client components
 
 Every entry point starts with `"use client"`. The components use state, effects and context, and they accept functions (`onChange`, `components`, label callbacks). In a React Server Components framework, render them from a file marked `"use client"` that owns the state.
