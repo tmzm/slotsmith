@@ -138,6 +138,7 @@
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "5.0.1",
     "antd": "^6.6.5",
     "axe-core": "^4.13.0",
     "clsx": "^2.1.1",

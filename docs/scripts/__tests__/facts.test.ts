@@ -17,6 +17,66 @@ describe("buildFacts", () => {
       expect(entry.gzipBytes, entry.entry).toBeLessThan(entry.minBytes);
     }
   }, 60_000);
+
+  it("measures styles.css and each component's stylesheet", async () => {
+    const facts = await buildFacts({ skipTests: true });
+    expect(facts.css.map((entry) => entry.entry)).toEqual([
+      "slotsmith/styles.css",
+      "slotsmith/autocomplete.css",
+      "slotsmith/data-table.css",
+      "slotsmith/date-picker.css",
+      "slotsmith/file-uploader.css",
+    ]);
+    for (const entry of facts.css) {
+      expect(entry.gzipBytes, entry.entry).toBeGreaterThan(0);
+      expect(entry.gzipBytes, entry.entry).toBeLessThan(entry.minBytes);
+    }
+  }, 60_000);
+});
+
+describe("buildFacts from a test report", () => {
+  const fixtures = resolve(import.meta.dirname, "fixtures");
+  const passing = { testsJson: resolve(fixtures, "tests-pass.json"), coverageJson: resolve(fixtures, "coverage-summary.json") };
+
+  it("rejects with the failing tests when the run did not pass", async () => {
+    const run = buildFacts({ testsJson: resolve(fixtures, "tests-fail.json"), coverageJson: passing.coverageJson });
+    await expect(run).rejects.toThrow(/1 of 2 tests failed/);
+    await expect(run).rejects.toThrow(/sorting keeps the sort after new data/);
+    await expect(run).rejects.toThrow(/expected 'Bea' to be 'Ada'/);
+  }, 60_000);
+
+  it("counts the tests and files of the report", async () => {
+    const facts = await buildFacts(passing);
+    expect(facts.tests).toBe(5);
+    expect(facts.testFiles).toBe(4);
+  }, 60_000);
+
+  it("classifies each test file and keeps the full test titles", async () => {
+    const { suites } = await buildFacts(passing);
+    expect(suites.map((suite) => suite.file)).toEqual([
+      "src/__tests__/bundle.test.ts",
+      "src/autocomplete/__tests__/a11y.test.tsx",
+      "src/data-table/__tests__/integrations/mui.test.tsx",
+      "src/data-table/core/__tests__/reorder.test.ts",
+    ]);
+    expect(suites).toContainEqual({
+      file: "src/data-table/__tests__/integrations/mui.test.tsx",
+      component: "data-table",
+      library: "mui",
+      kind: "integration",
+      tests: ["DataTable with MUI parts renders MUI rows", "DataTable with MUI parts sorts from an MUI header"],
+    });
+    expect(suites.find((suite) => suite.file === "src/__tests__/bundle.test.ts")).toMatchObject({ component: "package", library: null, kind: "bundle" });
+    expect(suites.find((suite) => suite.file.endsWith("a11y.test.tsx"))).toMatchObject({ component: "autocomplete", library: null, kind: "a11y" });
+    expect(suites.find((suite) => suite.file.endsWith("reorder.test.ts"))).toMatchObject({ component: "data-table", library: null, kind: "unit" });
+  }, 60_000);
+
+  it("rolls coverage up per component, then the total", async () => {
+    const { coverage } = await buildFacts(passing);
+    expect(coverage.map((row) => row.component)).toEqual(["autocomplete", "data-table", "date-picker", "file-uploader", "total"]);
+    expect(coverage.find((row) => row.component === "data-table")).toEqual({ component: "data-table", lines: 75, branches: 60, functions: 87.5, statements: 79.17 });
+    expect(coverage.at(-1)).toEqual({ component: "total", lines: 90, branches: 80, functions: 95, statements: 85 });
+  }, 60_000);
 });
 
 const fixture: Facts = {
@@ -33,6 +93,9 @@ const fixture: Facts = {
     { entry: "slotsmith", minBytes: 90_000, gzipBytes: 28_000 },
     { entry: "slotsmith/data-table", minBytes: 60_000, gzipBytes: 18_841 },
   ],
+  coverage: [],
+  suites: [],
+  css: [],
 };
 
 describe("manifestLine", () => {

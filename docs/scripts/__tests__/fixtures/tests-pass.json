@@ -1,0 +1,41 @@
+{
+  "numTotalTests": 5,
+  "numPassedTests": 5,
+  "numFailedTests": 0,
+  "success": true,
+  "testResults": [
+    {
+      "name": "E:/repo/src/data-table/__tests__/integrations/mui.test.tsx",
+      "status": "passed",
+      "message": "",
+      "assertionResults": [
+        { "ancestorTitles": ["DataTable with MUI parts"], "fullName": "DataTable with MUI parts renders MUI rows", "title": "renders MUI rows", "status": "passed", "failureMessages": [] },
+        { "ancestorTitles": ["DataTable with MUI parts"], "fullName": "DataTable with MUI parts sorts from an MUI header", "title": "sorts from an MUI header", "status": "passed", "failureMessages": [] }
+      ]
+    },
+    {
+      "name": "E:/repo/src/__tests__/bundle.test.ts",
+      "status": "passed",
+      "message": "",
+      "assertionResults": [
+        { "ancestorTitles": ["what an application bundles"], "fullName": "what an application bundles drops the date picker from a table import", "title": "drops the date picker from a table import", "status": "passed", "failureMessages": [] }
+      ]
+    },
+    {
+      "name": "E:\\repo\\src\\autocomplete\\__tests__\\a11y.test.tsx",
+      "status": "passed",
+      "message": "",
+      "assertionResults": [
+        { "ancestorTitles": ["Autocomplete"], "fullName": "Autocomplete has no axe violations", "title": "has no axe violations", "status": "passed", "failureMessages": [] }
+      ]
+    },
+    {
+      "name": "E:/repo/src/data-table/core/__tests__/reorder.test.ts",
+      "status": "passed",
+      "message": "",
+      "assertionResults": [
+        { "ancestorTitles": [], "fullName": "moves a row below its target", "title": "moves a row below its target", "status": "passed", "failureMessages": [] }
+      ]
+    }
+  ]
+}

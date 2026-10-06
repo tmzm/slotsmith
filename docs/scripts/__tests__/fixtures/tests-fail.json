@@ -1,0 +1,17 @@
+{
+  "numTotalTests": 2,
+  "numPassedTests": 1,
+  "numFailedTests": 1,
+  "success": false,
+  "testResults": [
+    {
+      "name": "E:/repo/src/data-table/__tests__/sorting.test.tsx",
+      "status": "failed",
+      "message": "",
+      "assertionResults": [
+        { "ancestorTitles": ["sorting"], "fullName": "sorting cycles ascending, descending, none", "title": "cycles ascending, descending, none", "status": "passed", "failureMessages": [] },
+        { "ancestorTitles": ["sorting"], "fullName": "sorting keeps the sort after new data", "title": "keeps the sort after new data", "status": "failed", "failureMessages": ["AssertionError: expected 'Bea' to be 'Ada'"] }
+      ]
+    }
+  ]
+}

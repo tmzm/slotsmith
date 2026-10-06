@@ -2,8 +2,8 @@
  * Facts
  *
  * The numbers the site states about the library: version, license, React
- * range, test counts, integration suites and bundle sizes. `scripts/facts.ts`
- * measures them into `src/generated/facts.json` on every build, so no page
+ * range, test counts, coverage, test suites, and bundle and stylesheet sizes.
+ * `scripts/facts.ts` measures them into `src/generated/facts.json` on every build, so no page
  * types a number by hand.
  */
 
@@ -23,6 +23,21 @@ export interface Facts {
   integrationSuites: { component: string; library: string }[];
   /** Each package entry bundled alone, minified, with its peers external. */
   bundle: { entry: string; minBytes: number; gzipBytes: number }[];
+  /**
+   * Coverage percentages per `src/<component>/` directory (test files
+   * excluded), in name order, then a `total` row for all of `src/`.
+   */
+  coverage: { component: string; lines: number; branches: number; functions: number; statements: number }[];
+  /**
+   * Every test file in path order, with the full title of each test. `kind`
+   * is `integration` under `__tests__/integrations/` (`library` from the file
+   * name), `bundle` for the tree-shaking test, `a11y` for `a11y.test.tsx` and
+   * file names containing `axe`, otherwise `unit`. `component` is the
+   * `src/<component>/` directory, or `package` for `src/__tests__/`.
+   */
+  suites: { file: string; component: string; library: string | null; kind: "integration" | "bundle" | "a11y" | "unit"; tests: string[] }[];
+  /** `styles.css` and each component's stylesheet, minified, then gzipped. */
+  css: { entry: string; minBytes: number; gzipBytes: number }[];
 }
 
 const files = import.meta.glob<Facts>("../generated/facts.json", { eager: true, import: "default" });

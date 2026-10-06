@@ -11,6 +11,9 @@ const fixtureFacts: Facts = {
   tests: 1,
   integrationSuites: [],
   bundle: [],
+  coverage: [],
+  suites: [],
+  css: [],
 };
 
 describe("softwareSourceCode", () => {
