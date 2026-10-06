@@ -111,10 +111,18 @@ const hasSidebar = Astro.slots.has("sidebar");
         } catch {}
         syncExpanded();
       };
+      // Animated with a view transition when the browser has one and motion is
+      // welcome; the names it needs are set only meanwhile (docs-layout.css).
+      const toggleColumn = () => {
+        const toggle = () => setCollapsed(!root.hasAttribute("data-sidebar-collapsed"));
+        if (!document.startViewTransition || reduceMotion.matches) return toggle();
+        root.setAttribute("data-sidebar-animating", "");
+        document.startViewTransition(toggle).finished.finally(() => root.removeAttribute("data-sidebar-animating"));
+      };
       syncExpanded();
       for (const button of menuButtons) {
         button.addEventListener("click", () => {
-          if (hasColumn()) return setCollapsed(!root.hasAttribute("data-sidebar-collapsed"));
+          if (hasColumn()) return toggleColumn();
           opener = button;
           setOpen(!root.hasAttribute("data-nav-open"));
         });

@@ -1,11 +1,17 @@
-/* Docs layout on wide screens: the collapsible sidebar column and a wider
-   page container. `data-sidebar-collapsed` on <html> is set before first
-   paint from the stored choice (see ThemeScript.astro); the header's menu
-   button toggles it from 1024px. */
+/* Docs layout on wide screens: the article fills the content column, the
+   sidebar column can be hidden, and the page container widens on very large
+   screens. `data-sidebar-collapsed` on <html> is set before first paint from
+   the stored choice (see ThemeScript.astro); the header's menu button toggles
+   it from 1024px, animated with a view transition (Base.astro). */
 
 @media (min-width: 1024px) {
   .site-header .menu-button:not([data-sheet-only]) {
     display: inline-grid;
+  }
+
+  /* The article takes the width beside the sidebar and "On this page". */
+  .docs__article {
+    max-inline-size: none;
   }
 
   html[data-sidebar-collapsed] .shell[data-has-sidebar] {
@@ -19,15 +25,10 @@
   html[data-sidebar-collapsed] .sidebar:not([data-sheet-only]) {
     display: none;
   }
-
-  /* With the sidebar hidden the article takes the freed width. */
-  html[data-sidebar-collapsed] .docs__article {
-    max-inline-size: none;
-  }
 }
 
 @media (min-width: 1280px) {
-  html[data-sidebar-collapsed] .docs[data-toc] {
+  .docs[data-toc] {
     grid-template-columns: minmax(0, 1fr) var(--toc-w);
   }
 }
@@ -47,4 +48,51 @@
   .site-footer__inner {
     max-inline-size: 120rem;
   }
+}
+
+/* Hiding or showing the sidebar: the sidebar fades, the article and "On this
+   page" move and resize. The names exist only during that transition, so the
+   theme toggle's transition stays a plain cross-fade. */
+html[data-sidebar-animating] .sidebar:not([data-sheet-only]) {
+  view-transition-name: docs-sidebar;
+}
+
+html[data-sidebar-animating] .docs__article {
+  view-transition-name: docs-article;
+}
+
+html[data-sidebar-animating] .toc {
+  view-transition-name: docs-toc;
+}
+
+::view-transition-group(docs-sidebar),
+::view-transition-group(docs-article),
+::view-transition-group(docs-toc) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-group(docs-article) {
+  overflow: clip;
+}
+
+/* Keep the article's text at its own size while its box resizes: pin both
+   snapshots to the top and the inline start instead of stretching them. */
+::view-transition-old(docs-article),
+::view-transition-new(docs-article) {
+  block-size: 100%;
+  inline-size: auto;
+  object-fit: none;
+  object-position: left top;
+}
+
+/* The text rewraps at the new width: let the old snapshot go quickly so the
+   two wraps barely overlap. */
+::view-transition-old(docs-article) {
+  animation-duration: 120ms;
+}
+
+[dir="rtl"]::view-transition-old(docs-article),
+[dir="rtl"]::view-transition-new(docs-article) {
+  object-position: right top;
 }
