@@ -1,0 +1,48 @@
+---
+/**
+ * Bundle sizes: every JavaScript entry and every stylesheet the package
+ * exports, minified and then gzipped, with a note under each table that says
+ * what was measured. A kilobyte is 1000 bytes, as on the landing.
+ */
+import "@/styles/reference.css";
+import "@/styles/trust.css";
+import { t, type Lang } from "@/i18n";
+import { getFacts, kilobytes, type Facts } from "@/lib/facts";
+
+interface Props {
+  lang?: Lang;
+  /** The facts to show; defaults to the generated ones. */
+  facts?: Facts;
+}
+
+const { lang = "en", facts = getFacts() } = Astro.props;
+const tables = [
+  { id: "js", rows: facts.bundle },
+  { id: "css", rows: facts.css },
+] as const;
+---
+{tables.map((table) => (
+  <>
+    <div class="ref-table trust-table" role="region" tabindex="0" aria-label={t(lang, `trust.sizes.${table.id}`)}>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{t(lang, `trust.sizes.${table.id}`)}</th>
+            <th scope="col" class="trust-num">{t(lang, "trust.sizes.min")}</th>
+            <th scope="col" class="trust-num">{t(lang, "trust.sizes.gzip")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row) => (
+            <tr>
+              <th scope="row" class="ref-name"><code dir="ltr">{row.entry}</code></th>
+              <td class="trust-num" dir="ltr">{kilobytes(row.minBytes)}</td>
+              <td class="trust-num" dir="ltr">{kilobytes(row.gzipBytes)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="ref-note">{t(lang, `trust.sizes.${table.id}Note`)}</p>
+  </>
+))}

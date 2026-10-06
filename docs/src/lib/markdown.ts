@@ -6,7 +6,8 @@
  * from the MDX with its blocks turned into what they show: a demo becomes its
  * sample's code, the install block its commands, a keyboard table a Markdown
  * table, `<CompoundParts />` a list of the parts, `<McpTable />` the MCP
- * tools or prompts as a table, `<Faq />` the
+ * tools or prompts as a table, the Trust page's blocks the same measured
+ * numbers as tables and lists, `<Faq />` the
  * frontmatter's questions. Generated pages (API, Adapters) are written from
  * the reference and the adapter samples. Links become absolute, so a copy
  * reads the same wherever it is pasted.
@@ -14,6 +15,8 @@
 import { SITE } from "../../site.config.ts";
 import { COMPONENTS, componentMeta, type ComponentSlug } from "@/data/components";
 import { landingFaq, type FaqItem } from "@/data/faq";
+import { getFacts, kilobytes } from "@/lib/facts";
+import { COVERAGE_COLUMNS, bundleSuites, componentTitle, coverageGroups, percent, requirements, suitesByLibrary, testCount } from "@/lib/trust";
 import { MCP_PROMPTS, MCP_TOOLS } from "@/data/mcp";
 import { localePath, t, type Lang, type MessageKey } from "@/i18n";
 import { ADAPTER_LIBRARIES } from "@/lib/adapters";
@@ -226,6 +229,82 @@ function referenceLinksMarkdown(slug: ComponentSlug, lang: Lang, contentLang: La
 }
 
 /** The MDX body of a prose page as Markdown. */
+/**
+ * A Trust page block as Markdown, with the numbers its component shows.
+ *
+ * @returns Undefined when `name` is not one of the Trust page's blocks.
+ */
+function trustMarkdown(name: string, attrs: Record<string, string>, lang: Lang, pageUrl: string): string | undefined {
+  const coverage = () => {
+    const facts = getFacts();
+    const { components, shared, total } = coverageGroups(facts);
+    return [
+      markdownTable(
+        [t(lang, "trust.coverage.directory"), ...COVERAGE_COLUMNS.map((column) => t(lang, `trust.coverage.${column}`))],
+        [
+          ...[...components, ...shared].map((row) => [code(`src/${row.component}/`), ...COVERAGE_COLUMNS.map((column) => percent(row[column]))]),
+          ...(total ? [[t(lang, "trust.coverage.total"), ...COVERAGE_COLUMNS.map((column) => percent(total[column]))]] : []),
+        ],
+      ),
+      t(lang, "trust.coverage.note"),
+    ].join("\n\n");
+  };
+  const titles = (tests: string[]) => tests.map((title) => `  - ${title}`).join("\n");
+  switch (name) {
+    case "TestsSummary": {
+      const facts = getFacts();
+      return `${t(lang, "trust.tests.summary", { tests: facts.tests, files: facts.testFiles, version: facts.version })}\n\n${coverage()}`;
+    }
+    case "CoverageTable":
+      return coverage();
+    case "SuitesList": {
+      const facts = getFacts();
+      if (attrs.kind === "bundle") {
+        return bundleSuites(facts)
+          .map((suite) => `${t(lang, "trust.bundle.summary", { count: suite.tests.length })} ${code(suite.file)}\n\n${suite.tests.map((title) => `- ${title}`).join("\n")}`)
+          .join("\n\n");
+      }
+      const libraries = suitesByLibrary(facts);
+      const all = libraries.flatMap((library) => library.suites);
+      const count = (tests: number) => t(lang, tests === 1 ? "trust.suites.test" : "trust.suites.tests", { count: tests });
+      const name = (directory: string) => {
+        const key = componentTitle(directory);
+        return key ? t(lang, key) : directory;
+      };
+      return [
+        t(lang, "trust.suites.summary", { suites: all.length, tests: testCount(all), libraries: libraries.length }),
+        ...libraries.map(
+          (library) => `### ${library.name}\n\n${library.suites.map((suite) => `- ${name(suite.component)}, ${count(suite.tests.length)}\n${titles(suite.tests)}`).join("\n")}`,
+        ),
+      ].join("\n\n");
+    }
+    case "SizesTable": {
+      const facts = getFacts();
+      return (["js", "css"] as const)
+        .map((id) =>
+          [
+            markdownTable(
+              [t(lang, `trust.sizes.${id}`), t(lang, "trust.sizes.min"), t(lang, "trust.sizes.gzip")],
+              (id === "js" ? facts.bundle : facts.css).map((row) => [code(row.entry), kilobytes(row.minBytes), kilobytes(row.gzipBytes)]),
+            ),
+            t(lang, `trust.sizes.${id}Note`),
+          ].join("\n\n"),
+        )
+        .join("\n\n");
+    }
+    case "Requirements":
+      return markdownTable(
+        [t(lang, "trust.req.item"), t(lang, "trust.req.value")],
+        requirements(getFacts()).map((row) => [t(lang, `trust.req.${row.key}`), code(row.value)]),
+      );
+    case "A11yResults":
+      // The table exists only in the built HTML page: axe runs after the build.
+      return `${t(lang, "trust.a11y.markdown")} ${pageUrl}#accessibility`;
+    default:
+      return undefined;
+  }
+}
+
 async function proseMarkdown(page: PageInfo): Promise<string> {
   const prose = page.prose!;
   const contentLang: Lang = prose.translated ? page.lang : "en";
@@ -290,7 +369,9 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
           .map((sample) => fence(sample.code, sample.lang))
           .join("\n\n");
       }
-      default:
+      default: {
+        const trust = trustMarkdown(name, attrs, contentLang, pageUrl);
+        if (trust !== undefined) return trust;
         // A wrapper (a note) keeps its text; anything else shows nothing a copy can use.
         return children ? (await replaceBlocks(children, render)).trim() : "";
     }
@@ -341,6 +422,7 @@ function apiMarkdown(slug: ComponentSlug, lang: Lang): string {
     t(lang, "api.stylingLead", { component }),
     `Classes: ${reference.classes.map(code).join(", ")}`,
     `Tokens: ${reference.tokens.map(code).join(", ")}`,
+      }
   ].join("\n\n");
 }
 

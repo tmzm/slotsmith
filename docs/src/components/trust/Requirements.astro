@@ -1,0 +1,41 @@
+---
+/**
+ * What the packages declare: React's peer range, the Node range
+ * `slotsmith-ai` needs, the license, the current version and the release
+ * line that gets security fixes. Read from the facts and from
+ * `packages/ai/package.json`, so the page cannot drift from the packages.
+ * Each row is `#requirement-<key>`.
+ */
+import "@/styles/reference.css";
+import "@/styles/trust.css";
+import { t, type Lang } from "@/i18n";
+import { getFacts, type Facts } from "@/lib/facts";
+import { requirements } from "@/lib/trust";
+
+interface Props {
+  lang?: Lang;
+  /** The facts to show; defaults to the generated ones. */
+  facts?: Facts;
+}
+
+const { lang = "en", facts = getFacts() } = Astro.props;
+const rows = requirements(facts);
+---
+<div class="ref-table trust-table" role="region" tabindex="0" aria-label={t(lang, "trust.req.label")}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "trust.req.item")}</th>
+        <th scope="col">{t(lang, "trust.req.value")}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((row) => (
+        <tr id={`requirement-${row.key}`}>
+          <th scope="row">{t(lang, `trust.req.${row.key}`)}</th>
+          <td class="ref-type"><code dir="ltr">{row.value}</code></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

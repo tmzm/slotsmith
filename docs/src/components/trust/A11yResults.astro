@@ -1,0 +1,24 @@
+---
+/**
+ * Where the axe results go on the Trust page. axe runs in `verify-site`,
+ * after `astro build`, so this renders only the start and end markers from
+ * `scripts/lib/a11y-report.ts`; the verifier replaces what is between them
+ * with the results table in the built page. Until it has, the paragraph
+ * between the markers says this build has no results (a build that skips the
+ * verifier, or the dev server) and links to the CI workflow that runs it.
+ */
+import "@/styles/reference.css";
+import "@/styles/trust.css";
+import { SITE } from "../../../site.config.ts";
+import { t, type Lang } from "@/i18n";
+import { A11Y_END_MARKER, A11Y_MARKER } from "../../../scripts/lib/a11y-report.ts";
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = "en" } = Astro.props;
+---
+<div class="trust-a11y">
+  <Fragment set:html={A11Y_MARKER} /><p class="trust-a11y__pending">{t(lang, "trust.a11y.pending")} <a href={`${SITE.repo}/actions/workflows/docs.yml`}>{t(lang, "trust.a11y.pendingLink")}</a></p><Fragment set:html={A11Y_END_MARKER} />
+</div>

@@ -1,0 +1,63 @@
+---
+/**
+ * Test suites by title. `kind="integration"`: the suites that run each
+ * component with a UI library's parts, grouped by library, each suite a
+ * disclosure of its test titles. `kind="bundle"`: what the tree-shaking test
+ * asserts, as a plain list. Both come from the test run's report, so a suite
+ * added to the library appears here with no change to the docs. Test titles
+ * are English.
+ */
+import "@/styles/trust.css";
+import { t, type Lang } from "@/i18n";
+import { getFacts, type Facts } from "@/lib/facts";
+import { bundleSuites, componentTitle, suitesByLibrary, testCount } from "@/lib/trust";
+
+interface Props {
+  kind: "integration" | "bundle";
+  lang?: Lang;
+  /** The facts to show; defaults to the generated ones. */
+  facts?: Facts;
+}
+
+const { kind, lang = "en", facts = getFacts() } = Astro.props;
+const libraries = kind === "integration" ? suitesByLibrary(facts) : [];
+const all = libraries.flatMap((library) => library.suites);
+const bundle = kind === "bundle" ? bundleSuites(facts) : [];
+const count = (tests: number) => t(lang, tests === 1 ? "trust.suites.test" : "trust.suites.tests", { count: tests });
+const componentName = (directory: string) => {
+  const key = componentTitle(directory);
+  return key ? t(lang, key) : directory;
+};
+---
+{kind === "integration" ? (
+  <>
+    <p class="trust-summary">{t(lang, "trust.suites.summary", { suites: all.length, tests: testCount(all), libraries: libraries.length })}</p>
+    <div class="trust-suites">
+      {libraries.map((library) => (
+        <section class="trust-suites__library" data-library={library.library} aria-labelledby={`suites-${library.library}`}>
+          <h3 class="trust-suites__name" id={`suites-${library.library}`}>{library.name}</h3>
+          {library.suites.map((suite) => (
+            <details class="trust-suite">
+              <summary class="trust-suite__summary">
+                <span class="trust-suite__component">{componentName(suite.component)}</span>{" "}
+                <span class="trust-suite__count">{count(suite.tests.length)}</span>
+              </summary>
+              <ul class="trust-titles" lang="en" dir="ltr">
+                {suite.tests.map((title) => <li>{title}</li>)}
+              </ul>
+            </details>
+          ))}
+        </section>
+      ))}
+    </div>
+  </>
+) : (
+  bundle.map((suite) => (
+    <>
+      <p class="trust-summary">{t(lang, "trust.bundle.summary", { count: suite.tests.length })} <code dir="ltr">{suite.file}</code></p>
+      <ul class="trust-titles trust-titles--open" lang="en" dir="ltr">
+        {suite.tests.map((title) => <li>{title}</li>)}
+      </ul>
+    </>
+  ))
+)}

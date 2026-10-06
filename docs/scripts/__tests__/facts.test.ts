@@ -117,7 +117,7 @@ describe("manifestLine", () => {
     expect(values.tests).toBe("1311");
     expect(values.suites).toBe("2");
     expect(values.gzip).toMatch(/^"\d+\.\d KB"$/);
-    expect(values.gzip).toBe('"18.4 KB"');
+    expect(values.gzip).toBe('"18.8 KB"');
     expect(values.license).toBe('"ISC"');
     expect(values.react).toBe('">=18"');
   });

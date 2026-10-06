@@ -1,17 +1,73 @@
 ---
 title: "Trust"
-description: "The Trust page of the slotsmith docs."
-draft: true
+description: "What backs slotsmith: tests, coverage, integration suites, axe results and bundle sizes, measured at build, plus support, versioning and security policies."
 ---
+import A11yResults from "@/components/trust/A11yResults.astro";
+import Requirements from "@/components/trust/Requirements.astro";
+import SizesTable from "@/components/trust/SizesTable.astro";
+import SuitesList from "@/components/trust/SuitesList.astro";
+import TestsSummary from "@/components/trust/TestsSummary.astro";
 
-This page is being written.
+The Trust page shows what backs slotsmith. Every number on it is measured when the site is built: passing tests, coverage per directory, integration suites for each design system, axe results for the demos, and bundle sizes. The support, versioning and security policies follow.
 
 ## Tests
 
-## Integration suites
+The site's build starts by running the library's whole test suite. If one test fails, the build stops and prints the failure, and nothing is published.
 
-## Bundle size
+<TestsSummary lang="en" />
+
+Coverage is listed per directory, so a weaker area is visible instead of being averaged into the total.
+
+## Integrations
+
+An integration suite renders a component with every slot replaced by a design system's real parts, then uses it the way a person would: by mouse and by keyboard. The adapters these suites test are the ones each component's Adapters page shows live, for example [the data table's](../components/data-table/adapters/).
+
+Every suite uses a shared harness that fails the test when React logs a warning or an error, such as a prop that should not reach the DOM.
+
+<SuitesList kind="integration" lang="en" />
+
+Open a suite to read what it tests.
+
+## Tree-shaking
+
+An app that imports one component should ship only that component. One test file bundles the published output the way an application's bundler does and fails if anything else gets in. Its test titles say what it proves:
+
+<SuitesList kind="bundle" lang="en" />
+
+## Accessibility
+
+axe-core runs in Chromium on every fallback demo of this site, on the English and the Arabic pages, each time the site is built and verified. It checks the WCAG A and AA rules. A finding fails the build, unless it is a known issue in the library's own parts; those are listed with their reason, not hidden.
+
+<A11yResults lang="en" />
+
+The demos show the parts exactly as they ship. Each component's overview describes its keyboard and screen reader behaviour, for example [the data table's](../components/data-table/#accessibility).
+
+## Sizes
+
+<SizesTable lang="en" />
+
+Importing one component from the main entry drops the others, as the [tree-shaking test](#tree-shaking) checks, so an app pays for the entries it uses.
+
+## Support
+
+slotsmith supports the last two versions of Chrome, Edge, Firefox and Safari. It needs ES2022, `Intl` and `IntersectionObserver`. It works with React 18 and React 19. `slotsmith-ai` runs on Node 20 or later.
+
+The table shows what the packages themselves declare:
+
+<Requirements lang="en" />
 
 ## License
 
-## React
+slotsmith and `slotsmith-ai` are published under the ISC license, a short permissive license: you may use, copy, change and distribute the code, in commercial work too, as long as the copyright notice and the license text stay with it. The [support table](#support) shows the license each package declares.
+
+## Versioning
+
+slotsmith follows semantic versioning. A breaking change ships only in a major version. Before an API is removed, it is marked `@deprecated` in the types, which editors show as a warning, and it keeps working for at least one minor version. `slotsmith-ai` shares its major and minor version with `slotsmith`.
+
+## Security
+
+Report a vulnerability privately, through a [GitHub security advisory](https://github.com/tmzm/slotsmith/security/advisories/new) on `tmzm/slotsmith`. Please do not open a public issue for it. You get a first answer within seven days. Fixes go into the latest minor version, shown as the release line in the [support table](#support).
+
+## Changelog
+
+The [changelog](../changelog/) lists what changed in each release.

@@ -1,0 +1,20 @@
+---
+/**
+ * The Trust page's test summary: how many tests pass, in how many files, on
+ * which version, then coverage per source directory. Every number is from
+ * the facts, measured by the test run that the site's build starts.
+ */
+import { t, type Lang } from "@/i18n";
+import { getFacts, type Facts } from "@/lib/facts";
+import CoverageTable from "./CoverageTable.astro";
+
+interface Props {
+  lang?: Lang;
+  /** The facts to show; defaults to the generated ones. */
+  facts?: Facts;
+}
+
+const { lang = "en", facts = getFacts() } = Astro.props;
+---
+<p class="trust-summary">{t(lang, "trust.tests.summary", { tests: facts.tests, files: facts.testFiles, version: facts.version })}</p>
+<CoverageTable lang={lang} facts={facts} />

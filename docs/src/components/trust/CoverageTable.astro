@@ -1,0 +1,55 @@
+---
+/**
+ * Coverage per source directory: the four components, then the shared code
+ * (every other `src/` directory), then the total. Every directory has its
+ * own row, so one low figure is not hidden in the total.
+ */
+import "@/styles/reference.css";
+import "@/styles/trust.css";
+import { t, type Lang } from "@/i18n";
+import { getFacts, type Facts } from "@/lib/facts";
+import { COVERAGE_COLUMNS, coverageGroups, percent } from "@/lib/trust";
+
+interface Props {
+  lang?: Lang;
+  /** The facts to show; defaults to the generated ones. */
+  facts?: Facts;
+}
+
+const { lang = "en", facts = getFacts() } = Astro.props;
+const { components, shared, total } = coverageGroups(facts);
+const groups = [
+  { title: t(lang, "trust.coverage.components"), rows: components },
+  { title: t(lang, "trust.coverage.shared"), rows: shared },
+].filter((group) => group.rows.length > 0);
+---
+<div class="ref-table trust-table" role="region" tabindex="0" aria-label={t(lang, "trust.coverage.label")}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{t(lang, "trust.coverage.directory")}</th>
+        {COVERAGE_COLUMNS.map((column) => <th scope="col" class="trust-num">{t(lang, `trust.coverage.${column}`)}</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      {groups.map((group) => (
+        <>
+          <tr><th scope="colgroup" colspan={COVERAGE_COLUMNS.length + 1}>{group.title}</th></tr>
+          {group.rows.map((row) => (
+            <tr>
+              <th scope="row" class="ref-name"><code dir="ltr">src/{row.component}/</code></th>
+              {COVERAGE_COLUMNS.map((column) => <td class="trust-num" dir="ltr">{percent(row[column])}</td>)}
+            </tr>
+          ))}
+        </>
+      ))}
+      {total && (
+        <tr class="trust-total">
+          <th scope="row">{t(lang, "trust.coverage.total")}</th>
+          {COVERAGE_COLUMNS.map((column) => <td class="trust-num" dir="ltr">{percent(total[column])}</td>)}
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+<p class="ref-note">{t(lang, "trust.coverage.note")}</p>

@@ -232,11 +232,17 @@ describe("TrustStrip", () => {
   it("renders one manifest line, braces in gold, each pair a link to the trust page", async () => {
     const doc = parse(await container.renderToString(TrustStrip, { props: { lang: "ar", facts } }));
     const line = doc.querySelector(".manifest");
-    expect(normalise(line?.textContent)).toBe('{ tests: 1311, suites: 1, gzip: "18.4 KB", license: "ISC", react: ">=18" }');
+    expect(normalise(line?.textContent)).toBe('{ tests: 1311, suites: 1, gzip: "18.8 KB", license: "ISC", react: ">=18" }');
     expect(line?.getAttribute("dir")).toBe("ltr");
     const links = [...doc.querySelectorAll(".manifest a")];
     expect(links).toHaveLength(5);
-    for (const link of links) expect(link.getAttribute("href")).toMatch(/^\/ar\/trust\/#/);
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/ar/trust/#tests",
+      "/ar/trust/#integrations",
+      "/ar/trust/#sizes",
+      "/ar/trust/#license",
+      "/ar/trust/#support",
+    ]);
     expect(doc.querySelectorAll(".manifest__brace")).toHaveLength(2);
   });
 });

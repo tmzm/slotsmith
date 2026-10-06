@@ -23,8 +23,8 @@ const LANDING: { key: string; link: string }[] = [
   { key: "nextjs", link: "/getting-started/" },
   { key: "tailwind", link: "/theming/" },
   { key: "designSystem", link: "/components/data-table/adapters/" },
-  { key: "bundle", link: "/trust/#bundle-size" },
-  { key: "react18", link: "/trust/#react" },
+  { key: "bundle", link: "/trust/#sizes" },
+  { key: "react18", link: "/trust/#support" },
   { key: "license", link: "/trust/#license" },
 ];
 

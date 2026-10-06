@@ -53,9 +53,9 @@ export function getFacts(): Facts {
   return facts;
 }
 
-/** Formats bytes as kilobytes with one decimal (`18.4 KB`). */
+/** Formats bytes as kilobytes of 1000 bytes with one decimal (`18.8 KB`), on the landing and the Trust page alike. */
 export function kilobytes(bytes: number): string {
-  return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1000).toFixed(1)} KB`;
 }
 
 /**
@@ -72,9 +72,9 @@ export function manifestLine(facts: Facts): { key: string; value: string; href: 
   const quote = (text: string) => JSON.stringify(text);
   return [
     { key: "tests", value: String(facts.tests), href: "/trust/#tests" },
-    { key: "suites", value: String(facts.integrationSuites.length), href: "/trust/#integration-suites" },
-    { key: "gzip", value: quote(kilobytes(table.gzipBytes)), href: "/trust/#bundle-size" },
+    { key: "suites", value: String(facts.integrationSuites.length), href: "/trust/#integrations" },
+    { key: "gzip", value: quote(kilobytes(table.gzipBytes)), href: "/trust/#sizes" },
     { key: "license", value: quote(facts.license), href: "/trust/#license" },
-    { key: "react", value: quote(facts.react), href: "/trust/#react" },
+    { key: "react", value: quote(facts.react), href: "/trust/#support" },
   ];
 }
