@@ -21,15 +21,16 @@ const PAGE_SIZE = 12;
 /** Waits `ms`, and rejects with an `AbortError` as soon as the signal aborts. */
 function wait(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    const abort = () => {
-      clearTimeout(timer);
-      reject(new DOMException("The request was cancelled.", "AbortError"));
-    };
-    if (signal.aborted) return abort();
+    const cancelled = () => new DOMException("The request was cancelled.", "AbortError");
+    if (signal.aborted) return reject(cancelled());
     const timer = setTimeout(() => {
       signal.removeEventListener("abort", abort);
       resolve();
     }, ms);
+    const abort = () => {
+      clearTimeout(timer);
+      reject(cancelled());
+    };
     signal.addEventListener("abort", abort, { once: true });
   });
 }
