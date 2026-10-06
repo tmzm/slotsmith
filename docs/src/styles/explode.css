@@ -33,17 +33,19 @@
 
 /* Room inside the demo box for the parts that move up (the header row, its
    cells and sort icons lift 5.25rem in all, under the header row's label) and
-   toward the start side. */
+   toward the start side. The room is real layout, kept at rest too: tying it to
+   `--explode` would reflow the table on every frame, which counts as layout
+   shift, where the parts' own transforms do not. */
 .explode:not([data-static]) .swap__box {
   padding-block-start: 5.75rem;
   padding-inline-start: 3.75rem;
 }
 
 /* The live view sits on the page's scroll path (the landing pins it mid-
-   viewport), so the box passes the wheel on at its ends. From the moment it
-   scrolls into view until the pin lets go (`data-driven`) it does not scroll
-   at all: the page's scroll drives the view. The gutter is kept so the table
-   does not reflow when the scrollbar goes. */
+   viewport), so the box passes the wheel on at its ends. While the pin holds
+   the view and it is open (`data-driven`) the box does not scroll at all: the
+   page's scroll drives the view, and it scrolls again as soon as the pin lets
+   go. The gutter is kept so the table does not reflow when the scrollbar goes. */
 .explode:not([data-static]) .swap__box {
   overscroll-behavior: auto;
   scrollbar-gutter: stable;
