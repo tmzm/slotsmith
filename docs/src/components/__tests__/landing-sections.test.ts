@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { loadRenderers } from "astro:container";
 import { getContainerRenderer } from "@astrojs/react/container-renderer";
-// jsdom ships no types; the repo root has it as a dev dependency.
+// jsdom ships no types (it is a dev dependency of the docs).
 // @ts-expect-error -- untyped module
 import { JSDOM } from "jsdom";
 import Demo from "@/components/Demo.astro";

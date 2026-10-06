@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
-// jsdom ships no types; the repo root has it as a dev dependency.
+// jsdom ships no types (it is a dev dependency of the docs).
 // @ts-expect-error -- untyped module
 import { JSDOM } from "jsdom";
 import A11yResults from "@/components/trust/A11yResults.astro";
