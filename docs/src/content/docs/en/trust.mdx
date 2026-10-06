@@ -3,6 +3,7 @@ title: "Trust"
 description: "What backs slotsmith: tests, coverage, integration suites, axe results and bundle sizes, measured at build, plus support, versioning and security policies."
 ---
 import A11yResults from "@/components/trust/A11yResults.astro";
+import RepoLink from "@/components/trust/RepoLink.astro";
 import Requirements from "@/components/trust/Requirements.astro";
 import SizesTable from "@/components/trust/SizesTable.astro";
 import SuitesList from "@/components/trust/SuitesList.astro";
@@ -50,7 +51,7 @@ Importing one component from the main entry drops the others, as the [tree-shaki
 
 ## Support
 
-slotsmith supports the last two versions of Chrome, Edge, Firefox and Safari. It needs ES2022, `Intl` and `IntersectionObserver`. It works with React 18 and React 19. `slotsmith-ai` runs on Node 20 or later.
+slotsmith targets the last two versions of Chrome, Edge, Firefox and Safari. It needs ES2022, `Intl` and `IntersectionObserver`. The tests run in jsdom, and the checks of this site run in Chromium; Firefox and Safari are not part of an automated run. It works with React 18 and React 19. `slotsmith-ai` runs on Node 20 or later.
 
 The table shows what the packages themselves declare:
 
@@ -66,7 +67,7 @@ slotsmith follows semantic versioning. A breaking change ships only in a major v
 
 ## Security
 
-Report a vulnerability privately, through a [GitHub security advisory](https://github.com/tmzm/slotsmith/security/advisories/new) on `tmzm/slotsmith`. Please do not open a public issue for it. You get a first answer within seven days. Fixes go into the latest minor version, shown as the release line in the [support table](#support).
+Report a vulnerability privately, through a <RepoLink path="/security/advisories/new">GitHub security advisory on the slotsmith repository</RepoLink>. Please do not open a public issue for it. You get a first answer within seven days. Fixes go into the latest minor version, shown as the release line in the [support table](#support).
 
 ## Changelog
 

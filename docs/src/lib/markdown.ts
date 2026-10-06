@@ -15,8 +15,8 @@
 import { SITE } from "../../site.config.ts";
 import { COMPONENTS, componentMeta, type ComponentSlug } from "@/data/components";
 import { landingFaq, type FaqItem } from "@/data/faq";
-import { getFacts, kilobytes } from "@/lib/facts";
-import { COVERAGE_COLUMNS, bundleSuites, componentTitle, coverageGroups, percent, requirements, suitesByLibrary, testCount } from "@/lib/trust";
+import { getFacts, kilobytes, type Facts } from "@/lib/facts";
+import { COVERAGE_COLUMNS, bundleSuites, componentTitle, coverageGroups, groupTitles, percent, requirements, suitesByLibrary, testCount } from "@/lib/trust";
 import { ATTRIBUTES, CORRECTION_URL, SUBJECTS } from "@/data/comparison";
 import { MCP_PROMPTS, MCP_TOOLS } from "@/data/mcp";
 import { localePath, t, type Lang, type MessageKey } from "@/i18n";
@@ -229,15 +229,26 @@ function referenceLinksMarkdown(slug: ComponentSlug, lang: Lang, contentLang: La
   return links.map(([href, title, lead]) => `- [${t(contentLang, title)}](${SITE.url}${localePath(lang, href)}): ${t(contentLang, lead)}`).join("\n");
 }
 
+/** One block of the Trust page, as the Markdown copy reads it from the MDX. */
+export interface TrustBlock {
+  name: string;
+  attrs: Record<string, string>;
+  /** The text inside a paired tag. */
+  children?: string;
+}
+
 /**
  * A Trust page block as Markdown, with the numbers its component shows.
  *
- * @returns Undefined when `name` is not one of the Trust page's blocks.
+ * @param pageUrl - The page's absolute URL, for the link to the axe results.
+ * @param facts - The facts to state; defaults to the generated ones.
+ * @returns Undefined when the block is not one of the Trust page's.
  */
-function trustMarkdown(name: string, attrs: Record<string, string>, lang: Lang, pageUrl: string): string | undefined {
+export function trustMarkdown({ name, attrs, children }: TrustBlock, lang: Lang, pageUrl: string, facts?: Facts): string | undefined {
+  const measured = () => facts ?? getFacts();
+  const tests = (count: number) => t(lang, count === 1 ? "trust.suites.test" : "trust.suites.tests", { count });
   const coverage = () => {
-    const facts = getFacts();
-    const { components, shared, total } = coverageGroups(facts);
+    const { components, shared, total } = coverageGroups(measured());
     return [
       markdownTable(
         [t(lang, "trust.coverage.directory"), ...COVERAGE_COLUMNS.map((column) => t(lang, `trust.coverage.${column}`))],
@@ -249,57 +260,69 @@ function trustMarkdown(name: string, attrs: Record<string, string>, lang: Lang, 
       t(lang, "trust.coverage.note"),
     ].join("\n\n");
   };
-  const titles = (tests: string[]) => tests.map((title) => `  - ${title}`).join("\n");
   switch (name) {
     case "TestsSummary": {
-      const facts = getFacts();
-      return `${t(lang, "trust.tests.summary", { tests: facts.tests, files: facts.testFiles, version: facts.version })}\n\n${coverage()}`;
+      const { tests: count, testFiles, version } = measured();
+      return `${t(lang, "trust.tests.summary", { tests: count, files: testFiles, version })}\n\n${coverage()}`;
     }
     case "CoverageTable":
       return coverage();
     case "SuitesList": {
-      const facts = getFacts();
       if (attrs.kind === "bundle") {
-        return bundleSuites(facts)
-          .map((suite) => `${t(lang, "trust.bundle.summary", { count: suite.tests.length })} ${code(suite.file)}\n\n${suite.tests.map((title) => `- ${title}`).join("\n")}`)
+        // The same groups as the page: the shared opening words once, then each title's own words.
+        return bundleSuites(measured())
+          .map((suite) =>
+            [
+              `${t(lang, "trust.bundle.summary", { tests: tests(suite.tests.length) })} ${code(suite.file)}`,
+              ...groupTitles(suite.tests).map((group) =>
+                group.prefix ? `- ${group.prefix}\n${group.titles.map((title) => `  - ${title}`).join("\n")}` : group.titles.map((title) => `- ${title}`).join("\n"),
+              ),
+            ].join("\n\n"),
+          )
           .join("\n\n");
       }
-      const libraries = suitesByLibrary(facts);
+      const libraries = suitesByLibrary(measured());
       const all = libraries.flatMap((library) => library.suites);
-      const count = (tests: number) => t(lang, tests === 1 ? "trust.suites.test" : "trust.suites.tests", { count: tests });
-      const name = (directory: string) => {
+      const component = (directory: string) => {
         const key = componentTitle(directory);
         return key ? t(lang, key) : directory;
       };
       return [
-        t(lang, "trust.suites.summary", { suites: all.length, tests: testCount(all), libraries: libraries.length }),
+        t(lang, "trust.suites.summary", {
+          suites: t(lang, all.length === 1 ? "trust.suites.suite" : "trust.suites.suites", { count: all.length }),
+          tests: tests(testCount(all)),
+          libraries: t(lang, libraries.length === 1 ? "trust.suites.library" : "trust.suites.libraries", { count: libraries.length }),
+        }),
         ...libraries.map(
-          (library) => `### ${library.name}\n\n${library.suites.map((suite) => `- ${name(suite.component)}, ${count(suite.tests.length)}\n${titles(suite.tests)}`).join("\n")}`,
+          (library) =>
+            `### ${library.name}\n\n${library.suites
+              .map((suite) => `- ${component(suite.component)}, ${tests(suite.tests.length)}\n${suite.tests.map((title) => `  - ${title}`).join("\n")}`)
+              .join("\n")}`,
         ),
       ].join("\n\n");
     }
-    case "SizesTable": {
-      const facts = getFacts();
+    case "SizesTable":
       return (["js", "css"] as const)
         .map((id) =>
           [
             markdownTable(
               [t(lang, `trust.sizes.${id}`), t(lang, "trust.sizes.min"), t(lang, "trust.sizes.gzip")],
-              (id === "js" ? facts.bundle : facts.css).map((row) => [code(row.entry), kilobytes(row.minBytes), kilobytes(row.gzipBytes)]),
+              (id === "js" ? measured().bundle : measured().css).map((row) => [code(row.entry), kilobytes(row.minBytes), kilobytes(row.gzipBytes)]),
             ),
             t(lang, `trust.sizes.${id}Note`),
           ].join("\n\n"),
         )
         .join("\n\n");
-    }
     case "Requirements":
       return markdownTable(
         [t(lang, "trust.req.item"), t(lang, "trust.req.value")],
-        requirements(getFacts()).map((row) => [t(lang, `trust.req.${row.key}`), code(row.value)]),
+        requirements(measured()).map((row) => [t(lang, `trust.req.${row.key}`), code(row.value)]),
       );
     case "A11yResults":
       // The table exists only in the built HTML page: axe runs after the build.
       return `${t(lang, "trust.a11y.markdown")} ${pageUrl}#accessibility`;
+    case "RepoLink":
+      return `[${(children ?? "").trim()}](${SITE.repo}${attrs.path ?? ""})`;
     default:
       return undefined;
   }
@@ -418,7 +441,7 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
           .join("\n\n");
       }
       default: {
-        const trust = trustMarkdown(name, attrs, contentLang, pageUrl);
+        const trust = trustMarkdown({ name, attrs, children }, contentLang, pageUrl);
         if (trust !== undefined) return trust;
         // A wrapper (a note) keeps its text; anything else shows nothing a copy can use.
         return children ? (await replaceBlocks(children, render)).trim() : "";

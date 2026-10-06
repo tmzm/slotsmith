@@ -19,6 +19,23 @@
   font-weight: 500;
 }
 
+/* One <tbody> per group: its heading row, as reference.css styles a colgroup heading. */
+.trust-table tbody th[scope="rowgroup"] {
+  padding-block-start: 1rem;
+  background: var(--bg);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.trust-table tbody tr:has(> th[scope="rowgroup"]):hover {
+  background: var(--bg);
+}
+
+/* reference.css drops the last row's rule per <tbody>; only the table's last row loses it here. */
+.trust-table tbody:not(:last-child) tr:last-child > * {
+  border-block-end: 1px solid var(--line);
+}
+
 .trust-table .trust-total > * {
   border-block-start: 1px solid var(--line-strong);
   color: var(--ink);
@@ -144,6 +161,18 @@
 .prose .trust-titles > li::before,
 .prose .trust-titles > li::marker {
   content: none;
+}
+
+.prose .trust-titles__group {
+  max-inline-size: 52rem;
+  margin-block: 1rem 0.25rem;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.prose .trust-titles__group + .trust-titles--open {
+  margin-block-start: 0;
 }
 
 .prose .trust-titles--open {

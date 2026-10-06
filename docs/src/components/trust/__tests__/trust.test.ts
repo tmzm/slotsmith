@@ -12,7 +12,18 @@ import SizesTable from "@/components/trust/SizesTable.astro";
 import SuitesList from "@/components/trust/SuitesList.astro";
 import TestsSummary from "@/components/trust/TestsSummary.astro";
 import type { Facts } from "@/lib/facts";
+import { trustMarkdown } from "@/lib/markdown";
+import { groupTitles } from "@/lib/trust";
+import { SITE } from "../../../../site.config.ts";
 import { A11Y_END_MARKER, A11Y_MARKER } from "../../../../scripts/lib/a11y-report.ts";
+
+const BUNDLE_TITLES = [
+  "what an app bundles drops everything but DataTable",
+  "what an app bundles keeps what the app imports",
+  "the stylesheets ships the whole set",
+  "locales keeps every pack out of a component's bundle",
+  "locales ships the packs without a client directive",
+];
 
 const facts: Facts = {
   version: "2.3.4",
@@ -31,11 +42,11 @@ const facts: Facts = {
   coverage: [
     { component: "data-table", lines: 99.27, branches: 91.37, functions: 99.01, statements: 97.39 },
     { component: "file-uploader", lines: 89.28, branches: 79.36, functions: 89.47, statements: 86.53 },
-    { component: "shared", lines: 93.62, branches: 84.44, functions: 92.31, statements: 92.59 },
+    { component: "shared", lines: 100, branches: 84.4, functions: 92.31, statements: 92.59 },
     { component: "total", lines: 97.21, branches: 87.48, functions: 97.61, statements: 95.37 },
   ],
   suites: [
-    { file: "src/__tests__/bundle.test.ts", component: "package", library: null, kind: "bundle", tests: ["drops everything but DataTable from a main-entry import"] },
+    { file: "src/__tests__/bundle.test.ts", component: "package", library: null, kind: "bundle", tests: BUNDLE_TITLES },
     { file: "src/data-table/__tests__/integrations/chakra.test.tsx", component: "data-table", library: "chakra", kind: "integration", tests: ["Chakra UI v3 renders rows", "Chakra UI v3 sorts <a column>"] },
     { file: "src/data-table/__tests__/integrations/mui.test.tsx", component: "data-table", library: "mui", kind: "integration", tests: ["MUI v7 renders rows"] },
     { file: "src/date-picker/__tests__/integrations/mui.test.tsx", component: "date-picker", library: "mui", kind: "integration", tests: ["MUI v7 picks a day", "MUI v7 picks a range"] },
@@ -68,15 +79,15 @@ describe("TestsSummary", () => {
 describe("CoverageTable", () => {
   it("gives every source directory its own row, components first, then shared code, then the total", async () => {
     const doc = await render(CoverageTable);
-    const rows = [...doc.querySelectorAll("tbody tr")].map((row) => [...row.children].map(text).join(" "));
-    expect(rows).toEqual([
-      "Components",
-      "src/data-table/ 99.27% 91.37% 99.01% 97.39%",
-      "src/file-uploader/ 89.28% 79.36% 89.47% 86.53%",
-      "Shared code",
-      "src/shared/ 93.62% 84.44% 92.31% 92.59%",
-      "All of src/ 97.21% 87.48% 97.61% 95.37%",
+    const bodies = [...doc.querySelectorAll("tbody")].map((body) => [...body.querySelectorAll("tr")].map((row) => [...row.children].map(text).join(" ")));
+    // One body per group; every figure has two decimals.
+    expect(bodies).toEqual([
+      ["Components", "src/data-table/ 99.27% 91.37% 99.01% 97.39%", "src/file-uploader/ 89.28% 79.36% 89.47% 86.53%"],
+      ["Shared code", "src/shared/ 100.00% 84.40% 92.31% 92.59%"],
+      ["All of src/ 97.21% 87.48% 97.61% 95.37%"],
     ]);
+    expect([...doc.querySelectorAll('th[scope="rowgroup"]')].map(text)).toEqual(["Components", "Shared code"]);
+    expect(doc.querySelector('th[scope="colgroup"]')).toBeNull();
   });
 });
 
@@ -96,11 +107,34 @@ describe("SuitesList", () => {
     expect(text(doc.querySelector(".trust-summary"))).toBe("4 integration suites with 6 tests, for 3 libraries.");
   });
 
-  it("lists what the bundle test proves, from its titles", async () => {
+  it("counts one suite, one test and one library in the singular", async () => {
+    const one = { ...facts, suites: facts.suites.filter((suite) => suite.file.endsWith("integrations/mui.test.tsx") && suite.component === "data-table") };
+    const doc = await render(SuitesList, { kind: "integration", facts: one });
+    expect(text(doc.querySelector(".trust-summary"))).toBe("1 integration suite with 1 test, for 1 library.");
+  });
+
+  it("lists what the bundle test proves, its titles grouped under the words they share", async () => {
     const doc = await render(SuitesList, { kind: "bundle" });
-    expect([...doc.querySelectorAll("li")].map((item) => text(item))).toEqual(["drops everything but DataTable from a main-entry import"]);
-    expect(text(doc.querySelector(".trust-summary"))).toContain("src/__tests__/bundle.test.ts");
+    expect([...doc.querySelectorAll(".trust-titles__group")].map(text)).toEqual(["what an app bundles", "locales"]);
+    expect([...doc.querySelectorAll("ul")].map((list) => [...list.querySelectorAll("li")].map(text))).toEqual([
+      ["drops everything but DataTable", "keeps what the app imports"],
+      ["the stylesheets ships the whole set"],
+      ["keeps every pack out of a component's bundle", "ships the packs without a client directive"],
+    ]);
+    expect(text(doc.querySelector(".trust-summary"))).toBe("5 tests in src/__tests__/bundle.test.ts");
     expect(doc.querySelector("[data-library]")).toBeNull();
+  });
+});
+
+describe("groupTitles", () => {
+  it("leaves every title at least one word, and a lone title whole", () => {
+    expect(groupTitles(["a b", "a b"])).toEqual([{ prefix: "a", titles: ["b", "b"] }]);
+    expect(groupTitles(["a b c"])).toEqual([{ prefix: "", titles: ["a b c"] }]);
+    expect(groupTitles([])).toEqual([]);
+  });
+
+  it("starts a new group when the first word changes, and again when it comes back", () => {
+    expect(groupTitles(["the x one", "the x two", "locales a", "the y one", "the y two"]).map((group) => group.prefix)).toEqual(["the x", "", "the y"]);
   });
 });
 
@@ -113,6 +147,12 @@ describe("SizesTable", () => {
       "slotsmith/data-table 60.0 KB 18.8 KB",
       "slotsmith/styles.css 27.5 KB 5.2 KB",
     ]);
+  });
+
+  it("names each table's region apart from its first column", async () => {
+    const doc = await render(SizesTable);
+    expect([...doc.querySelectorAll('[role="region"]')].map((region) => region.getAttribute("aria-label"))).toEqual(["JavaScript sizes", "CSS sizes"]);
+    expect([...doc.querySelectorAll("thead th:first-child")].map(text)).toEqual(["JavaScript entry", "Stylesheet"]);
   });
 
   it("says what was measured next to the numbers", async () => {
@@ -142,5 +182,55 @@ describe("Requirements", () => {
     const doc = await render(Requirements);
     const values = [...doc.querySelectorAll("tbody tr")].map((row) => text(row.querySelector("td")));
     expect(values).toEqual([">=18", ai.engines.node, "ISC", "2.3.4", "2.3.x"]);
+  });
+});
+
+describe("trustMarkdown", () => {
+  const url = "https://slotsmith.dev/trust/";
+  const block = (name: string, attrs: Record<string, string> = {}, children?: string) => trustMarkdown({ name, attrs, children }, "en", url, facts);
+
+  it("states the tests and the coverage of every directory", () => {
+    const markdown = block("TestsSummary")!;
+    expect(markdown).toContain("41 tests in 7 test files pass on version 2.3.4.");
+    expect(markdown).toContain("| Directory | Lines | Branches | Functions | Statements |");
+    expect(markdown).toContain("| `src/file-uploader/` | 89.28% | 79.36% | 89.47% | 86.53% |");
+    expect(markdown).toContain("| `src/shared/` | 100.00% | 84.40% | 92.31% | 92.59% |");
+    expect(markdown).toContain("| All of src/ | 97.21% | 87.48% | 97.61% | 95.37% |");
+  });
+
+  it("lists the integration suites per library with their titles", () => {
+    const markdown = block("SuitesList", { kind: "integration" })!;
+    expect(markdown.startsWith("4 integration suites with 6 tests, for 3 libraries.")).toBe(true);
+    expect(markdown).toContain("### MUI\n\n- Data table, 1 test\n  - MUI v7 renders rows\n- Date picker, 2 tests\n  - MUI v7 picks a day");
+    expect(markdown.indexOf("### MUI")).toBeLessThan(markdown.indexOf("### Chakra UI"));
+    expect(markdown).toContain("### later");
+  });
+
+  it("lists the bundle test's titles in the page's groups", () => {
+    expect(block("SuitesList", { kind: "bundle" })).toBe(
+      [
+        "5 tests in `src/__tests__/bundle.test.ts`",
+        "- what an app bundles\n  - drops everything but DataTable\n  - keeps what the app imports",
+        "- the stylesheets ships the whole set",
+        "- locales\n  - keeps every pack out of a component's bundle\n  - ships the packs without a client directive",
+      ].join("\n\n"),
+    );
+  });
+
+  it("gives the sizes in the same unit as the page, with the measurement notes", () => {
+    const markdown = block("SizesTable")!;
+    expect(markdown).toContain("| `slotsmith/data-table` | 60.0 KB | 18.8 KB |");
+    expect(markdown).toContain("| `slotsmith/styles.css` | 27.5 KB | 5.2 KB |");
+    expect(markdown).toMatch(/peer dependencies are excluded/);
+  });
+
+  it("gives the requirements, points at the page for the axe table, and keeps a repository link", () => {
+    expect(block("Requirements")).toContain("| Release line that gets security fixes | `2.3.x` |");
+    expect(block("A11yResults")).toContain(`${url}#accessibility`);
+    expect(block("RepoLink", { path: "/security/advisories/new" }, "a security advisory")).toBe(`[a security advisory](${SITE.repo}/security/advisories/new)`);
+  });
+
+  it("leaves other blocks to the caller", () => {
+    expect(block("Note")).toBeUndefined();
   });
 });

@@ -2,7 +2,8 @@
 /**
  * Coverage per source directory: the four components, then the shared code
  * (every other `src/` directory), then the total. Every directory has its
- * own row, so one low figure is not hidden in the total.
+ * own row, so one low figure is not hidden in the total. Each group is its
+ * own `<tbody>` under a `rowgroup` heading.
  */
 import "@/styles/reference.css";
 import "@/styles/trust.css";
@@ -31,25 +32,25 @@ const groups = [
         {COVERAGE_COLUMNS.map((column) => <th scope="col" class="trust-num">{t(lang, `trust.coverage.${column}`)}</th>)}
       </tr>
     </thead>
-    <tbody>
-      {groups.map((group) => (
-        <>
-          <tr><th scope="colgroup" colspan={COVERAGE_COLUMNS.length + 1}>{group.title}</th></tr>
-          {group.rows.map((row) => (
-            <tr>
-              <th scope="row" class="ref-name"><code dir="ltr">src/{row.component}/</code></th>
-              {COVERAGE_COLUMNS.map((column) => <td class="trust-num" dir="ltr">{percent(row[column])}</td>)}
-            </tr>
-          ))}
-        </>
-      ))}
-      {total && (
+    {groups.map((group) => (
+      <tbody>
+        <tr><th scope="rowgroup" colspan={COVERAGE_COLUMNS.length + 1}>{group.title}</th></tr>
+        {group.rows.map((row) => (
+          <tr>
+            <th scope="row" class="ref-name"><code dir="ltr">src/{row.component}/</code></th>
+            {COVERAGE_COLUMNS.map((column) => <td class="trust-num" dir="ltr">{percent(row[column])}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    ))}
+    {total && (
+      <tbody>
         <tr class="trust-total">
           <th scope="row">{t(lang, "trust.coverage.total")}</th>
           {COVERAGE_COLUMNS.map((column) => <td class="trust-num" dir="ltr">{percent(total[column])}</td>)}
         </tr>
-      )}
-    </tbody>
+      </tbody>
+    )}
   </table>
 </div>
 <p class="ref-note">{t(lang, "trust.coverage.note")}</p>

@@ -32,8 +32,8 @@ export function coverageGroups(facts: Facts): { components: CoverageRow[]; share
   };
 }
 
-/** A percentage as the page shows it (`91.37%`). */
-export const percent = (value: number) => `${value}%`;
+/** A percentage as the page shows it, always with two decimals (`91.37%`, `100.00%`). */
+export const percent = (value: number) => `${value.toFixed(2)}%`;
 
 /** The message key of a component's name, when the directory is one of the four components. */
 export function componentTitle(directory: string): MessageKey | undefined {
@@ -46,7 +46,7 @@ export interface LibrarySuites {
   library: string;
   /** Its display name, or the id for a library the site does not list yet. */
   name: string;
-  /** Its suites, in component order. */
+  /** Its suites, in file path order, which is component directory order. */
   suites: Suite[];
 }
 
@@ -70,6 +70,41 @@ export function suitesByLibrary(facts: Facts): LibrarySuites[] {
 /** The tree-shaking test files (`src/__tests__/bundle.test.ts`). */
 export function bundleSuites(facts: Facts): Suite[] {
   return facts.suites.filter((suite) => suite.kind === "bundle");
+}
+
+/** Test titles that share their opening words, which is the `describe` block they sit in. */
+export interface TitleGroup {
+  /** The shared opening words; empty when the group is one title or shares none. */
+  prefix: string;
+  /** Each title without the prefix. */
+  titles: string[];
+}
+
+/**
+ * Groups full test titles so a shared opening is written once. The report
+ * joins a test's `describe` names and its own name with spaces, so the split
+ * is not recorded; this takes each run of consecutive titles that start with
+ * the same word and uses the words they all share as the group's prefix,
+ * always leaving every title at least one word. A run of `describe("a") →
+ * it("b c")`, `it("b d")` therefore reads "a b": "c", "d".
+ */
+export function groupTitles(titles: string[]): TitleGroup[] {
+  const groups: TitleGroup[] = [];
+  let at = 0;
+  while (at < titles.length) {
+    const first = titles[at]!.split(" ");
+    let end = at + 1;
+    while (end < titles.length && titles[end]!.split(" ")[0] === first[0]) end++;
+    const run = titles.slice(at, end).map((title) => title.split(" "));
+    let shared = 0;
+    if (run.length > 1) {
+      const shortest = Math.min(...run.map((words) => words.length));
+      while (shared < shortest - 1 && run.every((words) => words[shared] === first[shared])) shared++;
+    }
+    groups.push({ prefix: first.slice(0, shared).join(" "), titles: run.map((words) => words.slice(shared).join(" ")) });
+    at = end;
+  }
+  return groups;
 }
 
 /** How many tests a list of suites holds. */

@@ -1,0 +1,15 @@
+---
+/**
+ * A link into the library's repository, so prose does not write the repo's
+ * address by hand: `path` is appended to `SITE.repo`.
+ */
+import { SITE } from "../../../site.config.ts";
+
+interface Props {
+  /** The path under the repository, with its leading slash (`/security/advisories/new`). */
+  path: string;
+}
+
+const { path } = Astro.props;
+---
+<a href={`${SITE.repo}${path}`}><slot /></a>
