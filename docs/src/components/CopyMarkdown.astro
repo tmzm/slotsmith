@@ -16,7 +16,7 @@ interface Props {
 const { lang, href } = Astro.props;
 ---
 {/* The labels follow the page's language, even inside a header showing English prose. */}
-<div class="copy-markdown mono" lang={lang} dir={dirOf(lang)}>
+<div class="copy-markdown mono" lang={lang} dir={dirOf(lang)} data-pagefind-ignore>
   <button
     type="button"
     class="copy-markdown__button"

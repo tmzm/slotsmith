@@ -56,6 +56,7 @@ const shared = showCode ? sharedImports(code).map((file) => ({ file, ...sampleSo
   data-variants={variants?.join(" ") || undefined}
   data-provider={provider}
   data-view="preview"
+  data-pagefind-ignore
   style={`--demo-h:${height}`}
 >
   {showCode && (

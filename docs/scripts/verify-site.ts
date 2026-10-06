@@ -13,7 +13,8 @@
  *   `lib/axe-allowlist.ts` are recorded as known library issues, not
  *   problems), and every `data-*` attribute a demo's slots carry is listed in
  *   that slot's reference;
- * - that an in-page anchor scrolls within the page instead of navigating.
+ * - that an in-page anchor scrolls within the page instead of navigating;
+ * - that search works in both languages (`lib/search-check.ts`).
  *
  * Writes `dist/a11y.json`, puts the axe table between the Trust pages'
  * markers (`lib/a11y-report.ts`; a second run on the same `dist` replaces
@@ -34,6 +35,7 @@ import type { ComponentReference } from "../src/lib/reference.ts";
 import { findDeadLinks, findGeoProblems, findMetaProblems, findOgProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
 import { serveDir } from "./lib/serve.ts";
 import { APP_FOLDERS, filesUnder } from "./lib/walk.ts";
+import { checkSearch } from "./lib/search-check.ts";
 import { sortViolations } from "./lib/axe-allowlist.ts";
 import { A11Y_END_MARKER, A11Y_MARKER, injectA11y, renderA11yTable, type A11yResult } from "./lib/a11y-report.ts";
 import type { Lang } from "../src/i18n/index.ts";
@@ -354,6 +356,7 @@ async function main(): Promise<void> {
       await page.close();
     }
     problems.push(...(await checkAnchor(await context.newPage(), server.url, facts)));
+    problems.push(...(await checkSearch(context, server.url, distDir, AXE_TAGS)));
   } finally {
     await browser.close();
     await server.close();

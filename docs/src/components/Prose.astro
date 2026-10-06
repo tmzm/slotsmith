@@ -24,7 +24,7 @@ const fallback = prose.lang === "ar" && !prose.translated;
 {
   fallback ? (
     <>
-      <p class="untranslated">{t("ar", "common.untranslated")}</p>
+      <p class="untranslated" data-pagefind-ignore>{t("ar", "common.untranslated")}</p>
       <div lang="en" dir="ltr" class="prose">
         <Content components={components} />
       </div>

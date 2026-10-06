@@ -1,12 +1,14 @@
 ---
 /**
  * Docs page layout: Base plus the sidebar column, the "On this page" list,
- * the "Edit this page" link and the page's last-updated date from git.
+ * the "Edit this page" link and the page's last-updated date from git. The
+ * article is what search indexes (Pagefind), under the page's section name.
  */
 import Base, { type Props as BaseProps } from "./Base.astro";
 import Sidebar from "@/components/Sidebar.astro";
 import LastUpdated from "@/components/LastUpdated.astro";
 import { t } from "@/i18n";
+import { searchSection } from "@/lib/search-messages";
 import { editUrl } from "@/lib/page";
 
 interface Props extends BaseProps {
@@ -25,10 +27,10 @@ const { lang, path } = base;
 <Base {...base}>
   <Sidebar slot="sidebar" lang={lang} path={path} />
   <div class="docs" data-toc={toc.length > 0 || undefined}>
-    <article class="docs__article">
+    <article class="docs__article" data-pagefind-body data-pagefind-meta={`section:${searchSection(lang, path)}`}>
       <slot />
       {(sourcePath || lastUpdated) && (
-        <footer class="docs__meta">
+        <footer class="docs__meta" data-pagefind-ignore>
           {sourcePath && <a class="docs__edit" href={editUrl(sourcePath)}>{t(lang, "common.editPage")}</a>}
           <LastUpdated lang={lang} date={lastUpdated} />
         </footer>

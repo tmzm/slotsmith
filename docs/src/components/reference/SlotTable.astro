@@ -64,7 +64,7 @@ const reference = getReference(slug);
             )}
           </td>
           <td class="ref-fallback">
-            <details>
+            <details data-pagefind-ignore>
               <summary>{t(lang, "ref.fallbackSource")}</summary>
               <Code code={slot.fallback} lang="tsx" theme={CODE_THEME} dir="ltr" />
             </details>

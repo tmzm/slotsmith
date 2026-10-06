@@ -1,0 +1,207 @@
+/*
+ * The search command palette (docs/DESIGN.md section 5, "Search"). The dialog
+ * imports this as text and adds it to the page on its first open, so it is
+ * never in a page's first load.
+ */
+.search {
+  inline-size: min(40rem, calc(100vw - 1.5rem));
+  max-block-size: min(38rem, calc(100dvh - 2rem));
+  margin: 12vh auto auto;
+  padding: 0;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.search[open] {
+  display: flex;
+  flex-direction: column;
+  animation: search-in 160ms var(--ease-out);
+}
+
+.search::backdrop {
+  background: rgb(8 7 5 / 0.72);
+}
+
+@keyframes search-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search[open] {
+    animation: none;
+  }
+}
+
+.search__field {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: 1rem 0.5rem;
+  border-block-end: 1px solid var(--line);
+}
+
+.search__field svg {
+  flex: none;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  color: var(--muted);
+}
+
+.search__input {
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 3.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.search__input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+/* The field fills the dialog's width, so the dialog's gold border is its focus mark. */
+.search__input:focus-visible {
+  outline: none;
+}
+
+.search__close {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.search__close:hover {
+  color: var(--ink);
+}
+
+.search__message {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+.search__list {
+  flex: 1;
+  min-block-size: 0;
+  padding: 0.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search__group {
+  margin: 0;
+  padding: 0.75rem 0.75rem 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.search__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-block-size: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 3px;
+  color: var(--ink);
+  text-decoration: none;
+  scroll-margin-block: 0.5rem;
+}
+
+.search__row[data-nested] {
+  padding-inline-start: 2rem;
+}
+
+.search__row[aria-selected="true"] {
+  background: var(--panel-2);
+}
+
+.search__marker {
+  flex: none;
+  inline-size: 0.75rem;
+  color: var(--gold-text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  visibility: hidden;
+}
+
+.search__row[aria-selected="true"] .search__marker {
+  visibility: visible;
+}
+
+.search__text {
+  display: grid;
+  flex: 1;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+/* Result text finds its own direction (English prose on Arabic pages) but stays on the list's start edge. */
+.search:dir(rtl) :is(.search__title, .search__excerpt) {
+  text-align: right;
+}
+
+.search__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.search__row[data-nested] .search__title {
+  font-weight: 400;
+}
+
+.search__excerpt {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.search__excerpt mark {
+  background: transparent;
+  color: var(--gold-text);
+  font-weight: 600;
+}
+
+.search__hint {
+  flex: none;
+  margin: 0;
+  padding: 0.625rem 1rem;
+  border-block-start: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* Phones have no such keys, and the dialog sits higher to leave room for the keyboard. */
+@media (max-width: 767px) {
+  .search {
+    margin-block-start: 1rem;
+  }
+
+  .search__hint {
+    display: none;
+  }
+}

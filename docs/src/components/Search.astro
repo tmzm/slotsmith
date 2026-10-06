@@ -1,0 +1,112 @@
+---
+/**
+ * The header's search button and the loader behind it (docs/DESIGN.md
+ * "Header", "Search").
+ *
+ * The button is in the HTML but hidden; the loader shows it, so a page whose
+ * script did not run has no dead control (and hides the dock's Search button
+ * the same way). The dialog (`islands/SearchDialog.tsx`), React and Pagefind
+ * load on the first request to open: a click on any `[data-search-open]`
+ * (Base.astro turns it into the `open-search` window event), Ctrl+K, ⌘K or
+ * `/`. After that the dialog listens for itself. The button appears in space
+ * the header's spacer held, so nothing else in the header moves.
+ */
+import { t, type Lang } from "@/i18n";
+import { searchMessages } from "@/lib/search-messages";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// "<" escaped so no text can close the script element.
+const data = JSON.stringify({ lang, messages: searchMessages(lang) }).replaceAll("<", "\\u003c");
+---
+<button type="button" class="search-button" data-search-open data-search-trigger aria-keyshortcuts="Control+K Meta+K /" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </svg>
+  <span>{t(lang, "common.search")}</span>
+  <kbd dir="ltr" aria-hidden="true" data-search-keys>⌘K</kbd>
+</button>
+<script is:inline type="application/json" id="search-data" set:html={data} />
+<noscript><style is:inline>[data-search-open] { display: none !important; }</style></noscript>
+
+<style>
+  .search-button {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    block-size: 2.5rem;
+    padding-inline: 0.75rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      border-color 200ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+
+  .search-button:hover {
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+
+  .search-button svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  .search-button kbd {
+    font-size: 0.75rem;
+  }
+
+  /* Below 768px the dock's Search button is the way in. */
+  @media (min-width: 768px) {
+    .search-button:not([hidden]) {
+      display: inline-flex;
+    }
+  }
+</style>
+
+<script>
+  import { isSearchShortcut } from "@/lib/search";
+
+  const data = document.getElementById("search-data");
+  const trigger = document.querySelector<HTMLElement>("[data-search-trigger]");
+  if (data && trigger) {
+    const keys = trigger.querySelector("[data-search-keys]");
+    if (keys && !/Mac|iPhone|iPad/.test(navigator.platform)) keys.textContent = "Ctrl K";
+    trigger.hidden = false;
+
+    const dialog = () => import("@/islands/SearchDialog");
+    let mounting: Promise<void> | undefined;
+    /** Loads the dialog and mounts it open; from then on it handles the event and the keys. */
+    const mount = () => {
+      mounting ??= dialog()
+        .then(({ mountSearch }) => {
+          window.removeEventListener("open-search", mount);
+          window.removeEventListener("keydown", onKey);
+          mountSearch(JSON.parse(data.textContent ?? ""));
+        })
+        .catch(() => {
+          // The chunk did not load (offline): the next request tries again.
+          mounting = undefined;
+        });
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (!isSearchShortcut(event)) return;
+      event.preventDefault();
+      mount();
+    };
+    window.addEventListener("open-search", mount);
+    window.addEventListener("keydown", onKey);
+    // Pointing at the button fetches the dialog's code ahead of the click.
+    trigger.addEventListener("pointerenter", () => void dialog().catch(() => {}), { once: true });
+  }
+</script>

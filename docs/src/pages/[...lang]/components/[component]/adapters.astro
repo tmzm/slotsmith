@@ -61,7 +61,7 @@ const headings = libraries.map((library) => ({ id: library.id, text: library.nam
       {/* The tallest adapter demo at 360px (Chakra, 484px measured in Chrome), so none shifts the page as it loads. */}
       <Demo name={library.demo} lang={lang} height="30.5rem" provider={library.id} />
       <p class="adapter-note">{t(lang, "adapters.provider", { library: library.name })}</p>
-      <div class="panel sample-code adapter-code" data-sample={library.sample}>
+      <div class="panel sample-code adapter-code" data-sample={library.sample} data-pagefind-ignore>
         <p class="adapter-code__file mono" dir="ltr">{`${library.id}.tsx`}</p>
         <Code code={library.code} lang="tsx" theme={CODE_THEME} dir="ltr" />
         <button type="button" class="copy-button" data-copy data-label={t(lang, "common.copy")} data-label-copied={t(lang, "common.copied")}>

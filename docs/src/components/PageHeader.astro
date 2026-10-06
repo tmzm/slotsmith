@@ -15,7 +15,7 @@ const { title, lead, meta, contentLang } = Astro.props;
   {lead && <p class="page-header__lead">{lead}</p>}
   {
     meta && meta.length > 0 && (
-      <ul class="page-header__meta">
+      <ul class="page-header__meta" data-pagefind-ignore>
         {meta.map((item) => (
           <li dir="ltr">
             <span class="page-header__meta-key">
