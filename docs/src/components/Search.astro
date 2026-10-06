@@ -3,13 +3,17 @@
  * The header's search button and the loader behind it (docs/DESIGN.md
  * "Header", "Search").
  *
- * The button is in the HTML but hidden; the loader shows it, so a page whose
- * script did not run has no dead control (and hides the dock's Search button
- * the same way). The dialog (`islands/SearchDialog.tsx`), React and Pagefind
- * load on the first request to open: a click on any `[data-search-open]`
- * (Base.astro turns it into the `open-search` window event), Ctrl+K, ⌘K or
- * `/`. After that the dialog listens for itself. The button appears in space
- * the header's spacer held, so nothing else in the header moves.
+ * No search control works before the loader runs, so none shows: the header
+ * button is in the HTML but `hidden`, and every other `[data-search-open]`
+ * (the dock's Search button) stays invisible in its place until the loader
+ * marks it `data-search-ready`. A page whose script never ran has no dead
+ * control, and nothing moves when the controls appear: the header button takes
+ * space the spacer held, the dock button already had its cell.
+ *
+ * The dialog (`islands/SearchDialog.tsx`), React and Pagefind load on the
+ * first request to open: a click on a `[data-search-open]` (Base.astro turns
+ * it into the `open-search` window event), Ctrl+K, ⌘K or `/`. After that the
+ * dialog listens for itself.
  */
 import { t, type Lang } from "@/i18n";
 import { searchMessages } from "@/lib/search-messages";
@@ -22,7 +26,7 @@ const { lang } = Astro.props;
 // "<" escaped so no text can close the script element.
 const data = JSON.stringify({ lang, messages: searchMessages(lang) }).replaceAll("<", "\\u003c");
 ---
-<button type="button" class="search-button" data-search-open data-search-trigger aria-keyshortcuts="Control+K Meta+K /" hidden>
+<button type="button" class="icon-button search-button" data-search-open data-search-trigger aria-keyshortcuts="Control+K Meta+K /" hidden>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
     <circle cx="11" cy="11" r="7" />
     <path d="M20 20l-3.5-3.5" />
@@ -33,43 +37,39 @@ const data = JSON.stringify({ lang, messages: searchMessages(lang) }).replaceAll
 <script is:inline type="application/json" id="search-data" set:html={data} />
 <noscript><style is:inline>[data-search-open] { display: none !important; }</style></noscript>
 
-<style>
-  .search-button {
-    display: none;
-    align-items: center;
-    gap: 0.5rem;
-    block-size: 2.5rem;
-    padding-inline: 0.75rem 0.5rem;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    background: transparent;
-    color: var(--muted);
-    font-size: 0.875rem;
-    white-space: nowrap;
-    cursor: pointer;
-    transition:
-      border-color 200ms var(--ease-out),
-      color 200ms var(--ease-out);
+<style is:global>
+  /* Until the loader runs: in place (the dock keeps its three cells) but neither seen nor reachable. */
+  [data-search-open]:not([data-search-ready]) {
+    visibility: hidden;
   }
 
-  .search-button:hover {
-    border-color: var(--gold);
+  /* The header's other controls (`.icon-button`), with a label and the shortcut beside the icon. */
+  .icon-button.search-button {
+    display: none;
+    grid-auto-flow: column;
+    gap: 0.5rem;
+    padding-inline: 0.75rem 0.5rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .icon-button.search-button:hover {
     color: var(--ink);
   }
 
-  .search-button svg {
+  .icon-button.search-button svg {
     inline-size: 1rem;
     block-size: 1rem;
   }
 
-  .search-button kbd {
+  .icon-button.search-button kbd {
     font-size: 0.75rem;
   }
 
   /* Below 768px the dock's Search button is the way in. */
   @media (min-width: 768px) {
-    .search-button:not([hidden]) {
-      display: inline-flex;
+    .icon-button.search-button:not([hidden]) {
+      display: inline-grid;
     }
   }
 </style>
@@ -83,6 +83,11 @@ const data = JSON.stringify({ lang, messages: searchMessages(lang) }).replaceAll
     const keys = trigger.querySelector("[data-search-keys]");
     if (keys && !/Mac|iPhone|iPad/.test(navigator.platform)) keys.textContent = "Ctrl K";
     trigger.hidden = false;
+    for (const button of document.querySelectorAll<HTMLElement>("[data-search-open]")) {
+      button.setAttribute("data-search-ready", "");
+      // Safari does not focus a clicked button; focused, it is where the dialog returns focus on close.
+      button.addEventListener("click", () => button.focus({ preventScroll: true }), { capture: true });
+    }
 
     const dialog = () => import("@/islands/SearchDialog");
     let mounting: Promise<void> | undefined;

@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "astro dev",
     "redirects": "node scripts/redirects.ts",
-    "build": "node scripts/reference.ts && node scripts/facts.ts && node scripts/redirects.ts && astro build && pagefind --site dist --glob \"**/index.html\" && node scripts/verify-site.ts",
+    "build": "node scripts/reference.ts && node scripts/facts.ts && node scripts/redirects.ts && astro build && node scripts/search-index.ts && node scripts/verify-site.ts",
     "check": "astro check && tsc --noEmit && tsc --noEmit -p samples && node scripts/check-snippets.ts && node scripts/check-structure.ts",
     "test": "vitest run",
     "verify": "node scripts/verify-site.ts",
+    "search-index": "node scripts/search-index.ts",
     "reference": "node scripts/reference.ts",
     "facts": "node scripts/facts.ts"
   },

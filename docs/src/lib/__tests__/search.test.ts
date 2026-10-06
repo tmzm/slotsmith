@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupResults, isSearchShortcut, nextActive, type SearchPage } from "@/lib/search";
+import { groupResults, nextActive, type SearchPage } from "@/lib/search";
 import { searchMessages, searchSection } from "@/lib/search-messages";
 
 const page = (url: string, section: string | undefined, subs: string[] = []): SearchPage => ({
@@ -32,26 +32,15 @@ describe("groupResults", () => {
     expect(groups[0]!.section).toBe("slotsmith");
   });
 
+  it("shows an excerpt once when the page and its first heading share it", () => {
+    const shared: SearchPage = { url: "/a/", excerpt: "same", meta: { title: "A" }, sub_results: [{ title: "One", url: "/a/#one", excerpt: "same" }] };
+    const [group] = groupResults([shared], "slotsmith");
+    expect(group!.rows.map((row) => row.excerpt)).toEqual(["", "same"]);
+  });
+
   it("falls back to the URL for a page with no title", () => {
     const [group] = groupResults([{ url: "/a/", excerpt: "", meta: {} }], "slotsmith");
     expect(group!.rows[0]!.title).toBe("/a/");
-  });
-});
-
-describe("isSearchShortcut", () => {
-  const press = (key: string, more: Partial<{ ctrlKey: boolean; metaKey: boolean; altKey: boolean; target: EventTarget | null }> = {}) =>
-    isSearchShortcut({ key, ctrlKey: false, metaKey: false, altKey: false, target: null, ...more });
-
-  it("accepts Ctrl+K and ⌘K in either case, and a bare slash", () => {
-    expect(press("k", { ctrlKey: true })).toBe(true);
-    expect(press("K", { metaKey: true })).toBe(true);
-    expect(press("/")).toBe(true);
-  });
-
-  it("rejects a bare K, Ctrl+slash and anything with Alt", () => {
-    expect(press("k")).toBe(false);
-    expect(press("/", { ctrlKey: true })).toBe(false);
-    expect(press("k", { ctrlKey: true, altKey: true })).toBe(false);
   });
 });
 

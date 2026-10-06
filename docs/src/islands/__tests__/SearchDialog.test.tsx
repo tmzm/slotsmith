@@ -117,6 +117,45 @@ describe("SearchDialog", () => {
     expect(dialog().open).toBe(false);
   });
 
+  it("opens the active row in a new tab on Ctrl+Enter", async () => {
+    const opened = vi.spyOn(window, "open").mockImplementation(() => null);
+    render(<SearchDialog lang="en" messages={messages} load={engine().load} defaultOpen />);
+    fireEvent.change(input(), { target: { value: "pagination" } });
+    await waitFor(() => expect(options()).toHaveLength(3));
+    fireEvent.keyDown(input(), { key: "Enter", ctrlKey: true });
+    expect(opened).toHaveBeenCalledWith("/components/data-table/guides/pagination/", "_blank", "noopener");
+    expect(dialog().open).toBe(false);
+    opened.mockRestore();
+  });
+
+  it("returns focus to the control that had it when the dialog closes", () => {
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    opener.focus();
+    render(<SearchDialog lang="en" messages={messages} load={engine().load} />);
+    act(() => void window.dispatchEvent(new Event("open-search")));
+    expect(document.activeElement).toBe(input());
+    act(() => {
+      dialog().close();
+      dialog().dispatchEvent(new Event("close"));
+    });
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
+  it("does not say it is searching when the answer comes quickly", async () => {
+    render(<SearchDialog lang="en" messages={messages} load={engine().load} defaultOpen />);
+    const said: string[] = [];
+    const status = within(dialog()).getByRole("status", { hidden: true });
+    const observer = new MutationObserver(() => said.push(status.textContent ?? ""));
+    observer.observe(status, { childList: true, characterData: true, subtree: true });
+    fireEvent.change(input(), { target: { value: "pagination" } });
+    await waitFor(() => expect(options()).toHaveLength(3));
+    observer.disconnect();
+    expect(said).not.toContain(messages.loading);
+    expect(status.getAttribute("data-query")).toBe("pagination");
+  });
+
   it("keeps Tab inside the dialog, and closes from the Esc button", () => {
     render(<SearchDialog lang="en" messages={messages} load={engine().load} defaultOpen />);
     const closeButton = within(dialog()).getByRole("button", { name: "Close", hidden: true });

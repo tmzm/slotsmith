@@ -18,7 +18,7 @@ export interface SearchRow {
   id: string;
   url: string;
   title: string;
-  /** HTML, as `SearchPage.excerpt`. */
+  /** HTML, as `SearchPage.excerpt`; empty when the row below shows the same text. */
   excerpt: string;
   /** A heading inside the page of the row above it. */
   nested: boolean;
@@ -36,7 +36,8 @@ const NESTED_PER_PAGE = 2;
 /**
  * Groups page results by their section, in the order sections first appear
  * (Pagefind's ranking). Each page is one row, followed by its best-matching
- * headings as nested rows that link to the heading.
+ * headings as nested rows that link to the heading. A page whose excerpt is
+ * its first heading's shows it once, on the heading.
  *
  * @param pages - Pagefind results, best first.
  * @param untitled - The section name for a page that names none.
@@ -52,8 +53,8 @@ export function groupResults(pages: SearchPage[], untitled: string): SearchGroup
       groups.push(group);
     }
     const row = (url: string, title: string, excerpt: string, nested: boolean): SearchRow => ({ id: `search-option-${count++}`, url, title, excerpt, nested });
-    group.rows.push(row(page.url, page.meta.title || page.url, page.excerpt, false));
     const headings = (page.sub_results ?? []).filter((sub) => sub.url !== page.url).slice(0, NESTED_PER_PAGE);
+    group.rows.push(row(page.url, page.meta.title || page.url, headings[0]?.excerpt === page.excerpt ? "" : page.excerpt, false));
     for (const sub of headings) group.rows.push(row(sub.url, sub.title, sub.excerpt, true));
   }
   return groups;
@@ -65,20 +66,33 @@ export interface ShortcutEvent {
   ctrlKey: boolean;
   metaKey: boolean;
   altKey: boolean;
+  shiftKey: boolean;
+  /** True while a held key repeats. */
+  repeat: boolean;
+  /** True when something on the page already handled the key. */
+  defaultPrevented: boolean;
   target: EventTarget | null;
 }
 
-const isTyping = (target: EventTarget | null): boolean =>
-  typeof HTMLElement !== "undefined" && target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+/** Where a typed slash belongs to the page: text fields, widgets that take typed characters, and the live demos. */
+const TYPING = "input, textarea, select, [contenteditable]:not([contenteditable=false]), [role=combobox], [role=listbox], [role=textbox], [role=searchbox], [data-sample]";
+
+const isTyping = (target: EventTarget | null): boolean => {
+  const element = target as { closest?: (selector: string) => unknown; isContentEditable?: boolean } | null;
+  if (typeof element?.closest !== "function") return false;
+  return element.isContentEditable === true || element.closest(TYPING) !== null;
+};
 
 /**
- * Whether a key press asks for search: Ctrl+K or ⌘K anywhere, or `/` outside
- * a text field.
+ * Whether a key press asks for search: Ctrl+K or ⌘K anywhere (not with Shift
+ * or Alt, which browsers use), or a bare `/` that nothing else handled,
+ * pressed outside text fields, typeahead widgets and demos. A repeating key
+ * never counts.
  */
 export function isSearchShortcut(event: ShortcutEvent): boolean {
-  if (event.altKey) return false;
-  if (event.ctrlKey || event.metaKey) return event.key.toLowerCase() === "k";
-  return event.key === "/" && !isTyping(event.target);
+  if (event.repeat || event.altKey) return false;
+  if (event.ctrlKey || event.metaKey) return !event.shiftKey && event.key.toLowerCase() === "k";
+  return event.key === "/" && !event.defaultPrevented && !isTyping(event.target);
 }
 
 /** The next active row for an arrow, Home or End key; wraps at both ends. Undefined for any other key or an empty list. */

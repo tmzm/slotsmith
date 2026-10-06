@@ -3,11 +3,13 @@
  * build, once per language.
  *
  * Each case loads a page, checks nothing under `/pagefind/` was fetched with
- * it, opens the dialog with `/`, types a query, and reads the results. The
- * English case must list an expected page in its first five results and no
- * `/ar/` page; the Arabic case must list `/ar/` pages only. Each also runs axe
- * on the open dialog and closes it with Escape. Console errors and uncaught
- * errors on the way are problems.
+ * it, opens the dialog with `/`, types a query, and reads the results once the
+ * dialog says they answer that query. The English case must list an expected
+ * page in its first five results and no `/ar/` page. The Arabic case searches
+ * for a prop name, which stays the same when the prose is translated, and
+ * must list `/ar/` pages only, a data-table page among them. Each also runs
+ * axe on the open dialog and closes it with Escape. Console errors and
+ * uncaught errors on the way are problems.
  */
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -19,15 +21,17 @@ interface SearchCase {
   path: string;
   query: string;
   /** A path the first results must include. */
-  expected?: string;
+  first?: string;
+  /** A path prefix some result must have. */
+  some?: string;
   /** Whether results must be `/ar/` pages (true) or must not be (false). */
   arabic: boolean;
 }
 
 const CASES: SearchCase[] = [
-  { path: "/getting-started/", query: "reorder", expected: "/components/data-table/guides/row-reorder/", arabic: false },
-  // No expected page: the Arabic index does not stem the English prose these pages still show, so its ranking differs.
-  { path: "/ar/getting-started/", query: "reorder", arabic: true },
+  { path: "/getting-started/", query: "reorder", first: "/components/data-table/guides/row-reorder/", arabic: false },
+  // No fixed page: the Arabic index ranks differently, and will again as pages are translated.
+  { path: "/ar/getting-started/", query: "onReorder", some: "/ar/components/data-table/", arabic: true },
 ];
 
 const FIRST = 5;
@@ -42,10 +46,10 @@ const WAIT_MS = 15_000;
  */
 export async function checkSearch(context: BrowserContext, origin: string, distDir: string, axeTags: string[]): Promise<string[]> {
   if (!existsSync(resolve(distDir, "pagefind/pagefind.js"))) {
-    return ["search: dist/pagefind/pagefind.js is missing; run `pagefind --site dist` after `astro build`"];
+    return ["search: dist/pagefind/pagefind.js is missing; run `node scripts/search-index.ts` after `astro build`"];
   }
   const problems: string[] = [];
-  for (const { path, query, expected, arabic } of CASES) {
+  for (const { path, query, first, some, arabic } of CASES) {
     const page = await context.newPage();
     await page.setViewportSize({ width: 1280, height: 800 });
     const early: string[] = [];
@@ -65,10 +69,13 @@ export async function checkSearch(context: BrowserContext, origin: string, distD
       await page.keyboard.press("/");
       await page.locator("dialog.search[open]").waitFor({ timeout: WAIT_MS });
       await page.keyboard.type(query);
-      await page.locator("dialog.search [role=option]").first().waitFor({ timeout: WAIT_MS });
+      // The status names the query its results answer: earlier, partial queries do not count.
+      await page.locator(`dialog.search [role=status][data-status=ready][data-query="${query}"]`).waitFor({ state: "attached", timeout: WAIT_MS });
       const found = await page.locator("dialog.search [role=option]").evaluateAll((options) => options.map((option) => new URL((option as HTMLAnchorElement).href).pathname));
-      const first = found.slice(0, FIRST);
-      if (expected && !first.includes(expected)) problems.push(`search: "${query}" on ${path} does not list ${expected} in its first ${FIRST} results (${first.join(", ")})`);
+      const top = found.slice(0, FIRST);
+      if (found.length === 0) problems.push(`search: "${query}" on ${path} lists no results`);
+      if (first && !top.includes(first)) problems.push(`search: "${query}" on ${path} does not list ${first} in its first ${FIRST} results (${top.join(", ")})`);
+      if (some && !found.some((url) => url.startsWith(some))) problems.push(`search: "${query}" on ${path} lists no page under ${some} (${found.join(", ")})`);
       const wrong = found.filter((url) => url.startsWith("/ar/") !== arabic);
       if (wrong.length) problems.push(`search: "${query}" on ${path} lists ${arabic ? "pages outside /ar/" : "/ar/ pages"} (${wrong.join(", ")})`);
 
@@ -79,7 +86,7 @@ export async function checkSearch(context: BrowserContext, origin: string, distD
 
       await page.keyboard.press("Escape");
       await page.locator("dialog.search:not([open])").waitFor({ state: "attached", timeout: WAIT_MS });
-      console.log(`verify: search "${query}" on ${path} listed ${found.length} results, first ${first[0]}`);
+      console.log(`verify: search "${query}" on ${path} listed ${found.length} results, first ${top[0]}`);
     } catch (error) {
       problems.push(`search: the dialog on ${path} did not work: ${(error as Error).message.split("\n")[0]}`);
     }

@@ -11,8 +11,9 @@
  * server has no index and says so.
  *
  * Keyboard: Ctrl+K or ⌘K toggles, `/` opens, arrows, Home and End move the
- * active row, Enter follows it, Escape closes. Focus stays in the dialog while
- * it is open and returns to where it was on close.
+ * active row, Enter follows it (with Ctrl or ⌘, in a new tab), Escape closes.
+ * Focus stays in the dialog while it is open and returns to where it was on
+ * close; the page behind does not scroll meanwhile (search.css).
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { createRoot } from "react-dom/client";
@@ -43,6 +44,8 @@ export interface SearchDialogProps {
 const MAX_PAGES = 8;
 const DEBOUNCE_MS = 120;
 const EXCERPT_WORDS = 18;
+/** A search slower than this says "Searching…"; a faster one is not announced on every key press. */
+const LOADING_NOTICE_MS = 300;
 
 type Status = "idle" | "loading" | "ready" | "unavailable";
 
@@ -59,7 +62,10 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const engineRef = useRef<Promise<SearchEngine> | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
   const [query, setQuery] = useState("");
+  /** The query the listed results answer. */
+  const [answered, setAnswered] = useState("");
   const [groups, setGroups] = useState<SearchGroup[]>([]);
   const [active, setActive] = useState(0);
   const [status, setStatus] = useState<Status>("idle");
@@ -80,6 +86,8 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
   const open = useCallback(() => {
     const dialog = dialogRef.current;
     if (!dialog || dialog.open) return;
+    // Remembered here: browsers differ on what a modal dialog gives focus back to.
+    openerRef.current = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
     dialog.showModal();
     inputRef.current?.focus();
     inputRef.current?.select();
@@ -106,18 +114,21 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
     const text = query.trim();
     if (!text) {
       setGroups([]);
+      setAnswered("");
       setStatus((current) => (current === "unavailable" ? current : "idle"));
       return;
     }
     let stale = false;
-    setStatus((current) => (current === "unavailable" ? current : "loading"));
+    const notice = setTimeout(() => setStatus((current) => (current === "unavailable" ? current : "loading")), LOADING_NOTICE_MS);
     engine()
       .then(async (pagefind) => {
         const search = await pagefind.debouncedSearch(text, {}, DEBOUNCE_MS);
         if (!search || stale) return;
         const pages = await Promise.all(search.results.slice(0, MAX_PAGES).map((result) => result.data()));
         if (stale) return;
+        clearTimeout(notice);
         setGroups(groupResults(pages, messages.untitled));
+        setAnswered(text);
         setActive(0);
         setStatus("ready");
       })
@@ -126,6 +137,7 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
       });
     return () => {
       stale = true;
+      clearTimeout(notice);
     };
   }, [query, engine, messages.untitled]);
 
@@ -136,8 +148,14 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
   const onInputKey = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      // The row is a link: clicking it navigates and closes, as a pointer would.
-      if (activeRow) document.getElementById(activeRow.id)?.click();
+      if (!activeRow) return;
+      if (event.ctrlKey || event.metaKey) {
+        window.open(activeRow.url, "_blank", "noopener");
+        close();
+      } else {
+        // The row is a link: clicking it navigates and closes, as a pointer would.
+        document.getElementById(activeRow.id)?.click();
+      }
       return;
     }
     // With nothing listed, Home and End keep moving the caret.
@@ -163,13 +181,12 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
     }
   };
 
-  const text = query.trim();
   const listed = rows.length > 0 && status !== "unavailable";
   let message = messages.start;
   if (status === "unavailable") message = import.meta.env.DEV ? messages.devOnly : messages.failed;
   else if (listed) message = messages.count.replace("{count}", String(rows.length));
   else if (status === "loading") message = messages.loading;
-  else if (status === "ready" && text) message = messages.empty.replace("{query}", text);
+  else if (status === "ready" && answered) message = messages.empty.replace("{query}", answered);
 
   return (
     <dialog
@@ -178,6 +195,7 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
       lang={lang}
       aria-label={messages.title}
       onKeyDown={onDialogKey}
+      onClose={() => openerRef.current?.focus()}
       onClick={(event) => {
         if (event.target === dialogRef.current) close();
       }}
@@ -196,6 +214,7 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
+          dir="auto"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onInputKey}
@@ -211,14 +230,14 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
           <kbd aria-hidden="true">Esc</kbd>
         </button>
       </div>
-      <p className={listed ? "visually-hidden" : "search__message"} role="status" data-status={status}>
+      <p className={listed ? "visually-hidden" : "search__message"} role="status" data-status={status} data-query={answered}>
         {message}
       </p>
       {listed && (
         <div className="search__list" id="search-list" role="listbox" aria-label={messages.results}>
           {groups.map((group) => (
             <div key={group.id} role="group" aria-labelledby={group.id}>
-              <p className="search__group" id={group.id}>
+              <p className="search__group" id={group.id} role="presentation">
                 {group.section}
               </p>
               {group.rows.map((row) => (
@@ -242,7 +261,7 @@ export default function SearchDialog({ lang, messages, defaultOpen = false, load
                       {row.title}
                     </span>
                     {/* Pagefind escapes the page text and adds only <mark>. */}
-                    <span className="search__excerpt" dir="auto" dangerouslySetInnerHTML={{ __html: row.excerpt }} />
+                    {row.excerpt && <span className="search__excerpt" dir="auto" dangerouslySetInnerHTML={{ __html: row.excerpt }} />}
                   </span>
                 </a>
               ))}

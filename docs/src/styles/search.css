@@ -21,6 +21,12 @@
   animation: search-in 160ms var(--ease-out);
 }
 
+/* The page behind stays put; the gutter keeps the scrollbar's space so nothing shifts. */
+:root:has(.search[open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
 .search::backdrop {
   background: rgb(8 7 5 / 0.72);
 }
@@ -71,9 +77,14 @@
   opacity: 1;
 }
 
-/* The field fills the dialog's width, so the dialog's gold border is its focus mark. */
+/* The focus mark is drawn around the whole field, inside the dialog's edge. */
 .search__input:focus-visible {
   outline: none;
+}
+
+.search__field:has(.search__input:focus-visible) {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
 }
 
 .search__close {

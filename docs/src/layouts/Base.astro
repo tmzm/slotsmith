@@ -131,7 +131,8 @@ const hasSidebar = Astro.slots.has("sidebar");
         if (event.target instanceof Element && event.target.closest("a")) setOpen(false, false);
       });
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && root.hasAttribute("data-nav-open")) setOpen(false);
+        // A dialog over the sheet (search) takes the key first.
+        if (event.key === "Escape" && root.hasAttribute("data-nav-open") && !document.querySelector("dialog[open]")) setOpen(false);
       });
       // Growing past 1024px turns the sheet back into a column (docs pages) or
       // hides the dock button that opened it, so an open sheet closes.
