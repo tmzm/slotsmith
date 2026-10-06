@@ -1,7 +1,9 @@
-import { act, screen, within } from "@testing-library/react";
-import type { UserEvent } from "@testing-library/user-event";
-import { useState } from "react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent, { type UserEvent } from "@testing-library/user-event";
+import axe from "axe-core";
+import { useState, type ComponentType, type ReactNode } from "react";
 import { afterEach, beforeEach, expect, vi, type MockInstance } from "vitest";
+import { SlotsmithProvider, type SlotsmithComponents } from "../../../provider";
 import { DataTable, type DataTableColumnDef, type DataTableComponents, type RowOrderChange } from "../../index";
 
 /**
@@ -85,6 +87,82 @@ export function failOnReactWarnings() {
     warn.mockRestore();
     expect(messages).toEqual([]);
   });
+}
+
+/**
+ * Render under a provider
+ *
+ * A paginated table that sets no `components` of its own, below a
+ * `SlotsmithProvider` carrying the maps: the way an app applies a design
+ * system once at its root.
+ *
+ * @param components - The provider's `components`.
+ * @param wrapper - The library's own provider, when it needs one.
+ * @returns The test's user-event instance.
+ */
+export function renderUnderProvider(components: SlotsmithComponents, wrapper?: ComponentType<{ children: ReactNode }>) {
+  const user = userEvent.setup();
+  render(
+    <SlotsmithProvider components={components}>
+      <DataTable<Employee> data={employees(23)} columns={employeeColumns} />
+    </SlotsmithProvider>,
+    { wrapper },
+  );
+  return user;
+}
+
+/**
+ * Axe violations
+ *
+ * Runs axe over the whole document, portalled popups included. Colour
+ * contrast is left to the browser check, because jsdom computes no styles,
+ * and so is `region`: a test renders no page landmarks.
+ *
+ * @returns The rules that failed, each with the markup it failed on.
+ */
+export async function axeViolations() {
+  const result = await axe.run(document.body, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
+  return result.violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.html).join(" | ")}`);
+}
+
+/**
+ * Page size through the autocomplete adapter
+ *
+ * The table's built-in page-size select is an `Autocomplete`, so a provider
+ * that carries only a library's autocomplete adapter skins it. This drives
+ * that select from the keyboard, with the adapter's parts meeting the page
+ * sizes (`{ value: number, label: string }`) rather than an app's options.
+ *
+ * @param autocomplete - The library's autocomplete adapter.
+ * @param wrapper - The library's own provider, when it needs one.
+ * @param whileOpen - Extra assertions on the open list, to prove the adapter drew it.
+ */
+export async function pageSizeThroughAutocompleteAdapter(
+  autocomplete: NonNullable<SlotsmithComponents["autocomplete"]>,
+  wrapper?: ComponentType<{ children: ReactNode }>,
+  whileOpen?: (parts: { trigger: HTMLElement; listbox: HTMLElement; options: HTMLElement[] }) => void,
+) {
+  const user = renderUnderProvider({ autocomplete }, wrapper);
+  const trigger = () => screen.getByRole("combobox", { name: "Rows per page" });
+  expect(trigger()).toHaveTextContent("10");
+  expect(bodyRows()).toHaveLength(10);
+
+  act(() => trigger().focus());
+  await user.keyboard("{ArrowDown}");
+  const listbox = await screen.findByRole("listbox");
+  const options = within(listbox).getAllByRole("option");
+  /** A library may draw a check mark beside the text, so only the number is read. */
+  expect(options.map((option) => Number.parseInt(option.textContent, 10))).toEqual([10, 25, 50, 100]);
+  expect(options.map((option) => option.getAttribute("aria-selected"))).toEqual(["true", "false", "false", "false"]);
+  whileOpen?.({ trigger: trigger(), listbox, options });
+  expect(await axeViolations()).toEqual([]);
+
+  await user.keyboard("{ArrowDown}{Enter}");
+  expect(bodyRows()).toHaveLength(23);
+  expect(trigger()).toHaveTextContent("25");
+  await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
+  expect(trigger()).toHaveFocus();
+  expect(await axeViolations()).toEqual([]);
 }
 
 /**

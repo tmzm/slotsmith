@@ -5,6 +5,10 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
+import type { SlotsmithComponents } from "../../../provider";
+import { muiAutocomplete } from "../../../autocomplete/__tests__/integrations/mui/components";
+import { muiDatePicker } from "../../../date-picker/__tests__/integrations/mui/components";
+import { muiFileUploader } from "../../../file-uploader/__tests__/integrations/mui/components";
 import { muiDataTable } from "./mui/components";
 import {
   bodyRows,
@@ -16,6 +20,8 @@ import {
   names,
   ReorderableEmployees,
   reorderStatus,
+  pageSizeThroughAutocompleteAdapter,
+  renderUnderProvider,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -90,6 +96,19 @@ function rootRuleValue(element: Element, property: string) {
   }
   return undefined;
 }
+
+/**
+ * Everywhere
+ *
+ * All four adapters on one provider, the way the guides apply a design system
+ * once. Module scope, so the object keeps its identity.
+ */
+const everywhere: SlotsmithComponents = {
+  dataTable: muiDataTable,
+  autocomplete: muiAutocomplete,
+  datePicker: muiDatePicker,
+  fileUploader: muiFileUploader,
+};
 
 beforeAll(stubBrowserApis);
 
@@ -235,5 +254,33 @@ describe("MUI v7 (CMS admin panel)", () => {
     expect(change.siblings.map((row: Employee) => row.id)).toEqual(["e3", "e2"]);
     expect(names()).toEqual(["Employee 01", "Employee 03", "Employee 02", "Employee 04"]);
     expect(document.activeElement).toBe(dragHandles()[2]);
+  });
+
+  /**
+   * The table adapter's `Pagination` draws its own rows-per-page select
+   * (`TablePagination`), so with every adapter at the provider that select,
+   * not the autocomplete adapter, is the page-size control.
+   */
+  it("takes all four adapters from the provider and changes the page size by keyboard", async () => {
+    const user = renderUnderProvider(everywhere, Wrapper);
+    expect(screen.getByRole("table")).toHaveClass("MuiTable-root");
+    const select = screen.getByRole("combobox", { name: /Rows per page/ });
+    expect(select).toHaveClass("MuiTablePagination-select");
+    expect(bodyRows()).toHaveLength(10);
+
+    act(() => select.focus());
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("option", { name: "25" })).toBeInTheDocument();
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(bodyRows()).toHaveLength(23);
+    expect(screen.getByRole("combobox", { name: /Rows per page/ })).toHaveTextContent("25");
+  });
+
+  it("skins the table's built-in page-size select when only the autocomplete adapter is at the provider", async () => {
+    await pageSizeThroughAutocompleteAdapter(muiAutocomplete, Wrapper, ({ trigger, listbox, options }) => {
+      expect(trigger).toHaveTextContent("10");
+      expect(listbox).toHaveClass("MuiList-root");
+      expect(options[0]).toHaveClass("MuiMenuItem-root");
+    });
   });
 });

@@ -6,6 +6,10 @@ import { createRequire } from "node:module";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
+import type { SlotsmithComponents } from "../../../provider";
+import { radixAutocomplete } from "../../../autocomplete/__tests__/integrations/radix/components";
+import { radixDatePicker } from "../../../date-picker/__tests__/integrations/radix/components";
+import { radixFileUploader } from "../../../file-uploader/__tests__/integrations/radix/components";
 import { radixDataTable } from "./radix/components";
 import {
   bodyRows,
@@ -17,6 +21,8 @@ import {
   names,
   ReorderableEmployees,
   reorderStatus,
+  pageSizeThroughAutocompleteAdapter,
+  renderUnderProvider,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -54,6 +60,19 @@ function renderRadixTable(props: Partial<DataTableProps<Employee>> = {}, wrapper
   );
   return user;
 }
+
+/**
+ * Everywhere
+ *
+ * All four adapters on one provider, the way the guides apply a design system
+ * once. Module scope, so the object keeps its identity.
+ */
+const everywhere: SlotsmithComponents = {
+  dataTable: radixDataTable,
+  autocomplete: radixAutocomplete,
+  datePicker: radixDatePicker,
+  fileUploader: radixFileUploader,
+};
 
 beforeAll(stubBrowserApis);
 
@@ -270,5 +289,34 @@ describe("Radix Themes v3", () => {
     fireEvent.click(dragHandles()[0]!);
     await user.click(screen.getByRole("button", { name: "Next page" }));
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The table adapter sets `PageSizeSelect`, a `SegmentedControl`, so with
+   * every adapter at the provider the page-size control is that radio group
+   * and never the autocomplete adapter.
+   */
+  it("takes all four adapters from the provider and changes the page size by keyboard", async () => {
+    const user = renderUnderProvider(everywhere, Wrapper);
+    expect(screen.getByRole("table").closest(".rt-TableRoot")).not.toBeNull();
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    const sizes = screen.getByRole("radiogroup", { name: "Rows per page" });
+    expect(sizes).toHaveClass("rt-SegmentedControlRoot");
+    expect(bodyRows()).toHaveLength(10);
+
+    act(() => within(sizes).getByRole("radio", { name: "10" }).focus());
+    await user.keyboard("{ArrowRight}");
+    expect(within(sizes).getByRole("radio", { name: "25" })).toHaveFocus();
+    await user.keyboard(" ");
+    expect(within(sizes).getByRole("radio", { name: "25" })).toBeChecked();
+    expect(bodyRows()).toHaveLength(23);
+  });
+
+  it("skins the table's built-in page-size select when only the autocomplete adapter is at the provider", async () => {
+    await pageSizeThroughAutocompleteAdapter(radixAutocomplete, Wrapper, ({ trigger, listbox, options }) => {
+      expect(trigger.closest("[style*='--radius-2']")).not.toBeNull();
+      expect(listbox.closest("[style*='--color-panel-solid']")).not.toBeNull();
+      expect(options).toHaveLength(4);
+    });
   });
 });

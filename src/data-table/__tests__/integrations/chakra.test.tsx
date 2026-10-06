@@ -4,6 +4,10 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
+import type { SlotsmithComponents } from "../../../provider";
+import { chakraAutocomplete } from "../../../autocomplete/__tests__/integrations/chakra/components";
+import { chakraDatePicker } from "../../../date-picker/__tests__/integrations/chakra/components";
+import { chakraFileUploader } from "../../../file-uploader/__tests__/integrations/chakra/components";
 import { chakraDataTable, ChakraSpinnerSkeleton } from "./chakra/components";
 import {
   bodyRows,
@@ -14,6 +18,8 @@ import {
   keyboardReorder,
   names,
   ReorderableEmployees,
+  pageSizeThroughAutocompleteAdapter,
+  renderUnderProvider,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -46,6 +52,19 @@ function renderChakraTable(props: Partial<DataTableProps<Employee>> = {}) {
   );
   return user;
 }
+
+/**
+ * Everywhere
+ *
+ * All four adapters on one provider, the way the guides apply a design system
+ * once. Module scope, so the object keeps its identity.
+ */
+const everywhere: SlotsmithComponents = {
+  dataTable: chakraDataTable,
+  autocomplete: chakraAutocomplete,
+  datePicker: chakraDatePicker,
+  fileUploader: chakraFileUploader,
+};
 
 beforeAll(stubBrowserApis);
 
@@ -130,5 +149,33 @@ describe("Chakra UI v3 (dense admin table)", () => {
     });
     expect(dragHandles()[0]).toHaveClass("chakra-button");
     await keyboardReorder(user, onMove);
+  });
+
+  /**
+   * The table adapter's `Pagination` draws its own rows-per-page control, a
+   * `NativeSelect`, so with every adapter at the provider that select, not
+   * the autocomplete adapter, is the page-size control. A native select's
+   * arrow keys are the browser's own, which jsdom does not run, so the option
+   * is chosen the way `user-event` chooses one.
+   */
+  it("takes all four adapters from the provider and changes the page size from the focused select", async () => {
+    const user = renderUnderProvider(everywhere, Wrapper);
+    expect(screen.getByRole("table")).toHaveClass("chakra-table__root");
+    const select = screen.getByRole("combobox", { name: "Rows per page" });
+    expect(select.tagName).toBe("SELECT");
+    expect(bodyRows()).toHaveLength(10);
+
+    select.focus();
+    await user.selectOptions(select, "25");
+    expect(bodyRows()).toHaveLength(23);
+    expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveValue("25");
+  });
+
+  it("skins the table's built-in page-size select when only the autocomplete adapter is at the provider", async () => {
+    await pageSizeThroughAutocompleteAdapter(chakraAutocomplete, Wrapper, ({ trigger, listbox, options }) => {
+      expect(trigger).toHaveTextContent("10");
+      expect(listbox).toHaveClass("chakra-list__root");
+      expect(options[0]).toHaveClass("chakra-list__item");
+    });
   });
 });

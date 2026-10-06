@@ -2,6 +2,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DataTable, type DataTableProps } from "../../index";
+import type { SlotsmithComponents } from "../../../provider";
+import { shadcnAutocomplete } from "../../../autocomplete/__tests__/integrations/shadcn/components";
+import { shadcnDatePicker } from "../../../date-picker/__tests__/integrations/shadcn/components";
+import { shadcnFileUploader } from "../../../file-uploader/__tests__/integrations/shadcn/components";
 import { shadcnDataTable } from "./shadcn/components";
 import {
   bodyRows,
@@ -12,6 +16,8 @@ import {
   keyboardReorder,
   names,
   ReorderableEmployees,
+  pageSizeThroughAutocompleteAdapter,
+  renderUnderProvider,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -33,6 +39,19 @@ function renderShadcnTable(props: Partial<DataTableProps<Employee>> = {}) {
   );
   return user;
 }
+
+/**
+ * Everywhere
+ *
+ * All four adapters on one provider, the way the guides apply a design system
+ * once. Module scope, so the object keeps its identity.
+ */
+const everywhere: SlotsmithComponents = {
+  dataTable: shadcnDataTable,
+  autocomplete: shadcnAutocomplete,
+  datePicker: shadcnDatePicker,
+  fileUploader: shadcnFileUploader,
+};
 
 beforeAll(stubBrowserApis);
 
@@ -182,5 +201,33 @@ describe("shadcn/ui (editorial layout)", () => {
     );
     fireEvent.click(dragHandles()[0]!);
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The table adapter's `Pagination` draws its own rows-per-page `Select`,
+   * so with every adapter at the provider that select, not the autocomplete
+   * adapter, is the page-size control.
+   */
+  it("takes all four adapters from the provider and changes the page size by keyboard", async () => {
+    const user = renderUnderProvider(everywhere);
+    expect(screen.getByRole("table")).toHaveAttribute("data-slot", "table");
+    const select = screen.getByRole("combobox", { name: "Rows per page" });
+    expect(select).toHaveAttribute("data-slot", "select-trigger");
+    expect(bodyRows()).toHaveLength(10);
+
+    select.focus();
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("option", { name: "25" })).toHaveAttribute("data-slot", "select-item");
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(bodyRows()).toHaveLength(23);
+    expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveTextContent("25");
+  });
+
+  it("skins the table's built-in page-size select when only the autocomplete adapter is at the provider", async () => {
+    await pageSizeThroughAutocompleteAdapter(shadcnAutocomplete, undefined, ({ trigger, listbox, options }) => {
+      expect(trigger).toHaveAttribute("data-slot", "select-trigger");
+      expect(listbox).toHaveAttribute("data-slot", "command-list");
+      expect(options[0]).toHaveAttribute("data-slot", "command-item");
+    });
   });
 });
