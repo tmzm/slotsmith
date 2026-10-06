@@ -3,7 +3,7 @@ title: "Getting started"
 description: "Install slotsmith, pick its stylesheet or none, theme it with --ss-* tokens, add dark mode and a language, and use it from CommonJS, Next.js or Vite."
 ---
 import ThemePreview from "@/islands/ThemePreview";
-import { PREVIEW_BASE, PREVIEW_THEMES } from "@/lib/preview-themes";
+import { PREVIEW_THEMES } from "@/lib/preview-themes";
 
 Getting started with slotsmith takes one package and, if you want the default look, one stylesheet import. Then render a component: [`DataTable`](../components/data-table/), [`Autocomplete`](../components/autocomplete/), [`DatePicker`](../components/date-picker/) or [`FileUploader`](../components/file-uploader/). Themes, dark mode and languages are optional steps on top.
 
@@ -35,7 +35,7 @@ Every component renders plain HTML with stable class names, and the stylesheet t
 
 The stylesheet reads a small set of shared `--ss-*` tokens, so a few values restyle all four components at once: set them on `:root` after the stylesheet. Or import one of the ready-made themes, which set the same tokens. Pick one here to see it on the components:
 
-<ThemePreview client:visible themes={PREVIEW_THEMES} base={PREVIEW_BASE} />
+<ThemePreview client:visible themes={PREVIEW_THEMES} />
 
 [Theming](../theming/) lists every token, each theme, the per-component tokens, Tailwind and styling without the stylesheet.
 

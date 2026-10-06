@@ -55,8 +55,14 @@
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  background: var(--sdt-surface);
-  color: var(--sdt-text);
+  background: var(--ss-surface, #ffffff);
+  color: var(--ss-text, #111827);
+}
+
+/* The stage follows the picked theme's tokens, else the library's stock palette. */
+[data-theme="dark"] .theme-preview {
+  background: var(--ss-surface, #141416);
+  color: var(--ss-text, #f5f5f5);
 }
 
 .theme-preview__fields {

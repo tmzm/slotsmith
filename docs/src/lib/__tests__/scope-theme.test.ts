@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { scopeTheme, tokenRules } from "../scope-theme";
+import { scopeTheme } from "../scope-theme";
 
 describe("scopeTheme", () => {
   it("moves :root and the dark selectors under the scope", () => {
@@ -24,29 +24,32 @@ describe("scopeTheme", () => {
     expect(scopeTheme(css, ".p")).toBe(css);
   });
 
+  it("rewrites rules nested in an at-rule", () => {
+    const css = "@media (prefers-color-scheme: dark){:root{--ss-accent:blue}}@layer theme{.dark,[data-theme=\"dark\"]{--ss-accent:navy}}";
+    const out = scopeTheme(css, ".p");
+    expect(out).toBe('@media (prefers-color-scheme: dark){.p{--ss-accent:blue}}@layer theme{[data-theme="dark"] .p, .p.dark{--ss-accent:navy}}');
+  });
+
+  it("accepts the dark attribute with single quotes", () => {
+    const out = scopeTheme(".dark, [data-theme='dark'] { --ss-accent: blue; }", ".p");
+    expect(out).toBe('[data-theme="dark"] .p, .p.dark { --ss-accent: blue; }');
+  });
+
+  it("refuses to emit a :root it cannot confine", () => {
+    expect(() => scopeTheme(":root, .x { --ss-accent: red; }", ".p")).toThrow(/:root/);
+    expect(() => scopeTheme(":root .x { --ss-accent: red; }", ".p")).toThrow(/:root/);
+  });
+
+  it("ignores :root inside a comment", () => {
+    expect(scopeTheme("/* :root, .x */ .y{color:red}", ".p")).toBe("/* :root, .x */ .y{color:red}");
+  });
+
   it.each(readdirSync(new URL("../../../../src/themes/", import.meta.url)))("scopes the library's %s", (file) => {
     // Read from disk: Vitest blanks CSS imports.
     const out = scopeTheme(readFileSync(new URL(`../../../../src/themes/${file}`, import.meta.url), "utf8"), ".theme-preview");
     expect(out).not.toContain(":root");
     expect(out).toMatch(/^\.theme-preview \{/m);
     expect(out).toContain('[data-theme="dark"] .theme-preview, .theme-preview.dark {');
-  });
-});
-
-describe("tokenRules", () => {
-  it("keeps the :root and dark rules and drops the rest", () => {
-    const css = '/* { tokens } */\n:root { --sdt-accent: var(--ss-accent, blue); }\n.dark,\n[data-theme="dark"] { --sdt-accent: var(--ss-accent, navy); }\n.sdt { color: var(--sdt-text); }\n@import "x.css";';
-    const out = tokenRules(css);
-    expect(out).toContain(":root { --sdt-accent: var(--ss-accent, blue); }");
-    expect(out).toContain('.dark, [data-theme="dark"] { --sdt-accent: var(--ss-accent, navy); }');
-    expect(out).not.toContain(".sdt {");
-    expect(scopeTheme(out, ".p")).toContain('[data-theme="dark"] .p, .p.dark {');
-  });
-
-  it.each(["autocomplete", "data-table", "date-picker", "file-uploader"])("finds both token rules in the %s stylesheet", (slug) => {
-    const out = tokenRules(readFileSync(new URL(`../../../../src/${slug}/styles.css`, import.meta.url), "utf8"));
-    expect(out.match(/^:root \{/gm)).toHaveLength(1);
-    expect(out.match(/^\.dark, \[data-theme="dark"\] \{/gm)).toHaveLength(1);
   });
 });
 

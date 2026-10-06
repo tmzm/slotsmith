@@ -17,8 +17,6 @@ import { DatePicker, type ISODate } from "slotsmith/date-picker";
 export interface ThemePreviewProps {
   /** Theme name → its CSS scoped to `.theme-preview`. */
   themes: Record<string, string>;
-  /** The components' token rules scoped to `.theme-preview`, so they read the theme there. */
-  base: string;
 }
 
 type Book = { id: string; title: string; year: number };
@@ -43,7 +41,7 @@ const genres = [
 
 const NONE = "none";
 
-export default function ThemePreview({ themes, base }: ThemePreviewProps) {
+export default function ThemePreview({ themes }: ThemePreviewProps) {
   const name = useId();
   const [theme, setTheme] = useState(NONE);
   const [genre, setGenre] = useState<OptionValue | null>("novel");
@@ -52,7 +50,7 @@ export default function ThemePreview({ themes, base }: ThemePreviewProps) {
 
   return (
     <div className="panel theme-preview-demo" data-theme-preview={theme}>
-      <style dangerouslySetInnerHTML={{ __html: `${base}\n${themes[theme] ?? ""}` }} />
+      <style dangerouslySetInnerHTML={{ __html: themes[theme] ?? "" }} />
       <fieldset className="theme-picker">
         <legend className="visually-hidden">Theme</legend>
         {options.map((option) => (

@@ -3,7 +3,7 @@ title: "Theming"
 description: "Restyle slotsmith with shared --ss-* tokens or a ready-made theme, add a dark palette, use Tailwind, write your own styles, and lay it out right to left."
 ---
 import ThemePreview from "@/islands/ThemePreview";
-import { PREVIEW_BASE, PREVIEW_THEMES } from "@/lib/preview-themes";
+import { PREVIEW_THEMES } from "@/lib/preview-themes";
 
 Theming slotsmith means setting CSS custom properties. The stylesheet reads eleven shared `--ss-*` tokens, so a few values restyle all four components at once; a ready-made theme sets the same tokens for you. Without the stylesheet, you style the parts yourself, with plain CSS, Tailwind or a design system.
 
@@ -12,6 +12,8 @@ Theming slotsmith means setting CSS custom properties. The stylesheet reads elev
 Set the tokens on `:root`, in a stylesheet loaded after slotsmith's:
 
 <SampleCode name="theming/tokens" />
+
+That restyles the whole page. Set them on any other element instead, such as a wrapper around one section, to restyle only the components inside it.
 
 | Token | What it colours or sizes |
 | --- | --- |
@@ -27,13 +29,13 @@ Set the tokens on `:root`, in a stylesheet loaded after slotsmith's:
 | `--ss-radius` | Corner radius |
 | `--ss-font-size` | Base font size |
 
-Each component also has its own tokens, which read the shared ones by default: `--sdt-*` for the [data table](../components/data-table/api/#styling), `--sac-*` for the [autocomplete](../components/autocomplete/api/#styling), `--sdp-*` for the [date picker](../components/date-picker/api/#styling) and `--sfu-*` for the [file uploader](../components/file-uploader/api/#styling). Set one of those to restyle one component without the others. Each component's API page lists its tokens.
+Each component also has its own tokens, which read the shared ones by default: `--sdt-*` for the [data table](../components/data-table/api/#styling), `--sac-*` for the [autocomplete](../components/autocomplete/api/#styling), `--sdp-*` for the [date picker](../components/date-picker/api/#styling) and `--sfu-*` for the [file uploader](../components/file-uploader/api/#styling). Set one of those to restyle one component without the others; it beats the shared token wherever each is set. Each component's API page lists its tokens.
 
 ## Themes
 
 Six themes ship with the library: `minimal`, `soft`, `ocean`, `forest`, `sunset` and `contrast`, a high-contrast palette. Each sets only the shared tokens, with a light and a dark palette. Pick one to try it here; the rest of this page keeps its look:
 
-<ThemePreview client:visible themes={PREVIEW_THEMES} base={PREVIEW_BASE} />
+<ThemePreview client:visible themes={PREVIEW_THEMES} />
 
 Import a theme after the stylesheet:
 
