@@ -1,6 +1,6 @@
 ---
 title: "The slot model"
-description: "How slotsmith components are built from slots: element and widget parts, their data-* state, wrapped fallbacks, compound parts and headless hooks."
+description: "How slotsmith components are built from slots: element and widget parts, data-* state, wrapped fallbacks, app-wide overrides, compound parts and headless hooks."
 ---
 import Demo from "@/components/Demo.astro";
 import SlotXRay from "@/components/SlotXRay.astro";
@@ -47,6 +47,28 @@ The built-in parts are exported as `fallbackComponents`. To change one thing abo
 <SampleCode name="guides/wrap-fallback" />
 
 Merge the `className` you are given with your own, as the sample does, or the fallback loses its own class and with it the stylesheet's rules.
+
+## Once, for the whole app
+
+To replace a slot everywhere, set it once on `SlotsmithProvider` instead of on every component. Its `components` prop takes one map per component, under the keys `dataTable`, `autocomplete`, `datePicker` and `fileUploader`. Each is the same map that component's own `components` prop takes, so an [adapter](../components/data-table/adapters/) works in either place.
+
+Below, one provider gives every data table a round checkbox and the date picker a diamond icon. The second table passes its own `Checkbox`, and that one wins:
+
+{/* Reserved height measured in Chrome from 360px to 1440px, English and Arabic: 34.9rem in the dark theme, 33.9rem in the light one. */}
+<Demo name="guides/provider-components" lang="en" height="35rem" />
+
+Each slot resolves on its own, in three layers, and the later one wins:
+
+1. The built-in fallback.
+2. The `components` of the providers above, for that component.
+3. The component's own `components` prop.
+
+- **Nested providers merge.** An inner provider adds to the outer one component by component, then slot by slot: its slots win, and what it does not name is inherited.
+- **The variants read the same maps.** `VirtualDataTable`, `VirtualAutocomplete` and `VirtualFileUploader` use their component's key, and so does a layout built from the compound parts.
+- **The page-size select follows `autocomplete`.** The data table's built-in page-size select is a slotsmith `Autocomplete`, so it renders with the provider's `autocomplete` slots. A `PageSizeSelect` slot, from `dataTable` or the table's own prop, replaces it altogether.
+- **Keep the map's identity.** Define it outside your component, as the sample does, or memoize it. `slotProps` stay on each component.
+
+`SlotsmithProvider` and the types `SlotsmithComponents` and `SlotsmithComponentName` come from `slotsmith/provider`. The same provider sets the [language](../languages/#passing-a-locale).
 
 ## Compound parts
 

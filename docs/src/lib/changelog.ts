@@ -105,11 +105,13 @@ export function hasNotes(release: Release): boolean {
 
 /**
  * Where a README heading the notes link to lives on this site, as a
- * language-neutral path. A test keeps every anchor the notes use in this map.
+ * language-neutral path, with the section's id when the heading became part
+ * of a page. A test keeps every anchor the notes use in this map.
  */
 export const README_ANCHOR_PATHS: Record<string, string> = {
   "reordering-rows": "/components/data-table/guides/row-reorder/",
   "ready-made-adapters": "/ai-tools/",
+  "once-for-the-whole-app": "/guides/#once-for-the-whole-app",
   theming: "/theming/",
   languages: "/languages/",
 };

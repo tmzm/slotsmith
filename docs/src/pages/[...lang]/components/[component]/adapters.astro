@@ -4,7 +4,8 @@
  * `#mui`, `#chakra`, `#antd`, `#radix`; other pages link to these ids), each
  * with a live demo of `adapters/<slug>/<lib>-demo` inside that library's
  * provider and the full adapter file, `adapters/<slug>/<lib>`. A row of
- * links at the top jumps between them. The packages each adapter needs are
+ * links at the top jumps between them, and one line under it shows the same
+ * map set once on `SlotsmithProvider`. The packages each adapter needs are
  * read from its imports. A component with no adapter samples yet keeps the
  * stub marker.
  */
@@ -15,10 +16,11 @@ import Demo from "@/components/Demo.astro";
 import H2 from "@/components/prose/H2.astro";
 import Fill from "@/components/reference/Fill.astro";
 import { componentMeta, componentPaths, type ComponentSlug } from "@/data/components";
-import { langFromParam, t } from "@/i18n";
+import { langFromParam, localePath, t } from "@/i18n";
 import { ADAPTER_LIBRARIES, adapterNeeds } from "@/lib/adapters";
 import { getReference } from "@/lib/reference";
 import { CODE_THEME, SAMPLE_SOURCES } from "@/lib/samples";
+import type { SlotsmithComponentName } from "slotsmith/provider";
 
 export function getStaticPaths() {
   return componentPaths();
@@ -46,6 +48,15 @@ const DEMO_HEIGHT: Record<ComponentSlug, string> = {
   "date-picker": "4.5rem",
   "file-uploader": "19rem",
 };
+/** The component's key in `SlotsmithProvider`'s `components`. */
+const PROVIDER_KEY: Record<ComponentSlug, SlotsmithComponentName> = {
+  "data-table": "dataTable",
+  autocomplete: "autocomplete",
+  "date-picker": "datePicker",
+  "file-uploader": "fileUploader",
+};
+/** The provider form of the first adapter on the page, with the name its file exports. */
+const once = libraries[0] && `<SlotsmithProvider components={{ ${PROVIDER_KEY[slug]}: ${libraries[0].id}Components }}>`;
 const headings = libraries.map((library) => ({ id: library.id, text: library.name, depth: 2 as const }));
 ---
 <ComponentPage lang={lang} component={component} section="adapters" stub={libraries.length === 0} headings={headings}>
@@ -55,6 +66,14 @@ const headings = libraries.map((library) => ({ id: library.id, text: library.nam
         <a href={`#${library.id}`} lang="en">{library.name}</a>
       ))}
     </nav>
+  )}
+  {once && (
+    <div class="prose adapter-once">
+      <p>
+        <Fill lang={lang} message="adapters.once" code={{ component: exportName, snippet: once }} />{" "}
+        <a href={localePath(lang, "/guides/#once-for-the-whole-app")}>{t(lang, "adapters.onceLink")}</a>
+      </p>
+    </div>
   )}
   {libraries.map((library) => (
     <section class="adapter" aria-labelledby={library.id}>
@@ -114,6 +133,11 @@ const headings = libraries.map((library) => ({ id: library.id, text: library.nam
     margin-block-start: 3rem;
   }
 
+  .adapter-once {
+    margin-block-start: 1rem;
+  }
+
+  .adapter-once :global(code),
   .adapter :global(.prose code) {
     font-family: var(--font-mono);
     font-size: 0.875em;

@@ -144,6 +144,8 @@ export const ar: Record<MessageKey, string> = {
   "adapters.needsShadcn": "يستورد مكوّنات shadcn/ui هذه، وتضيفها بالأمر {command}.",
   "adapters.provider": "العرض داخل موفّر {library}، كما في أي تطبيق مبني عليها.",
   "adapters.file": "المحوّل",
+  "adapters.once": "يمكن أيضًا ضبط المحوّل مرة واحدة للتطبيق كله بدلًا من تمريره إلى كل {component}: {snippet}.",
+  "adapters.onceLink": "كيف تُحسم فتحات الموفّر.",
 
   "install.label": "التثبيت بمدير الحزم",
   "install.optional": "يحتاج {component} من {entry} أيضًا إلى {peers}.",

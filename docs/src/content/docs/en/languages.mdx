@@ -30,7 +30,7 @@ Every component takes `locale`. Hand it a pack as an object, and that component 
 
 <SampleCode name="languages/object-form" />
 
-For a whole app, give `SlotsmithProvider` the active tag and the packs it may resolve to. `SlotsmithProvider` and `useSlotsmithLocale` come from `slotsmith/provider`.
+For a whole app, give `SlotsmithProvider` the active tag and the packs it may resolve to. `SlotsmithProvider` and `useSlotsmithLocale` come from `slotsmith/provider`. The same provider also takes `components`, which [replaces slots for every component below it](../guides/#once-for-the-whole-app).
 
 <SampleCode name="languages/provider-form" />
 

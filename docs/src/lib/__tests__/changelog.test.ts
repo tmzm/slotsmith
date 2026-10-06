@@ -54,7 +54,8 @@ describe("parseChangelog on the real README", () => {
     const anchors = new Set(releases.flatMap((release) => [...release.markdown.matchAll(/\]\(#([^)\s]+)\)/g)].map(([, anchor]) => anchor!)));
     expect(anchors.size).toBeGreaterThan(0);
     for (const anchor of anchors) expect(README_ANCHOR_PATHS, `README anchor #${anchor}`).toHaveProperty(anchor);
-    for (const path of Object.values(README_ANCHOR_PATHS)) expect(pages, path).toContain(path);
+    // A path may end with the id of a section on its page.
+    for (const path of Object.values(README_ANCHOR_PATHS)) expect(pages, path).toContain(path.replace(/#[\w-]+$/, ""));
   });
 });
 

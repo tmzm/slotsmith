@@ -1,6 +1,6 @@
 ---
 title: "Getting started"
-description: "Install slotsmith, pick its stylesheet or none, theme it with --ss-* tokens, add dark mode and a language, and use it from CommonJS, Next.js or Vite."
+description: "Install slotsmith, pick its stylesheet or none, theme it with --ss-* tokens, add dark mode, a language and app-wide adapters, and use it from Next.js or Vite."
 ---
 import ThemePreview from "@/islands/ThemePreview";
 import { PREVIEW_THEMES } from "@/lib/preview-themes";
@@ -50,6 +50,14 @@ English is built in. For another language, import its pack and pass it as `local
 <SampleCode name="getting-started/provider" />
 
 Each pack is its own entry, so an app loads only the languages it imports. The components follow the CSS direction of the page around them, so a right-to-left language also needs `dir="rtl"` on `<html>` or a wrapper. [Languages](../languages/) lists every pack and shows custom locales and one-off labels.
+
+## One adapter map for the whole app
+
+`SlotsmithProvider` also takes `components`: one map per component (`dataTable`, `autocomplete`, `datePicker`, `fileUploader`), each the same map that component's own `components` prop takes. Set an adapter there once and every component below renders with it:
+
+<SampleCode name="getting-started/provider-components" />
+
+Each slot resolves in three layers, the later one winning: the built-in fallback, then the provider's `components`, then the component's own `components` prop. The same provider can carry `locale` and `locales` too. The parts are functions, so in the Next.js App Router the map belongs in the [`"use client"` file](#nextjs-and-vite) that holds the provider. [The slot model](../guides/#once-for-the-whole-app) shows it live.
 
 ## CommonJS
 

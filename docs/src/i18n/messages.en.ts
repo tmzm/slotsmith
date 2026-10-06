@@ -144,6 +144,8 @@ export const en = {
   "adapters.needsShadcn": "It imports these shadcn/ui components; add them with {command}.",
   "adapters.provider": "The demo sits inside {library}'s provider, as any app built on it already does.",
   "adapters.file": "The adapter",
+  "adapters.once": "An adapter can also be set once for the whole app instead of on every {component}: {snippet}.",
+  "adapters.onceLink": "See how the provider's slots resolve.",
 
   "install.label": "Install with your package manager",
   "install.optional": "{component} from {entry} also needs {peers}.",
