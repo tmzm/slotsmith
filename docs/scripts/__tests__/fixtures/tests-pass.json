@@ -1,6 +1,6 @@
 {
-  "numTotalTests": 5,
-  "numPassedTests": 5,
+  "numTotalTests": 6,
+  "numPassedTests": 6,
   "numFailedTests": 0,
   "success": true,
   "testResults": [
@@ -27,6 +27,14 @@
       "message": "",
       "assertionResults": [
         { "ancestorTitles": ["Autocomplete"], "fullName": "Autocomplete has no axe violations", "title": "has no axe violations", "status": "passed", "failureMessages": [] }
+      ]
+    },
+    {
+      "name": "E:/repo/src/data-table/__tests__/page-size.test.tsx",
+      "status": "passed",
+      "message": "",
+      "assertionResults": [
+        { "ancestorTitles": ["page-size control"], "fullName": "page-size control has no axe violations with pagination shown, closed or open", "title": "has no axe violations with pagination shown, closed or open", "status": "passed", "failureMessages": [] }
       ]
     },
     {

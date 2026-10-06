@@ -47,8 +47,8 @@ describe("buildFacts from a test report", () => {
 
   it("counts the tests and files of the report", async () => {
     const facts = await buildFacts(passing);
-    expect(facts.tests).toBe(5);
-    expect(facts.testFiles).toBe(4);
+    expect(facts.tests).toBe(6);
+    expect(facts.testFiles).toBe(5);
   }, 60_000);
 
   it("classifies each test file and keeps the full test titles", async () => {
@@ -57,6 +57,7 @@ describe("buildFacts from a test report", () => {
       "src/__tests__/bundle.test.ts",
       "src/autocomplete/__tests__/a11y.test.tsx",
       "src/data-table/__tests__/integrations/mui.test.tsx",
+      "src/data-table/__tests__/page-size.test.tsx",
       "src/data-table/core/__tests__/reorder.test.ts",
     ]);
     expect(suites).toContainEqual({
@@ -69,6 +70,12 @@ describe("buildFacts from a test report", () => {
     expect(suites.find((suite) => suite.file === "src/__tests__/bundle.test.ts")).toMatchObject({ component: "package", library: null, kind: "bundle" });
     expect(suites.find((suite) => suite.file.endsWith("a11y.test.tsx"))).toMatchObject({ component: "autocomplete", library: null, kind: "a11y" });
     expect(suites.find((suite) => suite.file.endsWith("reorder.test.ts"))).toMatchObject({ component: "data-table", library: null, kind: "unit" });
+  }, 60_000);
+
+  it("counts a suite that imports axe as an accessibility suite, whatever its name", async () => {
+    // The report names the library's own page-size suite, which runs axe among its other checks.
+    const { suites } = await buildFacts(passing);
+    expect(suites.find((suite) => suite.file.endsWith("page-size.test.tsx"))).toMatchObject({ component: "data-table", library: null, kind: "a11y" });
   }, 60_000);
 
   it("rolls coverage up per component, then the total", async () => {

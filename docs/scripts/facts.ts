@@ -47,6 +47,9 @@ interface TestReport {
 /** A json-summary coverage report: `total`, then one entry per file path. */
 type CoverageSummary = Record<string, Record<Metric, { total: number; covered: number; pct: number }>>;
 
+/** An import of axe or one of its test wrappers, static or dynamic. */
+const AXE_IMPORT = /(?:from|import)\s*\(?\s*["'](?:axe-core|jest-axe|vitest-axe)["']/;
+
 /** The facts that come from a test run. */
 type TestFacts = Pick<Facts, "tests" | "testFiles" | "coverage" | "suites">;
 
@@ -56,13 +59,17 @@ type TestFacts = Pick<Facts, "tests" | "testFiles" | "coverage" | "suites">;
  *
  * @returns The facts of the run.
  * @throws With vitest's output when the run fails, so a failing test fails
- *   the docs build instead of publishing a lower count.
+ *   the docs build instead of publishing a lower count; and when a passing
+ *   run wrote no coverage summary, so the site never states tests without
+ *   coverage.
  */
 function runSuite(): TestFacts {
   const dir = mkdtempSync(join(tmpdir(), "slotsmith-facts-"));
   const testsJson = join(dir, "tests.json");
   const coverageDir = join(dir, "coverage");
   try {
+    // The run takes minutes and prints nothing until it ends.
+    console.log("facts: running the library suite…");
     const run = spawnSync(
       process.execPath,
       [
@@ -74,6 +81,8 @@ function runSuite(): TestFacts {
         "--coverage.exclude=**/__tests__/**",
         `--coverage.reportsDirectory=${coverageDir}`,
         // Coverage slows each file down, and the build machine has few cores.
+        // The longer limits only keep a slow test from timing out: a failed
+        // assertion fails at once, whatever the limit.
         "--testTimeout=60000",
         "--hookTimeout=60000",
         "--reporter=default",
@@ -86,7 +95,11 @@ function runSuite(): TestFacts {
       const output = `${run.stdout ?? ""}${run.stderr ?? ""}`.trim() || run.error?.message || "";
       throw new Error(`The library's tests failed (exit ${run.status}); the site states only numbers from a passing run.\n\n${output}`);
     }
-    return testFacts(testsJson, join(coverageDir, "coverage-summary.json"));
+    const coverageJson = join(coverageDir, "coverage-summary.json");
+    if (!existsSync(coverageJson)) {
+      throw new Error("The library's tests passed but wrote no coverage summary (coverage-summary.json); the site states coverage only from a measured run.");
+    }
+    return testFacts(testsJson, coverageJson);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -97,7 +110,8 @@ function runSuite(): TestFacts {
  *
  * @param testsJson - The JSON report's path.
  * @param coverageJson - The coverage summary's path; without one, the facts
- *   have no coverage rows.
+ *   have no coverage rows. Only a report passed in by a test may lack it: the
+ *   real run (`runSuite`) throws first.
  * @throws With each failing file and test and its failure messages when the
  *   report is not of a passing run.
  */
@@ -133,7 +147,18 @@ function relativePath(path: string): string {
   return src === -1 ? normalized : normalized.slice(src + 1);
 }
 
-/** Each test file of a report in path order, classified, with its tests' full titles. */
+/** True when a test file of the library imports axe: it checks accessibility whatever its name. */
+function importsAxe(file: string): boolean {
+  const path = resolve(libraryRoot, file);
+  return existsSync(path) && AXE_IMPORT.test(readFileSync(path, "utf8"));
+}
+
+/**
+ * Each test file of a report in path order, classified, with its tests' full
+ * titles. A file is an accessibility suite by its name (`a11y.test.tsx`,
+ * `*axe*`) or by importing axe, so a suite that runs axe among other checks
+ * (the data table's page-size and reorder suites) counts as one.
+ */
 function suitesOf(report: TestReport): Facts["suites"] {
   return report.testResults
     .map((result) => {
@@ -145,7 +170,7 @@ function suitesOf(report: TestReport): Facts["suites"] {
       let kind: Facts["suites"][number]["kind"] = "unit";
       if (integration) kind = "integration";
       else if (file === "src/__tests__/bundle.test.ts") kind = "bundle";
-      else if (name === "a11y.test.tsx" || name.includes("axe")) kind = "a11y";
+      else if (name === "a11y.test.tsx" || name.includes("axe") || importsAxe(file)) kind = "a11y";
       return { file, component, library: integration?.[1] ?? null, kind, tests: result.assertionResults.map((test) => test.fullName) };
     })
     .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
