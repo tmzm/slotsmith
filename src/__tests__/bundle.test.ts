@@ -125,6 +125,30 @@ async function bundle(
 }
 
 /**
+ * With chunks
+ *
+ * An entry in `dist` is a stub: its code lives in the chunks it imports, and
+ * in the chunks those import. Reading the stub alone proves nothing about
+ * what loading it runs.
+ *
+ * @param file - A built script, relative to `dist`.
+ * @returns The source of that script and of every chunk it reaches, by file name.
+ */
+function withChunks(file: string): Map<string, string> {
+  const sources = new Map<string, string>();
+  const queue = [file];
+  while (queue.length > 0) {
+    const name = queue.pop()!;
+    if (sources.has(name)) continue;
+    const source = readFileSync(dist(name), "utf8");
+    sources.set(name, source);
+    /** Every relative specifier, so a chunk and another entry are both followed. */
+    for (const [, specifier] of source.matchAll(/["']\.\/([\w.-]+\.c?js)["']/g)) queue.push(specifier!);
+  }
+  return sources;
+}
+
+/**
  * Built
  *
  * Whether `pnpm build` has been run. These tests inspect the published output,
@@ -358,9 +382,14 @@ describe.skipIf(!built)("the provider entry point", () => {
     `);
     for (const marker of Object.values(MARKERS)) expect(code).not.toContain(marker);
     for (const file of ["provider.js", "provider.cjs"]) {
-      const entry = readFileSync(dist(file), "utf8");
-      for (const marker of Object.values(MARKERS)) expect(entry).not.toContain(marker);
-      expect(entry).not.toMatch(/(autocomplete|data-table|date-picker|file-uploader)\.(js|cjs)/);
+      const sources = withChunks(file);
+      /** The provider itself is in a chunk, so the walk has to have left the stub. */
+      expect(sources.size).toBeGreaterThan(1);
+      expect([...sources.values()].join("\n")).toContain("SlotsmithProvider");
+      for (const [name, source] of sources) {
+        for (const marker of Object.values(MARKERS)) expect(source, name).not.toContain(marker);
+        expect(name).not.toMatch(/^(autocomplete|data-table|date-picker|file-uploader|index|virtual)\.c?js$/);
+      }
     }
   });
 
