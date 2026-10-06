@@ -6,13 +6,18 @@
  * the choice is kept under `localStorage["slotsmith-tab-" + remember]` and
  * shared by every Tabs on the page with the same key, so a package-manager
  * choice carries across pages. Without JS every panel shows, stacked.
+ *
+ * The script finds its tabs as the element before it, not by `id`: an MDX
+ * heading's slug can equal the id (`## Install` over `id="install"`), and
+ * `getElementById` would then return the heading. The root carries no id
+ * for the same reason; only the tab and panel ids derive from it.
  */
 import SampleCode from "./SampleCode.astro";
 import { t, type Lang } from "@/i18n";
 import type { SampleLang } from "@/lib/samples";
 
 export interface Props {
-  /** A page-unique id; tab and panel ids derive from it. */
+  /** A page-unique prefix for the tab and panel ids. */
   id: string;
   /** Each tab shows a sample by name, or code built at build time with its language. */
   tabs: ({ label: string; sample: string } | { label: string; code: string; lang: SampleLang })[];
@@ -28,7 +33,7 @@ const { id, tabs, remember, label, lang } = Astro.props;
 const tabId = (index: number) => `${id}-tab-${index}`;
 const panelId = (index: number) => `${id}-panel-${index}`;
 ---
-<div class="tabs panel" id={id} data-tabs data-remember={remember}>
+<div class="tabs panel" data-tabs data-remember={remember}>
   <div class="tabs__bar">
     <div class="tabs__list" role="tablist" aria-label={label}>
       {tabs.map((tab, index) => (
@@ -58,12 +63,13 @@ const panelId = (index: number) => `${id}-panel-${index}`;
   ))}
 </div>
 <noscript><style is:inline>[data-tabs] [role="tabpanel"][hidden] { display: block !important; } [data-tabs] .tabs__bar { display: none !important; } [data-tabs] .tabs__panel + .tabs__panel { border-block-start: 1px solid var(--line); }</style></noscript>
-<script is:inline define:vars={{ id, remember }}>
+<script is:inline define:vars={{ remember }}>
   (() => {
-    const root = document.getElementById(id);
+    let root = document.currentScript?.previousElementSibling;
+    while (root && !root.matches("[data-tabs]")) root = root.previousElementSibling;
     if (!root) return;
     const tabs = [...root.querySelectorAll('[role="tab"]')];
-    const panels = tabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")));
+    const panels = [...root.querySelectorAll('[role="tabpanel"]')];
     const key = remember ? "slotsmith-tab-" + remember : "";
     const select = (index) => {
       tabs.forEach((tab, i) => {
