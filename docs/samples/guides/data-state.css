@@ -1,0 +1,24 @@
+/* Selected body rows. */
+.app-table tbody tr[data-state="selected"] {
+  background: var(--selected-row);
+}
+
+/* Status rows: skeletons while loading, the empty and error messages. */
+.app-table tr[data-state="loading"] td {
+  opacity: 0.6;
+}
+
+/* The column the table is sorted by: data-sorted is "asc" or "desc". */
+.app-table th[data-sorted] {
+  color: var(--accent);
+}
+
+/* Tree rows: data-depth is the level, data-expanded "true" or "false". */
+.app-table tr[data-expanded="true"] td:first-child {
+  font-weight: 600;
+}
+
+/* The whole table while it loads, is empty or has failed. */
+.app-table[data-status="loading"] {
+  cursor: progress;
+}

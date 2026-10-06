@@ -7,6 +7,11 @@
  */
 import type { ComponentReference } from "@/lib/reference";
 
+/** What the exploded view reads from a reference: its name and each slot's name and kind. */
+export type SlotKindsSource = Pick<ComponentReference, "name"> & {
+  slots: readonly Pick<ComponentReference["slots"][number], "name" | "kind">[];
+};
+
 /** One labelled part of the exploded view. `dx`/`dy` are its offset in rem at `--explode: 1`, for a left-to-right page. */
 export interface ExplodePart {
   slot: string;
@@ -44,7 +49,7 @@ const DEFAULT_OFFSET = { dx: 0, dy: 1 };
  * @param pick - The slot names to show.
  * @throws When a picked slot is not in the reference or has no selector, naming the slot.
  */
-export function explodeParts(reference: ComponentReference, selectors: Record<string, string>, pick: string[]): ExplodePart[] {
+export function explodeParts(reference: SlotKindsSource, selectors: Record<string, string>, pick: string[]): ExplodePart[] {
   return pick.map((name) => {
     const slot = reference.slots.find((candidate) => candidate.name === name);
     if (!slot) throw new Error(`Slot "${name}" is not in the ${reference.name} reference.`);
@@ -71,7 +76,7 @@ export function bracketLabel(part: Pick<ExplodePart, "slot" | "kind">): string {
  * @param names - The slot names, in the order to show them.
  * @throws When a slot is not in the reference, naming the slot.
  */
-export function slotKinds(reference: ComponentReference, names: string[]): Pick<ExplodePart, "slot" | "kind">[] {
+export function slotKinds(reference: SlotKindsSource, names: string[]): Pick<ExplodePart, "slot" | "kind">[] {
   return names.map((name) => {
     const slot = reference.slots.find((candidate) => candidate.name === name);
     if (!slot) throw new Error(`Slot "${name}" is not in the ${reference.name} reference.`);

@@ -1,0 +1,19 @@
+---
+/**
+ * The slot model guide's X-ray block. It reads the data table's slots from
+ * the generated reference and the page's language from the URL, so the MDX
+ * writes `<SlotXRay />`: on an Arabic page showing English prose, the island
+ * shows English text and links to the Arabic API page.
+ */
+import "slotsmith/styles.css";
+import XRay from "@/islands/XRay";
+import { stripLang } from "@/i18n";
+import { getOptionalProse } from "@/lib/prose";
+import { getReference } from "@/lib/reference";
+
+const { lang } = stripLang(Astro.url.pathname);
+const prose = await getOptionalProse(lang, "guides");
+const contentLang = lang === "ar" && !prose?.translated ? "en" : lang;
+const slots = getReference("data-table").slots.map(({ name, kind }) => ({ name, kind }));
+---
+<XRay client:visible slots={slots} lang={lang} contentLang={contentLang} />

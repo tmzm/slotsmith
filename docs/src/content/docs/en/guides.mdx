@@ -1,7 +1,73 @@
 ---
-title: "Guides"
-description: "The Guides page of the slotsmith docs."
-draft: true
+title: "The slot model"
+description: "How slotsmith components are built from slots: element and widget parts, their data-* state, wrapped fallbacks, compound parts and headless hooks."
 ---
+import Demo from "@/components/Demo.astro";
+import SlotXRay from "@/components/SlotXRay.astro";
 
-This page is being written.
+The slot model is how slotsmith components are built: each is made of named slots, and its `components` prop replaces any of them. An element part receives one element's props; a widget part is told the state and renders what it likes. Slots you leave alone keep their fallbacks.
+
+## The data table, part by part
+
+Turn on "Show parts" to pull the table apart. The list under it names every slot the data table has, read from its source when the site is built; each links to the slot's row on the [API page](../components/data-table/api/#slots).
+
+<SlotXRay />
+
+## Two kinds
+
+**Element parts** stand for one element. `<Row>` gets the props of a `<tr>`, `<Cell>` those of a `<td>`, `<Root>` those of a `<div>`. Pass a component that renders that element and spread every prop onto it: they carry the classes, the `data-*` state below, the handlers and the ARIA attributes the table relies on.
+
+<SampleCode name="guides/element-part" />
+
+A component that already takes those props, such as shadcn/ui's `TableRow` or MUI's `TableRow`, fits as it is: `components={{ Row: TableRow }}`. `<DragHandle>` is an element part too, a `<button>` whose props are the row reorder engine's handlers, so spreading them is what makes the drag work.
+
+**Widget parts** stand for a control. `{Checkbox}` gets `checked`, `indeterminate`, `disabled`, `onCheckedChange` and its `aria-label`; `{Pagination}` gets the page, the page count, whether a previous or next page exists and the functions that go there. The markup is yours, so a design system's own checkbox or pager plugs in through a small adapter.
+
+<SampleCode name="guides/widget-part" />
+
+The data table has 12 element parts and 10 widget parts. Each slot's props are listed on the [API page](../components/data-table/api/#slots), and the [adapters](../components/data-table/adapters/) show the full maps for five design systems.
+
+## Data state
+
+Element parts show their state as `data-*` attributes rather than class names, so you style them with attribute selectors and any design system that already reads them (shadcn/ui's `TableRow` styles `data-[state=selected]`) picks them up. From the data table's source:
+
+- `<Root>`: `data-status` is `loading`, `error`, `empty` or `ready`; `data-size`, `data-striped`, `data-virtual` for the virtual table, and `aria-busy` while loading.
+- `<HeaderCell>`: `data-sorted` is `asc` or `desc` on the sorted column, beside `aria-sort`; `data-align` follows the column's `meta.align`.
+- `<Row>`: body rows carry `data-state="selected"`, `data-depth`, `data-expanded` (`true` or `false` on rows that can expand), `data-clickable` with `onRowClick`, and `data-row-id`. During a drag they add `data-dragging`, `data-dragging-child`, `data-drop-position` and `data-drop-edge`. The status rows carry `data-state="loading"`, `"empty"` or `"error"`.
+- `<Cell>`: `data-align`, and `data-slot="select"` or `"drag"` on the checkbox and drag-handle cells.
+
+<SampleCode name="guides/data-state" />
+
+Widget parts get the same facts as props instead, such as the `direction` of `{SortIcon}`. The API page lists every attribute under its slot.
+
+## Wrap fallbacks
+
+The built-in parts are exported as `fallbackComponents`. To change one thing about a part, render its fallback inside your own component rather than rewriting it: add a class, put something around it, or pass different props.
+
+<SampleCode name="guides/wrap-fallback" />
+
+Merge the `className` you are given with your own, as the sample does, or the fallback loses its own class and with it the stylesheet's rules.
+
+## Compound parts
+
+`<DataTable>` is a fixed layout: a root holding the table and the pagination. For another layout, build it from the compound parts inside `DataTable.Provider`, which takes every `DataTable` prop and renders no element of its own. The parts are `DataTable.Root`, `DataTable.Table`, `DataTable.Head`, `DataTable.Body`, `DataTable.Foot`, `DataTable.Row`, `DataTable.StatusRows`, `DataTable.Pagination` and `DataTable.DragHandle`. `useDataTableContext()` reads the same model from any component among them.
+
+{/* Reserved height measured in Chrome: 31.4rem up to 420px, 28.9rem to 560px, where the pagination wraps, and 22.8rem from 580px. */}
+<Demo name="guides/compound-parts" lang="en" height="clamp(22.8rem, 38.95rem - 28.57vw, 31.45rem)" fallback />
+
+These are layout parts, not slots: each still renders the slots inside it, so `components` keeps working. The autocomplete, the date picker and the file uploader have their own; see the [autocomplete's compound parts](../components/autocomplete/guides/compound-parts/) and the [date picker's](../components/date-picker/guides/compound-parts/).
+
+## Headless hooks
+
+Under every component is a hook with the state and no markup: `useDataTable`, `useAutocomplete`, `useDatePicker` and `useFileUploader`, each exported from its component's entry. `<DataTable>` calls `useDataTable` for you; call it yourself when no slot replacement gets you the markup you need.
+
+<SampleCode name="guides/headless-hooks" />
+
+The hook returns the TanStack Table instance, the `status` and the `selection`, and runs row reorder for markup of your own. The data table's [headless hook guide](../components/data-table/guides/headless-hook/) covers it in full.
+
+## Rules
+
+- **A custom `Row` keeps a stable identity.** Define slot components outside the component that renders the table, or memoize the `components` map. A component written inline in `components={{ Row: (props) => <tr {...props} /> }}` is a new type on every render, so React remounts every row: focus, a running drag and any state inside the row are lost.
+- **Spread what an element part receives.** Leaving out props drops the `data-*` state, the handlers or the accessible names.
+- **Widget parts get told what is true, not what to render.** A widget part decides its markup from the facts it receives (`checked`, `pageCount`, `direction`) and reports back through the callbacks it is given (`onCheckedChange`, `nextPage`), rather than reaching into the table.
+- **Keep the accessible names.** Widget parts receive their `aria-label` from the labels; pass it to the control that takes focus.

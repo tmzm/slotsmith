@@ -12,6 +12,10 @@
  * without JavaScript, under reduced motion, and whenever the motion module has
  * not loaded; `landing-motion.ts` removes the attribute when it takes over.
  * Nothing here needs it to be visible or usable.
+ *
+ * With `live`, the view starts without `data-static` and without the static
+ * figure: the page around it (the slot model guide's X-ray) sets `--explode`
+ * itself and lists every part on its own.
  */
 import "@/styles/explode.css";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -21,6 +25,8 @@ export interface ExplodedViewProps {
   parts: ExplodePart[];
   /** The static figure's caption. */
   caption?: ReactNode;
+  /** Leaves out the static figure and `data-static`: the caller drives `--explode` and lists the parts. */
+  live?: boolean;
   children: ReactNode;
 }
 
@@ -43,7 +49,7 @@ function anchor(matches: HTMLElement[], box: DOMRect): DOMRect | undefined {
   return inView[Math.floor((inView.length - 1) / 2)];
 }
 
-export default function ExplodedView({ parts, caption, children }: ExplodedViewProps) {
+export default function ExplodedView({ parts, caption, live = false, children }: ExplodedViewProps) {
   const view = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [positions, setPositions] = useState<Record<string, LabelPosition | undefined>>({});
@@ -91,7 +97,7 @@ export default function ExplodedView({ parts, caption, children }: ExplodedViewP
   }, [parts]);
 
   return (
-    <div className="explode" data-static="" ref={view}>
+    <div className="explode" data-static={live ? undefined : ""} ref={view}>
       <div className="explode__stage" ref={stage}>
         {children}
         {parts.map((part) => {
@@ -109,18 +115,20 @@ export default function ExplodedView({ parts, caption, children }: ExplodedViewP
           );
         })}
       </div>
-      <figure className="explode__diagram">
-        <ol className="explode__parts">
-          {parts.map((part) => (
-            <li key={part.slot} className="explode__part" data-slot={part.slot}>
-              <span className="explode__glyph" aria-hidden="true" />
-              <span className="explode__leader" aria-hidden="true" />
-              <code className={`explode__name explode__name--${part.kind}`}>{bracketLabel(part)}</code>
-            </li>
-          ))}
-        </ol>
-        {caption && <figcaption className="explode__caption">{caption}</figcaption>}
-      </figure>
+      {!live && (
+        <figure className="explode__diagram">
+          <ol className="explode__parts">
+            {parts.map((part) => (
+              <li key={part.slot} className="explode__part" data-slot={part.slot}>
+                <span className="explode__glyph" aria-hidden="true" />
+                <span className="explode__leader" aria-hidden="true" />
+                <code className={`explode__name explode__name--${part.kind}`}>{bracketLabel(part)}</code>
+              </li>
+            ))}
+          </ol>
+          {caption && <figcaption className="explode__caption">{caption}</figcaption>}
+        </figure>
+      )}
     </div>
   );
 }
