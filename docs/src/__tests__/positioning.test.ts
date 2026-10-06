@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { SITE } from "../../site.config.ts";
@@ -48,13 +48,22 @@ describe("links to the docs", () => {
     expect(readme).not.toContain("netlify.app/#");
   });
 
+  const siteHost = new URL(SITE.url).host;
+  const links = [...readme.matchAll(/\]\((https?:\/\/[^)\s]*slotsmith[^)\s]*)\)/g)].map((match) => match[1]!).filter((url) => new URL(url).host === siteHost);
+
   it("points every README docs link at a path under the site url", () => {
-    const links = [...readme.matchAll(/\]\((https?:\/\/[^)\s]*slotsmith[^)\s]*)\)/g)].map((match) => match[1]!).filter((url) => new URL(url).host.endsWith("slotsmith.dev"));
     expect(links.length).toBeGreaterThan(5);
     for (const link of links) {
       expect(link.startsWith(`${SITE.url}/`), link).toBe(true);
       expect(new URL(link).pathname.endsWith("/"), link).toBe(true);
     }
+  });
+
+  it("links only to pages the site builds", () => {
+    // Every page's path, with a stand-in prose entry wherever an English MDX file exists.
+    const lookup = (id: string) => (existsSync(fileURLToPath(new URL(`../content/docs/${id}.mdx`, import.meta.url))) ? ({ id, data: { title: id, description: id }, body: "" } as never) : undefined);
+    const paths = new Set(buildPages(lookup).map((page) => page.path));
+    for (const link of links) expect(paths.has(new URL(link).pathname), link).toBe(true);
   });
 
   it("sets the homepages from the site url, with no hash", () => {
@@ -67,6 +76,8 @@ describe("links to the docs", () => {
 describe("README sizes", () => {
   it("leaves the measured sizes to the Trust page", () => {
     expect(readme).toContain(`${SITE.url}/trust/#sizes`);
-    expect(readme).not.toMatch(/\d+(?:\.\d+)? ?KB/i);
+    // The changelog records history, sizes included; only the README's own prose defers to the Trust page.
+    const prose = readme.split(/^## Changelog\b/m)[0]!;
+    expect(prose).not.toMatch(/\d+(?:\.\d+)? ?KB/i);
   });
 });
