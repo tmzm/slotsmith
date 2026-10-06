@@ -14,7 +14,7 @@ import ComponentPage from "@/components/ComponentPage.astro";
 import Demo from "@/components/Demo.astro";
 import H2 from "@/components/prose/H2.astro";
 import Fill from "@/components/reference/Fill.astro";
-import { componentMeta, componentPaths } from "@/data/components";
+import { componentMeta, componentPaths, type ComponentSlug } from "@/data/components";
 import { langFromParam, t } from "@/i18n";
 import { ADAPTER_LIBRARIES, adapterNeeds } from "@/lib/adapters";
 import { getReference } from "@/lib/reference";
@@ -36,6 +36,16 @@ const libraries = ADAPTER_LIBRARIES.filter((library) => `adapters/${slug}/${libr
   const code = SAMPLE_SOURCES[name]!.code;
   return { ...library, name: library.name, sample: name, demo, code, needs: adapterNeeds(code) };
 });
+/**
+ * The tallest of each component's adapter demos at rest, from 360px to 1440px in English and Arabic (measured in
+ * Chrome), so none shifts the page as it loads. Open popups float over the page and need no room here.
+ */
+const DEMO_HEIGHT: Record<ComponentSlug, string> = {
+  "data-table": "30.5rem",
+  autocomplete: "5rem",
+  "date-picker": "4.5rem",
+  "file-uploader": "19rem",
+};
 const headings = libraries.map((library) => ({ id: library.id, text: library.name, depth: 2 as const }));
 ---
 <ComponentPage lang={lang} component={component} section="adapters" stub={libraries.length === 0} headings={headings}>
@@ -58,8 +68,7 @@ const headings = libraries.map((library) => ({ id: library.id, text: library.nam
           )}
         </p>
       </div>
-      {/* The tallest adapter demo at 360px (Chakra, 484px measured in Chrome), so none shifts the page as it loads. */}
-      <Demo name={library.demo} lang={lang} height="30.5rem" provider={library.id} />
+      <Demo name={library.demo} lang={lang} height={DEMO_HEIGHT[slug]} provider={library.id} />
       <p class="adapter-note">{t(lang, "adapters.provider", { library: library.name })}</p>
       <div class="panel sample-code adapter-code" data-sample={library.sample} data-pagefind-ignore>
         <p class="adapter-code__file mono" dir="ltr">{`${library.id}.tsx`}</p>
