@@ -429,7 +429,8 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
             const links = [source, ...also].filter((url): url is string => url !== undefined).map((url) => `<${url.startsWith("/") ? canonicalUrl(page.lang, url) : url}>`);
             return `- **${label}:** ${/[.?!"]$/.test(text) ? text : `${text}.`}${note ? ` ${note}` : ""}${links.length > 0 ? ` Source: ${links.join(", ")}` : ""}`;
           });
-          const about = `Checked on ${subject.checked}.${subject.note ? ` ${subject.note}` : ""} [Wrong? Open an issue](${CORRECTION_URL}).`;
+          const noteSources = (subject.also ?? []).map((url) => `<${url}>`).join(", ");
+          const about = `Checked on ${subject.checked}.${subject.note ? ` ${subject.note}` : ""}${noteSources ? ` Source: ${noteSources}.` : ""} [Wrong? Open an issue](${CORRECTION_URL}).`;
           return `## [${subject.name}](${subject.url})\n\n${about}\n\n${rows.join("\n")}`;
         }).join("\n\n");
       case "Tabs": {

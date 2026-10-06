@@ -67,6 +67,13 @@ export const DOC_SLUGS = [
   "about",
 ] as const;
 
+/** Files besides its MDX that a top-level page is built from, as repo paths: the changelog's notes are the README's. */
+const DATA_SOURCES: Record<string, string[]> = {
+  changelog: ["README.md"],
+  comparison: ["docs/src/data/comparison.ts"],
+  roadmap: ["docs/src/data/roadmap.ts"],
+};
+
 /** The top-level pages with a template of their own (`changelog/index.astro`, `roadmap/index.astro`) instead of the shared `[doc]` one. */
 export const OWN_TEMPLATE_DOCS: readonly string[] = ["changelog", "roadmap"];
 
@@ -177,8 +184,8 @@ export function buildPages(lookup: (id: string) => DocsEntry | undefined, docSlu
         kind: "doc",
         stub: prose.entry.data.draft === true,
         prose,
-        // The changelog's notes are the README's, so an edit there dates the page too.
-        sources: slug === "changelog" ? [mdxSource(prose), "README.md"] : [mdxSource(prose)],
+        // A page built from data outside its MDX is dated by that data too.
+        sources: [mdxSource(prose), ...(DATA_SOURCES[slug] ?? [])],
       };
     }),
     ...COMPONENTS.flatMap((meta) => [
