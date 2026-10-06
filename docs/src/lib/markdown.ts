@@ -17,6 +17,7 @@ import { COMPONENTS, componentMeta, type ComponentSlug } from "@/data/components
 import { landingFaq, type FaqItem } from "@/data/faq";
 import { getFacts, kilobytes } from "@/lib/facts";
 import { COVERAGE_COLUMNS, bundleSuites, componentTitle, coverageGroups, percent, requirements, suitesByLibrary, testCount } from "@/lib/trust";
+import { ATTRIBUTES, CORRECTION_URL, SUBJECTS } from "@/data/comparison";
 import { MCP_PROMPTS, MCP_TOOLS } from "@/data/mcp";
 import { localePath, t, type Lang, type MessageKey } from "@/i18n";
 import { ADAPTER_LIBRARIES } from "@/lib/adapters";
@@ -361,6 +362,17 @@ async function proseMarkdown(page: PageInfo): Promise<string> {
           ]),
         );
       }
+      case "ComparisonTable":
+        // One section per subject: each attribute with its statement and the pages it was read from.
+        return SUBJECTS.map((subject) => {
+          const rows = ATTRIBUTES.map(({ key, label }) => {
+            const { text, note, source, also = [] } = subject.cells[key];
+            const links = [source, ...also].filter((url): url is string => url !== undefined).map((url) => `<${url.startsWith("/") ? canonicalUrl(page.lang, url) : url}>`);
+            return `- **${label}:** ${/[.?!"]$/.test(text) ? text : `${text}.`}${note ? ` ${note}` : ""}${links.length > 0 ? ` Source: ${links.join(", ")}` : ""}`;
+          });
+          const about = `Checked on ${subject.checked}.${subject.note ? ` ${subject.note}` : ""} [Wrong? Open an issue](${CORRECTION_URL}).`;
+          return `## [${subject.name}](${subject.url})\n\n${about}\n\n${rows.join("\n")}`;
+        }).join("\n\n");
       case "Tabs": {
         // Each tab that shows a sample, as its own fenced block.
         const tabs = literal<{ label: string; sample?: string }[]>(attrs.tabs) ?? [];

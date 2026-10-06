@@ -1,0 +1,272 @@
+---
+/**
+ * The comparison: one group per subject, slotsmith first. Where there is
+ * room the groups sit side by side as columns with the attribute names down
+ * the start edge; on a narrow page they stack, each cell under its own
+ * label. Every group shows the day it was checked and a link for reporting
+ * a correction, and each cell links to the page it was read from. The text
+ * is English (`@/data/comparison`).
+ */
+import { ATTRIBUTES, CORRECTION_URL, SUBJECTS, type Cell } from "@/data/comparison";
+
+/** Splits text into plain and `code` runs. */
+const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ text: run, code: index % 2 === 1 }));
+/** A cell's sources: its own docs pages for slotsmith (relative, so they keep the page's language), https URLs otherwise. */
+const sources = (cell: Cell) =>
+  [cell.source, ...(cell.also ?? [])].filter((url): url is string => url !== undefined).map((url) => ({ href: url.startsWith("/") ? `..${url}` : url, own: url.startsWith("/") }));
+const idOf = (name: string) => `subject-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+---
+<div class="cmp-frame">
+  <div class="cmp">
+    <div class="cmp__labels" aria-hidden="true">
+      <div class="cmp__corner"></div>
+      {ATTRIBUTES.map((attribute) => <div class="cmp__label">{attribute.label}</div>)}
+      <div class="cmp__foot"></div>
+    </div>
+    {
+      SUBJECTS.map((subject) => (
+        <section class="cmp__subject" aria-labelledby={idOf(subject.name)}>
+          <header class="cmp__head">
+            <h2 class="cmp__name" id={idOf(subject.name)}>
+              <a href={subject.url}>{subject.name}</a>
+            </h2>
+            <p class="cmp__checked">
+              checked on <time datetime={subject.checked}>{subject.checked}</time>
+            </p>
+            {subject.note && <p class="cmp__note">{runs(subject.note).map((run) => (run.code ? <code>{run.text}</code> : run.text))}</p>}
+          </header>
+          <dl class="cmp__cells">
+            {ATTRIBUTES.map((attribute) => {
+              const cell = subject.cells[attribute.key];
+              const links = sources(cell);
+              return (
+                <div class="cmp__cell">
+                  <dt class="cmp__term">{attribute.label}</dt>
+                  <dd class="cmp__value">
+                    <p>{runs(cell.text).map((run) => (run.code ? <code>{run.text}</code> : run.text))}</p>
+                    {cell.note && <p class="cmp__note">{runs(cell.note).map((run) => (run.code ? <code>{run.text}</code> : run.text))}</p>}
+                    {links.length > 0 && (
+                      <p class="cmp__sources">
+                        {links.map((link, index) => (
+                          <a href={link.href} aria-label={`${link.own ? "Docs" : "Source"}${links.length > 1 ? ` ${index + 1}` : ""}: ${subject.name}, ${attribute.label}`}>
+                            {link.own ? "docs" : "source"}
+                            {links.length > 1 && ` ${index + 1}`}
+                          </a>
+                        ))}
+                      </p>
+                    )}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+          <p class="cmp__foot">
+            <a href={CORRECTION_URL} aria-label={`Wrong about ${subject.name}? Open an issue`}>Wrong? Open an issue</a>
+          </p>
+        </section>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .cmp-frame {
+    container-type: inline-size;
+    margin-block: 2rem;
+  }
+
+  /* Narrow: one panel per subject, each cell under its label. */
+  .cmp {
+    display: grid;
+    gap: 1.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  .cmp__labels {
+    display: none;
+  }
+
+  .cmp__subject {
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+  }
+
+  .cmp__head {
+    padding-block-end: 1rem;
+    border-block-end: 1px solid var(--line-strong);
+  }
+
+  .cmp__name {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-transform: none;
+    text-wrap: balance;
+  }
+
+  .cmp__name a {
+    color: var(--ink);
+  }
+
+  .cmp__checked {
+    margin: 0.375rem 0 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+
+  .cmp__note {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .cmp__cells {
+    margin: 0;
+  }
+
+  .cmp__cell {
+    padding-block: 0.875rem;
+    border-block-end: 1px solid var(--line);
+  }
+
+  .cmp__term {
+    margin-block-end: 0.25rem;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .cmp__value {
+    margin: 0;
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+
+  .cmp__value p {
+    margin: 0;
+  }
+
+  .cmp__value .cmp__note {
+    margin-block-start: 0.5rem;
+  }
+
+  .cmp code {
+    font-family: var(--font-mono);
+    font-size: 0.8125em;
+    color: var(--ink);
+  }
+
+  .cmp__value .cmp__sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.125rem 0.75rem;
+    margin-block-start: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+
+  .cmp__foot {
+    margin: 0;
+    padding-block-start: 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  /* Room for a label beside each value. */
+  @container (min-width: 36rem) {
+    .cmp__cell {
+      display: grid;
+      grid-template-columns: 11rem minmax(0, 1fr);
+      gap: 1rem;
+    }
+
+    .cmp__term {
+      margin: 0;
+    }
+  }
+
+  /*
+   * Wide: subjects as columns. Each subject spans every row of the outer
+   * grid and lays its header, cells and footer out on those rows (subgrid),
+   * so a row is as tall as its longest cell in any column.
+   */
+  @container (min-width: 60rem) {
+    .cmp {
+      grid-template-columns: 6.5rem repeat(6, minmax(0, 1fr));
+      grid-template-rows: repeat(11, auto);
+      gap: 0;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+
+    .cmp__labels,
+    .cmp__subject {
+      display: grid;
+      grid-row: 1 / -1;
+      grid-template-rows: subgrid;
+    }
+
+    .cmp__subject {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+    }
+
+    .cmp__cells,
+    .cmp__cell {
+      display: contents;
+    }
+
+    .cmp__term {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .cmp__corner,
+    .cmp__head {
+      position: sticky;
+      inset-block-start: var(--header-h);
+      z-index: 1;
+      padding: 0.75rem 0.625rem;
+      border-block-end: 1px solid var(--line-strong);
+      background: var(--bg);
+    }
+
+    .cmp__name {
+      font-size: 0.9375rem;
+    }
+
+    .cmp__label,
+    .cmp__value,
+    .cmp__foot {
+      padding: 0.75rem 0.625rem;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .cmp__label {
+      padding-inline-start: 0;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .cmp__corner {
+      padding-inline-start: 0;
+    }
+
+    .cmp__foot {
+      border-block-end: 0;
+    }
+  }
+</style>
