@@ -14,3 +14,13 @@
   --ss-selected: color-mix(in oklab, var(--gold) 16%, var(--panel));
   --ss-danger: var(--danger);
 }
+
+/*
+ * Light mode: gold on the vellum panel is 2.32:1, below the 3:1 that focus
+ * rings, ticks and the picked day need (WCAG 1.4.11). The darker text gold
+ * is 5.71:1 on the panel, and the panel reads at the same ratio on it.
+ */
+[data-theme="light"] .site-demo {
+  --ss-accent: var(--gold-text);
+  --ss-on-accent: var(--panel);
+}
