@@ -37,13 +37,15 @@ import type { SwapMessages } from "@/lib/swap-messages";
 export type Variant = "fallback" | "shadcn" | "mui" | "chakra" | "antd";
 type Remote = Exclude<Variant, "fallback">;
 
-/** What a variant's provider reads: the site's theme and the page's direction. */
+/** What a variant's provider reads: the site's theme and the page's direction and language. */
 export interface VariantSettings {
   theme: "dark" | "light";
   dir: "ltr" | "rtl";
+  /** The page's language, for a design system's own labels (MUI's "Rows per page"). */
+  lang: Lang;
 }
 
-const Settings = createContext<VariantSettings>({ theme: "dark", dir: "ltr" });
+const Settings = createContext<VariantSettings>({ theme: "dark", dir: "ltr", lang: "en" });
 
 type VariantModule = { default: ComponentType };
 export type VariantLoader = () => Promise<VariantModule>;
@@ -87,14 +89,14 @@ export function retryable<T>(load: () => Promise<T>): () => Promise<T> {
   };
 }
 
-/** Loads a variant's sample and its provider together, wrapped so the provider reads the theme and direction. */
-async function withProvider(sample: () => Promise<{ default: ComponentType }>, provider: () => Promise<ProviderComponent>): Promise<VariantModule> {
+/** Loads a variant's sample and its provider together, wrapped so the provider reads the theme, direction and language. */
+export async function withProvider(sample: () => Promise<{ default: ComponentType }>, provider: () => Promise<ProviderComponent>): Promise<VariantModule> {
   const [{ default: Sample }, Provider] = await Promise.all([sample(), provider()]);
   return {
     default: function WithProvider() {
-      const { theme, dir } = useContext(Settings);
+      const { theme, dir, lang } = useContext(Settings);
       return (
-        <Provider theme={theme} dir={dir}>
+        <Provider theme={theme} dir={dir} lang={lang}>
           <Sample />
         </Provider>
       );
@@ -305,7 +307,7 @@ export default function SwapDemo({ lang, messages, sources, loaders, parts = [],
   };
 
   const Current = loaded.current[current] ?? Fallback;
-  const settings = useMemo(() => ({ theme, dir }), [theme, dir]);
+  const settings = useMemo(() => ({ theme, dir, lang }), [theme, dir, lang]);
   const loading = requested !== current;
 
   return (

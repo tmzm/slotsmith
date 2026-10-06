@@ -2,10 +2,10 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { t } from "@/i18n";
-import SwapDemo, { retryable, type Variant } from "@/islands/SwapDemo";
+import SwapDemo, { retryable, withProvider, type Variant } from "@/islands/SwapDemo";
 import { swapMessages } from "@/lib/swap-messages";
 
 type Loaded = { default: ComponentType };
@@ -233,6 +233,21 @@ describe("SwapDemo", () => {
     await act(async () => releases[1]!());
     expect(root.getAttribute("data-current")).toBe("chakra");
     expect(after).toEqual(["chakra"]);
+  });
+
+  it("gives a variant's provider the page's direction and language", async () => {
+    const seen: { dir: string; lang: string }[] = [];
+    const Provider = ({ children, dir, lang }: { children: ReactNode; dir: string; lang: string }) => {
+      seen.push({ dir, lang });
+      return <div data-testid="provider">{children}</div>;
+    };
+    const mui = () => withProvider(resolved("mui"), async () => Provider);
+    render(<SwapDemo lang="ar" messages={swapMessages("ar")} sources={sources} loaders={{ mui }} />);
+    // The Arabic locale pack loads lazily, so the first client render waits for it.
+    await screen.findByRole("radio", { name: t("ar", "swap.fallback") });
+    await act(async () => fireEvent.click(screen.getAllByRole("radio")[2]!));
+    expect((await screen.findByTestId("variant-mui")).closest('[data-testid="provider"]')).toBeTruthy();
+    expect(seen.at(-1)).toEqual({ dir: "rtl", lang: "ar" });
   });
 
   it("labels the segments in Arabic on Arabic pages", async () => {
