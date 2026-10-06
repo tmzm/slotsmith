@@ -86,3 +86,27 @@ describe("MUI provider direction", () => {
     expect(styles("css")).toMatch(new RegExp(`\.${cell}\{[^}]*text-align:left`));
   });
 });
+
+describe("MUI provider language", () => {
+  const Provider = PROVIDERS.mui;
+
+  it("gives MUI's own labels in Arabic on an Arabic page", () => {
+    const { container } = render(
+      <Provider theme="light" dir="rtl" lang="ar">
+        <Mui />
+      </Provider>,
+    );
+    expect(container.textContent).toContain("عدد الصفوف في الصفحة");
+    expect(container.textContent).toContain("1–5 من 12");
+    expect(container.textContent).not.toContain("Rows per page");
+  });
+
+  it("keeps MUI's English labels when no language is given", () => {
+    const { container } = render(
+      <Provider theme="light" dir="ltr">
+        <Mui />
+      </Provider>,
+    );
+    expect(container.textContent).toContain("1–5 of 12");
+  });
+});

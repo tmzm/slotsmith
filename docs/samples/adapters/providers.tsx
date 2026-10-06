@@ -17,6 +17,8 @@ export interface ProviderProps {
   children: ReactNode;
   theme: "dark" | "light";
   dir: "ltr" | "rtl";
+  /** The page's language, for providers that bring their own translated labels. English when left out. */
+  lang?: string;
 }
 
 /** The design systems that have a provider here. */

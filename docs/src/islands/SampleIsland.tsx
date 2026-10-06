@@ -105,21 +105,21 @@ function useSiteTheme(): "dark" | "light" {
   return theme;
 }
 
-type Wrapper = ComponentType<{ children: ReactNode; dir: "ltr" | "rtl" }>;
+type Wrapper = ComponentType<{ children: ReactNode; dir: "ltr" | "rtl"; lang: Lang }>;
 
 const providers = new Map<ProviderName, LazyExoticComponent<Wrapper>>();
 
-/** One lazy wrapper per design system: its provider, fed the site theme and the page direction. */
+/** One lazy wrapper per design system: its provider, fed the site theme and the page direction and language. */
 function lazyProvider(name: ProviderName): LazyExoticComponent<Wrapper> {
   let wrapper = providers.get(name);
   if (!wrapper) {
     wrapper = lazy(async () => {
       const Provider = await PROVIDER_LOADERS[name]();
       return {
-        default: function WithProvider({ children, dir }: { children: ReactNode; dir: "ltr" | "rtl" }) {
+        default: function WithProvider({ children, dir, lang }: { children: ReactNode; dir: "ltr" | "rtl"; lang: Lang }) {
           const theme = useSiteTheme();
           return (
-            <Provider theme={theme} dir={dir}>
+            <Provider theme={theme} dir={dir} lang={lang}>
               {children}
             </Provider>
           );
@@ -143,11 +143,15 @@ function CheckProvider({ provider }: { provider: ProviderName }) {
  * the island does; mounts the provider and sample once hydrated. (Hooks live
  * here, not in SampleIsland, which Astro also calls as a plain function.)
  */
-function WithProvider({ provider, dir, children }: { provider: ProviderName; dir: "ltr" | "rtl"; children: ReactNode }) {
+function WithProvider({ provider, dir, lang, children }: { provider: ProviderName; dir: "ltr" | "rtl"; lang: Lang; children: ReactNode }) {
   const mounted = useMounted();
   if (!mounted) return <CheckProvider provider={provider} />;
   const Wrap = lazyProvider(provider);
-  return <Wrap dir={dir}>{children}</Wrap>;
+  return (
+    <Wrap dir={dir} lang={lang}>
+      {children}
+    </Wrap>
+  );
 }
 
 /** False on the server and on the first client render, true after mount. */
@@ -164,7 +168,7 @@ export default function SampleIsland({ name, lang, locales = "site", provider }:
     <SiteLocale lang={lang} locales={locales}>
       <div className="sample-stage" dir={dir}>
         {provider ? (
-          <WithProvider provider={provider} dir={dir}>
+          <WithProvider provider={provider} dir={dir} lang={lang}>
             {sample}
           </WithProvider>
         ) : (
