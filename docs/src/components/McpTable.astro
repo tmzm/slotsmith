@@ -6,6 +6,11 @@
  * scrolling sideways. Read from `@/data/mcp`, which a test keeps equal to
  * the server's source. Each
  * row is `#tool-<name>` or `#prompt-<name>`. The descriptions are English.
+ *
+ * The table, its row groups, rows and cells carry explicit ARIA roles: on
+ * phones the rows are `display: grid` and the cells `display: block`, and
+ * some browsers drop a table's semantics once its parts stop being
+ * table boxes. The roles are the ones the elements have anyway.
  */
 import "@/styles/reference.css";
 import { t, type Lang } from "@/i18n";
@@ -23,22 +28,22 @@ const descLang = lang === "en" ? undefined : "en";
 const runs = (text: string) => text.split(/`([^`]+)`/).map((run, index) => ({ text: run, code: index % 2 === 1 }));
 ---
 <div class="ref-table mcp-table" role="region" tabindex="0" aria-label={t(lang, kind === "tools" ? "mcp.tools" : "mcp.prompts")}>
-  <table>
-    <thead>
-      <tr>
-        <th scope="col">{t(lang, kind === "tools" ? "mcp.tool" : "mcp.prompt")}</th>
-        <th scope="col">{t(lang, "mcp.does")}</th>
-        <th scope="col">{t(lang, "mcp.args")}</th>
+  <table role="table">
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">{t(lang, kind === "tools" ? "mcp.tool" : "mcp.prompt")}</th>
+        <th scope="col" role="columnheader">{t(lang, "mcp.does")}</th>
+        <th scope="col" role="columnheader">{t(lang, "mcp.args")}</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody role="rowgroup">
       {rows.map((row) => (
-        <tr id={`${kind === "tools" ? "tool" : "prompt"}-${row.name}`}>
-          <th scope="row" class="ref-name"><code dir="ltr">{row.name}</code></th>
-          <td class="ref-desc-cell ref-desc" lang={descLang} dir={descLang && "ltr"}>
+        <tr role="row" id={`${kind === "tools" ? "tool" : "prompt"}-${row.name}`}>
+          <th scope="row" role="rowheader" class="ref-name"><code dir="ltr">{row.name}</code></th>
+          <td role="cell" class="ref-desc-cell ref-desc" lang={descLang} dir={descLang && "ltr"}>
             {runs(row.description).map((run) => (run.code ? <code>{run.text}</code> : run.text))}
           </td>
-          <td class="ref-type" data-label={t(lang, "mcp.args")}>
+          <td role="cell" class="ref-type" data-label={t(lang, "mcp.args")}>
             {row.args.length === 0 ? (
               <span class="mcp-none">{t(lang, "mcp.none")}</span>
             ) : (
