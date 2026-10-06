@@ -21,8 +21,12 @@ const NEXT_SECTION = /^##[ \t]+\S/;
 const FENCE = /^[ \t]*(`{3,}|~{3,})/;
 /** `### 1.6.0`: a release as a heading. */
 const HEADING = /^###[ \t]+(.+?)[ \t]*#*[ \t]*$/;
-/** `- **1.6.0** — notes`: a release as a bullet, the README's form. Other bold text starts no release. */
-const BULLET = /^[-*][ \t]+\*\*(unreleased|v?\d+\.\d+\.\d+[^*]*)\*\*[ \t]*(?:[—–:-][ \t]*)?(.*)$/i;
+/** A top-level bullet that opens with bold text: `- **1.6.0** — notes` is a release, the README's form. */
+const BOLD_BULLET = /^[-*][ \t]+\*\*([^*]*)\*\*[ \t]*(?:[—–:-][ \t]*)?(.*)$/;
+/** What a release may be called: `Unreleased`, or a version such as `1.6.0` or `2.0.0-beta.1`. */
+const RELEASE_NAME = /^(?:unreleased|\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/i;
+/** Bold text that was meant as a version: it starts with a digit, or with `v` and a digit. */
+const VERSION_LIKE = /^\s*v?\d/i;
 
 /**
  * Splits the README's changelog into releases, in the order written.
@@ -33,14 +37,22 @@ const BULLET = /^[-*][ \t]+\*\*(unreleased|v?\d+\.\d+\.\d+[^*]*)\*\*[ \t]*(?:[�
  * version is the release's first bullet. Lines inside a fenced code block
  * never start a release or end the section.
  *
+ * A section the page could only show wrongly is an error, not a guess: a
+ * release named twice, text before the first release, a `###` heading or a
+ * bold version-like bullet that is not `Unreleased` or `x.y.z`.
+ *
  * @param readme - The README's text.
  * @returns The releases, or an empty list when there is no changelog section.
+ * @throws When the section is malformed; the message names the line.
  */
 export function parseChangelog(readme: string): Release[] {
   const releases: { version: string; lines: string[] }[] = [];
+  const fail = (index: number, line: string, why: string): never => {
+    throw new Error(`README changelog, line ${index + 1}: ${why}\n  ${line}`);
+  };
   let inSection = false;
   let fence: string | null = null;
-  for (const line of readme.split(/\r?\n/)) {
+  for (const [index, line] of readme.split(/\r?\n/).entries()) {
     if (!inSection) {
       inSection = SECTION.test(line);
       continue;
@@ -52,17 +64,22 @@ export function parseChangelog(readme: string): Release[] {
       releases.at(-1)?.lines.push(line);
       continue;
     }
-    if (mark) {
-      fence = mark;
-      releases.at(-1)?.lines.push(line);
+    if (NEXT_SECTION.test(line)) break;
+    const heading = mark ? null : HEADING.exec(line);
+    const bullet = mark || heading ? null : BOLD_BULLET.exec(line);
+    const name = heading ? heading[1]! : bullet && (RELEASE_NAME.test(bullet[1]!) || VERSION_LIKE.test(bullet[1]!)) ? bullet[1]! : null;
+    if (name !== null) {
+      if (!RELEASE_NAME.test(name)) fail(index, line, `"${name}" is not a release name. Use "Unreleased" or a version such as "1.8.0", with no spaces inside the bold.`);
+      if (releases.some((release) => release.version.toLowerCase() === name.toLowerCase())) fail(index, line, `the release "${name}" is listed twice.`);
+      releases.push({ version: name, lines: bullet?.[2] ? [`- ${bullet[2]}`] : [] });
       continue;
     }
-    if (NEXT_SECTION.test(line)) break;
-    const heading = HEADING.exec(line);
-    const bullet = heading ? null : BULLET.exec(line);
-    if (heading) releases.push({ version: heading[1]!, lines: [] });
-    else if (bullet) releases.push({ version: bullet[1]!.trim(), lines: bullet[2] ? [`- ${bullet[2]}`] : [] });
-    else releases.at(-1)?.lines.push(line);
+    if (releases.length === 0) {
+      if (line.trim() !== "") fail(index, line, "text before the first release. Start the section with a release.");
+      continue;
+    }
+    if (mark) fence = mark;
+    releases.at(-1)!.lines.push(line);
   }
   return releases.map(({ version, lines }) => ({
     version,

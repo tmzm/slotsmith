@@ -21,13 +21,17 @@
   margin-block-start: 1.25rem;
 }
 
-/* Long entries: a list without the indent, each change a row of its own. */
+/* Long entries: each change a row of its own, with a quiet marker so it stays a list to assistive technology. */
 .release__notes > ul {
   display: grid;
   gap: 0.875rem;
   margin: 0;
   padding: 0;
-  list-style: none;
+  padding-inline-start: 1.125rem;
+}
+
+.release__notes > ul > li::marker {
+  color: var(--line-strong);
 }
 
 .release__notes > ul > li {

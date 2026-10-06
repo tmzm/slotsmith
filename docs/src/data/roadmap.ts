@@ -30,7 +30,6 @@ export const ROADMAP: RoadmapItem[] = [
     detail: "roadmap.excelModeDetail",
     status: "planned",
     id: "excel-mode",
-    link: "/components/data-table/",
   },
   {
     title: "roadmap.renderPerformance",

@@ -140,6 +140,37 @@ describe("parseChangelog", () => {
   });
 });
 
+describe("parseChangelog on a malformed section", () => {
+  it("rejects a release listed twice, as a version or as Unreleased", () => {
+    expect(() => parseChangelog("## Changelog\n\n- **1.7.0** — One.\n- **1.7.0** — Two.\n")).toThrow('line 4: the release "1.7.0" is listed twice.\n  - **1.7.0** — Two.');
+    expect(() => parseChangelog("## Changelog\n\n### Unreleased\n\n- A.\n\n- **unreleased** — B.\n")).toThrow('line 7: the release "unreleased" is listed twice');
+  });
+
+  it("rejects text between the heading and the first release", () => {
+    expect(() => parseChangelog("## Changelog\n\nAll notable changes.\n\n- **1.0.0** — First.\n")).toThrow("line 3: text before the first release. Start the section with a release.\n  All notable changes.");
+    expect(() => parseChangelog("## Changelog\n\n- A change with no release.\n")).toThrow("line 3: text before the first release");
+    expect(() => parseChangelog("## Changelog\n\n```\ncode\n```\n")).toThrow("line 3: text before the first release");
+  });
+
+  it("rejects a bold version-like bullet that is not a full version", () => {
+    expect(() => parseChangelog("## Changelog\n\n- **1.8** — Short.\n")).toThrow('line 3: "1.8" is not a release name');
+    expect(() => parseChangelog("## Changelog\n\n- **1.7.0** — Fine.\n- **1.8.0 ** — Space.\n")).toThrow('line 4: "1.8.0 " is not a release name');
+    expect(() => parseChangelog("## Changelog\n\n- **v1.8.0** — Prefixed.\n")).toThrow('line 3: "v1.8.0" is not a release name');
+  });
+
+  it("rejects a `###` heading that is neither a version nor Unreleased", () => {
+    expect(() => parseChangelog("## Changelog\n\n### 1.0.0\n\n- First.\n\n### Older releases\n")).toThrow('line 7: "Older releases" is not a release name');
+    expect(() => parseChangelog("## Changelog\n\n### 1.0.0\n\n- First.\n\n### Older releases\n")).toThrow("\n  ### Older releases");
+    expect(() => parseChangelog("## Changelog\n\n### 1.8\n")).toThrow('line 3: "1.8" is not a release name');
+  });
+
+  it("accepts a pre-release version and bold text that is not a version", () => {
+    expect(parseChangelog("## Changelog\n\n- **2.0.0-beta.1** — Beta.\n- **Fixes:** one.\n")).toEqual([
+      { version: "2.0.0-beta.1", unreleased: false, markdown: "- Beta.\n- **Fixes:** one." },
+    ]);
+  });
+});
+
 describe("releaseId", () => {
   it("is the version, or `unreleased`", () => {
     expect(releaseId({ version: "1.6.0", unreleased: false })).toBe("1.6.0");

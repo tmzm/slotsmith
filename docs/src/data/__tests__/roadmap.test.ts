@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { COMPONENTS } from "@/data/components";
 import { IGNORED_TODOS, ROADMAP, roadmapId } from "@/data/roadmap";
+import { ar } from "@/i18n/messages.ar";
 import { en } from "@/i18n/messages.en";
 import { DOC_SLUGS } from "@/lib/pages";
 import { findTodoTags } from "@/lib/todos";
@@ -96,13 +97,20 @@ describe("ROADMAP", () => {
     for (const item of ROADMAP) if (item.link) expect(pages, `${item.title} links to ${item.link}`).toContain(item.link.split("#")[0]);
   });
 
-  it("has a message for every title and detail, and no date in any of them", () => {
-    for (const item of ROADMAP) {
-      for (const key of [item.title, item.detail]) {
-        if (!key) continue;
-        expect(en[key], key).toBeTruthy();
-        expect(en[key], key).not.toMatch(/\b20\d\d\b|\bQ[1-4]\b|next (?:week|month|quarter|year)|soon/i);
-      }
+  it("has a message for every title and detail", () => {
+    for (const item of ROADMAP) for (const key of [item.title, item.detail]) if (key) expect(en[key], key).toBeTruthy();
+  });
+
+  it("has no date in any roadmap message, in either language", () => {
+    const keys = (Object.keys(en) as (keyof typeof en)[]).filter((key) => key.startsWith("roadmap."));
+    expect(keys.length).toBeGreaterThan(20);
+    // A year in Latin or Arabic-Indic digits.
+    const year = /[0-9٠-٩]{4}/;
+    for (const key of keys) {
+      expect(en[key], key).not.toMatch(year);
+      expect(en[key], key).not.toMatch(/\bQ[1-4]\b|next (?:week|month|quarter|year)|later this|soon/i);
+      expect(ar[key], key).not.toMatch(year);
+      expect(ar[key], key).not.toMatch(/قريب|الشهر القادم|العام القادم|السنة القادمة|الربع/);
     }
   });
 });

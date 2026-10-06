@@ -71,7 +71,8 @@ export const DOC_SLUGS = [
 const DATA_SOURCES: Record<string, string[]> = {
   changelog: ["README.md"],
   comparison: ["docs/src/data/comparison.ts"],
-  roadmap: ["docs/src/data/roadmap.ts"],
+  // Its "In progress" section is the README's unreleased notes.
+  roadmap: ["docs/src/data/roadmap.ts", "README.md"],
 };
 
 /** The top-level pages with a template of their own (`changelog/index.astro`, `roadmap/index.astro`) instead of the shared `[doc]` one. */

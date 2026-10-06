@@ -27,7 +27,9 @@ const releases = await Promise.all(
     Content: (await render(entry)).Content,
   })),
 );
-const oldest = releases.findLast((release) => !release.unreleased);
+// The note about releases with no written notes; none came before 1.0.0, so it is left out once the notes reach it.
+const last = releases.findLast((release) => !release.unreleased);
+const oldest = last && last.version !== "1.0.0" ? last : undefined;
 const [beforeLink = "", afterLink = ""] = oldest ? t(lang, "changelog.earlier", { version: oldest.version, link: "\u0000" }).split("\u0000") : [];
 ---
 {
