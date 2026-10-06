@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SITE } from "../../../site.config.ts";
-import { findDeadLinks, findGeoProblems, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "../html.ts";
+import { findDeadLinks, findGeoProblems, findMetaProblems, findOgProblems, findUnusedSamples, readPage, type PageFacts } from "../html.ts";
 
 function doc(path: string, { title = "Theming · slotsmith", description = "How to theme.", body = "", stub = false } = {}) {
   const ar = path.startsWith("/ar/");
@@ -89,6 +89,25 @@ describe("readPage", () => {
 
   it("returns null when there is no og:image", () => {
     expect(readPage("/x/", "<html><head><title>x</title></head></html>").ogImage).toBeNull();
+  });
+});
+
+describe("findOgProblems", () => {
+  const files = new Set(["/og/theming.png"]);
+
+  it("passes a page whose image was built", () => {
+    expect(findOgProblems([facts("/theming/", { ogImage: `${SITE.url}/og/theming.png` })], files)).toEqual([]);
+  });
+
+  it("reports a missing image, one on another origin and one that was not built", () => {
+    const problems = findOgProblems(
+      [facts("/a/"), facts("/b/", { ogImage: "/og/theming.png" }), facts("/c/", { ogImage: `${SITE.url}/og/c.png` })],
+      files,
+    );
+    expect(problems).toHaveLength(3);
+    expect(problems[0]).toBe("no og:image on /a/");
+    expect(problems[1]).toContain("/b/");
+    expect(problems[2]).toContain("/og/c.png");
   });
 });
 

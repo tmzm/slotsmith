@@ -2,7 +2,7 @@
  * Post-build verifier
  *
  * Checks `docs/dist` after `astro build`:
- * - every page's head (title, description, canonical, hreflang), internal links
+ * - every page's head (title, description, canonical, hreflang, a built og:image), internal links
  *   and `#id` targets, and that every sample is shown somewhere;
  * - every page's JSON-LD (it parses; `SoftwareSourceCode` on the landing,
  *   `BreadcrumbList` elsewhere; an `FAQPage` lists the visible FAQ's
@@ -31,7 +31,7 @@ import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { chromium, type Page } from "playwright";
 import type { ComponentReference } from "../src/lib/reference.ts";
-import { findDeadLinks, findGeoProblems, findMetaProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
+import { findDeadLinks, findGeoProblems, findMetaProblems, findOgProblems, findUnusedSamples, readPage, type PageFacts } from "./lib/html.ts";
 import { serveDir } from "./lib/serve.ts";
 import { APP_FOLDERS, filesUnder } from "./lib/walk.ts";
 import { sortViolations } from "./lib/axe-allowlist.ts";
@@ -278,6 +278,7 @@ async function main(): Promise<void> {
 
   const problems = [
     ...findMetaProblems(facts),
+    ...findOgProblems(facts, new Set(files)),
     ...findDeadLinks(facts, new Set(files)),
     // The framework examples are whole apps that CI builds; a page shows only the files that matter.
     ...findUnusedSamples(facts, sampleNames().filter((name) => !name.startsWith("frameworks/")), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),

@@ -156,6 +156,23 @@ export function findMetaProblems(pages: PageFacts[]): string[] {
 }
 
 /**
+ * Social image problems: a page with no `og:image`, one that is not an absolute
+ * URL on `SITE.url`, or one whose file was not built.
+ *
+ * @param pages - Every page of the site.
+ * @param files - Paths of the built files (`/og/theming.png`).
+ */
+export function findOgProblems(pages: PageFacts[], files: ReadonlySet<string>): string[] {
+  const problems: string[] = [];
+  for (const page of pages) {
+    if (!page.ogImage) problems.push(`no og:image on ${page.path}`);
+    else if (!page.ogImage.startsWith(`${SITE.url}/`)) problems.push(`og:image on ${page.path} is "${page.ogImage}", expected a URL on ${SITE.url}`);
+    else if (!files.has(page.ogImage.slice(SITE.url.length))) problems.push(`og:image on ${page.path} points at ${page.ogImage.slice(SITE.url.length)}, which was not built`);
+  }
+  return problems;
+}
+
+/**
  * Internal links that lead nowhere: a path with no page (and not one of the
  * given `files`, such as `/llms.txt`), or a `#id` the target page does not have.
  *

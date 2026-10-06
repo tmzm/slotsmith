@@ -22,20 +22,19 @@ export interface Props {
   title: string | null;
   description: string;
   path: string;
-  ogImage?: string;
   /** Structured data for the page's head. */
   jsonLd?: object[];
   /** Marks a page whose prose is still a placeholder: renders `data-stub` on <main>. */
   stub?: boolean;
 }
 
-const { lang, title, description, path, ogImage, stub, jsonLd } = Astro.props;
+const { lang, title, description, path, stub, jsonLd } = Astro.props;
 const hasSidebar = Astro.slots.has("sidebar");
 ---
 <!doctype html>
 <html lang={lang} dir={dirOf(lang)} data-theme="dark">
   <head>
-    <Head lang={lang} title={title} description={description} path={path} ogImage={ogImage} jsonLd={jsonLd} />
+    <Head lang={lang} title={title} description={description} path={path} jsonLd={jsonLd} />
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->

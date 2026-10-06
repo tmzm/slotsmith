@@ -12,6 +12,7 @@ import JsonLd from "./JsonLd.astro";
 import ThemeScript from "./ThemeScript.astro";
 import { alternates, canonicalUrl, pageTitle } from "@/lib/page";
 import type { Lang } from "@/i18n";
+import { OG_HEIGHT, OG_WIDTH, ogUrl } from "@/lib/og";
 import { markdownUrl } from "@/lib/seo-files";
 import { SITE } from "../../site.config";
 
@@ -31,12 +32,11 @@ interface Props {
   title: string | null;
   description: string;
   path: string;
-  ogImage?: string;
   /** Structured data, one `application/ld+json` script per object. */
   jsonLd?: object[];
 }
 
-const { lang, title, description, path, ogImage, jsonLd = [] } = Astro.props;
+const { lang, title, description, path, jsonLd = [] } = Astro.props;
 
 const LATIN =
   "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD";
@@ -76,7 +76,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 const fullTitle = pageTitle(lang, title);
 const canonical = canonicalUrl(lang, path);
-const ogImageUrl = ogImage ? new URL(ogImage, canonical).href : undefined;
+// Every page has an image at /og/<page>.png (pages/og/[...slug].png.ts).
+const ogImageUrl = ogUrl(lang, path);
 const favicon =
   "data:image/svg+xml," +
   encodeURIComponent(
@@ -105,6 +106,14 @@ const favicon =
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical} />
 <meta property="og:locale" content={lang === "ar" ? "ar" : "en_US"} />
-{ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
-<meta name="twitter:card" content={ogImageUrl ? "summary_large_image" : "summary"} />
+<meta property="og:image" content={ogImageUrl} />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content={String(OG_WIDTH)} />
+<meta property="og:image:height" content={String(OG_HEIGHT)} />
+<meta property="og:image:alt" content={fullTitle} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageUrl} />
+<meta name="twitter:image:alt" content={fullTitle} />
 <JsonLd data={jsonLd} />
