@@ -80,7 +80,7 @@ describe("ROADMAP", () => {
   });
 
   it("lists the plans the author has stated first, then the ones the source marks", () => {
-    expect(planned.map(roadmapId)).toEqual(["excel-mode", "render-performance", "calendars", "server-locales", "reorder-sorting"]);
+    expect(planned.map(roadmapId)).toEqual(["spreadsheet-mode", "render-performance", "calendars", "server-locales", "reorder-sorting"]);
   });
 
   it("ships the four components, each linking to its page", () => {

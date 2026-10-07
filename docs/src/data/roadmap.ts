@@ -26,10 +26,10 @@ export interface RoadmapItem {
  */
 export const ROADMAP: RoadmapItem[] = [
   {
-    title: "roadmap.excelMode",
-    detail: "roadmap.excelModeDetail",
+    title: "roadmap.spreadsheetMode",
+    detail: "roadmap.spreadsheetModeDetail",
     status: "planned",
-    id: "excel-mode",
+    id: "spreadsheet-mode",
   },
   {
     title: "roadmap.renderPerformance",
