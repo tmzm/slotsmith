@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { breadcrumbs, faqPage, softwareSourceCode, techArticle } from "@/lib/structured-data";
+import { breadcrumbs, faqPage, softwareSourceCode, techArticle, webSite } from "@/lib/structured-data";
 import type { Facts } from "@/lib/facts";
 import { t } from "@/i18n";
 
@@ -79,5 +79,15 @@ describe("faqPage", () => {
     expect(page["@type"]).toBe("FAQPage");
     expect(page.mainEntity[0]!.name).toBe("Q?");
     expect(page.mainEntity[0]!.acceptedAnswer.text).toBe("A.");
+  });
+});
+
+describe("webSite", () => {
+  it("names the site slotsmith at its own domain, so results do not show the host's name", () => {
+    const site = webSite("ar") as Record<string, unknown>;
+    expect(site["@type"]).toBe("WebSite");
+    expect(site.name).toBe("slotsmith");
+    expect(site.url).toBe("https://slotsmith.dev/");
+    expect(site.inLanguage).toBe("ar");
   });
 });

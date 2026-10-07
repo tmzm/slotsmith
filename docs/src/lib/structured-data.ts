@@ -41,6 +41,23 @@ export function softwareSourceCode(facts: Facts, lang: Lang = "en", image?: stri
   };
 }
 
+/**
+ * The site itself, for the landing pages. Search engines take a result's site
+ * name from this (it names the site "slotsmith", not its host).
+ *
+ * @param lang - The page's language.
+ */
+export function webSite(lang: Lang = "en"): object {
+  return {
+    "@context": CONTEXT,
+    "@type": "WebSite",
+    name: "slotsmith",
+    alternateName: ["slotsmith.dev", "slotsmith docs"],
+    url: `${SITE.url}/`,
+    inLanguage: lang,
+  };
+}
+
 /** A docs page, with its social image. `dateModified` is left out when git has no date for the page; it is never guessed. */
 export function techArticle(page: { title: string; description: string; url: string; image: string; lang: Lang; dateModified: string | null }): object {
   return {
