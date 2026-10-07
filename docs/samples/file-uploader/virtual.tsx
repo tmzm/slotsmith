@@ -25,9 +25,6 @@ export default function Virtual() {
       upload={fakeUpload}
       // A fallback row is 64.5px tall plus the 8px gap; the list scrolls inside 320px and renders only what is in view.
       virtual={{ estimateSize: 72.5, maxHeight: 320 }}
-      // The stylesheet makes the list a flex column, which shrinks the spacer rows to nothing;
-      // a grid keeps them at their height, so the whole list scrolls, and keeps the gap (a known library issue).
-      slotProps={{ list: { style: { display: "grid", gap: 8 } } }}
     />
   );
 }

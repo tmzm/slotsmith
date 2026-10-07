@@ -300,9 +300,9 @@ describe("file uploader guide: virtual", () => {
   it("renders a scroll container with fewer rows in the DOM than files", () => {
     render(<Virtual />);
     const list = document.querySelector<HTMLElement>(".sfu__list")!;
-    // The sample's workaround for the flex list that shrinks the spacer rows: a grid, with the row gap kept.
-    expect(list.style.display).toBe("grid");
-    expect(list.style.gap).toBe("8px");
+    // The fallback flex list as it ships: the sample no longer overrides its layout.
+    expect(list.style.display).toBe("");
+    expect(list.style.gap).toBe("");
     expect(list.style.maxHeight).toBe("320px");
     expect(list.style.overflowY).toBe("auto");
     const rows = list.querySelectorAll(".sfu__item");
