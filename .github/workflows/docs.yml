@@ -61,17 +61,21 @@ jobs:
       - name: Install Chromium for Playwright
         run: pnpm --filter slotsmith-docs exec playwright install --with-deps chromium
 
-      - name: Test
-        run: pnpm --filter slotsmith-docs test
-
       - name: Check
         run: pnpm --filter slotsmith-docs check
+        env:
+          DOCS_STRICT: "1"
 
       # Strict mode: a page still marked as a stub fails the build.
       - name: Build and verify the site
         run: pnpm --filter slotsmith-docs build
         env:
           DOCS_STRICT: "1"
+
+      # After the build: the tests read the reference and facts data it
+      # generates into src/generated (gitignored).
+      - name: Test
+        run: pnpm --filter slotsmith-docs test
 
       # Mobile Lighthouse on the built site (docs/lighthouserc.cjs): every
       # category at 0.95 or more and layout shift at 0.01 or less.
