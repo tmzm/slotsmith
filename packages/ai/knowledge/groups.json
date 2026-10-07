@@ -13,7 +13,7 @@
     "Options": ["options", "getOptionValue", "getOptionLabel", "optionDisabled", "filter", "selected"],
     "Selection": ["multiple", "value", "defaultValue", "onChange", "clearable", "closeOnSelect", "name"],
     "Search": ["searchable", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars"],
-    "Open state and keyboard": ["open", "defaultOpen", "onOpenChange", "loop", "disabled", "onBlur"],
+    "Open state and keyboard": ["open", "defaultOpen", "onOpenChange", "loop", "autoHighlight", "disabled", "onBlur"],
     "Remote options": ["loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore"],
     "Creating": ["creatable", "onCreate", "createLoading"],
     "Rendering": ["components", "labels", "locale", "slotProps", "placeholder", "maxTags"],

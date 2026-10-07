@@ -104,6 +104,12 @@ export interface UseAutocompleteOptions<TOption> {
   closeOnSelect?: boolean;
   /** Whether the highlight wraps past the ends. Default `false`. */
   loop?: boolean;
+  /**
+   * Highlight the first enabled option whenever the list opens or its
+   * contents change, so Enter picks the top match. A highlight the user moved
+   * themselves is kept until the search changes. Default `false`.
+   */
+  autoHighlight?: boolean;
   /** Nothing can be opened, picked or cleared. */
   disabled?: boolean;
   /** Told when focus leaves the whole control, for form libraries. */
@@ -280,6 +286,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     clearable = true,
     closeOnSelect = !multiple,
     loop = false,
+    autoHighlight = false,
     disabled = false,
     onBlur,
   } = options;
@@ -309,6 +316,15 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   );
   const [values, setValues] = useControllableState<OptionValue[]>(options.value, options.defaultValue ?? []);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  /**
+   * Whether the user moved the highlight since the list opened or the search
+   * last changed. `autoHighlight` leaves such a highlight alone.
+   */
+  const highlightMoved = useRef(false);
+  const moveHighlight = useCallback((index: number) => {
+    highlightMoved.current = true;
+    setHighlightedIndex(index);
+  }, []);
 
   const onValuesChangeRef = useRef(options.onValuesChange);
   onValuesChangeRef.current = options.onValuesChange;
@@ -377,6 +393,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
         /** Reopening must never show the previous query's results. */
         setQueryState("");
         setHighlightedIndex(-1);
+        highlightMoved.current = false;
       }
     },
     [disabled, setOpenState, setQueryState],
@@ -386,6 +403,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     (next: string) => {
       setQueryState(next);
       setHighlightedIndex(-1);
+      highlightMoved.current = false;
     },
     [setQueryState],
   );
@@ -492,6 +510,22 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     if (highlightedIndex >= visible.length) setHighlightedIndex(visible.length ? visible.length - 1 : -1);
   }, [visible.length, highlightedIndex]);
 
+  /**
+   * Auto highlight
+   *
+   * Lands on the first enabled option when the list opens and each time what
+   * it shows changes — a new search, or a page arriving — unless the user has
+   * moved the highlight since the search last changed.
+   */
+  useEffect(() => {
+    if (!open) {
+      highlightMoved.current = false;
+      return;
+    }
+    if (!autoHighlight || highlightMoved.current) return;
+    setHighlightedIndex(firstEnabled());
+  }, [autoHighlight, open, firstEnabled]);
+
   /** Keep the highlighted row in view without scrolling the page. */
   useEffect(() => {
     if (!open || highlightedIndex < 0) return;
@@ -552,11 +586,11 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
         getOptionLabel,
         isOptionDisabled,
       );
-      if (index >= 0) setHighlightedIndex(index);
+      if (index >= 0) moveHighlight(index);
       return index;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [visible, highlightedIndex, isOptionDisabled],
+    [visible, highlightedIndex, isOptionDisabled, moveHighlight],
   );
 
   const onKeyDown = useCallback(
@@ -567,7 +601,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
         if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault();
           setOpenState(true);
-          setHighlightedIndex(event.key === "ArrowUp" ? lastEnabled() : firstEnabled());
+          moveHighlight(event.key === "ArrowUp" ? lastEnabled() : firstEnabled());
           return;
         }
         /** Typing opens: into the search box, or straight into typeahead. */
@@ -586,27 +620,27 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       switch (event.key) {
         case "ArrowDown":
           event.preventDefault();
-          setHighlightedIndex(highlightedIndex < 0 ? firstEnabled() : nextEnabled(highlightedIndex, 1));
+          moveHighlight(highlightedIndex < 0 ? firstEnabled() : nextEnabled(highlightedIndex, 1));
           break;
         case "ArrowUp":
           event.preventDefault();
-          setHighlightedIndex(highlightedIndex < 0 ? lastEnabled() : nextEnabled(highlightedIndex, -1));
+          moveHighlight(highlightedIndex < 0 ? lastEnabled() : nextEnabled(highlightedIndex, -1));
           break;
         case "Home":
           event.preventDefault();
-          setHighlightedIndex(firstEnabled());
+          moveHighlight(firstEnabled());
           break;
         case "End":
           event.preventDefault();
-          setHighlightedIndex(lastEnabled());
+          moveHighlight(lastEnabled());
           break;
         case "PageDown":
           event.preventDefault();
-          setHighlightedIndex(nextEnabled(Math.min(highlightedIndex + PAGE_STEP - 1, visible.length - 1), 1));
+          moveHighlight(nextEnabled(Math.min(highlightedIndex + PAGE_STEP - 1, visible.length - 1), 1));
           break;
         case "PageUp":
           event.preventDefault();
-          setHighlightedIndex(nextEnabled(Math.max(highlightedIndex - PAGE_STEP + 1, 0), -1));
+          moveHighlight(nextEnabled(Math.max(highlightedIndex - PAGE_STEP + 1, 0), -1));
           break;
         case "Enter": {
           const option = visible[highlightedIndex];
@@ -645,6 +679,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     [
       disabled, open, searchable, highlightedIndex, visible, canCreate, multiple, query, values,
       firstEnabled, lastEnabled, nextEnabled, select, create, setOpen, setOpenState, remove, runTypeahead,
+      moveHighlight,
     ],
   );
 
@@ -739,13 +774,13 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
         /** `pointermove`, not `pointerenter`: a list scrolling under a still cursor must not steal the highlight. */
         onPointerMove: (event: PointerEvent) => {
           if (event.movementX === 0 && event.movementY === 0) return;
-          if (!optionIsDisabled && index !== highlightedIndex) setHighlightedIndex(index);
+          if (!optionIsDisabled && index !== highlightedIndex) moveHighlight(index);
         },
         onClick: () => select(value),
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ids, values, highlightedIndex, isOptionDisabled, select],
+    [ids, values, highlightedIndex, isOptionDisabled, select, moveHighlight],
   );
 
   return {

@@ -121,6 +121,22 @@ describe("the virtual option list", () => {
   });
 });
 
+describe("the virtual layout with autoHighlight", () => {
+  it("highlights the first match as the search narrows, so Enter picks it", async () => {
+    const onChange = vi.fn();
+    const { user } = renderVirtual({ autoHighlight: true, onChange });
+
+    await user.click(screen.getByRole("combobox"));
+    const search = screen.getByRole("searchbox");
+    expect(document.getElementById(search.getAttribute("aria-activedescendant") ?? "")).toHaveTextContent("City 0");
+
+    await user.type(search, "City 42");
+    await user.keyboard("{Enter}");
+
+    expect(onChange).toHaveBeenCalledWith("c42", CITIES[42]);
+  });
+});
+
 describe("the virtual layout's props", () => {
   it("names the combobox rather than the wrapper", () => {
     renderVirtual({ "aria-label": "City" } as never);

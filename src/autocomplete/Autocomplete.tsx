@@ -297,7 +297,7 @@ const PROVIDER_KEYS = [
   "open", "defaultOpen", "onOpenChange",
   "loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore",
   "creatable", "onCreate", "createLoading",
-  "clearable", "closeOnSelect", "loop", "disabled", "onBlur",
+  "clearable", "closeOnSelect", "loop", "autoHighlight", "disabled", "onBlur",
   "components", "labels", "locale", "slotProps", "placeholder", "maxTags",
   "placement", "popupOffset", "matchTriggerWidth", "popupMaxHeight", "name",
 ] as const;
