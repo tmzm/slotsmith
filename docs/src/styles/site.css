@@ -293,6 +293,7 @@ details[open] > .sidebar__summary::after {
 
 .sheet-backdrop {
   display: none;
+  border: none;
 }
 
 /* Below 1024px (and on pages without a sidebar column) the sidebar is a sheet. */
