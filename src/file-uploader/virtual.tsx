@@ -28,7 +28,7 @@ import { useFileUploaderContext } from "./slots/context";
  * ```
  */
 export interface FileUploaderVirtualOptions {
-  /** Estimated row height in pixels. Defaults to 56. */
+  /** Estimated row height in pixels, with the gap between rows included. Defaults to 56. */
   estimateSize?: number;
   /** Rows rendered beyond the visible area. Defaults to 6. */
   overscan?: number;
@@ -44,13 +44,26 @@ const DEFAULT_MAX_HEIGHT = 400;
  *
  * An empty row standing in for the items outside the viewport, so the
  * scrollbar reflects the whole list. Hidden from assistive technology,
- * because it is not an item.
+ * because it is not an item. It never shrinks, so a flex list capped by
+ * `maxHeight`, like the fallback one, cannot collapse it.
  *
  * @param props - The height to occupy.
  */
 function Spacer({ height }: { height: number }) {
   if (height <= 0) return null;
-  return <li aria-hidden="true" data-slot="virtual-spacer" style={{ height, padding: 0, margin: 0 }} />;
+  return <li aria-hidden="true" data-slot="virtual-spacer" style={{ height, flexShrink: 0, padding: 0, margin: 0 }} />;
+}
+
+/**
+ * Row gap
+ *
+ * @param element - The scroll element, once mounted.
+ * @returns The gap a flex or grid list puts between two children, in
+ * pixels, or 0 for a list laid out as a block.
+ */
+function rowGapOf(element: HTMLElement | null): number {
+  if (!element) return 0;
+  return Number.parseFloat(getComputedStyle(element).rowGap) || 0;
 }
 
 /**
@@ -106,8 +119,15 @@ export function FileUploaderVirtualList({
   if (variant === "tile" || !items.length) return null;
 
   const virtualItems = virtualizer.getVirtualItems();
-  const before = virtualItems[0]?.start ?? 0;
-  const after = virtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0);
+  /**
+   * `estimateSize` is a row's pitch, the gap below it included. A list with
+   * a gap also puts one between each spacer and its neighbouring row, so
+   * each spacer gives one gap back: the rows then start where the virtualizer
+   * places them, and the list is as tall as its total.
+   */
+  const gap = rowGapOf(scrollElement);
+  const before = (virtualItems[0]?.start ?? 0) - gap;
+  const after = virtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end ?? 0) - gap;
 
   return (
     <C.List

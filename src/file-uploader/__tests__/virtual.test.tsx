@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SlotsmithProvider } from "../../provider";
@@ -62,6 +62,54 @@ describe("VirtualFileUploader", () => {
     const spacers = container.querySelectorAll('[data-slot="virtual-spacer"]');
     expect(spacers.length).toBeGreaterThan(0);
     spacers.forEach((spacer) => expect(spacer).toHaveAttribute("aria-hidden", "true"));
+  });
+
+  /**
+   * In the fallback list, a flex column with a gap, a spacer that may shrink
+   * collapses inside the capped height, and the gap is added around each
+   * spacer as well as between rows. The spacers keep their height and give
+   * the gap back, so the content is as tall as the virtualizer's total, less
+   * the one gap after the last row.
+   */
+  it("keeps the scroll height at the virtualizer's total in a flex list with a gap", async () => {
+    const user = userEvent.setup();
+    const estimate = 72.5;
+    const gap = 8;
+    const { container } = render(
+      <VirtualFileUploader
+        multiple
+        maxFiles={300}
+        virtual={{ estimateSize: estimate, overscan: 2 }}
+        slotProps={{ list: { style: { display: "flex", flexDirection: "column", rowGap: `${gap}px` } } }}
+      />,
+    );
+    const count = 300;
+    await user.upload(
+      fileInput(),
+      Array.from({ length: count }, (_, index) => makeFile(`file-${index}.png`)),
+    );
+
+    const list = screen.getByRole("list");
+    Object.defineProperty(list, "scrollTop", { configurable: true, value: 100 * estimate });
+    fireEvent.scroll(list);
+
+    await waitFor(() => expect(container.querySelectorAll('[data-slot="virtual-spacer"]')).toHaveLength(2));
+    const spacers = [...container.querySelectorAll<HTMLElement>('[data-slot="virtual-spacer"]')];
+    for (const spacer of spacers) expect(spacer.style.flexShrink).toBe("0");
+
+    // The content as the flex column lays it out: every child, a gap between each two, rows at the estimate less the gap.
+    const rendered = rows().length;
+    const children = spacers.length + rendered;
+    const content =
+      spacers.reduce((sum, spacer) => sum + parseFloat(spacer.style.height), 0) +
+      rendered * (estimate - gap) +
+      (children - 1) * gap;
+    expect(content).toBeCloseTo(count * estimate - gap);
+
+    // The first rendered row starts where the virtualizer puts it: a whole number of rows down.
+    const firstStart = parseFloat(spacers[0]!.style.height) + gap;
+    expect(firstStart / estimate).toBeCloseTo(Math.round(firstStart / estimate));
+    expect(firstStart).toBeGreaterThan(0);
   });
 
   it("renders no list at all until something is picked", () => {
