@@ -25,21 +25,6 @@ export const KNOWN_LIBRARY_ISSUES: KnownIssue[] = [
     selector: ".sfu__zone",
     reason: "The file uploader's dropzone is role=button with a tab stop, and holds the Browse <button>.",
   },
-  {
-    rule: "target-size",
-    selector: ".sac__clear",
-    reason: "The combobox clear button is 20px square, under the 24px minimum, next to other targets.",
-  },
-  {
-    rule: "target-size",
-    selector: ".sac__tag-remove",
-    reason: "The combobox tag's remove button is 16px square, under the 24px minimum, next to the next tag.",
-  },
-  {
-    rule: "target-size",
-    selector: ".sdp__clear",
-    reason: "The date picker clear button is 20px square, under the 24px minimum, next to other targets.",
-  },
 ];
 
 /** The part of an axe result the verifier reads. */
