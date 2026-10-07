@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "isolatedModules": true
   },
-  "include": ["src", "vitest.config.ts", "vitest.setup.ts", "tsup.config.ts"]
+  "include": ["src", "scripts", "vitest.config.ts", "vitest.setup.ts", "tsup.config.ts"]
 }

@@ -450,9 +450,13 @@ function declarationImports(entry: string): Set<string> {
       /**
        * A file wins over a folder of the same name, and an entry's script
        * (`dist/provider.js`) is such a file: reaching it instead of the
-       * folder's declarations leaves the import untyped.
+       * folder's declarations leaves the import untyped. A specifier with its
+       * `.js` extension names the declaration beside that script.
        */
-      const found = [`${target}.d.ts`, `${target}.js`, resolve(target, "index.d.ts")].find((candidate) => existsSync(candidate));
+      const candidates = target.endsWith(".js")
+        ? [target.replace(/\.js$/, ".d.ts")]
+        : [`${target}.d.ts`, `${target}.js`, resolve(target, "index.d.ts")];
+      const found = candidates.find((candidate) => existsSync(candidate));
       expect(found, `${specifier} from ${file}`).toMatch(/\.d\.ts$/);
       queue.push(found!);
     }
@@ -490,5 +494,51 @@ describe.skipIf(!built)("the declarations an app without the optional peers load
 
   it("still finds the table engine behind the table's own entry, so the walk is real", () => {
     expect(declarationImports("data-table/index.d.ts")).toContain("@tanstack/react-table");
+  });
+});
+
+/**
+ * Declaration files
+ *
+ * @param extension - `.d.ts` for the ES module declarations, `.d.cts` for the CommonJS ones.
+ * @returns Every such file in `dist`, relative to it.
+ */
+const declarationFiles = (extension: ".d.ts" | ".d.cts") =>
+  readdirSync(dist("."), { recursive: true, encoding: "utf8" })
+    .map((file) => file.split("\\").join("/"))
+    .filter((file) => file.endsWith(extension));
+
+/**
+ * Relative specifiers
+ *
+ * @param file - A declaration file, relative to `dist`.
+ * @returns Every relative specifier its imports, re-exports and `import()` types name.
+ */
+const relativeSpecifiers = (file: string) =>
+  [...readFileSync(dist(file), "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)["'](\.{1,2}\/[^"']*)["']/g)].map(
+    ([, specifier]) => specifier!,
+  );
+
+/**
+ * The package is `"type": "module"`, so Node's resolution (`node16`,
+ * `nodenext`) reads every `.d.ts` as an ES module, where a relative import
+ * without its extension does not resolve and the types behind it turn into
+ * `any`. The `require` condition gets `.d.cts` twins naming the `.cjs` files.
+ */
+describe.skipIf(!built)("the declarations under Node's own resolution", () => {
+  it("names the extension of every relative import in the ES module declarations", () => {
+    const files = declarationFiles(".d.ts");
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      for (const specifier of relativeSpecifiers(file)) expect(specifier, file).toMatch(/\.js$/);
+    }
+  });
+
+  it("gives every declaration a CommonJS twin that names the .cjs files", () => {
+    const files = declarationFiles(".d.ts");
+    expect(declarationFiles(".d.cts").sort()).toEqual(files.map((file) => file.replace(/\.d\.ts$/, ".d.cts")).sort());
+    for (const file of declarationFiles(".d.cts")) {
+      for (const specifier of relativeSpecifiers(file)) expect(specifier, file).toMatch(/\.cjs$/);
+    }
   });
 });
