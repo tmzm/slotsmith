@@ -1,3 +1,4 @@
 # Written by docs/scripts/redirects.ts on every docs build, with LF endings:
 # keep them in the checkout too, so the build does not show the file as changed.
 docs/public/_redirects text eol=lf
+*.snap text eol=lf
