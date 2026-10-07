@@ -177,7 +177,7 @@ const BORROWS_TABLE: string[] = ["sdp", "sfu"];
 const TABLE_TOKENS: string[] = ["surface", "text", "muted", "border", "accent", "danger", "hover", "selected", "radius", "font-size"];
 
 /** The only focus rings drawn inside their target: controls packed too tightly for an outside ring. */
-const INSET_RINGS = [".sdp__day:focus-visible", ".sfu__action:focus-visible", ".sac__tag-remove:focus-visible", ".sac__clear:focus-visible"];
+const INSET_RINGS = [".sdp__day:focus-visible", ".sfu__action:focus-visible", ".sac__tag-remove:focus-visible", ".sac__clear:focus-visible", ".sdp__clear:focus-visible"];
 
 /**
  * The data table's density tokens. The library never declares them: the size
@@ -433,5 +433,58 @@ describe("the data table's density tokens", () => {
       expect(resolve({ ...scope, "--sdt-padding-x": "20px" }), selector).toBe(`${scope["--sdt-size-padding-y"]} 20px`);
       expect(resolve(scope), selector).toBe(`${scope["--sdt-size-padding-y"]} ${scope["--sdt-size-padding-x"]}`);
     }
+  });
+});
+
+/**
+ * The small buttons inside a trigger: each must be a 24 by 24 CSS pixel
+ * pointer target, and still take only the room its glyph box always took, so
+ * the trigger keeps its height and nothing beside the button moves.
+ */
+describe("the clear and tag-remove targets", () => {
+  /** The last value a sheet gives `property` on exactly `selector`, alone or in a selector list. */
+  const declared = (css: string, selector: string, property: string) =>
+    rules(css)
+      .filter((entry) => entry.selector.split(", ").includes(selector))
+      .map((entry) => value(entry.body, property))
+      .filter((found) => found !== undefined)
+      .at(-1);
+
+  const rem = (length: string | undefined) => Number(/^(-?[\d.]+)rem$/.exec(length ?? "")?.[1] ?? Number.NaN);
+
+  it.each([
+    ["autocomplete", ".sac__clear", 1.25],
+    ["autocomplete", ".sac__tag-remove", 1],
+    ["date-picker", ".sdp__clear", 1.25],
+  ])("%s: %s is 1.5rem square in a %srem footprint", (folder, selector, footprint) => {
+    const css = read(folder);
+    const width = rem(declared(css, selector, "width"));
+    const height = rem(declared(css, selector, "height"));
+    const margin = rem(declared(css, selector, "margin"));
+    expect(width).toBeGreaterThanOrEqual(1.5);
+    expect(height).toBeGreaterThanOrEqual(1.5);
+    expect(declared(css, selector, "box-sizing")).toBe("border-box");
+    // A negative margin gives back what the target gained, on every side, so it is the same in right-to-left.
+    expect(width + 2 * margin).toBeCloseTo(footprint);
+    expect(height + 2 * margin).toBeCloseTo(footprint);
+    // The hover tint stays the size of the old box.
+    expect(rem(declared(css, selector, "padding"))).toBeCloseTo(-margin);
+    expect(declared(css, selector, "background-clip")).toBe("content-box");
+  });
+
+  it("keeps the hover tint clipped, which the background shorthand would undo", () => {
+    for (const [folder, selector] of [
+      ["autocomplete", ".sac__tag-remove:hover, .sac__clear:hover"],
+      ["date-picker", ".sdp__clear:hover"],
+    ] as const) {
+      const body = rule(read(folder), selector);
+      expect(value(body, "background"), selector).toBeUndefined();
+      expect(value(body, "background-color"), selector).toBeDefined();
+    }
+  });
+
+  it("gives wrapped tags a row pitch of 24px, so one row's remove buttons never cover the next row's", () => {
+    expect(value(rule(read("autocomplete"), ".sac__tag"), "min-height")).toBe("1.25rem");
+    expect(value(rule(read("autocomplete"), ".sac__body"), "gap")).toBe("0.25rem");
   });
 });

@@ -113,6 +113,9 @@
   align-items: center;
   gap: 0.25rem;
   max-width: 100%;
+  /* With the body's 0.25rem gap, wrapped rows sit 1.5rem apart: the pitch of the remove buttons' targets. */
+  min-height: 1.25rem;
+  box-sizing: border-box;
   padding-block: 0.0625rem;
   padding-inline: 0.4rem 0.25rem;
   border-radius: 0.3rem;
@@ -131,32 +134,42 @@
   font-size: 0.75rem;
 }
 
+/**
+ * Both are 1.5rem (24px) pointer targets. The negative margin gives back what
+ * the target gains over its glyph box, so the trigger keeps its height and
+ * nothing beside the button moves; the padding and the clip keep the hover
+ * tint the size of that glyph box.
+ */
 .sac__tag-remove,
 .sac__clear {
   display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  box-sizing: border-box;
   flex: none;
   place-items: center;
-  padding: 0;
   border: 0;
-  border-radius: 0.25rem;
   background: none;
+  background-clip: content-box;
   color: var(--_sac-muted);
   cursor: pointer;
 }
 
 .sac__tag-remove {
-  width: 1rem;
-  height: 1rem;
+  margin: -0.25rem;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
 }
 
 .sac__clear {
-  width: 1.25rem;
-  height: 1.25rem;
+  margin: -0.125rem;
+  padding: 0.125rem;
+  border-radius: 0.375rem;
 }
 
 .sac__tag-remove:hover,
 .sac__clear:hover {
-  background: var(--_sac-hover);
+  background-color: var(--_sac-hover);
   color: var(--_sac-text);
 }
 
