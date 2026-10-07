@@ -11,7 +11,7 @@
  */
 import { CheckIcon, ChevronDownIcon, Cross2Icon, CrossCircledIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Badge, Box, Button, Flex, IconButton, Separator, Spinner, Text, TextField } from "@radix-ui/themes";
-import type { ReactNode } from "react";
+import { useState, type FocusEvent, type ReactNode } from "react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -32,6 +32,8 @@ import type {
   AutocompleteSearchSlotProps,
   AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
@@ -78,13 +80,22 @@ const RadixRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * Radix's focus outline while open, and the disabled fill when disabled. An
  * invalid value switches the field to the red scale with
  * `data-accent-color="red"`, which is what Radix's own `color="red"` sets.
+ *
+ * With the search in the trigger it is the field around the `TextField`,
+ * and the focus outline also follows focus in that input.
  */
 function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
-  const open = has(props, "data-open");
+  const [focused, setFocused] = useState(false);
+  const searchInTrigger = has(props, "data-search-in");
+  const open = has(props, "data-open") || (searchInTrigger && focused);
   const disabled = has(props, "data-disabled");
   const invalid = has(props, "data-invalid");
   return (
     <div
+      onFocus={() => setFocused(true)}
+      onBlur={(event: FocusEvent<HTMLDivElement>) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+      }}
       data-accent-color={invalid ? "red" : undefined}
       style={{
         display: "flex",
@@ -102,7 +113,7 @@ function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
         borderRadius: "var(--radius-2)",
         outline: open ? `2px solid ${invalid ? "var(--red-8)" : "var(--focus-8)"}` : undefined,
         outlineOffset: -1,
-        cursor: disabled ? "not-allowed" : "pointer",
+        cursor: disabled ? "not-allowed" : searchInTrigger ? "text" : "pointer",
         ...style,
       }}
       {...props}
@@ -233,6 +244,35 @@ const RadixSearch = ({ value, type, defaultValue: _defaultValue, ...props }: Aut
       </TextField.Slot>
     </TextField.Root>
   </Box>
+);
+
+/**
+ * Radix trigger input
+ *
+ * A `TextField` that is the combobox when the search is in the trigger. The
+ * field around it draws the border and the focus outline, so its own are
+ * cleared; it hands the ref, the role, the aria wiring and the key handler
+ * to its `<input>`, and narrows `value` and `type` as the search box does.
+ */
+const RadixTriggerInput = ({ value, type, defaultValue: _defaultValue, style, ...props }: AutocompleteTriggerInputSlotProps) => (
+  <TextField.Root
+    size="2"
+    variant="soft"
+    color="gray"
+    type={type as TextField.RootProps["type"]}
+    value={value === undefined ? undefined : String(value)}
+    style={{ flex: "1 0 80px", minWidth: 80, background: "transparent", boxShadow: "none", outline: "none", ...style }}
+    {...props}
+  />
+);
+
+/**
+ * Radix toggle
+ *
+ * A ghost `IconButton` holding the chevron, kept out of the tab order.
+ */
+const RadixToggle = (props: AutocompleteToggleSlotProps) => (
+  <IconButton size="1" variant="ghost" color="gray" style={{ margin: 0 }} {...props} type="button" />
 );
 
 /**
@@ -437,6 +477,8 @@ const RadixLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMore
 export const radixAutocomplete: Partial<AutocompleteComponents> = {
   Root: RadixRoot,
   Trigger: RadixTrigger,
+  TriggerInput: RadixTriggerInput,
+  Toggle: RadixToggle,
   Value: RadixValue,
   Tag: RadixTag,
   Clear: RadixClear,

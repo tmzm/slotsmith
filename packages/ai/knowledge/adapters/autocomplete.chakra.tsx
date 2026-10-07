@@ -27,6 +27,8 @@ import type {
   AutocompleteSearchSlotProps,
   AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
@@ -44,6 +46,11 @@ const ChakraRoot = (props: AutocompleteRootSlotProps) => <Box position="relative
  * A bordered `Box`, styled off the `data-*` attributes the part carries. An
  * invalid value takes Chakra's `_invalid` condition and its `border.error`
  * token, the way Chakra's own `Input` shows one.
+ *
+ * With the search in the trigger it is the field around the `Input`: it
+ * wraps the tags, and takes Chakra's focus ring while the input inside has
+ * focus, through `_focusWithin`. The error border follows `data-invalid`,
+ * since `aria-invalid` is on the input then.
  */
 const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
   <Box
@@ -59,10 +66,32 @@ const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
       "&[data-open]": { borderColor: "colorPalette.solid" },
       "&[data-disabled]": { opacity: 0.5, cursor: "not-allowed" },
       _invalid: { borderColor: "border.error" },
+      "&[data-search-in]": { flexWrap: "wrap", gap: "1", px: "1", py: "0.5", cursor: "text" },
+      "&[data-search-in]:focus-within": { borderColor: "colorPalette.focusRing", outline: "1px solid", outlineColor: "colorPalette.focusRing" },
+      "&[data-search-in][data-invalid]": { borderColor: "border.error" },
+      "&[data-search-in][data-invalid]:focus-within": { outlineColor: "border.error" },
     }}
     {...props}
   />
 );
+
+/**
+ * Chakra trigger input
+ *
+ * Chakra's `Input`, unstyled, since the field around it draws the border.
+ * It is the combobox when the search is in the trigger, and takes the space
+ * the tags leave.
+ */
+const ChakraTriggerInput = (props: AutocompleteTriggerInputSlotProps) => (
+  <Input unstyled flex="1 0 80px" minW="20" h="8" px="2" bg="transparent" outline="none" {...props} />
+);
+
+/**
+ * Chakra toggle
+ *
+ * A ghost `IconButton` holding the chevron, kept out of the tab order.
+ */
+const ChakraToggle = (props: AutocompleteToggleSlotProps) => <IconButton size="xs" variant="ghost" {...props} />;
 
 /**
  * Chakra value
@@ -322,6 +351,8 @@ const ChakraLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMor
 export const chakraAutocomplete: Partial<AutocompleteComponents> = {
   Root: ChakraRoot,
   Trigger: ChakraTrigger,
+  TriggerInput: ChakraTriggerInput,
+  Toggle: ChakraToggle,
   Value: ChakraValue,
   Tag: ChakraTag,
   Clear: ChakraClear,

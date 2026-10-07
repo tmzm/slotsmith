@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { antdAutocomplete } from "./antd/components";
-import { failOnReactWarnings, itRendersGroups, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Ant Design wrapper
@@ -58,6 +58,17 @@ describe("Ant Design v6", () => {
     expect(separator.querySelector(".ant-divider")).not.toBeNull();
   });
   itShowsTheInvalidState(renderAntdAutocomplete, (trigger) => expect(trigger).toHaveStyle({ borderColor: "#ff4d4f" }));
+  itSearchesInTheTrigger(
+    renderAntdAutocomplete,
+    ({ input, toggle }) => {
+      expect(input).toHaveClass("ant-input", "ant-input-borderless");
+      expect(toggle).toHaveClass("ant-btn");
+    },
+    (field, input) => {
+      expect(field).toHaveStyle({ borderColor: "#ff4d4f" });
+      expect(input).toHaveClass("ant-input-status-error");
+    },
+  );
 
   it("renders the popup with Ant's primitives and tokens", async () => {
     const user = renderAntdAutocomplete();

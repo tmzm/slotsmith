@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { chakraAutocomplete } from "./chakra/components";
-import { failOnReactWarnings, itRendersGroups, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Chakra wrapper
@@ -61,6 +61,14 @@ describe("Chakra UI v3", () => {
   });
   itShowsTheInvalidState(renderChakraAutocomplete, (trigger) =>
     expect(invalidStyle(trigger)).toContain("border-color: var(--chakra-colors-border-error)"),
+  );
+  itSearchesInTheTrigger(
+    renderChakraAutocomplete,
+    ({ input, toggle }) => {
+      expect(input).toHaveClass("chakra-input");
+      expect(toggle).toHaveClass("chakra-button");
+    },
+    (field) => expect(invalidStyle(field)).toContain("border-color: var(--chakra-colors-border-error)"),
   );
 
   it("renders the popup with Chakra's parts", async () => {

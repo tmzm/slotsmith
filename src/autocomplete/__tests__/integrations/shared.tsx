@@ -141,6 +141,95 @@ export function itShowsTheInvalidState(
   });
 }
 
+/**
+ * Searches in the trigger
+ *
+ * Registers the tests every library's `Trigger`, `TriggerInput` and `Toggle`
+ * must pass with `searchIn="trigger"`: the library's input is the combobox
+ * and keeps focus, typing filters, the keyboard picks, the picked label
+ * shows in the input, tags sit before it and Backspace removes the last,
+ * the toggle opens without taking focus, and an invalid value marks the
+ * input and shows the library's error style on the field.
+ *
+ * @param renderAutocomplete - Renders the autocomplete with the library's parts.
+ * @param expectLibraryParts - Asserts the library's markers on the field, the input and the toggle.
+ * @param expectErrorStyle - Asserts the library's error marker on the field.
+ */
+export function itSearchesInTheTrigger(
+  renderAutocomplete: (props?: Partial<AutocompleteProps<Brand>>) => ReturnType<typeof userEvent.setup>,
+  expectLibraryParts: (parts: { field: HTMLElement; input: HTMLElement; toggle: HTMLElement }) => void,
+  expectErrorStyle: (field: HTMLElement, input: HTMLElement) => void,
+) {
+  const inTrigger = (props: Partial<AutocompleteProps<Brand>> = {}) =>
+    renderAutocomplete({ searchIn: "trigger", "aria-label": "Brand", ...props } as Partial<AutocompleteProps<Brand>>);
+  const input = () => screen.getByRole("combobox") as HTMLInputElement;
+  const field = () => input().closest<HTMLElement>('[data-search-in="trigger"]')!;
+  const toggle = () => within(field()).getByRole("button", { name: "Show options" });
+
+  it("searches from the library's input inside the trigger", async () => {
+    const onChange = vi.fn();
+    const user = inTrigger({ onChange, defaultValue: "b4" });
+
+    expect(input().tagName).toBe("INPUT");
+    expect(input()).toHaveValue("Dux");
+    expect(screen.queryByRole("searchbox")).toBeNull();
+    expectLibraryParts({ field: field(), input: input(), toggle: toggle() });
+
+    await user.click(input());
+    await user.keyboard("ka");
+    expect(screen.getAllByRole("option").map((option) => option.textContent?.trim())).toEqual(["Kartell"]);
+    expect(input()).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(onChange).toHaveBeenCalledWith("b10", BRANDS[9]);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(input()).toHaveValue("Kartell");
+    expect(input()).toHaveFocus();
+  });
+
+  it("opens from the toggle and picks with the pointer, keeping focus in the input", async () => {
+    const onChange = vi.fn();
+    const user = inTrigger({ onChange });
+
+    expect(toggle()).toHaveAttribute("tabindex", "-1");
+    await user.click(toggle());
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    expect(input()).toHaveFocus();
+    expect(input()).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(screen.getByRole("option", { name: "Cassina" }));
+    expect(onChange).toHaveBeenCalledWith("b3", BRANDS[2]);
+    expect(input()).toHaveFocus();
+  });
+
+  it("puts the tags before the input and removes the last on Backspace", async () => {
+    const onChange = vi.fn();
+    const user = inTrigger({ multiple: true, defaultValue: ["b1", "b2"], onChange });
+
+    const tags = within(field()).getAllByRole("button", { name: /^Remove / });
+    expect(tags.map((button) => button.getAttribute("aria-label"))).toEqual(["Remove Aalto", "Remove Boråstapeter"]);
+    expect(tags[0]!.compareDocumentPosition(input()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await user.click(input());
+    await user.keyboard("{Backspace}");
+    expect(onChange).toHaveBeenLastCalledWith(["b1"], [BRANDS[0]]);
+
+    await user.click(within(field()).getByRole("button", { name: "Remove Aalto" }));
+    expect(onChange).toHaveBeenLastCalledWith([], []);
+    expect(input()).toHaveFocus();
+  });
+
+  it("marks the input invalid and shows the library's error style on the field", async () => {
+    const user = inTrigger({ invalid: true });
+
+    expect(input()).toHaveAttribute("aria-invalid", "true");
+    expect(field()).toHaveAttribute("data-invalid");
+    expectErrorStyle(field(), input());
+    await user.click(input());
+    expectErrorStyle(field(), input());
+  });
+}
+
 /** Where each shared brand is made, so the integration tests can group them. */
 const COUNTRY: Record<string, string> = {
   b1: "Finland",

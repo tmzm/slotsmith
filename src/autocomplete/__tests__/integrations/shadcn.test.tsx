@@ -13,7 +13,7 @@ import {
   type Brand,
 } from "../builders";
 import { shadcnAutocomplete } from "./shadcn/components";
-import { failOnReactWarnings, itRendersGroups, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Render shadcn autocomplete
@@ -35,6 +35,16 @@ describe("shadcn/ui", () => {
     expect(separator.querySelector('[data-slot="separator"]')).not.toBeNull();
   });
   itShowsTheInvalidState(renderShadcnAutocomplete, (trigger) => expect(trigger).toHaveClass("aria-invalid:border-destructive"));
+  itSearchesInTheTrigger(
+    renderShadcnAutocomplete,
+    ({ field, input, toggle }) => {
+      expect(field).toHaveAttribute("data-slot", "input-group");
+      expect(input).toHaveAttribute("data-slot", "input-group-control");
+      expect(toggle.closest('[data-slot="input-group-addon"]')).toHaveAttribute("data-align", "inline-end");
+      expect(toggle).toHaveAttribute("data-size", "icon-xs");
+    },
+    (field) => expect(field).toHaveClass("has-[[data-slot][aria-invalid=true]]:border-destructive"),
+  );
 
   it("renders the popup with shadcn's parts", async () => {
     const user = renderShadcnAutocomplete();

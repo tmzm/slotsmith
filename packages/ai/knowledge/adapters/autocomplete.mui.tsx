@@ -38,6 +38,8 @@ import type {
   AutocompleteSearchSlotProps,
   AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
@@ -59,27 +61,66 @@ const MuiRoot = (props: AutocompleteRootSlotProps) => <Box sx={{ position: "rela
  *
  * An invalid value takes the theme's `error` colour and MUI's `Mui-error`
  * state class, the way an outlined `TextField` with `error` shows one.
+ *
+ * With the search in the trigger it is the outlined field around the
+ * `InputBase`: the primary border while the input has focus, read off
+ * `:focus-within`, and the error border off `data-invalid`, since
+ * `aria-invalid` is on the input then.
  */
-const MuiTrigger = ({ className, ...props }: AutocompleteTriggerSlotProps) => (
-  <Box
-    className={[className, props["aria-invalid"] ? "Mui-error" : undefined].filter(Boolean).join(" ") || undefined}
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: 0.5,
-      minHeight: 40,
-      px: 1,
-      border: 1,
-      borderColor: "divider",
-      borderRadius: 1,
-      cursor: "pointer",
-      "&[data-open]": { borderColor: "primary.main" },
-      "&[data-disabled]": { opacity: 0.5, cursor: "default" },
-      "&.Mui-error": { borderColor: "error.main" },
-    }}
-    {...props}
+const MuiTrigger = ({ className, ...props }: AutocompleteTriggerSlotProps) => {
+  const invalid = props["aria-invalid"] || "data-invalid" in props;
+  return (
+    <Box
+      className={[className, invalid ? "Mui-error" : undefined].filter(Boolean).join(" ") || undefined}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        minHeight: 40,
+        px: 1,
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1,
+        cursor: "pointer",
+        "&[data-open]": { borderColor: "primary.main" },
+        "&[data-disabled]": { opacity: 0.5, cursor: "default" },
+        "&[data-search-in]": { flexWrap: "wrap", py: 0.5, cursor: "text" },
+        "&[data-search-in]:focus-within": { borderColor: "primary.main", boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.primary.main}` },
+        "&.Mui-error": { borderColor: "error.main" },
+        "&.Mui-error[data-search-in]:focus-within": { boxShadow: (theme) => `inset 0 0 0 1px ${theme.palette.error.main}` },
+      }}
+      {...props}
+    />
+  );
+};
+
+/**
+ * MUI trigger input
+ *
+ * The `InputBase` that is the combobox when the search is in the trigger.
+ * As with the search box, everything that belongs on the input element
+ * itself goes through `inputProps`; `error` follows its `aria-invalid`.
+ */
+const MuiTriggerInput = ({ ref, value, onChange, placeholder, disabled, ...input }: AutocompleteTriggerInputSlotProps) => (
+  <InputBase
+    size="small"
+    inputRef={ref}
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    disabled={disabled}
+    error={input["aria-invalid"] === true}
+    inputProps={input}
+    sx={{ flex: "1 0 80px", minWidth: 80, px: 0.5 }}
   />
 );
+
+/**
+ * MUI toggle
+ *
+ * A small `IconButton` holding the chevron, kept out of the tab order.
+ */
+const MuiToggle = (props: AutocompleteToggleSlotProps) => <IconButton size="small" {...props} />;
 
 /**
  * MUI value
@@ -351,6 +392,8 @@ const MuiLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMoreSl
 export const muiAutocomplete: Partial<AutocompleteComponents> = {
   Root: MuiRoot,
   Trigger: MuiTrigger,
+  TriggerInput: MuiTriggerInput,
+  Toggle: MuiToggle,
   Value: MuiValue,
   Tag: MuiTag,
   Clear: MuiClear,

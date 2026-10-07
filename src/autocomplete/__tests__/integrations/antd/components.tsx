@@ -9,7 +9,7 @@
 import { CheckOutlined, CloseCircleFilled, DownOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Divider, Empty, Input, Spin, Tag, Typography, theme } from "antd";
 import type { InputRef } from "antd";
-import { useCallback, type ReactNode, type Ref } from "react";
+import { useCallback, useState, type FocusEvent, type ReactNode, type Ref } from "react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -30,6 +30,8 @@ import type {
   AutocompleteSearchSlotProps,
   AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "../../../index";
@@ -69,16 +71,25 @@ const AntRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * The outlined field of Ant's select: the primary border and focus ring
  * while open, the disabled fill when disabled, and the error border and
  * ring of `status="error"` when the value is invalid.
+ *
+ * With the search in the trigger it is the field around the borderless
+ * `Input`, and the border and ring also follow focus in that input.
  */
 function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
   const { token } = theme.useToken();
-  const open = has(props, "data-open");
+  const [focused, setFocused] = useState(false);
+  const searchInTrigger = has(props, "data-search-in");
+  const open = has(props, "data-open") || (searchInTrigger && focused);
   const disabled = has(props, "data-disabled");
   const invalid = has(props, "data-invalid");
   const edge = invalid ? token.colorError : open ? token.colorPrimary : token.colorBorder;
   const ring = invalid ? token.colorErrorOutline : token.controlOutline;
   return (
     <div
+      onFocus={() => setFocused(true)}
+      onBlur={(event: FocusEvent<HTMLDivElement>) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+      }}
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -93,7 +104,7 @@ function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
         border: `${token.lineWidth}px ${token.lineType} ${edge}`,
         borderRadius: token.borderRadius,
         boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${ring}` : undefined,
-        cursor: disabled ? "not-allowed" : "pointer",
+        cursor: disabled ? "not-allowed" : searchInTrigger ? "text" : "pointer",
         transition: `all ${token.motionDurationMid}`,
         ...style,
       }}
@@ -240,6 +251,37 @@ function AntSearch({ ref, style, ...props }: AutocompleteSearchSlotProps) {
     />
   );
 }
+
+/**
+ * Ant trigger input
+ *
+ * A borderless `Input` that is the combobox when the search is in the
+ * trigger, taking the space the tags leave. It shows `status="error"` when
+ * invalid. As with the search box, the engine's ref is handed the input
+ * from Ant's ref object.
+ */
+function AntTriggerInput({ ref, style, ...props }: AutocompleteTriggerInputSlotProps) {
+  const inputRef = useCallback((instance: InputRef | null) => assignRef(ref, instance?.input ?? null), [ref]);
+  return (
+    <Input
+      ref={inputRef}
+      variant="borderless"
+      status={props["aria-invalid"] ? "error" : undefined}
+      style={{ flex: "1 0 80px", minWidth: 80, paddingInline: 4, ...style }}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Ant toggle
+ *
+ * A text `Button` holding the chevron, kept out of the tab order. Ant's
+ * `type` is its look, so the HTML type goes through `htmlType`.
+ */
+const AntToggle = ({ type: _type, ...props }: AutocompleteToggleSlotProps) => (
+  <Button type="text" htmlType="button" size="small" {...props} />
+);
 
 /**
  * Ant list
@@ -447,6 +489,8 @@ const AntLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMoreSl
 export const antdAutocomplete: Partial<AutocompleteComponents> = {
   Root: AntRoot,
   Trigger: AntTrigger,
+  TriggerInput: AntTriggerInput,
+  Toggle: AntToggle,
   Value: AntValue,
   Tag: AntTag,
   Clear: AntClear,

@@ -29,12 +29,16 @@ import type {
   AutocompleteSearchSlotProps,
   AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
+import { useAutocompleteContext } from "slotsmith/autocomplete";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
@@ -89,22 +93,64 @@ const ShadcnRoot = ({ className, ...props }: AutocompleteRootSlotProps) => (
  * carries rather than by props of its own. An invalid value gets shadcn's
  * own `aria-invalid:` treatment: the destructive border, and the destructive
  * ring while open or focused.
+ *
+ * With the search in the trigger it is an `InputGroup` instead: the group
+ * draws the field, its ring and its destructive state off the input inside,
+ * and grows to wrap the badges.
  */
-const ShadcnTrigger = ({ className, ...props }: AutocompleteTriggerSlotProps) => (
-  <div
-    data-slot="select-trigger"
-    className={cn(
-      "flex min-h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none",
-      "data-[open]:border-ring data-[open]:ring-[3px] data-[open]:ring-ring/50",
-      "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-      "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
-      "aria-invalid:border-destructive",
-      "aria-invalid:data-[open]:border-destructive aria-invalid:data-[open]:ring-destructive/20 dark:aria-invalid:data-[open]:ring-destructive/40",
-      "aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:focus-visible:ring-destructive/40",
-      className,
-    )}
-    {...props}
-  />
+function ShadcnTrigger({ className, ...props }: AutocompleteTriggerSlotProps) {
+  if ("data-search-in" in props) {
+    return (
+      <InputGroup
+        className={cn(
+          "h-auto min-h-9 cursor-text gap-1 py-0.5 ps-1",
+          "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+          className,
+        )}
+        {...props}
+      />
+    );
+  }
+  return (
+    <div
+      data-slot="select-trigger"
+      className={cn(
+        "flex min-h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none",
+        "data-[open]:border-ring data-[open]:ring-[3px] data-[open]:ring-ring/50",
+        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+        "aria-invalid:border-destructive",
+        "aria-invalid:data-[open]:border-destructive aria-invalid:data-[open]:ring-destructive/20 dark:aria-invalid:data-[open]:ring-destructive/40",
+        "aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:focus-visible:ring-destructive/40",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Shadcn trigger input
+ *
+ * The `InputGroupInput` that is the combobox when the search is in the
+ * trigger. It takes the space the badges leave and wraps below them when
+ * that is too little.
+ */
+const ShadcnTriggerInput = ({ className, ...props }: AutocompleteTriggerInputSlotProps) => (
+  <InputGroupInput className={cn("h-7 min-w-20 basis-20 px-2", className)} {...props} />
+);
+
+/**
+ * Shadcn toggle
+ *
+ * An icon `InputGroupButton` in an inline-end `InputGroupAddon`, holding the
+ * chevron. It stays out of the tab order and never takes focus from the
+ * input.
+ */
+const ShadcnToggle = ({ className, ...props }: AutocompleteToggleSlotProps) => (
+  <InputGroupAddon align="inline-end" className="ps-0">
+    <InputGroupButton size="icon-xs" className={cn("text-muted-foreground", className)} {...props} />
+  </InputGroupAddon>
 );
 
 /**
@@ -150,22 +196,37 @@ const ShadcnTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSl
  *
  * shadcn's `Button` sets no `type`, so inside a form it would submit it;
  * this and every other `Button` here passes `type="button"`.
+ *
+ * With the search in the trigger it is an icon `InputGroupButton` in an
+ * inline-end `InputGroupAddon`, beside the toggle.
  */
-const ShadcnClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
-  <Button
-    type="button"
-    variant="ghost"
-    size="icon"
-    className="ms-auto"
-    onClick={(event) => {
-      event.stopPropagation();
-      onClick();
-    }}
-    {...aria}
-  >
-    <X />
-  </Button>
-);
+function ShadcnClear({ onClick, ...aria }: AutocompleteClearSlotProps) {
+  const { searchIn } = useAutocompleteContext();
+  if (searchIn === "trigger") {
+    return (
+      <InputGroupAddon align="inline-end" className="pe-0">
+        <InputGroupButton size="icon-xs" onClick={onClick} {...aria}>
+          <X />
+        </InputGroupButton>
+      </InputGroupAddon>
+    );
+  }
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="ms-auto"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      {...aria}
+    >
+      <X />
+    </Button>
+  );
+}
 
 /**
  * Shadcn indicator
@@ -366,6 +427,8 @@ const ShadcnLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMor
 export const shadcnAutocomplete: Partial<AutocompleteComponents> = {
   Root: ShadcnRoot,
   Trigger: ShadcnTrigger,
+  TriggerInput: ShadcnTriggerInput,
+  Toggle: ShadcnToggle,
   Value: ShadcnValue,
   Tag: ShadcnTag,
   Clear: ShadcnClear,

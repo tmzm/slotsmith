@@ -17,6 +17,7 @@ import { muiAutocomplete } from "./mui/components";
 import {
   failOnReactWarnings,
   itRendersGroups,
+  itSearchesInTheTrigger,
   itShowsTheInvalidState,
   removeControl,
   renderIntegration,
@@ -48,6 +49,17 @@ beforeAll(stubBrowserApis);
 describe("MUI v7", () => {
   failOnReactWarnings();
   itShowsTheInvalidState(renderMuiAutocomplete, (trigger) => expect(trigger).toHaveClass("Mui-error"));
+  itSearchesInTheTrigger(
+    renderMuiAutocomplete,
+    ({ input, toggle }) => {
+      expect(input.closest(".MuiInputBase-root")).not.toBeNull();
+      expect(toggle).toHaveClass("MuiIconButton-root");
+    },
+    (field, input) => {
+      expect(field).toHaveClass("Mui-error");
+      expect(input.closest(".MuiInputBase-root")).toHaveClass("Mui-error");
+    },
+  );
   itRendersGroups(renderMuiAutocomplete, ({ label, separator }) => {
     expect(label).toHaveClass("MuiListSubheader-root");
     expect(separator).toHaveClass("MuiDivider-root");
