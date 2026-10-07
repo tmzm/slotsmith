@@ -28,12 +28,15 @@ export type {
 } from "./Autocomplete";
 
 export {
+  AutocompleteGroupLabelView,
+  AutocompleteGroupView,
   AutocompleteList,
   AutocompleteLiveRegion,
   AutocompleteOptions,
   AutocompleteOptionView,
   AutocompletePopup,
   AutocompleteSearch,
+  AutocompleteSeparatorView,
   AutocompleteStatusRows,
   AutocompleteTrigger,
   mergeProps as mergeAutocompleteProps,
@@ -50,6 +53,8 @@ export { usePopupPosition } from "../shared/position";
 export type { PopupPlacement, PopupPosition, UsePopupPositionOptions } from "../shared/position";
 
 export { defaultFilter, filterOptions, fold, typeaheadMatch } from "./core/filter";
+export { groupOptions } from "./core/groups";
+export type { AutocompleteSection, GetOptionGroup } from "./core/groups";
 export { useControllableState } from "../shared/useControllableState";
 
 export type {

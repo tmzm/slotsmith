@@ -12,6 +12,7 @@ import {
   type PointerEvent,
 } from "react";
 import { filterOptions, typeaheadMatch } from "./filter";
+import { groupOptions, type AutocompleteSection, type GetOptionGroup } from "./groups";
 import type {
   AutocompleteStatus,
   GetOptionLabel,
@@ -46,6 +47,16 @@ export interface UseAutocompleteOptions<TOption> {
   getOptionLabel?: GetOptionLabel<TOption>;
   /** Marks an option unselectable. It stays visible but cannot be landed on. */
   optionDisabled?: (option: TOption) => boolean;
+  /**
+   * Reads the group an option belongs to, which is also the group's label.
+   * The options stay one flat list: groups appear in the order their first
+   * option does, an option joins its group wherever it sits (a later page
+   * included), and the options with no group form one unlabelled section
+   * where the first of them appeared. A group the search empties disappears
+   * with its label and separator. Read whenever the options or the search
+   * change.
+   */
+  getOptionGroup?: GetOptionGroup<TOption>;
   /** How to narrow options against the search. `false` filters nothing. */
   filter?: OptionFilter<TOption>;
   /** Options behind ids that may never appear in `options`, so they can be labelled. */
@@ -132,8 +143,16 @@ export interface UseAutocompleteOptions<TOption> {
  * @typeParam TOption - The option type.
  */
 export interface AutocompleteModel<TOption> {
-  /** The options after filtering, in render order. */
+  /** The options after filtering, in render order: section by section when `getOptionGroup` is set. */
   options: TOption[];
+  /**
+   * The options as the sections they render in. Without `getOptionGroup` it
+   * is one ungrouped section holding every option. An option's index in
+   * `options` is its section's `start` plus its position in the section.
+   */
+  sections: AutocompleteSection<TOption>[];
+  /** Whether `getOptionGroup` is set, so the list renders groups. */
+  grouped: boolean;
   /** What the list should show. See {@link AutocompleteStatus}. */
   status: AutocompleteStatus;
   /** The chosen ids. */
@@ -203,7 +222,14 @@ export interface AutocompleteModel<TOption> {
   minChars: number;
 
   /** Stable ids for the aria wiring. */
-  ids: { root: string; trigger: string; list: string; option: (index: number) => string };
+  ids: {
+    root: string;
+    trigger: string;
+    list: string;
+    option: (index: number) => string;
+    /** The id of a group's label element, from the group's name. */
+    group: (group: string) => string;
+  };
   /** The id `aria-activedescendant` should point at, if any. */
   activeDescendant?: string;
 
@@ -226,6 +252,12 @@ export interface AutocompleteModel<TOption> {
   getListProps: () => Record<string, unknown>;
   /** Props for one `Option` part. */
   getOptionProps: (option: TOption, index: number) => Record<string, unknown>;
+  /** Props for a group's wrapper: `role="group"`, labelled by its label element. */
+  getGroupProps: (section: AutocompleteSection<TOption>) => Record<string, unknown>;
+  /** Props for a group's label element: its id, and `role="presentation"` so it is not read as an item. */
+  getGroupLabelProps: (section: AutocompleteSection<TOption>) => Record<string, unknown>;
+  /** Props for the line between two sections: presentational and hidden from assistive technology. */
+  getSeparatorProps: () => Record<string, unknown>;
   /** Props for the `Root` part. */
   getRootProps: () => Record<string, unknown>;
 }
@@ -292,6 +324,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     getOptionValue = defaultGetOptionValue,
     getOptionLabel = defaultGetOptionLabel,
     optionDisabled,
+    getOptionGroup,
     filter,
     selected: selectedOptions,
     multiple = false,
@@ -365,10 +398,24 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     [optionDisabled],
   );
 
-  const visible = useMemo(
+  const filtered = useMemo(
     () => filterOptions(allOptions, searchable ? query : "", filter, getOptionLabel),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [allOptions, query, searchable, filter],
+  );
+
+  /**
+   * Grouping runs on the filtered list, so a group the search empties goes
+   * with its label. It is keyed on that list rather than on
+   * `getOptionGroup`, which is usually an inline function, so the sections
+   * stay stable between renders — the way `getOptionLabel` is treated.
+   */
+  const grouped = !!getOptionGroup;
+  const groupLabelId = useCallback((group: string) => `${reactId}-group-${idFragment(group)}`, [reactId]);
+  const { options: visible, sections } = useMemo(
+    () => groupOptions(filtered, getOptionGroup, groupLabelId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filtered, grouped, groupLabelId],
   );
 
   /**
@@ -385,9 +432,10 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
         const option = visible[index];
         return `${reactId}-option-${option === undefined ? `i${index}` : idFragment(getOptionValue(option))}`;
       },
+      group: groupLabelId,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [reactId, visible],
+    [reactId, visible, groupLabelId],
   );
 
   const belowMinChars = searchable && minChars > 0 && query.trim().length < minChars;
@@ -548,6 +596,26 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     setHighlightedIndex(-1);
     highlightMoved.current = false;
   }, [open]);
+
+  /**
+   * Follow the highlighted option when grouping moves it
+   *
+   * A page that brings more of an earlier group inserts options above the
+   * highlight. The highlight is an index, so it is moved back onto the same
+   * option rather than left on whatever slid into its place.
+   */
+  const previousVisible = useRef(visible);
+  useEffect(() => {
+    const previous = previousVisible.current;
+    previousVisible.current = visible;
+    if (!grouped || previous === visible || highlightedIndex < 0) return;
+    const option = previous[highlightedIndex];
+    if (option === undefined) return;
+    const value = getOptionValue(option);
+    const next = visible.findIndex((entry) => getOptionValue(entry) === value);
+    if (next >= 0 && next !== highlightedIndex) setHighlightedIndex(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   /** A shorter list must not leave the highlight pointing past its end. */
   useEffect(() => {
@@ -845,8 +913,40 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     [ids, values, highlightedIndex, isOptionDisabled, select, moveHighlight],
   );
 
+  const getGroupProps = useCallback(
+    (section: AutocompleteSection<TOption>) => ({
+      role: "group" as const,
+      "aria-labelledby": section.labelId,
+    }),
+    [],
+  );
+
+  const getGroupLabelProps = useCallback(
+    (section: AutocompleteSection<TOption>) => ({
+      id: section.labelId,
+      role: "presentation" as const,
+    }),
+    [],
+  );
+
+  /**
+   * A `listbox` may own only options and groups, so the line between two
+   * sections is presentational and hidden rather than `role="separator"`:
+   * screen readers announce a separator inside a listbox inconsistently, and
+   * the groups already carry the boundary.
+   */
+  const getSeparatorProps = useCallback(
+    () => ({
+      role: "none" as const,
+      "aria-hidden": true as const,
+    }),
+    [],
+  );
+
   return {
     options: visible,
+    sections,
+    grouped,
     status,
     values,
     selected,
@@ -896,6 +996,9 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     getSearchProps,
     getListProps,
     getOptionProps,
+    getGroupProps,
+    getGroupLabelProps,
+    getSeparatorProps,
     getRootProps,
   };
 }

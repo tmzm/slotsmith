@@ -127,6 +127,20 @@ export const autocompleteFallbacks: AutocompleteComponents = {
 
   Check: ({ selected }) => (selected ? <CheckIcon /> : null),
 
+  Group: ({ label: _label, labelId: _labelId, className, ...props }) => (
+    <li className={classes.group} role="none">
+      <ul className={cx(classes.groupList, className)} {...props} />
+    </li>
+  ),
+
+  GroupLabel: ({ label, ...props }) => (
+    <li className={classes.groupLabel} {...props}>
+      {label}
+    </li>
+  ),
+
+  Separator: ({ className, ...props }) => <li className={cx(classes.separator, className)} {...props} />,
+
   Empty: ({ message }) => <li className={classes.message}>{message}</li>,
 
   Loading: ({ message }) => (

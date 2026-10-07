@@ -34,4 +34,8 @@ export const classes = {
   search: "sac__search",
   list: "sac__list",
   option: "sac__option",
+  group: "sac__group",
+  groupList: "sac__group-list",
+  groupLabel: "sac__group-label",
+  separator: "sac__separator",
 } as const;

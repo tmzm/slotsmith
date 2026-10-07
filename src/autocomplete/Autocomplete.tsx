@@ -9,11 +9,14 @@ import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import type { OptionValue } from "./core/types";
 import { useAutocomplete, type UseAutocompleteOptions } from "./core/useAutocomplete";
 import {
+  AutocompleteGroupLabelView,
+  AutocompleteGroupView,
   AutocompleteList,
   AutocompleteLiveRegion,
   AutocompleteOptions,
   AutocompletePopup,
   AutocompleteSearch,
+  AutocompleteSeparatorView,
   AutocompleteStatusRows,
   AutocompleteTrigger,
   mergeProps,
@@ -291,7 +294,7 @@ export type AutocompleteProps<TOption> = Omit<AutocompleteProviderProps<TOption>
  * The props that belong to the provider; anything else lands on the root.
  */
 const PROVIDER_KEYS = [
-  "options", "getOptionValue", "getOptionLabel", "optionDisabled", "filter", "selected",
+  "options", "getOptionValue", "getOptionLabel", "optionDisabled", "getOptionGroup", "filter", "selected",
   "multiple", "value", "defaultValue", "onChange",
   "searchable", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars",
   "open", "defaultOpen", "onOpenChange",
@@ -429,7 +432,12 @@ function AutocompleteComponent<TOption>(props: AutocompleteProps<TOption>) {
  * Every part is replaceable through `components`, every string through
  * `labels`, and the fallbacks are plain accessible HTML. The compound parts
  * (`Autocomplete.Provider`, `.Root`, `.Trigger`, `.Popup`, `.List`,
- * `.Options`) are there when the default layout is not enough.
+ * `.Options`, `.Group`, `.GroupLabel`, `.Separator`) are there when the
+ * default layout is not enough.
+ *
+ * Set `getOptionGroup` to show the options in labelled groups. The options
+ * stay one flat list; the groups follow the order their first option appears
+ * in, and the keyboard follows the groups.
  *
  * @typeParam TOption - The option type.
  * @param props - See {@link AutocompleteProps}.
@@ -445,6 +453,9 @@ function AutocompleteComponent<TOption>(props: AutocompleteProps<TOption>) {
  *
  * // Several at once.
  * <Autocomplete multiple options={tags} value={tagIds} onChange={setTagIds} />
+ *
+ * // In groups, labelled by each city's country.
+ * <Autocomplete options={cities} getOptionGroup={(city) => city.country} value={cityId} onChange={setCityId} />
  * ```
  */
 export const Autocomplete = /* @__PURE__ */ Object.assign(AutocompleteComponent, {
@@ -455,6 +466,9 @@ export const Autocomplete = /* @__PURE__ */ Object.assign(AutocompleteComponent,
   Search: AutocompleteSearch,
   List: AutocompleteList,
   Options: AutocompleteOptions,
+  Group: AutocompleteGroupView,
+  GroupLabel: AutocompleteGroupLabelView,
+  Separator: AutocompleteSeparatorView,
   StatusRows: AutocompleteStatusRows,
   LiveRegion: AutocompleteLiveRegion,
 });

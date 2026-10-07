@@ -137,6 +137,91 @@ describe("the virtual layout with autoHighlight", () => {
   });
 });
 
+describe("the virtual layout with groups", () => {
+  /** Twenty regions of a hundred cities each. */
+  const region = (city: City) => `Region ${Math.floor(Number(city.id.slice(1)) / 100)}`;
+  /** Rows: 2000 options of 36px, 20 labels of 28px, 19 separators of 9px. */
+  const TOTAL = 2000 * 36 + 20 * 28 + 19 * 9;
+
+  /**
+   * Scroll spy
+   *
+   * Records where the virtualizer scrolls the list, and moves it there, so
+   * the window follows as it would in a browser.
+   */
+  function spyOnScroll() {
+    const offsets: number[] = [];
+    const scrollTo = vi.fn(function (this: HTMLElement, options: ScrollToOptions) {
+      offsets.push(options.top ?? 0);
+      Object.defineProperty(this, "scrollTop", { configurable: true, value: options.top ?? 0 });
+      this.dispatchEvent(new Event("scroll"));
+    });
+    Object.defineProperty(HTMLElement.prototype, "scrollTo", { configurable: true, writable: true, value: scrollTo });
+    /** The listbox scrolls through every row; nothing else scrolls. */
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "listbox" ? TOTAL : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(320);
+    return offsets;
+  }
+
+  const groupNamed = (name: string) => screen.getByRole("group", { name });
+  const active = (search: HTMLElement) =>
+    document.getElementById(search.getAttribute("aria-activedescendant") ?? "")?.textContent?.trim();
+
+  it("windows label and separator rows, and keeps them out of the options", async () => {
+    const { user } = renderVirtual({ getOptionGroup: region });
+    await user.click(screen.getByRole("combobox"));
+
+    expect(groupNamed("Region 0")).toBeInTheDocument();
+    expect(options().length).toBeLessThan(100);
+    expect(screen.getByText("Region 0")).toHaveAttribute("role", "presentation");
+    expect(screen.getByRole("status")).toHaveTextContent("2000 results");
+  });
+
+  it("scrolls exactly to the option the keyboard lands on, and names its group", async () => {
+    const offsets = spyOnScroll();
+    const { user } = renderVirtual({ getOptionGroup: region });
+    await user.click(screen.getByRole("combobox"));
+    const search = screen.getByRole("searchbox");
+
+    await user.keyboard("{End}");
+
+    expect(offsets.at(-1)).toBe(TOTAL - 320);
+    expect(active(search)).toBe("City 1999");
+    /** Its label scrolled away long ago; a hidden copy still names the group. */
+    expect(groupNamed("Region 19")).toContainElement(document.getElementById(search.getAttribute("aria-activedescendant")!));
+
+    await user.keyboard("{Home}");
+    expect(offsets.at(-1)).toBe(0);
+    expect(active(search)).toBe("City 0");
+  });
+
+  it("crosses from one group into the next with the arrow keys, skipping the label", async () => {
+    spyOnScroll();
+    const { user } = renderVirtual({ getOptionGroup: region });
+    await user.click(screen.getByRole("combobox"));
+    const search = screen.getByRole("searchbox");
+
+    await user.type(search, "City 99");
+    /** City 99 in Region 0, then City 990–999 in Region 9. */
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    expect(active(search)).toBe("City 990");
+    expect(groupNamed("Region 9")).toContainElement(document.getElementById(search.getAttribute("aria-activedescendant")!));
+    await user.keyboard("{ArrowUp}");
+    expect(active(search)).toBe("City 99");
+  });
+
+  it("highlights the first option in visual order with autoHighlight", async () => {
+    const { user } = renderVirtual({ getOptionGroup: (city) => (city.id === "c5" ? "First" : "Rest"), autoHighlight: true });
+    await user.click(screen.getByRole("combobox"));
+
+    expect(active(screen.getByRole("searchbox"))).toBe("City 0");
+    await user.type(screen.getByRole("searchbox"), "City 5");
+    expect(active(screen.getByRole("searchbox"))).toBe("City 5");
+  });
+});
+
 describe("the virtual layout's props", () => {
   it("names the combobox rather than the wrapper", () => {
     renderVirtual({ "aria-label": "City" } as never);

@@ -92,6 +92,57 @@ export interface AutocompleteOptionSlotProps
 }
 
 /**
+ * Group slot props
+ *
+ * One group of options, rendered when `getOptionGroup` is set. The DOM props
+ * — `role="group"` and `aria-labelledby` pointing at the label — belong on
+ * the list that holds the group's rows. Inside a `<ul>` listbox that list
+ * needs a presentational `<li>` around it, since an `<li>` may not be a
+ * group itself:
+ * `<li role="none"><ul role="group" aria-labelledby="…">…</ul></li>`.
+ * `children` is already complete — the `GroupLabel` row, then the options —
+ * so `label` and `labelId` are there for a skin that wants them, not to be
+ * rendered again.
+ */
+export interface AutocompleteGroupSlotProps extends DomProps<HTMLUListElement> {
+  /** The group's name, which is also its label. */
+  label: string;
+  /** The id of the label element the group is labelled by. */
+  labelId: string;
+  /** The label row, then the group's option rows. */
+  children?: ReactNode;
+  ref?: Ref<HTMLUListElement>;
+}
+
+/**
+ * Group label slot props
+ *
+ * The heading row of a group. Put `id` on the rendered element, because the
+ * group is labelled by it, and keep `role="presentation"` so a list item is
+ * not announced as an item of the list. It is never highlighted and never
+ * focusable.
+ */
+export interface AutocompleteGroupLabelSlotProps {
+  /** The id the group's `aria-labelledby` points at. */
+  id: string;
+  /** Keeps the row from being read as a list item. */
+  role: "presentation";
+  /** The group's name. */
+  label: string;
+}
+
+/**
+ * Separator slot props
+ *
+ * The line between two sections of a grouped list. It is presentational and
+ * hidden from assistive technology, because a listbox may own only options
+ * and groups and the groups already mark the boundary.
+ */
+export interface AutocompleteSeparatorSlotProps extends Omit<LiHTMLAttributes<HTMLLIElement>, "color"> {
+  ref?: Ref<HTMLLIElement>;
+}
+
+/**
  * Value slot props
  *
  * What the trigger shows: the selected label, or the placeholder.
@@ -263,10 +314,11 @@ export interface AutocompleteLoadMoreSlotProps {
  *
  * Every replaceable part.
  *
- * Element parts — `Root`, `Trigger`, `Popup`, `Search`, `List`, `Option` —
- * receive DOM props with state as `data-*`, so a library's primitives drop
- * straight in. Widget parts receive semantic props and usually need a short
- * adapter.
+ * Element parts — `Root`, `Trigger`, `Popup`, `Search`, `List`, `Option`,
+ * `Separator` — receive DOM props with state as `data-*`, so a library's
+ * primitives drop straight in. Widget parts receive semantic props and
+ * usually need a short adapter. `Group`, `GroupLabel` and `Separator` render
+ * only when `getOptionGroup` is set.
  *
  * @typeParam TOption - The option type.
  *
@@ -292,6 +344,9 @@ export interface AutocompleteComponents<TOption = any> {
   Option: ComponentType<AutocompleteOptionSlotProps>;
   OptionLabel: ComponentType<AutocompleteOptionLabelSlotProps<TOption>>;
   Check: ComponentType<AutocompleteCheckSlotProps>;
+  Group: ComponentType<AutocompleteGroupSlotProps>;
+  GroupLabel: ComponentType<AutocompleteGroupLabelSlotProps>;
+  Separator: ComponentType<AutocompleteSeparatorSlotProps>;
   Empty: ComponentType<AutocompleteEmptySlotProps>;
   Loading: ComponentType<AutocompleteLoadingSlotProps>;
   Error: ComponentType<AutocompleteErrorSlotProps>;

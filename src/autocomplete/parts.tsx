@@ -1,6 +1,7 @@
 "use client";
 
-import type { Ref } from "react";
+import { Fragment, type ReactNode, type Ref } from "react";
+import type { AutocompleteSection } from "./core/groups";
 import { mergeProps, mergeRefs } from "../shared/mergeProps";
 import { useAutocompleteContext } from "./slots/context";
 import { classes } from "./classes";
@@ -163,19 +164,112 @@ export function AutocompleteOptionView({ option, index }: { option: unknown; ind
 }
 
 /**
+ * Autocomplete.Group
+ *
+ * The `Group` part around one named section: `role="group"`, labelled by its
+ * `GroupLabel`. Windowing renderers use it to wrap the rows in view.
+ *
+ * @param props - The section, and the rows to put inside it.
+ *
+ * @example
+ * ```tsx
+ * <AutocompleteGroupView section={section}>
+ *   <AutocompleteGroupLabelView section={section} />
+ *   {rows}
+ * </AutocompleteGroupView>
+ * ```
+ */
+export function AutocompleteGroupView({ section, children }: { section: AutocompleteSection<unknown>; children?: ReactNode }) {
+  const { components: C, getGroupProps } = useAutocompleteContext();
+
+  return (
+    <C.Group {...getGroupProps(section)} label={section.group ?? ""} labelId={section.labelId ?? ""}>
+      {children}
+    </C.Group>
+  );
+}
+
+/**
+ * Autocomplete.GroupLabel
+ *
+ * The `GroupLabel` part: the heading row a group is labelled by.
+ *
+ * @param props - The section it heads.
+ */
+export function AutocompleteGroupLabelView({ section }: { section: AutocompleteSection<unknown> }) {
+  const { components: C } = useAutocompleteContext();
+
+  return <C.GroupLabel id={section.labelId ?? ""} role="presentation" label={section.group ?? ""} />;
+}
+
+/**
+ * Autocomplete.Separator
+ *
+ * The `Separator` part between two sections, presentational and hidden from
+ * assistive technology.
+ */
+export function AutocompleteSeparatorView() {
+  const { components: C, getSeparatorProps } = useAutocompleteContext();
+
+  return <C.Separator {...getSeparatorProps()} />;
+}
+
+/**
+ * Section key
+ *
+ * A React key for a section that cannot collide between a group and the
+ * ungrouped options.
+ *
+ * @param section - The section.
+ * @returns Its key.
+ */
+export const sectionKey = (section: AutocompleteSection<unknown>) =>
+  section.group === undefined ? "ungrouped" : `group:${section.group}`;
+
+/**
  * Autocomplete.Options
  *
  * Every option row, without the listbox around them. Use it when the list
- * needs a wrapper of its own.
+ * needs a wrapper of its own. With `getOptionGroup` set, the rows come in
+ * their groups, each with its label, and a separator between sections.
  */
 export function AutocompleteOptions() {
-  const { options, getOptionValue } = useAutocompleteContext();
+  const { options, sections, grouped, getOptionValue } = useAutocompleteContext();
+
+  if (!grouped) {
+    return (
+      <>
+        {options.map((option, index) => (
+          <AutocompleteOptionView key={String(getOptionValue(option))} option={option} index={index} />
+        ))}
+      </>
+    );
+  }
 
   return (
     <>
-      {options.map((option, index) => (
-        <AutocompleteOptionView key={String(getOptionValue(option))} option={option} index={index} />
-      ))}
+      {sections.map((section, sectionIndex) => {
+        const rows = section.options.map((option, offset) => (
+          <AutocompleteOptionView
+            key={String(getOptionValue(option))}
+            option={option}
+            index={section.start + offset}
+          />
+        ));
+        return (
+          <Fragment key={sectionKey(section)}>
+            {sectionIndex > 0 ? <AutocompleteSeparatorView /> : null}
+            {section.group === undefined ? (
+              rows
+            ) : (
+              <AutocompleteGroupView section={section}>
+                <AutocompleteGroupLabelView section={section} />
+                {rows}
+              </AutocompleteGroupView>
+            )}
+          </Fragment>
+        );
+      })}
     </>
   );
 }

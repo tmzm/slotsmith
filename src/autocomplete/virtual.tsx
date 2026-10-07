@@ -1,7 +1,7 @@
 "use client";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AutocompleteProvider,
   AutocompleteRoot,
@@ -11,13 +11,17 @@ import {
   type AutocompleteRootProps,
 } from "./Autocomplete";
 import {
+  AutocompleteGroupLabelView,
+  AutocompleteGroupView,
   AutocompleteLiveRegion,
   AutocompleteOptionView,
   AutocompleteSearch,
+  AutocompleteSeparatorView,
   AutocompleteStatusRows,
   AutocompleteTrigger,
   mergeProps,
   mergeRefs,
+  sectionKey,
 } from "./parts";
 import { useAutocompleteContext } from "./slots/context";
 
@@ -38,7 +42,23 @@ export interface AutocompleteVirtualOptions {
   overscan?: number;
   /** Height of the scroll area in pixels. Defaults to 320. */
   maxHeight?: number;
+  /** Height of a group's label row in pixels, with `getOptionGroup`. Defaults to 28. */
+  groupLabelSize?: number;
+  /** Height of the separator between sections in pixels, margins included. Defaults to 9. */
+  separatorSize?: number;
 }
+
+/**
+ * Virtual row
+ *
+ * One windowed row of a grouped list. Group labels and separators are rows
+ * of their own, so the scroll height counts them; only option rows can be
+ * highlighted.
+ */
+type VirtualRow =
+  | { kind: "option"; index: number; section: number }
+  | { kind: "label"; section: number }
+  | { kind: "separator"; section: number };
 
 /** Height of the scroll area when `virtual.maxHeight` is not set. */
 const DEFAULT_MAX_HEIGHT = 320;
@@ -58,11 +78,33 @@ function Spacer({ height }: { height: number }) {
 }
 
 /**
+ * Hidden group label
+ *
+ * Stands in for a group's label row once it has scrolled out of the window,
+ * so the group in view is still named. `aria-labelledby` reads hidden
+ * elements, and a hidden row takes no height from the spacers.
+ *
+ * @param props - The label's id and text.
+ */
+function HiddenGroupLabel({ id, label }: { id: string; label: string }) {
+  return (
+    <li id={id} role="presentation" hidden>
+      {label}
+    </li>
+  );
+}
+
+/**
  * Autocomplete virtual list
  *
  * A `role="listbox"` that renders only the options in view. Spacer rows keep
  * the scroll height honest, so every `Option` and `OptionLabel` part works
  * exactly as it does in the plain list.
+ *
+ * With `getOptionGroup`, each group's label and the separators between
+ * sections are windowed rows too, sized by `groupLabelSize` and
+ * `separatorSize`. The rows in view are wrapped in their `Group`, and a group
+ * whose label has scrolled away keeps a hidden copy of it, so it stays named.
  *
  * Use it in place of `Autocomplete.List` when a list runs to thousands of
  * options. Paging with `hasMore` solves a different problem — how much has
@@ -88,12 +130,18 @@ export function AutocompleteVirtualList({
   estimateSize = 36,
   overscan = 8,
   maxHeight = DEFAULT_MAX_HEIGHT,
+  groupLabelSize = 28,
+  separatorSize = 9,
 }: AutocompleteVirtualOptions = {}) {
   const {
     components: C,
     labels,
     slotProps,
     options,
+    sections,
+    grouped,
+    highlightedIndex,
+    getOptionValue,
     status,
     canCreate,
     create,
@@ -114,18 +162,119 @@ export function AutocompleteVirtualList({
    */
   const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
 
+  /** The grouped list as rows, and the row each option sits on. `null` without groups. */
+  const layout = useMemo(() => {
+    if (!grouped) return null;
+    const rows: VirtualRow[] = [];
+    const rowOfOption: number[] = [];
+    sections.forEach((section, sectionIndex) => {
+      if (sectionIndex > 0) rows.push({ kind: "separator", section: sectionIndex });
+      if (section.group !== undefined) rows.push({ kind: "label", section: sectionIndex });
+      section.options.forEach((_, offset) => {
+        rowOfOption.push(rows.length);
+        rows.push({ kind: "option", index: section.start + offset, section: sectionIndex });
+      });
+    });
+    return { rows, rowOfOption };
+  }, [grouped, sections]);
+
+  /** Keys follow what a row shows, so a row's measured size never sticks to another row. */
+  const getItemKey = useCallback(
+    (index: number) => {
+      const row = layout?.rows[index];
+      if (!row) return index;
+      const key = sectionKey(sections[row.section]!);
+      if (row.kind === "option") return `option:${String(getOptionValue(options[row.index]))}`;
+      return `${row.kind}:${key}`;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [layout],
+  );
+
   const virtualizer = useVirtualizer({
-    count: status === "ready" ? options.length : 0,
+    count: status === "ready" ? (layout ? layout.rows.length : options.length) : 0,
     getScrollElement: () => scrollElement,
-    estimateSize: () => estimateSize,
+    estimateSize: (index) => {
+      const kind = layout?.rows[index]?.kind;
+      return kind === "label" ? groupLabelSize : kind === "separator" ? separatorSize : estimateSize;
+    },
     overscan,
     /** Renders a first screen before the popup has been measured. */
     initialRect: { width: 0, height: maxHeight },
+    ...(layout ? { getItemKey } : {}),
   });
+
+  /**
+   * Keep the highlighted option in view. Only the rows in the window exist in
+   * the DOM, so a jump past it — End, PageDown, typeahead — is scrolled to by
+   * the virtualizer, which knows every row's offset, labels and separators
+   * included.
+   */
+  useEffect(() => {
+    if (status !== "ready" || highlightedIndex < 0) return;
+    const row = layout ? layout.rowOfOption[highlightedIndex] : highlightedIndex;
+    if (row === undefined) return;
+    /**
+     * Reaching a group's first option from below brings its label into view
+     * with it, so Home and ArrowUp never leave a group unnamed on screen.
+     */
+    if (layout?.rows[row - 1]?.kind === "label") {
+      const labelStart = virtualizer.measurementsCache[row - 1]?.start ?? 0;
+      if (labelStart < (virtualizer.scrollOffset ?? 0)) {
+        virtualizer.scrollToIndex(row - 1, { align: "start" });
+        return;
+      }
+    }
+    virtualizer.scrollToIndex(row, { align: "auto" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightedIndex, status, layout]);
 
   const items = virtualizer.getVirtualItems();
   const before = items[0]?.start ?? 0;
   const after = virtualizer.getTotalSize() - (items[items.length - 1]?.end ?? 0);
+
+  /**
+   * The rows in view, with each run of a group's rows wrapped in its `Group`
+   * and the separators between them.
+   */
+  const renderGrouped = (rows: VirtualRow[]) => {
+    const out: ReactNode[] = [];
+    let position = 0;
+    while (position < items.length) {
+      const row = rows[items[position]!.index]!;
+      if (row.kind === "separator") {
+        out.push(<AutocompleteSeparatorView key={items[position]!.key} />);
+        position += 1;
+        continue;
+      }
+      const section = sections[row.section]!;
+      const run: ReactNode[] = [];
+      let labelInView = false;
+      while (position < items.length) {
+        const item = items[position]!;
+        const current = rows[item.index]!;
+        if (current.kind === "separator" || current.section !== row.section) break;
+        if (current.kind === "label") {
+          labelInView = true;
+          run.push(<AutocompleteGroupLabelView key={item.key} section={section} />);
+        } else {
+          run.push(<AutocompleteOptionView key={item.key} option={options[current.index]!} index={current.index} />);
+        }
+        position += 1;
+      }
+      if (section.group === undefined) {
+        out.push(...run);
+      } else {
+        out.push(
+          <AutocompleteGroupView key={sectionKey(section)} section={section}>
+            {labelInView ? null : <HiddenGroupLabel id={section.labelId!} label={section.group} />}
+            {run}
+          </AutocompleteGroupView>,
+        );
+      }
+    }
+    return out;
+  };
 
   return (
     <C.List
@@ -137,9 +286,11 @@ export function AutocompleteVirtualList({
       {status === "ready" ? (
         <>
           <Spacer height={before} />
-          {items.map((item) => (
-            <AutocompleteOptionView key={item.key} option={options[item.index]!} index={item.index} />
-          ))}
+          {layout
+            ? renderGrouped(layout.rows)
+            : items.map((item) => (
+                <AutocompleteOptionView key={item.key} option={options[item.index]!} index={item.index} />
+              ))}
           <Spacer height={after} />
         </>
       ) : canCreate ? null : (

@@ -10,7 +10,7 @@
     "Rendering": ["components", "labels", "locale", "slotProps", "onRowClick", "size", "striped", "tableOptions"]
   },
   "autocomplete": {
-    "Options": ["options", "getOptionValue", "getOptionLabel", "optionDisabled", "filter", "selected"],
+    "Options": ["options", "getOptionValue", "getOptionLabel", "optionDisabled", "getOptionGroup", "filter", "selected"],
     "Selection": ["multiple", "value", "defaultValue", "onChange", "clearable", "closeOnSelect", "name"],
     "Search": ["searchable", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars"],
     "Open state and keyboard": ["open", "defaultOpen", "onOpenChange", "loop", "autoHighlight", "disabled", "invalid", "onBlur"],
