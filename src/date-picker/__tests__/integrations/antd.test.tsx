@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
 import { antdDatePicker } from "./antd/components";
-import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Ant Design wrapper
@@ -57,6 +57,7 @@ freezeToday();
 
 describe("Ant Design v6", () => {
   failOnReactWarnings();
+  itKeepsFocusOnAPickedDay(renderAntdDatePicker);
 
   it("renders the calendar with Ant's primitives", async () => {
     const user = renderAntdDatePicker();
@@ -82,7 +83,8 @@ describe("Ant Design v6", () => {
     expect(isOpen()).toBe(false);
 
     await open(user);
-    expect(day("2026-03-20")).toHaveClass("ant-btn-variant-solid");
+    expect(day("2026-03-20").style.backgroundColor).toBe(cssColor(token.colorPrimary));
+    expect(day("2026-03-20").style.color).toBe(cssColor(token.colorTextLightSolid));
   });
 
   it("moves through the grid with the keyboard", async () => {

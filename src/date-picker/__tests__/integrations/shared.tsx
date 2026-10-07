@@ -1,8 +1,9 @@
 import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentType, ReactNode } from "react";
-import { afterEach, beforeEach, expect, vi, type MockInstance } from "vitest";
+import { afterEach, beforeEach, expect, it, vi, type MockInstance } from "vitest";
 import { DatePicker, type DatePickerComponents, type DatePickerProps } from "../../index";
+import { day, focusedDate, open } from "../builders";
 
 /**
  * Stub browser APIs
@@ -83,4 +84,47 @@ export function renderIntegration(
     wrapper ? { wrapper } : undefined,
   );
   return user;
+}
+
+/**
+ * Keeps focus on a picked day
+ *
+ * Registers the tests every library's `Day` must pass: picking a day by
+ * keyboard or by click keeps the same element mounted and focused, so the
+ * arrow keys keep working. A part that swaps its element as the day becomes
+ * selected drops focus to `<body>`.
+ *
+ * @param renderPicker - Renders the picker with the library's parts.
+ */
+export function itKeepsFocusOnAPickedDay(
+  renderPicker: (props?: Partial<DatePickerProps>) => ReturnType<typeof userEvent.setup>,
+) {
+  it("keeps the same day focused when Enter picks it, and the arrows keep moving", async () => {
+    const user = renderPicker({ mode: "multiple" });
+    await open(user);
+    await user.keyboard("{ArrowRight}");
+    const picked = day("2026-03-13");
+    expect(document.activeElement).toBe(picked);
+
+    await user.keyboard("{Enter}");
+
+    expect(day("2026-03-13")).toHaveAttribute("data-selected");
+    expect(day("2026-03-13")).toBe(picked);
+    expect(document.activeElement).toBe(picked);
+    await user.keyboard("{ArrowRight}");
+    expect(focusedDate()).toBe("2026-03-14");
+  });
+
+  it("keeps the range end focused when a click picks it", async () => {
+    const user = renderPicker({ mode: "range" });
+    await open(user);
+    await user.click(day("2026-03-16"));
+    const end = day("2026-03-20");
+
+    await user.click(end);
+
+    expect(day("2026-03-20")).toBe(end);
+    expect(day("2026-03-20")).toHaveAttribute("data-selected");
+    expect(document.activeElement).toBe(end);
+  });
 }

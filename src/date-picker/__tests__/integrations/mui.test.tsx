@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
 import { muiDatePicker } from "./mui/components";
-import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * MUI wrapper
@@ -31,6 +31,7 @@ freezeToday();
 
 describe("MUI v7", () => {
   failOnReactWarnings();
+  itKeepsFocusOnAPickedDay(renderMuiDatePicker);
 
   it("renders the calendar with MUI's primitives", async () => {
     const user = renderMuiDatePicker();

@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
 import { chakraDatePicker } from "./chakra/components";
-import { failOnReactWarnings, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Chakra wrapper
@@ -32,6 +32,7 @@ freezeToday();
 
 describe("Chakra UI v3", () => {
   failOnReactWarnings();
+  itKeepsFocusOnAPickedDay(renderChakraDatePicker);
 
   it("renders the calendar with Chakra's parts", async () => {
     const user = renderChakraDatePicker();
