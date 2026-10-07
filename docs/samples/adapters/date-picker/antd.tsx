@@ -236,9 +236,12 @@ export const antdComponents: Partial<DatePickerComponents> = {
   /**
    * One cell of the grid.
    *
-   * A `Button`, pinned to the cell size: `primary` when picked, `text`
-   * otherwise, so the hover and the picked fill are Ant's own. The HTML
-   * `type` moves to `htmlType`, since Ant's `type` is the variant.
+   * A `text` `Button`, pinned to the cell size, so the hover is Ant's own;
+   * the picked fill is painted from the theme's primary tokens. The variant
+   * never changes: Ant wraps every other variant in an extra element, so
+   * switching to `primary` as the day is picked would replace the button and
+   * drop focus to `<body>`. The HTML `type` moves to `htmlType`, since Ant's
+   * `type` is the variant.
    *
    * Blocked days are styled from `data-disabled`, not Ant's `disabled`: the
    * component keeps them focusable, so it never sets `disabled` on them.
@@ -257,7 +260,7 @@ export const antdComponents: Partial<DatePickerComponents> = {
     const bleed = "calc(var(--sdp-gap, 0.25rem) / -2 - 0.5px)";
     return (
       <Button
-        type={selected ? "primary" : "text"}
+        type="text"
         htmlType={type}
         style={{
           position: "relative",
@@ -269,7 +272,8 @@ export const antdComponents: Partial<DatePickerComponents> = {
           overflow: "visible",
           borderRadius: token.borderRadius,
           fontSize: token.fontSizeSM + 1,
-          color: selected ? undefined : has(props, "data-outside") ? token.colorTextDisabled : token.colorText,
+          color: selected ? token.colorTextLightSolid : has(props, "data-outside") ? token.colorTextDisabled : token.colorText,
+          background: selected ? token.colorPrimary : undefined,
           boxShadow: has(props, "data-today") && !selected ? `inset 0 0 0 ${token.lineWidth}px ${token.colorPrimary}` : "none",
           ...(has(props, "data-disabled") && { opacity: 0.3, cursor: "not-allowed" }),
           ...style,
