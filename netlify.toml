@@ -11,9 +11,9 @@
   # reference tables, facts (this runs the library's test suite: 35 seconds
   # measured on a developer machine, likely longer on Netlify's build image),
   # redirects, astro build (which also draws the Open Graph images), the
-  # Pagefind search index (scripts/search-index.ts), and the verifier (skipped
-  # here, see below). DOCS_STRICT=1 fails the build while any page is still a
-  # stub.
+  # Pagefind search index (scripts/search-index.ts), and the verifier (its
+  # static checks only, see below). DOCS_STRICT=1 fails the build while any
+  # page is still a stub.
   # `git fetch --unshallow` keeps the full history for last-updated dates.
   # `command -v pnpm` is a fallback for PNPM_VERSION below, until a real deploy
   # confirms the pin.
@@ -26,9 +26,14 @@
   # pnpm 11, as CI uses. Without this Netlify picks a pnpm
   # version from the lockfile.
   PNPM_VERSION = "11"
-  # The verifier drives a real browser (Playwright). Netlify's build image is
-  # not set up for that, and CI already runs it on every change before merge,
-  # so the Netlify build skips it. Remove this to verify on deploy.
+  # Part of the verifier drives a real browser (Playwright): console errors,
+  # axe, the anchor and search checks. Netlify's build image is not set up for
+  # that, and CI already runs them on every change before merge, so this skips
+  # the browser checks only. The static ones (head and Open Graph tags, dead
+  # links, the GEO checks, unused samples, stubs under DOCS_STRICT) still run
+  # and still fail the deploy. The Trust pages then show their "this build did
+  # not run the browser checks" note instead of the axe table. Remove this to
+  # run the browser checks on deploy.
   DOCS_SKIP_VERIFY = "1"
 
 # Hashed build assets never change: cache them for a year.

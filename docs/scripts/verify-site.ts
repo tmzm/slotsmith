@@ -23,8 +23,11 @@
  *
  * The browser is Playwright's Chromium. `DOCS_BROWSER_CHANNEL` picks an
  * installed channel instead (default `chrome`); set it to `chromium` or empty
- * to use the bundled build, as CI does. `DOCS_SKIP_VERIFY=1` skips the whole
- * run (Netlify's build image has no browser; CI verifies every change).
+ * to use the bundled build, as CI does. `DOCS_SKIP_VERIFY=1` skips the browser
+ * checks only (Netlify's build image has no browser; CI runs them on every
+ * change): the static checks above still run, and no `a11y.json` or axe table
+ * is written, so the Trust pages keep their note that this build did not run
+ * the browser checks.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -262,33 +265,19 @@ async function checkAnchor(page: Page, origin: string, facts: PageFacts[]): Prom
   return problems;
 }
 
-async function main(): Promise<void> {
-  if (process.env.DOCS_SKIP_VERIFY === "1") {
-    console.log("verify: skipped (DOCS_SKIP_VERIFY=1)");
-    return;
-  }
-  const files = walk(distDir).map(toUrlPath);
-  const pageFiles = files.filter((file) => file.endsWith("/index.html")).sort();
-  const geoProblems: string[] = [];
-  const facts = pageFiles.map((file) => {
-    const path = file.slice(0, -"index.html".length);
-    const html = readFileSync(resolve(distDir, `.${file}`), "utf8");
-    const markdownFile = resolve(distDir, `.${path}index.md`);
-    geoProblems.push(...findGeoProblems(path, html, existsSync(markdownFile) ? readFileSync(markdownFile, "utf8") : null));
-    return readPage(path, html);
-  });
-
-  const problems = [
-    ...findMetaProblems(facts),
-    ...findOgProblems(facts, new Set(files)),
-    ...findDeadLinks(facts, new Set(files)),
-    // The framework examples are whole apps that CI builds; a page shows only the files that matter.
-    ...findUnusedSamples(facts, sampleNames().filter((name) => !name.startsWith("frameworks/")), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),
-    ...geoProblems,
-  ];
-
+/**
+ * Drives the built site in a browser: console errors, hydration, axe on every
+ * fallback demo, the slots' `data-*` attributes, an in-page anchor and search.
+ * Pushes what it finds onto `problems` and `missing`.
+ *
+ * @returns The axe results, their engine version and the count of known library issues.
+ */
+async function browserChecks(
+  facts: PageFacts[],
+  problems: string[],
+  missing: SlotMap,
+): Promise<{ a11y: A11yResult[]; axeVersion: string; knownIssues: number }> {
   const reference = referenceAttributes();
-  const missing: SlotMap = {};
   const a11y: A11yResult[] = [];
   let axeVersion = "";
   let knownIssues = 0;
@@ -361,6 +350,37 @@ async function main(): Promise<void> {
     await browser.close();
     await server.close();
   }
+  return { a11y, axeVersion, knownIssues };
+}
+
+async function main(): Promise<void> {
+  const skipBrowser = process.env.DOCS_SKIP_VERIFY === "1";
+  const files = walk(distDir).map(toUrlPath);
+  const pageFiles = files.filter((file) => file.endsWith("/index.html")).sort();
+  const geoProblems: string[] = [];
+  const facts = pageFiles.map((file) => {
+    const path = file.slice(0, -"index.html".length);
+    const html = readFileSync(resolve(distDir, `.${file}`), "utf8");
+    const markdownFile = resolve(distDir, `.${path}index.md`);
+    geoProblems.push(...findGeoProblems(path, html, existsSync(markdownFile) ? readFileSync(markdownFile, "utf8") : null));
+    return readPage(path, html);
+  });
+
+  const problems = [
+    ...findMetaProblems(facts),
+    ...findOgProblems(facts, new Set(files)),
+    ...findDeadLinks(facts, new Set(files)),
+    // The framework examples are whole apps that CI builds; a page shows only the files that matter.
+    ...findUnusedSamples(facts, sampleNames().filter((name) => !name.startsWith("frameworks/")), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),
+    ...geoProblems,
+  ];
+
+  const missing: SlotMap = {};
+  let a11y: A11yResult[] = [];
+  let axeVersion = "";
+  let knownIssues = 0;
+  if (skipBrowser) console.log("verify: browser checks skipped (DOCS_SKIP_VERIFY=1)");
+  else ({ a11y, axeVersion, knownIssues } = await browserChecks(facts, problems, missing));
 
   if (Object.keys(missing).length) {
     for (const [slug, slots] of Object.entries(missing)) {
@@ -372,15 +392,18 @@ async function main(): Promise<void> {
     console.error(`Add to docs/src/data/data-attributes.json:\n${JSON.stringify(missing, null, 2)}`);
   }
 
-  writeFileSync(resolve(distDir, "a11y.json"), `${JSON.stringify(a11y, null, 2)}\n`);
-  problems.push(...injectTrustPages(a11y, axeVersion, facts));
+  // Without the browser checks there are no results: the Trust pages keep their note instead of a table.
+  if (!skipBrowser) {
+    writeFileSync(resolve(distDir, "a11y.json"), `${JSON.stringify(a11y, null, 2)}\n`);
+    problems.push(...injectTrustPages(a11y, axeVersion, facts));
+  }
 
   const stubs = facts.filter((page) => page.stub).length;
   if (process.env.DOCS_STRICT === "1" && stubs > 0) {
     problems.push(...facts.filter((page) => page.stub).map((page) => `stub page ${page.path}`));
   }
   for (const problem of problems) console.error(`  ✗ ${problem}`);
-  console.log(`verify: ${facts.length} pages, ${problems.length} problems, ${stubs} stubs, ${knownIssues} known library a11y issues`);
+  console.log(`verify: ${facts.length} pages, ${problems.length} problems, ${stubs} stubs, ${skipBrowser ? "browser checks skipped" : `${knownIssues} known library a11y issues`}`);
   if (problems.length) process.exitCode = 1;
 }
 
