@@ -1,8 +1,34 @@
 /** U+2066 LEFT-TO-RIGHT ISOLATE. */
 const LRI = "⁦";
 
+/** U+2068 FIRST STRONG ISOLATE. */
+const FSI = "⁨";
+
 /** U+2069 POP DIRECTIONAL ISOLATE. */
 const PDI = "⁩";
+
+/**
+ * Isolated
+ *
+ * Writes a value that may be in either direction, such as a file name, into
+ * right-to-left text. The value is wrapped, whole, in a first-strong isolate:
+ * it takes the direction of its own first letter, so a Latin name keeps its
+ * order (`report.v2.pdf` does not read from the wrong end) and an Arabic one
+ * still reads right to left, and its punctuation never joins the words
+ * around it. The isolates are invisible format characters that screen
+ * readers skip.
+ *
+ * @param text - The value, as it is; commas in it are kept.
+ * @returns The isolated value.
+ *
+ * @example
+ * ```ts
+ * isolated("report.v2.pdf"); // "⁨report.v2.pdf⁩"
+ * ```
+ */
+export function isolated(text: string): string {
+  return `${FSI}${text}${PDI}`;
+}
 
 /**
  * Isolated list

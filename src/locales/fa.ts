@@ -1,4 +1,4 @@
-import { isolatedList } from "../locale/bidi";
+import { isolated, isolatedList } from "../locale/bidi";
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
 import type { SlotsmithLocale } from "../locale/types";
@@ -117,12 +117,12 @@ export const fa: SlotsmithLocale = defineLocale({
       remove: "حذف فایل",
       retry: "بارگذاری دوباره",
       cancel: "لغو بارگذاری",
-      progress: (name) => `در حال بارگذاری ${name}`,
+      progress: (name) => `در حال بارگذاری ${isolated(name)}`,
       ready: "آماده",
       uploading: "در حال بارگذاری…",
       done: "بارگذاری شد",
       failed: "ناموفق",
-      preview: (name) => `پیش‌نمایش ${name}`,
+      preview: (name) => `پیش‌نمایش ${isolated(name)}`,
       dismiss: "بستن",
       rejectedTitle: (count) =>
         plural(count, {
@@ -135,9 +135,9 @@ export const fa: SlotsmithLocale = defineLocale({
   fileValidation: (code) => {
     const plural = createPlural(code);
     return {
-      wrongType: (name) => `نوع فایل ${name} مجاز نیست`,
-      tooLarge: (name, max) => `حجم ${name} بیش از حد مجاز است (حداکثر ${max})`,
-      tooSmall: (name, min) => `حجم ${name} کمتر از حد مجاز است (حداقل ${min})`,
+      wrongType: (name) => `نوع فایل ${isolated(name)} مجاز نیست`,
+      tooLarge: (name, max) => `حجم ${isolated(name)} بیش از حد مجاز است (حداکثر ${max})`,
+      tooSmall: (name, min) => `حجم ${isolated(name)} کمتر از حد مجاز است (حداقل ${min})`,
       tooMany: (max) =>
         plural(max, {
           one: "حداکثر {count} فایل مجاز است",

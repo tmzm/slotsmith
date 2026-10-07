@@ -196,3 +196,47 @@ it("leaves the left-to-right packs' hints without isolates", () => {
     expect(hint, pack.code).not.toMatch(/[⁦-⁩]/);
   }
 });
+
+/**
+ * Right-to-left file names
+ *
+ * A file name is usually Latin, so in a right-to-left message the bidi
+ * algorithm would pull its punctuation apart from it (`report.v2.pdf` read
+ * from the wrong end, or its extension stuck to the Arabic word beside it).
+ * Each message that names a file wraps the name in a first-strong isolate,
+ * whole, even when it holds a comma, so a Latin name keeps its order and an
+ * Arabic, Persian or Hebrew name still reads right to left.
+ */
+describe.each(["ar", "ar-EG", "ar-IQ", "ar-SA", "fa", "he"])("%s file names", (code) => {
+  const pack = PACKS.find((candidate) => candidate.code === code)!;
+  const name = "scan, final.v2.pdf";
+  const isolated = `⁨${name}⁩`;
+  const messages = (): [string, string][] => {
+    const validation = build(pack, "fileValidation") as Record<string, (...args: unknown[]) => unknown>;
+    const uploader = build(pack, "fileUploader") as Record<string, (...args: unknown[]) => unknown>;
+    return [
+      ["wrongType", String(validation.wrongType!(name))],
+      ["tooLarge", String(validation.tooLarge!(name, "5 MB"))],
+      ["tooSmall", String(validation.tooSmall!(name, "1 KB"))],
+      ["progress", String(uploader.progress!(name))],
+      ["preview", String(uploader.preview!(name))],
+    ];
+  };
+
+  it("isolates the file name, whole, once, in every message that names a file", () => {
+    for (const [key, message] of messages()) {
+      expect(message.split(isolated), key).toHaveLength(2);
+      expect(message.replace(isolated, ""), key).not.toContain(name);
+    }
+  });
+});
+
+it("leaves the left-to-right packs' file names without isolates", () => {
+  for (const pack of PACKS.filter((candidate) => candidate.dir !== "rtl")) {
+    const validation = build(pack, "fileValidation") as Record<string, (...args: unknown[]) => unknown>;
+    const uploader = build(pack, "fileUploader") as Record<string, (...args: unknown[]) => unknown>;
+    for (const message of [validation.wrongType!("a.pdf"), validation.tooLarge!("a.pdf", "5 MB"), uploader.progress!("a.pdf"), uploader.preview!("a.pdf")]) {
+      expect(String(message), pack.code).not.toMatch(/[⁦-⁩]/);
+    }
+  }
+});

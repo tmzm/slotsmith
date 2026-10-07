@@ -1,4 +1,4 @@
-import { isolatedList } from "../locale/bidi";
+import { isolated, isolatedList } from "../locale/bidi";
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
 import type { SlotsmithLocale } from "../locale/types";
@@ -125,12 +125,12 @@ export const he: SlotsmithLocale = defineLocale({
       remove: "הסרת הקובץ",
       retry: "לנסות להעלות שוב",
       cancel: "ביטול ההעלאה",
-      progress: (name) => `העלאת ${name}`,
+      progress: (name) => `העלאת ${isolated(name)}`,
       ready: "מוכן",
       uploading: "בהעלאה…",
       done: "הועלה",
       failed: "נכשל",
-      preview: (name) => `תצוגה מקדימה של ${name}`,
+      preview: (name) => `תצוגה מקדימה של ${isolated(name)}`,
       dismiss: "סגירה",
       rejectedTitle: (count) =>
         plural(count, {
@@ -144,9 +144,9 @@ export const he: SlotsmithLocale = defineLocale({
   fileValidation: (code) => {
     const plural = createPlural(code);
     return {
-      wrongType: (name) => `סוג הקובץ של ${name} אינו מותר`,
-      tooLarge: (name, max) => `${name} גדול מדי (עד ${max})`,
-      tooSmall: (name, min) => `${name} קטן מדי (לפחות ${min})`,
+      wrongType: (name) => `סוג הקובץ של ${isolated(name)} אינו מותר`,
+      tooLarge: (name, max) => `${isolated(name)} גדול מדי (עד ${max})`,
+      tooSmall: (name, min) => `${isolated(name)} קטן מדי (לפחות ${min})`,
       tooMany: (max) =>
         plural(max, {
           one: "אפשר להוסיף קובץ אחד בלבד",

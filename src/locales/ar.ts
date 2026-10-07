@@ -1,4 +1,4 @@
-import { isolatedList } from "../locale/bidi";
+import { isolated, isolatedList } from "../locale/bidi";
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
 import type { SlotsmithLocale } from "../locale/types";
@@ -126,12 +126,12 @@ export const ar: SlotsmithLocale = defineLocale({
       remove: "حذف الملف",
       retry: "إعادة محاولة الرفع",
       cancel: "إلغاء الرفع",
-      progress: (name) => `جارٍ رفع ${name}`,
+      progress: (name) => `جارٍ رفع ${isolated(name)}`,
       ready: "جاهز",
       uploading: "جارٍ الرفع…",
       done: "تم الرفع",
       failed: "فشل",
-      preview: (name) => `معاينة ${name}`,
+      preview: (name) => `معاينة ${isolated(name)}`,
       dismiss: "إخفاء",
       rejectedTitle: (count) =>
         plural(count, {
@@ -147,9 +147,9 @@ export const ar: SlotsmithLocale = defineLocale({
   fileValidation: (code) => {
     const plural = createPlural(code);
     return {
-      wrongType: (name) => `نوع الملف ${name} غير مسموح به`,
-      tooLarge: (name, max) => `حجم ${name} يتجاوز ${max}`,
-      tooSmall: (name, min) => `حجم ${name} أقل من ${min}`,
+      wrongType: (name) => `نوع الملف ${isolated(name)} غير مسموح به`,
+      tooLarge: (name, max) => `حجم ${isolated(name)} يتجاوز ${max}`,
+      tooSmall: (name, min) => `حجم ${isolated(name)} أقل من ${min}`,
       tooMany: (max) =>
         plural(max, {
           one: "لا يمكن إضافة أكثر من ملف واحد",

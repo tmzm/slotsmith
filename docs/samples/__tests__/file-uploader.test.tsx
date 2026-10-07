@@ -283,7 +283,8 @@ describe("file uploader guide: validation", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "A 6 MB photo" }));
     const message = screen.getByRole("status").textContent!;
-    expect(message).toContain("holiday.jpg");
+    // The pack isolates the Latin file name (U+2068 â¦ U+2069), so it keeps its order in the Arabic sentence.
+    expect(message).toContain("⁨holiday.jpg⁩");
     expect(message).toContain("يتجاوز");
   });
 });
