@@ -153,3 +153,46 @@ describe("ar pack plural forms", () => {
     expect(hint(100)).not.toContain("ملفًا");
   });
 });
+
+/**
+ * Right-to-left hints
+ *
+ * The accepted types are Latin, so in a right-to-left sentence the bidi
+ * algorithm would reorder them (`image/*` reads `*\/image`). Each type is
+ * wrapped in a left-to-right isolate, and the list joined with the language's
+ * own separator, so every type keeps its order and the list still reads right
+ * to left.
+ */
+describe.each([
+  ["ar", "، "],
+  ["ar-EG", "، "],
+  ["ar-IQ", "، "],
+  ["ar-SA", "، "],
+  ["fa", "، "],
+  ["he", ", "],
+])("%s uploader hint", (code, separator) => {
+  const pack = PACKS.find((candidate) => candidate.code === code)!;
+  const hint = (limits: { accept?: string; maxSize?: string; maxFiles?: number }) =>
+    String((build(pack, "fileUploader").hint as (limits: object) => unknown)(limits));
+
+  it("isolates each accepted type, in the given order", () => {
+    expect(hint({ accept: "image/*,.pdf" })).toBe(`⁦image/*⁩${separator}⁦.pdf⁩`);
+  });
+
+  it("ignores the spaces and empty entries an accept list may carry", () => {
+    expect(hint({ accept: " image/png , ,.pdf " })).toBe(`⁦image/png⁩${separator}⁦.pdf⁩`);
+  });
+
+  it("keeps the other parts as they were", () => {
+    const full = hint({ accept: "image/*", maxSize: "5 MB", maxFiles: 3 });
+    expect(full.startsWith("⁦image/*⁩ · ")).toBe(true);
+    expect(full.split(" · ")).toHaveLength(3);
+  });
+});
+
+it("leaves the left-to-right packs' hints without isolates", () => {
+  for (const pack of PACKS.filter((candidate) => candidate.dir !== "rtl")) {
+    const hint = String((build(pack, "fileUploader").hint as (limits: object) => unknown)({ accept: "image/*,.pdf" }));
+    expect(hint, pack.code).not.toMatch(/[⁦-⁩]/);
+  }
+});

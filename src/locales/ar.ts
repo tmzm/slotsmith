@@ -1,3 +1,4 @@
+import { isolatedList } from "../locale/bidi";
 import { defineLocale } from "../locale/defineLocale";
 import { createNumber, createPlural } from "../locale/plural";
 import type { SlotsmithLocale } from "../locale/types";
@@ -106,7 +107,7 @@ export const ar: SlotsmithLocale = defineLocale({
       // and the file limit only when more than one file is allowed.
       hint: ({ accept, maxSize, maxFiles }) =>
         [
-          accept ? accept.replace(/,/g, "، ") : null,
+          accept ? isolatedList(accept, "، ") : null,
           maxSize ? `حتى ${maxSize}` : null,
           maxFiles && maxFiles > 1
             ? plural(maxFiles, {
