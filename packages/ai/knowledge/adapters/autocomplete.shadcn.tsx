@@ -16,6 +16,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -25,6 +27,7 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
@@ -32,6 +35,7 @@ import type {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 /** Stands in for `lucide-react`'s ChevronDown icon. */
@@ -232,6 +236,41 @@ const ShadcnOption = ({ className, ...props }: AutocompleteOptionSlotProps) => (
 );
 
 /**
+ * Shadcn group
+ *
+ * The `command-group`: its own `<ul>`, carrying `role="group"`, inside a
+ * bare `<li>`.
+ */
+const ShadcnGroup = ({ label: _label, labelId: _labelId, className, ...props }: AutocompleteGroupSlotProps) => (
+  <li role="none">
+    <ul data-slot="command-group" className={cn("overflow-hidden text-foreground", className)} {...props} />
+  </li>
+);
+
+/**
+ * Shadcn group label
+ *
+ * The `command-group` heading, with the combobox's label classes.
+ */
+const ShadcnGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) => (
+  <li data-slot="command-group-heading" className="text-muted-foreground px-2 py-1.5 text-xs font-medium" {...props}>
+    {label}
+  </li>
+);
+
+/**
+ * Shadcn separator
+ *
+ * The `Separator` in a hidden list item, run out to the list's edges like
+ * the `command-separator`.
+ */
+const ShadcnSeparator = ({ className, ...props }: AutocompleteSeparatorSlotProps) => (
+  <li className={cn("-mx-1 my-1", className)} {...props}>
+    <Separator />
+  </li>
+);
+
+/**
  * Shadcn option label
  *
  * The row's text.
@@ -337,6 +376,9 @@ export const shadcnAutocomplete: Partial<AutocompleteComponents> = {
   Option: ShadcnOption,
   OptionLabel: ShadcnOptionLabel,
   Check: ShadcnCheck,
+  Group: ShadcnGroup,
+  GroupLabel: ShadcnGroupLabel,
+  Separator: ShadcnSeparator,
   Empty: ShadcnEmpty,
   Loading: ShadcnLoading,
   Error: ShadcnError,

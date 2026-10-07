@@ -10,7 +10,7 @@
  * bare Radix primitives wants the shadcn/ui adapter, which is built on them.
  */
 import { CheckIcon, ChevronDownIcon, Cross2Icon, CrossCircledIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { Badge, Box, Button, Flex, IconButton, Spinner, Text, TextField } from "@radix-ui/themes";
+import { Badge, Box, Button, Flex, IconButton, Separator, Spinner, Text, TextField } from "@radix-ui/themes";
 import type { ReactNode } from "react";
 import type {
   AutocompleteCheckSlotProps,
@@ -19,6 +19,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -28,6 +30,7 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
@@ -273,6 +276,53 @@ function RadixOption({ style, ...props }: AutocompleteOptionSlotProps) {
 }
 
 /**
+ * Radix group
+ *
+ * The group's own `<ul>`, carrying `role="group"`, inside a bare `<li>`.
+ * Radix's `Select.Group` needs the select's context, so it cannot be used on
+ * its own.
+ */
+const RadixGroup = ({ label: _label, labelId: _labelId, style, ...props }: AutocompleteGroupSlotProps) => (
+  <li role="none">
+    <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  </li>
+);
+
+/**
+ * Radix group label
+ *
+ * The look of `Select.Label`: a row's height and padding in the muted gray,
+ * at the small size.
+ */
+const RadixGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) => (
+  <li
+    style={{
+      display: "flex",
+      alignItems: "center",
+      minHeight: "var(--space-6)",
+      paddingInline: "var(--space-3)",
+      color: "var(--gray-a10)",
+      cursor: "default",
+      userSelect: "none",
+    }}
+    {...props}
+  >
+    <Text size="1">{label}</Text>
+  </li>
+);
+
+/**
+ * Radix separator
+ *
+ * Radix's `Separator` in a hidden list item, run out to the popup's edges.
+ */
+const RadixSeparator = ({ style, ...props }: AutocompleteSeparatorSlotProps) => (
+  <li style={{ marginBlock: "var(--space-1)", marginInline: "calc(var(--space-1) * -1)", ...style }} {...props}>
+    <Separator size="4" />
+  </li>
+);
+
+/**
  * Radix option label
  *
  * The row's text, cut short rather than wrapped.
@@ -396,6 +446,9 @@ export const radixAutocomplete: Partial<AutocompleteComponents> = {
   Option: RadixOption,
   OptionLabel: RadixOptionLabel,
   Check: RadixCheck,
+  Group: RadixGroup,
+  GroupLabel: RadixGroupLabel,
+  Separator: RadixSeparator,
   Empty: RadixEmpty,
   Loading: RadixLoading,
   Error: RadixError,

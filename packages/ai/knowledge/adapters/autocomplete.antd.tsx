@@ -7,7 +7,7 @@
  * out keeps its fallback.
  */
 import { CheckOutlined, CloseCircleFilled, DownOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Empty, Input, Spin, Tag, Typography, theme } from "antd";
+import { Button, Divider, Empty, Input, Spin, Tag, Typography, theme } from "antd";
 import type { InputRef } from "antd";
 import { useCallback, type ReactNode, type Ref } from "react";
 import type {
@@ -17,6 +17,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -26,6 +28,7 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
@@ -281,6 +284,57 @@ function AntOption({ style, ...props }: AutocompleteOptionSlotProps) {
 }
 
 /**
+ * Ant group
+ *
+ * The group's own `<ul>`, carrying `role="group"`, inside a bare `<li>`.
+ */
+const AntGroup = ({ label: _label, labelId: _labelId, style, ...props }: AutocompleteGroupSlotProps) => (
+  <li role="none">
+    <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  </li>
+);
+
+/**
+ * Ant group label
+ *
+ * The look of a group title in Ant's select menu: a row's height and
+ * padding, in the description colour at the small font size.
+ */
+function AntGroupLabel({ label, ...props }: AutocompleteGroupLabelSlotProps) {
+  const { token } = theme.useToken();
+  return (
+    <li
+      style={{
+        minHeight: token.controlHeight,
+        paddingBlock: (token.controlHeight - token.fontSize * token.lineHeight) / 2,
+        paddingInline: token.paddingSM,
+        color: token.colorTextDescription,
+        fontSize: token.fontSizeSM,
+        cursor: "default",
+        boxSizing: "border-box",
+      }}
+      {...props}
+    >
+      {label}
+    </li>
+  );
+}
+
+/**
+ * Ant separator
+ *
+ * Ant's `Divider` in a hidden list item, run out to the popup's edges.
+ */
+function AntSeparator({ style, ...props }: AutocompleteSeparatorSlotProps) {
+  const { token } = theme.useToken();
+  return (
+    <li style={{ marginInline: -token.paddingXXS, ...style }} {...props}>
+      <Divider style={{ marginBlock: token.marginXXS }} />
+    </li>
+  );
+}
+
+/**
  * Ant option label
  *
  * The row's text, cut short rather than wrapped.
@@ -402,6 +456,9 @@ export const antdAutocomplete: Partial<AutocompleteComponents> = {
   Option: AntOption,
   OptionLabel: AntOptionLabel,
   Check: AntCheck,
+  Group: AntGroup,
+  GroupLabel: AntGroupLabel,
+  Separator: AntSeparator,
   Empty: AntEmpty,
   Loading: AntLoading,
   Error: AntError,

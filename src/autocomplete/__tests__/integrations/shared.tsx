@@ -140,3 +140,71 @@ export function itShowsTheInvalidState(
     expectErrorStyle(trigger());
   });
 }
+
+/** Where each shared brand is made, so the integration tests can group them. */
+const COUNTRY: Record<string, string> = {
+  b1: "Finland",
+  b2: "Sweden",
+  b3: "Italy",
+  b4: "Sweden",
+  b5: "Norway",
+  b6: "Denmark",
+  b7: "Denmark",
+  b8: "Denmark",
+  b9: "Finland",
+  b10: "Italy",
+};
+
+/** Groups the shared brands by country, interleaved so grouping has to gather them. */
+export const byCountry = (brand: Brand) => COUNTRY[brand.id];
+
+/**
+ * Renders the groups
+ *
+ * Registers the test every library's `Group`, `GroupLabel` and `Separator`
+ * must pass: each group is a `role="group"` named by its label, in order of
+ * first appearance; the keyboard crosses groups in the order shown; the
+ * separators are hidden and never focusable; and the library's own parts
+ * render them.
+ *
+ * @param renderAutocomplete - Renders the autocomplete with the library's parts.
+ * @param expectLibraryParts - Asserts the library's markers on a group label and a separator.
+ */
+export function itRendersGroups(
+  renderAutocomplete: (props?: Partial<AutocompleteProps<Brand>>) => ReturnType<typeof userEvent.setup>,
+  expectLibraryParts: (parts: { label: HTMLElement; separator: Element }) => void,
+) {
+  it("renders option groups with the library's parts", async () => {
+    const onChange = vi.fn();
+    const user = renderAutocomplete({ getOptionGroup: byCountry, onChange });
+    await user.click(trigger());
+    const listbox = screen.getByRole("listbox");
+
+    const groups = within(listbox).getAllByRole("group");
+    const names = ["Finland", "Sweden", "Italy", "Norway", "Denmark"];
+    expect(groups.map((group) => document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent)).toEqual(names);
+    for (const name of names) expect(within(listbox).getByRole("group", { name })).toBeInTheDocument();
+    expect(within(screen.getByRole("group", { name: "Sweden" })).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "Boråstapeter",
+      "Dux",
+    ]);
+
+    const separators = listbox.querySelectorAll('[aria-hidden="true"][role="none"]');
+    expect(separators).toHaveLength(names.length - 1);
+    separators.forEach((separator) => {
+      expect(separator.querySelector("[tabindex], button, input")).toBeNull();
+      expect(separator).not.toHaveAttribute("tabindex");
+    });
+
+    const label = document.getElementById(groups[0]!.getAttribute("aria-labelledby")!)!;
+    expect(label).toHaveAttribute("role", "presentation");
+    expectLibraryParts({ label, separator: separators[0]! });
+
+    /** Aalto and Iittala (Finland), then Boråstapeter (Sweden). */
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+    const active = document.getElementById(screen.getByRole("searchbox").getAttribute("aria-activedescendant")!);
+    expect(active).toHaveTextContent("Boråstapeter");
+    await user.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledWith("b2", BRANDS[1]);
+  });
+}

@@ -6,7 +6,7 @@
  * want, and pass the map as `components={chakraAutocomplete}`; every slot left
  * out keeps its fallback.
  */
-import { Box, Button, EmptyState, IconButton, Input, List, Span, Spinner, Tag, Text } from "@chakra-ui/react";
+import { Box, Button, EmptyState, IconButton, Input, List, Separator, Span, Spinner, Tag, Text } from "@chakra-ui/react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -14,6 +14,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -23,6 +25,7 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
@@ -189,6 +192,42 @@ const ChakraOption = (props: AutocompleteOptionSlotProps) => (
 const ChakraOptionLabel = ({ label }: AutocompleteOptionLabelSlotProps) => <Span>{label}</Span>;
 
 /**
+ * Chakra group
+ *
+ * A nested `List.Root` carrying `role="group"`, inside a bare `List.Item`.
+ * Chakra's combobox `ItemGroup` needs its own machine's context, so it cannot
+ * be used on its own.
+ */
+const ChakraGroup = ({ label: _label, labelId: _labelId, ...props }: AutocompleteGroupSlotProps) => (
+  <List.Item role="none">
+    <List.Root listStyleType="none" gap="0" p="0" m="0" {...props} />
+  </List.Item>
+);
+
+/**
+ * Chakra group label
+ *
+ * The look of the combobox recipe's `itemGroupLabel`: medium weight, the
+ * rows' padding, in the muted foreground at the small text style.
+ */
+const ChakraGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) => (
+  <List.Item px="3" py="1.5" textStyle="xs" fontWeight="medium" color="fg.muted" cursor="default" {...props}>
+    {label}
+  </List.Item>
+);
+
+/**
+ * Chakra separator
+ *
+ * Chakra's `Separator` in a hidden list item, run out to the list's edges.
+ */
+const ChakraSeparator = (props: AutocompleteSeparatorSlotProps) => (
+  <List.Item my="1" mx="-1" {...props}>
+    <Separator />
+  </List.Item>
+);
+
+/**
  * Chakra check
  *
  * The mark on a selected row, hidden from assistive technology so it stays
@@ -293,6 +332,9 @@ export const chakraAutocomplete: Partial<AutocompleteComponents> = {
   Option: ChakraOption,
   OptionLabel: ChakraOptionLabel,
   Check: ChakraCheck,
+  Group: ChakraGroup,
+  GroupLabel: ChakraGroupLabel,
+  Separator: ChakraSeparator,
   Empty: ChakraEmpty,
   Loading: ChakraLoading,
   Error: ChakraError,

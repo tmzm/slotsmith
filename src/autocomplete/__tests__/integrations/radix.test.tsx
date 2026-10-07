@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { radixAutocomplete } from "./radix/components";
-import { failOnReactWarnings, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Radix Themes wrapper
@@ -40,6 +40,10 @@ beforeAll(stubBrowserApis);
 
 describe("Radix Themes v3", () => {
   failOnReactWarnings();
+  itRendersGroups(renderRadixAutocomplete, ({ label, separator }) => {
+    expect(label.querySelector(".rt-Text")).not.toBeNull();
+    expect(separator.querySelector(".rt-Separator")).not.toBeNull();
+  });
   itShowsTheInvalidState(renderRadixAutocomplete, (trigger) => expect(trigger).toHaveAttribute("data-accent-color", "red"));
 
   it("renders the popup with Radix primitives and variables", async () => {

@@ -13,7 +13,7 @@ import {
   type Brand,
 } from "../builders";
 import { shadcnAutocomplete } from "./shadcn/components";
-import { failOnReactWarnings, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Render shadcn autocomplete
@@ -30,6 +30,10 @@ beforeAll(stubBrowserApis);
 
 describe("shadcn/ui", () => {
   failOnReactWarnings();
+  itRendersGroups(renderShadcnAutocomplete, ({ label, separator }) => {
+    expect(label).toHaveClass("text-muted-foreground", "text-xs");
+    expect(separator.querySelector('[data-slot="separator"]')).not.toBeNull();
+  });
   itShowsTheInvalidState(renderShadcnAutocomplete, (trigger) => expect(trigger).toHaveClass("aria-invalid:border-destructive"));
 
   it("renders the popup with shadcn's parts", async () => {

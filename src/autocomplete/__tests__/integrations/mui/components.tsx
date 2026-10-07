@@ -10,9 +10,11 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
+import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import InputBase from "@mui/material/InputBase";
 import List from "@mui/material/List";
+import ListSubheader from "@mui/material/ListSubheader";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -23,6 +25,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -32,6 +36,7 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
@@ -226,6 +231,40 @@ const MuiCheck = ({ selected }: AutocompleteCheckSlotProps) =>
   ) : null;
 
 /**
+ * MUI group
+ *
+ * MUI's grouped-list shape: a bare `<li>` holding the group's own `<ul>`,
+ * which carries `role="group"` and the label wiring.
+ */
+const MuiGroup = ({ label: _label, labelId: _labelId, ...props }: AutocompleteGroupSlotProps) => (
+  <li role="none">
+    <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none" }} {...props} />
+  </li>
+);
+
+/**
+ * MUI group label
+ *
+ * A `ListSubheader`, compacted to sit above dense rows. It is not sticky, so
+ * it never covers the row the keyboard scrolls to.
+ */
+const MuiGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) => (
+  <ListSubheader component="li" disableSticky sx={{ lineHeight: "32px", fontSize: "0.75rem" }} {...props}>
+    {label}
+  </ListSubheader>
+);
+
+/**
+ * MUI separator
+ *
+ * A `Divider` rendered as the list item itself; the slot's `role` and
+ * `aria-hidden` replace its own `role="separator"`.
+ */
+const MuiSeparator = (props: AutocompleteSeparatorSlotProps) => (
+  <Divider component="li" sx={{ my: 0.5 }} {...props} />
+);
+
+/**
  * MUI empty state
  *
  * Secondary `Typography` in place of the rows.
@@ -321,6 +360,9 @@ export const muiAutocomplete: Partial<AutocompleteComponents> = {
   Option: MuiOption,
   OptionLabel: MuiOptionLabel,
   Check: MuiCheck,
+  Group: MuiGroup,
+  GroupLabel: MuiGroupLabel,
+  Separator: MuiSeparator,
   Empty: MuiEmpty,
   Loading: MuiLoading,
   Error: MuiError,

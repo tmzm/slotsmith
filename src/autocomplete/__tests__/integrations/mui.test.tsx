@@ -14,7 +14,15 @@ import {
   type Brand,
 } from "../builders";
 import { muiAutocomplete } from "./mui/components";
-import { failOnReactWarnings, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import {
+  failOnReactWarnings,
+  itRendersGroups,
+  itShowsTheInvalidState,
+  removeControl,
+  renderIntegration,
+  stubBrowserApis,
+  tagLabels,
+} from "./shared";
 
 /**
  * MUI wrapper
@@ -40,6 +48,10 @@ beforeAll(stubBrowserApis);
 describe("MUI v7", () => {
   failOnReactWarnings();
   itShowsTheInvalidState(renderMuiAutocomplete, (trigger) => expect(trigger).toHaveClass("Mui-error"));
+  itRendersGroups(renderMuiAutocomplete, ({ label, separator }) => {
+    expect(label).toHaveClass("MuiListSubheader-root");
+    expect(separator).toHaveClass("MuiDivider-root");
+  });
 
   it("renders the popup with MUI's primitives", async () => {
     const user = renderMuiAutocomplete();
