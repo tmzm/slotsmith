@@ -245,11 +245,12 @@ const MuiGroup = ({ label: _label, labelId: _labelId, ...props }: AutocompleteGr
 /**
  * MUI group label
  *
- * A `ListSubheader`, compacted to sit above dense rows. It is not sticky, so
- * it never covers the row the keyboard scrolls to.
+ * A `ListSubheader`, compacted to sit above dense rows at 28px, the virtual
+ * list's default `groupLabelSize`. It is not sticky, so it never covers the
+ * row the keyboard scrolls to.
  */
 const MuiGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) => (
-  <ListSubheader component="li" disableSticky sx={{ lineHeight: "32px", fontSize: "0.75rem" }} {...props}>
+  <ListSubheader component="li" disableSticky sx={{ lineHeight: "28px", fontSize: "0.75rem" }} {...props}>
     {label}
   </ListSubheader>
 );

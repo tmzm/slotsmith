@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { SlotsmithProvider } from "../../provider";
 import { VirtualAutocomplete } from "../virtual";
 
@@ -149,21 +149,48 @@ describe("the virtual layout with groups", () => {
    * Records where the virtualizer scrolls the list, and moves it there, so
    * the window follows as it would in a browser.
    */
-  function spyOnScroll() {
+  function spyOnScroll(total = TOTAL) {
     const offsets: number[] = [];
     const scrollTo = vi.fn(function (this: HTMLElement, options: ScrollToOptions) {
       offsets.push(options.top ?? 0);
       Object.defineProperty(this, "scrollTop", { configurable: true, value: options.top ?? 0 });
       this.dispatchEvent(new Event("scroll"));
     });
+    const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollTo");
     Object.defineProperty(HTMLElement.prototype, "scrollTo", { configurable: true, writable: true, value: scrollTo });
     /** The listbox scrolls through every row; nothing else scrolls. */
-    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockImplementation(function (this: HTMLElement) {
-      return this.getAttribute("role") === "listbox" ? TOTAL : 0;
+    const scrollHeight = vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "listbox" ? total : 0;
     });
-    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(320);
+    const clientHeight = vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(320);
+    restores.push(() => {
+      if (original) Object.defineProperty(HTMLElement.prototype, "scrollTo", original);
+      else delete (HTMLElement.prototype as { scrollTo?: unknown }).scrollTo;
+      scrollHeight.mockRestore();
+      clientHeight.mockRestore();
+    });
     return offsets;
   }
+
+  /** Undoes each test's scroll spies, leaving the file's layout spies in place. */
+  const restores: (() => void)[] = [];
+  afterEach(() => {
+    while (restores.length) restores.pop()!();
+  });
+
+  /**
+   * Scroll the list
+   *
+   * Moves the listbox as a user scrolling it would, and lets the virtualizer
+   * hear about it.
+   */
+  const scrollListTo = (top: number) => {
+    const list = screen.getByRole("listbox");
+    act(() => {
+      Object.defineProperty(list, "scrollTop", { configurable: true, value: top });
+      list.dispatchEvent(new Event("scroll"));
+    });
+  };
 
   const groupNamed = (name: string) => screen.getByRole("group", { name });
   const active = (search: HTMLElement) =>
@@ -210,6 +237,54 @@ describe("the virtual layout with groups", () => {
     expect(groupNamed("Region 9")).toContainElement(document.getElementById(search.getAttribute("aria-activedescendant")!));
     await user.keyboard("{ArrowUp}");
     expect(active(search)).toBe("City 99");
+  });
+
+  it("keeps its scroll when a page arrives, with autoHighlight", async () => {
+    const offsets = spyOnScroll(300 * 36 + 3 * 28 + 2 * 9);
+    const page = (count: number) => CITIES.slice(0, count);
+    const props = { getOptionLabel: (city: City) => city.name, getOptionGroup: region, hasMore: true, autoHighlight: true };
+    const user = userEvent.setup();
+    const { rerender } = render(<VirtualAutocomplete<City> options={page(200)} {...props} />);
+    await user.click(screen.getByRole("combobox"));
+    expect(active(screen.getByRole("searchbox"))).toBe("City 0");
+
+    const highlighted = screen.getByRole("searchbox").getAttribute("aria-activedescendant");
+    scrollListTo(7000);
+    const before = offsets.length;
+    rerender(<VirtualAutocomplete<City> options={page(300)} {...props} />);
+
+    expect(offsets.slice(before)).toEqual([]);
+    expect(screen.getByRole("listbox").scrollTop).toBe(7000);
+    /** City 0 is out of the window now, but still the highlight. */
+    expect(screen.getByRole("searchbox")).toHaveAttribute("aria-activedescendant", highlighted);
+  });
+
+  it("names a group through a custom GroupLabel after its label scrolls away", async () => {
+    spyOnScroll();
+    const { user } = renderVirtual({
+      getOptionGroup: region,
+      components: { GroupLabel: ({ label, ...props }) => <li {...props}>{label.toUpperCase()}</li> },
+    });
+    await user.click(screen.getByRole("combobox"));
+    await user.keyboard("{End}");
+
+    expect(groupNamed("REGION 19")).toContainElement(
+      document.getElementById(screen.getByRole("searchbox").getAttribute("aria-activedescendant")!),
+    );
+  });
+
+  it("does not scroll to a group's label when the pointer highlights its first option", async () => {
+    const offsets = spyOnScroll();
+    const { user } = renderVirtual({ getOptionGroup: region });
+    await user.click(screen.getByRole("combobox"));
+
+    /** Region 1's label starts at 3637px; scrolled just past it, City 100 is the first row in view. */
+    scrollListTo(3640);
+    const before = offsets.length;
+    fireEvent.pointerMove(screen.getByRole("option", { name: "City 100" }), { movementX: 1, movementY: 1 });
+
+    expect(active(screen.getByRole("searchbox"))).toBe("City 100");
+    expect(offsets.slice(before)).toEqual([]);
   });
 
   it("highlights the first option in visual order with autoHighlight", async () => {

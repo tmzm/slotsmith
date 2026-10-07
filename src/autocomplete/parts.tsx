@@ -194,12 +194,15 @@ export function AutocompleteGroupView({ section, children }: { section: Autocomp
  *
  * The `GroupLabel` part: the heading row a group is labelled by.
  *
- * @param props - The section it heads.
+ * @param props - The section it heads, and whether to render it hidden: a
+ *   windowed list keeps a hidden copy for a group whose label row has
+ *   scrolled away, so the group is still named the same way.
  */
-export function AutocompleteGroupLabelView({ section }: { section: AutocompleteSection<unknown> }) {
-  const { components: C } = useAutocompleteContext();
+export function AutocompleteGroupLabelView({ section, hidden }: { section: AutocompleteSection<unknown>; hidden?: boolean }) {
+  const { components: C, getGroupLabelProps } = useAutocompleteContext();
+  const props = getGroupLabelProps(section) as { id: string; role: "presentation" };
 
-  return <C.GroupLabel id={section.labelId ?? ""} role="presentation" label={section.group ?? ""} />;
+  return <C.GroupLabel {...props} label={section.group ?? ""} {...(hidden ? { hidden: true } : {})} />;
 }
 
 /**

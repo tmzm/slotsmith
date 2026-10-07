@@ -41,7 +41,11 @@ const PAGE_STEP = 10;
 export interface UseAutocompleteOptions<TOption> {
   /** The options to render. */
   options: TOption[];
-  /** Reads an option's id. Default: `option.value ?? option.id`. */
+  /**
+   * Reads an option's id. Default: `option.value ?? option.id`. Every
+   * option's value must be unique: it keys the rows and builds their DOM ids,
+   * so two options with one value would share an id.
+   */
   getOptionValue?: GetOptionValue<TOption>;
   /** Reads an option's text. Default: `option.label ?? option.name`. */
   getOptionLabel?: GetOptionLabel<TOption>;
@@ -598,29 +602,28 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   }, [open]);
 
   /**
-   * Follow the highlighted option when grouping moves it
+   * Follow the highlighted option when the list changes under it
    *
    * A page that brings more of an earlier group inserts options above the
-   * highlight. The highlight is an index, so it is moved back onto the same
-   * option rather than left on whatever slid into its place.
+   * highlight, and new options can replace old ones without the search
+   * changing. The highlight is an index, so it is moved back onto the same
+   * option, or, when that option is gone, kept within the list. This runs
+   * while rendering rather than in an effect, so no commit ever points
+   * `aria-activedescendant` at whatever slid into the old position.
    */
-  const previousVisible = useRef(visible);
-  useEffect(() => {
-    const previous = previousVisible.current;
-    previousVisible.current = visible;
-    if (!grouped || previous === visible || highlightedIndex < 0) return;
-    const option = previous[highlightedIndex];
-    if (option === undefined) return;
-    const value = getOptionValue(option);
-    const next = visible.findIndex((entry) => getOptionValue(entry) === value);
-    if (next >= 0 && next !== highlightedIndex) setHighlightedIndex(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
-
-  /** A shorter list must not leave the highlight pointing past its end. */
-  useEffect(() => {
-    if (highlightedIndex >= visible.length) setHighlightedIndex(visible.length ? visible.length - 1 : -1);
-  }, [visible.length, highlightedIndex]);
+  const [previousVisible, setPreviousVisible] = useState(visible);
+  if (previousVisible !== visible) {
+    setPreviousVisible(visible);
+    let next = highlightedIndex;
+    const option = highlightedIndex >= 0 ? previousVisible[highlightedIndex] : undefined;
+    if (option !== undefined) {
+      const value = getOptionValue(option);
+      const index = visible.findIndex((entry) => getOptionValue(entry) === value);
+      if (index >= 0) next = index;
+    }
+    if (next >= visible.length) next = visible.length ? visible.length - 1 : -1;
+    if (next !== highlightedIndex) setHighlightedIndex(next);
+  }
 
   /**
    * Auto highlight

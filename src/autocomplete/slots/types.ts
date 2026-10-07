@@ -129,6 +129,12 @@ export interface AutocompleteGroupLabelSlotProps {
   role: "presentation";
   /** The group's name. */
   label: string;
+  /**
+   * Set on the copy a windowed list keeps for a group whose label row has
+   * scrolled away. Pass it on to the element: the group stays named through
+   * it, and it takes no space.
+   */
+  hidden?: boolean;
 }
 
 /**

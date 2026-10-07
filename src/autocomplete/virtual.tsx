@@ -1,7 +1,7 @@
 "use client";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AutocompleteProvider,
   AutocompleteRoot,
@@ -75,23 +75,6 @@ const DEFAULT_MAX_HEIGHT = 320;
 function Spacer({ height }: { height: number }) {
   if (height <= 0) return null;
   return <li aria-hidden="true" data-slot="virtual-spacer" style={{ height, padding: 0, margin: 0 }} />;
-}
-
-/**
- * Hidden group label
- *
- * Stands in for a group's label row once it has scrolled out of the window,
- * so the group in view is still named. `aria-labelledby` reads hidden
- * elements, and a hidden row takes no height from the spacers.
- *
- * @param props - The label's id and text.
- */
-function HiddenGroupLabel({ id, label }: { id: string; label: string }) {
-  return (
-    <li id={id} role="presentation" hidden>
-      {label}
-    </li>
-  );
 }
 
 /**
@@ -205,13 +188,32 @@ export function AutocompleteVirtualList({
   });
 
   /**
+   * The option the pointer last moved over. A highlight that came from the
+   * pointer is already on screen, so it never scrolls the list.
+   */
+  const hovered = useRef(-1);
+  const onPointerMove = useCallback((event: { target: EventTarget | null }) => {
+    const row = (event.target as Element | null)?.closest?.("[data-index]");
+    hovered.current = row ? Number(row.getAttribute("data-index")) : -1;
+  }, []);
+
+  /**
    * Keep the highlighted option in view. Only the rows in the window exist in
    * the DOM, so a jump past it — End, PageDown, typeahead — is scrolled to by
    * the virtualizer, which knows every row's offset, labels and separators
    * included.
+   *
+   * It runs when the highlighted option changes, keyed on its value, and not
+   * when the rows around it do: a page arriving rebuilds the layout, and
+   * scrolling back to an unmoved highlight then would undo the scroll that
+   * asked for the page.
    */
+  const highlightedOption = status === "ready" && highlightedIndex >= 0 ? options[highlightedIndex] : undefined;
+  const highlightedKey = highlightedOption === undefined ? undefined : getOptionValue(highlightedOption);
   useEffect(() => {
-    if (status !== "ready" || highlightedIndex < 0) return;
+    if (highlightedKey === undefined) return;
+    if (hovered.current === highlightedIndex) return;
+    hovered.current = -1;
     const row = layout ? layout.rowOfOption[highlightedIndex] : highlightedIndex;
     if (row === undefined) return;
     /**
@@ -227,7 +229,7 @@ export function AutocompleteVirtualList({
     }
     virtualizer.scrollToIndex(row, { align: "auto" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightedIndex, status, layout]);
+  }, [highlightedKey]);
 
   const items = virtualizer.getVirtualItems();
   const before = items[0]?.start ?? 0;
@@ -262,12 +264,17 @@ export function AutocompleteVirtualList({
         }
         position += 1;
       }
+      /**
+       * A label scrolled out of the window stays as a hidden copy, through
+       * the same part, so the group keeps its name. `aria-labelledby` reads
+       * hidden elements, and a hidden row takes no height from the spacers.
+       */
       if (section.group === undefined) {
         out.push(...run);
       } else {
         out.push(
           <AutocompleteGroupView key={sectionKey(section)} section={section}>
-            {labelInView ? null : <HiddenGroupLabel id={section.labelId!} label={section.group} />}
+            {labelInView ? null : <AutocompleteGroupLabelView section={section} hidden />}
             {run}
           </AutocompleteGroupView>,
         );
@@ -281,6 +288,7 @@ export function AutocompleteVirtualList({
       {...mergeProps(mergeProps(getListProps(), slotProps.list), {
         ref: mergeRefs(listRef as never, setScrollElement),
         style: { maxHeight, overflowY: "auto" as const },
+        onPointerMove,
       })}
     >
       {status === "ready" ? (

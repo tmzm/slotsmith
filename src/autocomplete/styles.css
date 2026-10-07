@@ -330,6 +330,8 @@
   color: var(--_sac-muted);
   font-size: 0.75rem;
   font-weight: 500;
+  /* With the padding, exactly 28px: the virtual list's default groupLabelSize. */
+  line-height: 1rem;
   cursor: default;
   user-select: none;
 }

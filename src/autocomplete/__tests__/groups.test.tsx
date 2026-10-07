@@ -6,6 +6,7 @@ import type { AutocompleteComponents, AutocompleteGroupSlotProps } from "../slot
 import { groupOptions } from "../core/groups";
 import {
   activeOption,
+  BRANDS,
   listbox,
   open,
   optionLabels,
@@ -298,6 +299,98 @@ describe("a custom Group, GroupLabel and Separator", () => {
     expect(first["aria-labelledby"]).toBe(first.labelId);
     expect(screen.getByRole("group", { name: "FINLAND" })).toBeInTheDocument();
     expect(screen.getAllByTestId("separator")).toHaveLength(2);
+  });
+});
+
+describe("the highlight as the list changes under it", () => {
+  /**
+   * Record active ids
+   *
+   * Every value `aria-activedescendant` takes on an element, in commit
+   * order, so a value shown for a single commit is caught too.
+   *
+   * @param element - The element carrying the attribute.
+   * @returns A function that stops recording and returns the values seen.
+   */
+  function recordActiveIds(element: HTMLElement) {
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver((batch) => records.push(...batch));
+    observer.observe(element, { attributes: true, attributeFilter: ["aria-activedescendant"], attributeOldValue: true });
+    return () => {
+      records.push(...observer.takeRecords());
+      observer.disconnect();
+      return [...records.slice(1).map((record) => record.oldValue), element.getAttribute("aria-activedescendant")];
+    };
+  }
+
+  it("points at the same option from the very commit a reordering page arrives in", async () => {
+    const first = [MAKERS[0]!, MAKERS[1]!, MAKERS[3]!];
+    const props = { getOptionLabel: (maker: Maker) => maker.name, getOptionGroup: byCountry };
+    const { user, rerender } = renderWithUser(<Autocomplete<Maker> options={first} hasMore {...props} />);
+    await open(user);
+    /** Aalto (Finland), then Boråstapeter and Dux (Sweden). */
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    const boras = screen.getByRole("option", { name: "Boråstapeter" }).id;
+    expect(searchBox()).toHaveAttribute("aria-activedescendant", boras);
+
+    const stop = recordActiveIds(searchBox());
+    /** Iittala joins Finland, above the highlight. */
+    rerender(<Autocomplete<Maker> options={[...first, MAKERS[4]!]} hasMore {...props} />);
+
+    expect(stop()).toEqual([boras]);
+    expect(active()).toBe("Boråstapeter");
+  });
+
+  it("stays on its option when options leave without the search changing", async () => {
+    const props = { getOptionLabel: (brand: Brand) => brand.name };
+    const all = BRANDS.slice(0, 4);
+    const { user, rerender } = renderWithUser(<Autocomplete<Brand> options={all} {...props} />);
+    await open(user);
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+    expect(active()).toBe("Cassina");
+
+    rerender(<Autocomplete<Brand> options={all.slice(1)} {...props} />);
+    expect(active()).toBe("Cassina");
+  });
+
+  it("stays within the list when its option leaves", async () => {
+    const props = { getOptionLabel: (brand: Brand) => brand.name };
+    const all = BRANDS.slice(0, 4);
+    const { user, rerender } = renderWithUser(<Autocomplete<Brand> options={all} {...props} />);
+    await open(user);
+    await user.keyboard("{End}");
+    expect(active()).toBe("Dux");
+
+    rerender(<Autocomplete<Brand> options={all.slice(0, 2)} {...props} />);
+    expect(active()).toBe("Boråstapeter");
+  });
+});
+
+describe("groups with the invalid state", () => {
+  it("marks the combobox and still renders the groups, with no axe violations", async () => {
+    const { user, container } = renderGrouped({ invalid: true, "aria-label": "Maker" } as never);
+    await open(user);
+
+    expect(trigger()).toHaveAttribute("aria-invalid", "true");
+    expect(searchBox()).not.toHaveAttribute("aria-invalid");
+    expect(groupNames()).toEqual(["Finland", "Sweden", "Italy"]);
+    const result = await axe.run(container, { rules: { "color-contrast": { enabled: false } } });
+    expect(result.violations.map((violation) => violation.id)).toEqual([]);
+  });
+});
+
+describe("groups with paging", () => {
+  it("puts the load-more row after every group", async () => {
+    const onLoadMore = vi.fn();
+    const { user } = renderGrouped({ hasMore: true, onLoadMore });
+    await open(user);
+
+    const more = screen.getByRole("button", { name: "Load more" });
+    expect(more.closest('[role="group"]')).toBeNull();
+    const groups = within(listbox()).getAllByRole("group");
+    expect(groups.at(-1)!.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await user.click(more);
+    expect(onLoadMore).toHaveBeenCalled();
   });
 });
 

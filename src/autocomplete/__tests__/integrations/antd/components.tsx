@@ -297,16 +297,17 @@ const AntGroup = ({ label: _label, labelId: _labelId, style, ...props }: Autocom
 /**
  * Ant group label
  *
- * The look of a group title in Ant's select menu: a row's height and
- * padding, in the description colour at the small font size.
+ * The look of a group title in Ant's select menu, in the description colour
+ * at the small font size, compacted to 28px: the virtual list's default
+ * `groupLabelSize`.
  */
 function AntGroupLabel({ label, ...props }: AutocompleteGroupLabelSlotProps) {
   const { token } = theme.useToken();
   return (
     <li
       style={{
-        minHeight: token.controlHeight,
-        paddingBlock: (token.controlHeight - token.fontSize * token.lineHeight) / 2,
+        minHeight: 28,
+        paddingBlock: (28 - token.fontSizeSM * token.lineHeightSM) / 2,
         paddingInline: token.paddingSM,
         color: token.colorTextDescription,
         fontSize: token.fontSizeSM,

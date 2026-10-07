@@ -299,7 +299,8 @@ const RadixGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) =
     style={{
       display: "flex",
       alignItems: "center",
-      minHeight: "var(--space-6)",
+      /* 28px, the virtual list's default groupLabelSize. */
+      minHeight: "calc(var(--space-5) + var(--space-1))",
       paddingInline: "var(--space-3)",
       color: "var(--gray-a10)",
       cursor: "default",
