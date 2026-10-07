@@ -236,6 +236,20 @@ const defaultGetOptionValue = <TOption,>(option: TOption): OptionValue => {
   return typeof value === "number" ? value : String(value);
 };
 
+/**
+ * Id fragment
+ *
+ * Turns an option's value into a stable, whitespace-free fragment of an HTML
+ * id. Anything outside `[A-Za-z0-9-]` is written as `_` plus its code point,
+ * so distinct values never collide, and numbers and strings are kept apart.
+ *
+ * @param value - The option's value.
+ * @returns The fragment.
+ */
+const idFragment = (value: OptionValue): string =>
+  (typeof value === "number" ? "n" : "s") +
+  String(value).replace(/[^A-Za-z0-9-]/gu, (character) => `_${character.codePointAt(0)!.toString(36)}_`);
+
 const defaultGetOptionLabel = <TOption,>(option: TOption): string => {
   const record = option as Record<string, unknown>;
   return String(record?.label ?? record?.name ?? "");
@@ -302,15 +316,6 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   } = options;
 
   const reactId = useId();
-  const ids = useMemo(
-    () => ({
-      root: `${reactId}-root`,
-      trigger: `${reactId}-trigger`,
-      list: `${reactId}-list`,
-      option: (index: number) => `${reactId}-option-${index}`,
-    }),
-    [reactId],
-  );
 
   const rootRef = useRef<HTMLElement | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -364,6 +369,25 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     () => filterOptions(allOptions, searchable ? query : "", filter, getOptionLabel),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [allOptions, query, searchable, filter],
+  );
+
+  /**
+   * Option ids come from the option's value, not its position. When the
+   * search narrows the list, the new top match then gets a new id, so
+   * `aria-activedescendant` changes and a screen reader announces it.
+   */
+  const ids = useMemo(
+    () => ({
+      root: `${reactId}-root`,
+      trigger: `${reactId}-trigger`,
+      list: `${reactId}-list`,
+      option: (index: number) => {
+        const option = visible[index];
+        return `${reactId}-option-${option === undefined ? `i${index}` : idFragment(getOptionValue(option))}`;
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [reactId, visible],
   );
 
   const belowMinChars = searchable && minChars > 0 && query.trim().length < minChars;
@@ -515,6 +539,16 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     return -1;
   }, [visible, isOptionDisabled]);
 
+  /**
+   * A parent closing a controlled popup skips `setOpen`, so the reset it
+   * would have done happens here: the next open starts from nothing.
+   */
+  useEffect(() => {
+    if (open) return;
+    setHighlightedIndex(-1);
+    highlightMoved.current = false;
+  }, [open]);
+
   /** A shorter list must not leave the highlight pointing past its end. */
   useEffect(() => {
     if (highlightedIndex >= visible.length) setHighlightedIndex(visible.length ? visible.length - 1 : -1);
@@ -525,16 +559,15 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
    *
    * Lands on the first enabled option when the list opens and each time what
    * it shows changes — a new search, or a page arriving — unless the user has
-   * moved the highlight since the search last changed.
+   * moved the highlight since the search last changed. The search is a
+   * dependency of its own, because a caller filtering remotely may hand back
+   * the same array. While a first page is loading the rows on screen may be
+   * the previous search's, so nothing is picked until it settles.
    */
   useEffect(() => {
-    if (!open) {
-      highlightMoved.current = false;
-      return;
-    }
-    if (!autoHighlight || highlightMoved.current) return;
+    if (!open || !autoHighlight || highlightMoved.current || loading) return;
     setHighlightedIndex(firstEnabled());
-  }, [autoHighlight, open, firstEnabled]);
+  }, [autoHighlight, open, firstEnabled, query, loading]);
 
   /** Keep the highlighted row in view without scrolling the page. */
   useEffect(() => {
@@ -611,7 +644,18 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
         if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault();
           setOpenState(true);
-          moveHighlight(event.key === "ArrowUp" ? lastEnabled() : firstEnabled());
+          /**
+           * Landing on the first option is what `autoHighlight` would do
+           * anyway, so only ArrowUp — and only when it found something —
+           * counts as the user moving the highlight. Otherwise opening on a
+           * list that is still loading would switch `autoHighlight` off.
+           */
+          if (event.key === "ArrowUp") {
+            const index = lastEnabled();
+            if (index >= 0) moveHighlight(index);
+          } else {
+            setHighlightedIndex(firstEnabled());
+          }
           return;
         }
         /** Typing opens: into the search box, or straight into typeahead. */
@@ -781,7 +825,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       const value = getOptionValue(option);
       const optionIsDisabled = isOptionDisabled(option);
       return {
-        id: ids.option(index),
+        id: `${reactId}-option-${idFragment(value)}`,
         role: "option" as const,
         "aria-selected": values.includes(value),
         "aria-disabled": optionIsDisabled || undefined,
