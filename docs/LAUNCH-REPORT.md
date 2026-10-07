@@ -1,72 +1,268 @@
 # Launch report
 
-## Needs a decision
+Written 2026-10-07 at commit `6519b87` (`master`). Every number below comes from a run made for this report unless it says otherwise.
 
-- **Owner actions: deploy the docs on Netlify (https://slotsmith.dev).** The repo is ready (`netlify.toml` at the root); these steps stay in Netlify's UI and at the DNS host.
-  1. Netlify: Add new project, Import from Git, pick `tmzm/slotsmith` (the repo's default branch, `master`, is the production branch). Leave the build settings as they come: base directory `docs`, build command and publish directory (`dist`) are read from `netlify.toml`.
-  2. Project settings, Domain management: add `slotsmith.dev` and make it the primary domain. At the DNS host, point the apex at Netlify (the `A` record or ALIAS/ANAME Netlify shows, or use Netlify DNS by switching the nameservers) and `www` as a CNAME to the project's `.netlify.app` address.
-  3. Keep `slotsmith-docs.netlify.app` as a domain alias of the project (do not delete or rename it). The forced rule in `public/_redirects` then sends every path on it to `https://slotsmith.dev/` with a 301.
-  4. Domain management, HTTPS: provision the Let's Encrypt certificate once DNS resolves, and turn on Force HTTPS.
-  5. Deploys: the first build runs the library's test suite (the facts step), so expect about five to seven minutes. The verifier is skipped on Netlify (`DOCS_SKIP_VERIFY=1` in `netlify.toml`, no browser in the build image); CI verifies every change before merge. `DOCS_STRICT` stays off until the last stub pages are written.
-- **Privacy: Google Tag Manager loads on every page** (container `GTM-NV899NTZ`, owner request, with the Search Console verification tag and file). GTM pulls in Google scripts and whatever tags the container holds, so visitors' browsers contact Google on each page view. Depending on the audience (EU and UK visitors in particular) a cookie and consent notice may be needed, and the privacy text should say what the container collects. Consent mode can be set up inside GTM. Lighthouse performance and best-practices scores may drop slightly because of the extra third-party script. The docs verifier answers GTM requests with an empty script, so builds and checks need no network and never run the tags.
-- **Known library accessibility issues, allowlisted in the verifier.** Fallback demos show the parts exactly as they ship, so these axe findings are not worked around in the samples. `scripts/lib/axe-allowlist.ts` lists them (rule, selector, reason); `verify-site` records them in `dist/a11y.json` under `knownLibraryIssues` instead of failing the build, and any other finding still fails it. Each needs a library fix; remove its entry once fixed.
-  - `nested-interactive` on `.sfu__zone`: the file uploader's dropzone is `role="button"` with `tabIndex=0` (`useFileUploader` `dropzoneProps`) and holds the Browse `<button>`. Possible fix: drop the zone's button role and tab stop (Browse already opens the dialog), or drop Browse from the zone.
-- Landing initial JS is about 111 KB gzipped at 360px and 112 KB at 1440px (the hero peek table hydrates only there), against the 90 KB budget. React (client + react-dom) is about 68 KB and the data table with its page-size select about 37 KB; the swap demo itself adds about 4 KB (island 3.1 KB, sample and data 0.8 KB). Meeting 90 KB needs a smaller first island (for example rendering the swap table server-only until first interaction) or a budget change.
-- **The facts step runs the library's full test suite on every docs build.** `scripts/facts.ts` runs `vitest run --reporter=json` at the repo root to count tests, which adds about 35 seconds to each docs build (measured on a developer machine; likely longer on Netlify's build image) and repeats the tests CI already runs in the library job. Options: accept it (simple; the counts can never be stale), or have the CI test job write its JSON report and pass its path to the facts script (for example `FACTS_TESTS_JSON=<path>`, reading `numTotalTests` and `testResults.length` from it) so the docs job does not run the suite again. Default: accept.
-- **The marquee has no persistent pause control.** It pauses on hover and while a link has focus, and is static under reduced motion, but nothing stops it for good. WCAG 2.2.2 (Pause, Stop, Hide) asks for a mechanism to pause moving content that starts automatically, lasts over 5 seconds and sits next to other content. The plan asks for a slow marquee paused on hover and focus. Options: add a small pause/play button beside the strip, stop the loop after a few cycles, or accept the risk. Default: as built (hover, focus and reduced-motion pause only).
-- **The site's own focus ring is under 3:1 in light mode.** DESIGN.md asks for a 2px `--gold` (#c9a14a) outline everywhere; on light vellum that is 2.18:1 on `--bg` (#f4f3ef) and 2.32:1 on `--panel` (#fbfaf7), below WCAG 1.4.11's 3:1 for focus indicators. The demos already use `--gold-text` (#7d5f1c, 5.36:1 on `--bg`, 5.71:1 on `--panel`) for their accent in light mode (`library.css`), so only the site chrome is affected. Options: use `--gold-text` for focus in light mode, add a dark inner ring, or accept it. Default: as built.
-- **OWNER ACTION, blocks launch: turn on private vulnerability reporting.** The Trust page's Security section sends reporters to `https://github.com/tmzm/slotsmith/security/advisories/new`. That form only accepts reports from outsiders once "Private vulnerability reporting" is enabled on the repository (GitHub: Settings, then Code security, then Private vulnerability reporting, Enable). Until then the page names a channel that does not work, so enable it before the site is announced, or change the Security text to another private channel (for example the email on the About page).
-- **Trust page policy drafts** (`docs/src/content/docs/en/trust.mdx`). The three texts below are drafts until you approve them; each is the reversible default.
-  1. **Versioning (SemVer).** As written: breaking changes ship only in a major version; before an API is removed it is marked `@deprecated` in the types (editors show that as a warning) and keeps working for at least one minor version; `slotsmith-ai` shares its major and minor with `slotsmith`. To decide: whether "one minor" is the notice you want to promise, and whether a deprecation should also log a development warning (today the library only uses `@deprecated` JSDoc, as on the `slotsmith/locale` re-exports of the provider, so the page promises no runtime warning).
-  2. **Support.** As written: slotsmith targets the last two versions of Chrome, Edge, Firefox and Safari, and the page says the tests run in jsdom and this site's checks in Chromium, with Firefox and Safari in no automated run; ES2022, `Intl` and `IntersectionObserver` required; React 18 and 19; Node 20 or later for `slotsmith-ai`. The table under it reads the React peer range, the Node range, the license and the version from the packages. To decide: the browser list, and whether to add a Firefox and WebKit run (Playwright has both) so "targets" can become "tested in".
-  3. **Security.** As written: report privately through a GitHub security advisory on `tmzm/slotsmith`; first answer within seven days; fixes go into the latest minor (the table shows it as a release line, for example `1.7.x`). To decide: the seven-day target (the plan asked for a response target and named no number), and whether older minors get fixes. The link needs the owner action above. The repo has no `SECURITY.md`, so the page does not link one; adding one with the same text would also fill GitHub's Security tab.
-- **The repo has no `LICENSE` file.** Both packages declare `"license": "ISC"` and the Trust page's License section says so, but there is no license text in the repo or the tarball to link to. Default: the page states the license without a link. Adding a root `LICENSE` file is outside what the docs plans may change.
-- **The deployed Trust page has no axe results while Netlify skips the verifier.** axe runs in `verify-site`, which writes the results table into the built Trust pages. `netlify.toml` sets `DOCS_SKIP_VERIFY=1` (no browser in the build image), so a Netlify build publishes the page with a short paragraph in place of the table: it says this build did not run the browser checks and links to the docs workflow's runs. CI builds do carry the table. Options: publish the CI-built `dist` (the `docs-dist` artifact) to Netlify from the workflow instead of letting Netlify build; install Chromium in the Netlify build and drop `DOCS_SKIP_VERIFY`; or keep the paragraph. Default: as built. Until this is decided the page says axe runs "each time the site is built and verified", not "at every deploy".
-- **Sizes are now in kilobytes of 1000 bytes, on the landing too.** The Trust plan asks for `(bytes / 1000).toFixed(1)`; the landing's trust line and the size FAQ used 1024, so the same entry would have read 17.0 KB on the landing and 17.4 KB on the Trust page. Both now use 1000 (the landing's `gzip` value went from "17.0 KB" to "17.4 KB" for the same bytes). Default: 1000 everywhere; say so if you prefer 1024 (KiB) everywhere.
-- **Root `vitest` is a caret range next to an exact `@vitest/coverage-v8`.** `@vitest/coverage-v8` is pinned to `5.0.1` and needs exactly that `vitest`; the root `package.json` still asks for `vitest` `^5.0.1`. Both resolve to 5.0.1 in the lockfile today, so nothing breaks, but a later `pnpm update` could move `vitest` alone and break the coverage run that `scripts/facts.ts` needs for the Trust page. Pinning `vitest` to `5.0.1` rewrites the lockfile, which pnpm could not do offline (`ERR_PNPM_NO_OFFLINE_META`), so it was left. Default: pin it with the end-of-run downloads (`"vitest": "5.0.1"`, then `pnpm install`).
-- **Changelog: what the README does not say.** The page is generated from the README's `## Changelog`, which starts at 1.5.0 and has no dates. (a) Releases 1.0.0 to 1.4.0 exist on npm and as release commits but never had written notes; the page says so and links to the commit history. Default: no entries are invented. To decide: whether to write short notes for them in the README. (b) No release shows a date. Default: none shown. To decide: whether to add dates to the README headings (the release commits have them). (c) The token-scope change planned for 1.8.0 is shown as `Unreleased`, with the note "In the repository, not published to npm yet". At release, rename that README entry to `1.8.0`; the page, its description and the header tag follow on the next build, and the Roadmap's "In progress" section disappears until there are new unreleased notes.
-- **Roadmap wording to confirm** (`docs/src/data/roadmap.ts`, text in `messages.en.ts` / `messages.ar.ts` under `roadmap.*`). No item has a date. (a) "Spreadsheet mode for the data table" (renamed from "Excel mode", owner decision) and "Data table rendering performance" are your two stated plans, written from your words; they have no `TODO` tag in the source, so they carry their own ids (`#spreadsheet-mode`, `#render-performance`). (b) The plan called the third source item "keeping the sorted view on reorder", but `TODO(reorder-sorting)` says the behaviour is undecided (block the drop, or clear the sort), so the page says that instead. (c) "Locales that cross the server and client boundary" states only what `TODO(server-locales)` states: a serialisable locale form. (d) The Arabic text of these items is a draft. (e) The Excel mode item has no "How it works today" link, since no page documents cell editing yet.
-- **The README's size figures disagree with the generated ones.** `README.md` types sizes by hand in two places: the stylesheet comments under Install (about lines 70 to 73: `styles.css` 24.4 KB, `autocomplete.css` 5.5 KB, `date-picker.css` 7.0 KB) and the table under "You ship only what you import" (about lines 287 to 291: `Autocomplete` alone 18.4 KB, `useAutocomplete` alone 7.9 KB, `DatePicker` alone 19.1 KB, `useDatePicker` alone 9.2 KB, all four 81.2 KB). Neither states a unit of measure (minified or gzipped, 1000 or 1024 bytes) or a method, and they differ from what the Trust page measures at build for 1.7.0 (minified: `styles.css` 27.5 KB, `autocomplete.css` 5.8 KB, `date-picker.css` 7.5 KB, `slotsmith/autocomplete` 20.2 KB, `slotsmith/date-picker` 19.5 KB, the main entry 85.4 KB), so they look like figures from an older release. Options: replace them with the Trust numbers and their method, drop the numbers and link to `/trust/#sizes`, or generate that part of the README. Default: unchanged (the README is the owner's; plan 08 Task 5 edits its positioning and can take this with it).
-- **Big Shoulders 900: the M, N and W nearly close up.** At weight 900 the typeface draws M, N and W with thin cut diagonals, and at poster size "SM" or "OM" reads as two letters run together ("SLOTSMITH", "AUTOCOMPLETE", "THEMING"). It is the font's drawing, not kerning: Chrome shows the same with kerning off, at every size. The Open Graph images therefore use Big Shoulders 800 (the default taken here; reversible in `FONT_FILES` in `src/lib/og.ts`). The site's own display headings still use 900 as DESIGN.md says. To decide: keep 900 on the site, or move the display weight to 800 there too.
+**At a glance**
 
-## Library issues
+- The site is live at https://slotsmith.dev (Netlify, built from this repo). The old `slotsmith-docs.netlify.app` address, `http://` and `www.` all send a 301 to it.
+- Build: 100 pages, 0 problems, 0 stubs. axe: 0 violations; 18 findings of one known library issue.
+- Lighthouse (mobile, median of 3): every gated page scores 0.97 or more in all four categories, CLS 0.
+- Library: 1456 tests in 65 files pass; `slotsmith-ai`: 110 tests in 6 files pass.
+- One thing blocks the announcement: GitHub private vulnerability reporting is off (see [Needs a decision](#6-needs-a-decision)).
 
-- **The knowledge generator misses label defaults that are spread in.** `packages/ai/scripts/generate.ts` reads each label's default from the `defaultLabels` object literal, so the six reorder labels that arrive through `...defaultReorderLabels` (`reorderRow` … `reorderCancelled`) have no `default` in the generated knowledge (and so none in slotsmith-ai's answers). The docs' labels table fills them from the library's exported `defaultLabels` at build time.
-- **`HeaderRow` and `FooterRow` are documented with body-row data attributes.** Both slots take `RowSlotProps`, whose JSDoc lists `data-depth`, `data-expanded` and `data-clickable`, so the generated reference gives them those attributes; the header and footer rows never carry them (`parts.tsx` spreads only `slotProps.headerRow` / `footerRow`). Fix: a separate props type (or JSDoc) for the header and footer rows. The docs show the generated data as it is.
-- **A remote autocomplete reads "No results" for the first 300 ms after it opens.** `useAsyncOptions` sets `loading` only when the debounced request starts (`core/useAsyncOptions.ts`, `run`), so between opening and the debounce firing there are no options and no `loading`, and the engine's status is `empty` (`core/useAutocomplete.ts`, `status`). The list shows the `empty` row, then `Loading…`, then the options. Possible fix: treat "a request is scheduled" as loading (set `loading` when the query or `enabled` changes, before the timer), or skip the debounce for the first request after `enabled` turns on. The remote-options test asserts the loading row after the debounce, not before.
-- **The autocomplete's `Trigger` and `Popup` data attributes are missing from the generated reference.** `getTriggerProps` puts `data-open`, `data-disabled` and `data-empty` on the trigger (`core/useAutocomplete.ts`), and `Autocomplete.Popup` puts `data-placement` on the popup (`parts.tsx`), but `AutocompleteTriggerSlotProps` and `AutocompletePopupSlotProps` do not document them, so the generator gives those slots none. The docs add them through `docs/src/data/data-attributes.json`. Fix: list them in the two slot props' JSDoc.
-- **The date picker's `Trigger` and `Popup` data attributes are missing from the generated reference.** `getTriggerProps` puts `data-open`, `data-disabled` and `data-empty` on the trigger (`src/date-picker/core/useDatePicker.ts`), and `DatePickerPopup` puts `data-placement` on the popup (`src/date-picker/parts.tsx`), but the `DpTriggerProps` and `DpPopupProps` JSDoc lists none. The docs add them through `docs/src/data/data-attributes.json`; listing them in the slot JSDoc would make that entry unnecessary.
-- **A date range can span blocked days, and a preset can pick them.** `pick` checks only the clicked date against `minDate`, `maxDate` and `disabledDates`, so a range whose two ends are allowed may contain blocked days; `applyPreset` checks nothing, so a preset can set a value outside the bounds (`src/date-picker/core/useDatePicker.ts`). The docs state both (overview limitations, the bounds and presets guides). An option to reject such ranges, or to clamp presets, would be a library change.
-- **The date picker has no `name` prop.** Unlike the autocomplete, it renders no hidden input, so a plain HTML form needs one written by hand. Stated in the overview's limitations.
-- **shadcn/ui's published table uses physical sides** (`text-left`, `[&:has([role=checkbox])]:pr-0`), so in right-to-left pages its headers stay left-aligned. Not a slotsmith bug; the docs mirror them under `[dir="rtl"]` in `samples/adapters/shadcn.css`.
-- **The file uploader's refusals may not be announced the first time.** `FileUploader.Rejections` renders nothing until a file is refused (`src/file-uploader/parts.tsx`), so the `role="status"` region is inserted together with its first message; many screen readers announce only changes to a live region that already exists. Later refusals go into the same region and are announced. Fix: keep an empty region mounted. The docs describe the region as it ships.
-- **The file uploader's item actions are not named per file.** Every item's buttons are "Remove file", "Retry upload" and "Cancel upload" (`labels.remove/retry/cancel`, plain strings), so a list of files has several identical names. Fix: make them functions of the file name, like `progress` and `preview`. Stated in the overview's accessibility section.
-- **In Chrome the hidden file input is a second "Add files" button.** The visually hidden `<input type="file">` (`inputProps`, `tabIndex: -1`) keeps the zone's `aria-label`, and Chrome exposes it as a button, so a screen reader's browse mode finds two "Add files" buttons. Possible fix: `aria-hidden` on the input when a zone or Browse button is present.
-- **A cancelled upload cannot be restarted from its row.** `cancel` puts the item back to `ready` (`core/useFileUploader.ts`), and `FileUploader.Actions` shows Retry only for `error`, so the row offers only Remove; `uploadAll()` restarts it. Stated in the uploads guide.
-- **The file uploader's `rejectedTitle` label is never rendered.** It is in `FileUploaderLabels` and every locale pack, but neither the fallbacks nor the generated adapters use it.
-- **`.sfu[data-variant="tile"] .sfu__zone:not([data-empty])` always matches.** The zone never carries `data-empty` (only the root does), so the empty tile also gets the solid border meant for a filled one (`src/file-uploader/styles.css`). Fix: `.sfu[data-variant="tile"]:not([data-empty]) .sfu__zone`.
-- **The file uploader's `Dropzone`, `Icon`, `Progress` and `Action` data attributes are missing from the generated reference.** `data-disabled` on the zone (`dropzoneProps`), `data-dragging` on the icon, `data-active` on the progress bar and `data-action` on each action button (`slots/fallbacks.tsx`) are not in the slot props' JSDoc. The docs add them through `docs/src/data/data-attributes.json`.
-- **The Chakra file-uploader adapter's progress bar is named by its percentage.** `ChakraProgress` spreads the `aria-label` ("Uploading photo.png") onto `Progress.Root`, which has no role; Chakra's `Progress.Track` carries `role="progressbar"` and names itself "20%". Fix in the chakra skin and the regenerated adapter: pass the label to `Progress.Track`.
+## 1. Checklist
+
+The plans' "brief requirements 1–10" come from a brief that is not in the repo; the spec (`superpowers/specs/2026-09-29-docs-launch-site-design.md`) covers all of them, so this list follows the spec section by section.
+
+### Site and pages
+
+| Item | Status | Where |
+| --- | --- | --- |
+| Static Astro site in `docs/`, English at `/`, Arabic at `/ar/` | Done | `src/pages/`, `src/i18n/` |
+| Every page of the site map (100 pages: 50 English, 50 Arabic) | Done | `src/content/docs/en/` |
+| Props and slots generated from source (brief req. 4) | Done | `scripts/reference.ts`, `/components/<c>/api/` |
+| Every sample is a type-checked file, rendered and checked (brief req. 8) | Done | `samples/`, `scripts/check-snippets.ts`, `scripts/verify-site.ts` |
+| Getting started, slot model guide, theming, languages, AI tools, about | Done | `src/content/docs/en/*.mdx` |
+| Next.js App Router and Vite examples, built in CI | Done | `samples/frameworks/next-app/`, `samples/frameworks/vite/` |
+| Trust page, generated at build (tests, coverage, suites, sizes, axe, policies) | Done; on Netlify the axe table is replaced by a note (see 6) | `src/content/docs/en/trust.mdx`, `scripts/facts.ts` |
+| Roadmap, Comparison (researched, dated sources), Changelog (from the README) | Done | `src/data/roadmap.ts`, `src/data/comparison.ts`, `/changelog/` |
+| Header (version badge, search, GitHub, npm, language, theme), footer (edit link, license, author) | Done | `src/components/Header.astro` |
+| Collapsible sidebar, wider container (owner requests) | Done | header menu button, `src/components/Header.astro` |
+| Arabic prose for guides | Not done (out of scope; Arabic chrome, titles and demos only) | |
+
+### Landing (a–h and the close)
+
+| Section | Status | Where |
+| --- | --- | --- |
+| a. Positioning + install (tabs for npm / pnpm / yarn / bun) | Done (positioning reworded by the owner: "any design system", the libraries are examples) | `src/components/landing/Hero.astro` |
+| b. Swap demo, exploded view (Fallback, shadcn, MUI, Chakra, Ant Design) | Done | `Swap.astro`, `samples/landing/` |
+| c. Two kinds of parts | Done | `Parts.astro` |
+| d. The four components (mosaic with live mini demos) | Done | `Cards.astro` |
+| e. Works with what you have (marquee with logos) | Done | `WorksWith.astro` |
+| f. Languages and RTL (en / ar / fa) | Done | `Languages.astro` |
+| g. Use with AI agents | Done | `Agents.astro` |
+| h. Trust strip from generated facts | Done | `TrustStrip.astro` |
+| Close (gold band) | Done | `Close.astro` |
+| GSAP scroll choreography (lazy, ≥ 1024×660, never under reduced motion) | Done | `src/lib/landing-motion.ts` |
+| Initial JS within 90 KB gzipped | **Not met**: about 123 KB (see 6) | |
+
+### Component template (all four components)
+
+| Item | Status | Where |
+| --- | --- | --- |
+| Overview: demo, install, quick start, guide list, accessibility, limitations, FAQ | Done | `src/content/docs/en/components/<c>/index.mdx` |
+| Guides: 27 pages (data table 8, autocomplete 7, date picker 5, file uploader 7), each with a live demo and full code | Done (server-data guide included) | `…/components/<c>/guides/` |
+| API: slots, props, labels and locales, styling (generated) | Done | `/components/<c>/api/` |
+| Adapters: shadcn/ui, MUI, Chakra, Ant Design, Radix Themes, each live | Done | `/components/<c>/adapters/` |
+
+### SEO, GEO, search, performance, CI
+
+| Item | Status | Where |
+| --- | --- | --- |
+| Unique title and description per page, canonical, hreflang, OG and Twitter tags | Done (checked by `verify-site`) | `src/layouts/Base.astro` |
+| OG image per page (100 PNGs, Arabic set right to left) | Done | `src/lib/og.ts` |
+| `sitemap.xml` (100 URLs), `robots.txt`, `llms.txt` (11 KB), `llms-full.txt` (545 KB, under 1 MB) | Done | `src/pages/*.ts` |
+| JSON-LD, Markdown copies, answer-first check, FAQs, AI-crawler rules, last-updated dates | Done (see 3a) | `src/lib/seo-files.ts`, `src/lib/git-dates.ts`, `scripts/check-structure.ts` |
+| Pagefind search, one index per language | Done | `scripts/search-index.ts` |
+| Lighthouse ≥ 0.95 on `/` and `/components/data-table/`, CLS ≤ 0.01 | Done (gate also covers `/components/data-table/api/` and `/theming/`) | `lighthouserc.cjs` |
+| `DOCS_STRICT=1` fails on stubs (Netlify builds with it) | Done | `netlify.toml` |
+| Docs workflow: install, library build, examples, test, check, build + verify, Lighthouse | Done (its runs on GitHub were not checked for this report) | `.github/workflows/docs.yml` |
+| Netlify builds from this repo (`docs/` base) | Done and live | `netlify.toml` |
+| Old hash and path URLs redirect | Done (see 5) | `public/_redirects`, script on `/` |
+
+### Outside `docs/` and process
+
+| Item | Status |
+| --- | --- |
+| README positioning, short versions linking to the docs | Done |
+| Root `package.json` `description` and `homepage`; `packages/ai/package.json` `homepage` | Done |
+| `@vitest/coverage-v8` and `vitest` pinned to 5.0.1 | Done |
+| `pnpm-workspace.yaml` includes `docs` and the example apps | Done |
+| Library changes only with the owner's approval | Done (each fix below was approved) |
+| One-line conventional commits, no AI attribution | Done |
+| Old repo `tmzm/slotsmith-docs` archived | Not done (owner step, see 7) |
+
+## 2. Lighthouse
+
+Run on 2026-10-07 at commit `6519b87`: `pnpm --filter slotsmith-docs exec lhci autorun` against the full build, Lighthouse 12.6.1, installed Chrome on Windows, mobile preset (412×823), 3 runs per page. The run passed every assertion.
+
+| Page | Performance | Accessibility | Best practices | SEO | CLS | LCP | FCP |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `/` | 0.99 (runs 0.99, 0.99, 0.97) | 1 | 1 | 1 | 0 | 1.8 s | 1.3 s |
+| `/components/data-table/` | 0.97 (0.97, 0.97, 0.99) | 1 | 1 | 1 | 0 | 2.4 s | 1.5 s |
+| `/components/data-table/api/` | 1 | 1 | 1 | 1 | 0 | 1.7 s | 1.1 s |
+| `/theming/` | 1 (1, 0.99, 1) | 1 | 1 | 1 | 0 | 1.7 s | 1.0 s |
+| `/ar/` (one run, not gated) | **0.89** | 1 | 1 | 1 | 0 | 3.6 s | 1.6 s |
+
+- `/ar/` is slower because of fonts: the page loads three Noto Sans Arabic weights (49, 51 and 53 KB) and Alexandria 800 (13 KB) on top of the Latin fonts. Subsetting or dropping a weight is the fix (see 6).
+- The landing's file-uploader card trips Lighthouse's `label-content-name-mismatch` check (the dropzone is named "Add files" but shows other text). It does not lower the score; the fix is the same library change as the axe finding below.
+
+## 3. axe
+
+`verify-site` output from the full build: **100 pages, 0 problems, 0 stubs, 18 known library a11y issues.** `dist/a11y.json` holds 84 demo results with 0 violations.
+
+- No axe rule is disabled.
+- One rule is allowlisted, with its reason, in `scripts/lib/axe-allowlist.ts`: `nested-interactive` on `.sfu__zone`. It accounts for all 18 findings (9 file-uploader demos, English and Arabic). It is a library issue (see 4); remove the entry once it is fixed.
+
+## 3a. GEO
+
+- **Structured data.** The schema.org validator (validator.schema.org, live site, 2026-10-07) reports 0 errors and 0 warnings for the landing (`SoftwareSourceCode`, `FAQPage`) and for `/components/data-table/guides/pagination/` (`TechArticle`, `BreadcrumbList`). Google's Rich Results Test has no API and was not run; FAQ rich results only show for government and health sites anyway, so `FAQPage` is there for AI search.
+- **`robots.txt`** allows, by name: GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-User, Claude-SearchBot, PerplexityBot, Perplexity-User, Google-Extended, Applebot-Extended, CCBot, then every other crawler, then the sitemap. Live at https://slotsmith.dev/robots.txt.
+- **Markdown copies.** 100 `index.md` files in the build; live ones answer `200 text/markdown; charset=utf-8` (checked `/components/data-table/index.md` and `/ar/index.md`). Each page links its copy with `<link rel="alternate" type="text/markdown">`.
+- **Last-updated dates** are live and differ per page (for example `/components/data-table/` 2026-10-04, `/theming/` 2026-10-06, `/about/` 2026-10-07), so **Netlify's clone has full history**: `netlify.toml` runs `git fetch --unshallow` first. If history were shallow, `src/lib/git-dates.ts` would show no date rather than a wrong one. CI checks out with `fetch-depth: 0`.
+
+## 4. Library issues
+
+Still open. "Tiny fix" marks the ones that are a few lines and safe to approve.
+
+**File uploader**
+
+1. **The dropzone is a button that contains a button** (the one allowlisted axe rule, and Lighthouse's name mismatch). `useFileUploader` gives the zone `role="button"` and `tabIndex: 0` (`src/file-uploader/core/useFileUploader.ts:567`), and the zone holds the Browse `<button>`. Fix: drop the zone's role and tab stop when Browse is shown (Browse already opens the dialog), or leave Browse out of a focusable zone.
+2. **Refusals may not be announced the first time.** `FileUploader.Rejections` returns `null` until a file is refused (`src/file-uploader/parts.tsx:326`), so the live region arrives with its first message. Fix: keep an empty region mounted. *Tiny fix.*
+3. **Item buttons share one name.** Every item's buttons read "Remove file", "Retry upload", "Cancel upload" (`src/file-uploader/slots/fallbacks.tsx:304-306`). Fix: make them functions of the file name, like `progress` and `preview`.
+4. **The hidden file input is a second "Add files" button in Chrome.** It keeps the zone's label (`useFileUploader.ts:576-583`). Fix: `aria-hidden` on the input when a zone or Browse button exists. *Tiny fix.*
+5. **A cancelled upload cannot be restarted from its row.** `cancel` sets the item back to `ready` (`useFileUploader.ts:478-484`) and Retry shows only for `error` (`parts.tsx:95`). Fix: show Retry (or Upload) for a cancelled item.
+6. **`rejectedTitle` is never rendered** (`fallbacks.tsx:314`; in every locale pack). Fix: render it as the rejections heading, or remove the label.
+7. **The tile's filled-border rule always matches.** `.sfu[data-variant="tile"] .sfu__zone:not([data-empty])` (`src/file-uploader/styles.css:320`), but only the root carries `data-empty`. Fix: `.sfu[data-variant="tile"]:not([data-empty]) .sfu__zone`. *Tiny fix.*
+8. **Chakra uploader adapter: the progress bar is named "20%".** The skin spreads the label onto `Progress.Root`, which has no role (`src/file-uploader/__tests__/integrations/chakra/components.tsx:121-129`). Fix: pass it to `Progress.Track`, then regenerate the `slotsmith-ai` adapter. *Tiny fix.*
+
+**Autocomplete and date picker**
+
+9. **A remote autocomplete shows "No results" for its first 300 ms.** `loading` is set only when the debounced request starts (`src/autocomplete/core/useAsyncOptions.ts:91-99`), so the status is `empty` until then (`src/autocomplete/core/useAutocomplete.ts:352`). Fix: count a scheduled request as loading, or skip the debounce for the first request.
+10. **A date range can span blocked days; presets are not checked.** `pick` checks only the clicked day (`src/date-picker/core/useDatePicker.ts:528-530`), `applyPreset` checks nothing (`:565`). Fix: an option to reject such ranges and to clamp presets.
+11. **The date picker has no `name` prop** (no hidden input), unlike the autocomplete. Fix: render one hidden input per value when `name` is set.
+
+**Generated reference and knowledge**
+
+12. **Missing `data-*` attributes in slot JSDoc.** The docs fill them in from `docs/src/data/data-attributes.json`: data table `Row` (`data-row-id`, `data-state`, `data-dragging`, …), `Root`, `HeaderCell`, `Cell`, `ExpandToggle`; autocomplete and date picker `Trigger` / `Popup` (`src/autocomplete/slots/types.ts:43,54`, `src/date-picker/slots/types.ts:38,49`); uploader `Dropzone`, `Icon`, `Progress`, `Action`. Fix: list them in the JSDoc so the JSON file can go. *Tiny fix (comments only).*
+13. **`HeaderRow` and `FooterRow` are documented with body-row attributes** (`src/data-table/slots/types.ts:46`, `:316`, `:322`); they never carry them (`src/data-table/parts.tsx:126`, `:234`). Fix: their own props type or JSDoc.
+14. **The knowledge generator drops spread-in label defaults** (the six reorder labels): `objectValues` reads only plain properties (`packages/ai/scripts/generate.ts:374-381`). Fix: resolve `...defaultReorderLabels`. *Tiny fix.*
+15. **JSDoc gaps:** `Constraints.accept`, `maxSize`, `minSize` (units not stated; `src/file-uploader/core/validate.ts:115-117`); six `FileUploaderLabels` keys (`remove`, `retry`, `cancel`, `uploading`, `done`, `failed`; `src/file-uploader/slots/types.ts:225-234`); per-slot docs on `AutocompleteComponents` and `DatePickerComponents`. *Tiny fix.*
+
+**Packaging and tests**
+
+16. **`import … from "slotsmith"` still imports `@tanstack/react-table`.** The main entry pulls a chunk that imports it (`dist/chunk-*.js`), so an autocomplete-only app depends on the bundler dropping it. ES module tree shaking is tested; a real app without the peer is not. Fix: a test app with no TanStack installed, per bundler.
+17. **One `.d.ts` serves both `import` and `require`** (every entry in `package.json` `exports`). Fix: run arethetypeswrong; emit `.d.cts` if it complains.
+18. **`dist` CSS is not minified** (`dist/styles.css` is 32,460 bytes as shipped; the Trust page measures 27,712 minified). Fix: minify the CSS in `tsup.config.ts`. *Tiny fix.*
+19. **Stale test comment.** `src/__tests__/bundle.test.ts:273-276` says the uploader borrows the table's class helper; it now uses `src/shared/cx`, so the uploader could join the CommonJS test. *Tiny fix.*
+20. **axe runs in only two library tests** (`page-size.test.tsx`, `reorder.test.tsx`); other "a11y" suites check ARIA by hand. The docs build runs axe on all 84 demos, which covers most of the gap.
+21. **`packages/ai` uses TypeScript ^6, the root ^7** (the docs also need 6 for `astro check`). Align when Astro supports 7.
+
+Not slotsmith bugs, noted for users: shadcn/ui's table uses physical sides (`text-left`), so its headers stay left on RTL pages (the docs mirror them in `samples/adapters/shadcn.css`); shadcn's `Progress` fills from the left in RTL; MUI's `Alert` puts its close button at the far left in Arabic.
+
+### Fixed for 1.8.0 (owner-approved, in `master`, not yet on npm)
+
+- `--ss-*` tokens set on a wrapper now reach the components (token scope).
+- The shadcn file-uploader adapter works with the real shadcn/ui `Alert` and `Progress`.
+- Provider and component types no longer need `@tanstack/react-table` installed.
+- **Published bug:** the main entry's and `slotsmith/locale`'s type re-exports resolved to the built scripts, so `import { DataTable } from "slotsmith"` was untyped under `moduleResolution: "bundler"`. This affects every 1.7.0 user and is a strong reason to release 1.8.0 soon.
+- Clear and tag-remove buttons are 24px targets.
+- The Ant Design date-picker adapter keeps focus on the picked day.
+- Arabic, Persian and Hebrew packs isolate file types in the uploader hint (`image/*` no longer reads `*/image`) and file names in its messages, including the wrong-type refusal.
+- `VirtualFileUploader` scrolls the whole list with the default stylesheet.
+- New: `SlotsmithProvider` `components` (global slot overrides).
+
+## 5. Redirects
+
+From the spec. Hash URLs never reach a server, so an inline script on `/` maps them with `location.replace()`:
+
+| Old | New |
+| --- | --- |
+| `#/` | `/` |
+| `#/docs/installation` | `/getting-started/` |
+| `#/docs/slots` | `/guides/` |
+| `#/docs/theming` | `/theming/` |
+| `#/docs/locales` | `/languages/` |
+| `#/docs/ai-tools` | `/ai-tools/` |
+| `#/docs/data-table` | `/components/data-table/` |
+| `#/docs/file-uploader` | `/components/file-uploader/` |
+| `#/docs/autocomplete` | `/components/autocomplete/` |
+| `#/docs/date-picker` | `/components/date-picker/` |
+| `#/docs/author` | `/about/` |
+| any other `#/…` | `/` |
+
+`public/_redirects` (generated by `scripts/redirects.ts`) sends real 301s for the path forms and the old domain. Checked live: `/docs/data-table` → `/components/data-table/`, and `slotsmith-docs.netlify.app` → `https://slotsmith.dev/`.
+
+```
+# Old path forms of the hash routes. Generated by scripts/redirects.ts.
+/docs/installation  /getting-started/  301
+/docs/installation/  /getting-started/  301
+/docs/slots  /guides/  301
+/docs/slots/  /guides/  301
+/docs/theming  /theming/  301
+/docs/theming/  /theming/  301
+/docs/locales  /languages/  301
+/docs/locales/  /languages/  301
+/docs/ai-tools  /ai-tools/  301
+/docs/ai-tools/  /ai-tools/  301
+/docs/data-table  /components/data-table/  301
+/docs/data-table/  /components/data-table/  301
+/docs/file-uploader  /components/file-uploader/  301
+/docs/file-uploader/  /components/file-uploader/  301
+/docs/autocomplete  /components/autocomplete/  301
+/docs/autocomplete/  /components/autocomplete/  301
+/docs/date-picker  /components/date-picker/  301
+/docs/date-picker/  /components/date-picker/  301
+/docs/author  /about/  301
+/docs/author/  /about/  301
+
+# The old Netlify address sends every path to the real domain (forced, so it wins over a file).
+https://slotsmith-docs.netlify.app/*  https://slotsmith.dev/:splat  301!
+```
+
+## 6. Needs a decision
+
+**Blocks launch**
+
+- **Turn on GitHub private vulnerability reporting.** The Trust page sends reporters to `github.com/tmzm/slotsmith/security/advisories/new`; GitHub's API says the feature is off (`"enabled": false`, checked 2026-10-07), so outsiders cannot use that form. Settings → Code security → Private vulnerability reporting → Enable. Or change the Security text to another private channel.
+
+**Open**
+
+- **The live Trust page has no axe table.** Netlify skips the verifier (`DOCS_SKIP_VERIFY=1`, no browser in its build image), so the deployed page shows a short note linking to the workflow runs (checked live). Options: publish the CI-built `dist` (the `docs-dist` artifact) to Netlify from the workflow; install Chromium in the Netlify build; or keep the note. Default: keep the note.
+- **Arabic fonts slow `/ar/`** (performance 0.89, LCP 3.6 s). Options: subset Noto Sans Arabic to the characters the site uses, drop a weight (400, 500 and 700 all load), or preload fewer. Default: as built; `/ar/` is not in the Lighthouse gate.
+- **No `LICENSE` file** (both packages say ISC; GitHub shows no license) and **no `SECURITY.md`**. Adding both at the root is a small owner commit; the Trust page would then link them.
+- **Landing initial JS is about 123 KB gzipped against a 90 KB budget.** Measured from the landing's Lighthouse run (scripts it loaded, gzipped locally): 170 KB in all, of which GSAP, ScrollTrigger and the motion code (47 KB) load after first paint and sit outside the budget. The rest is mostly React (64 KB) and the data table with its autocomplete and floating-ui (34 KB). GSAP also downloads on phones, where the pin never runs. Options: load GSAP only on screens ≥ 1024×660, render the swap table server-only until first interaction, or raise the budget. Default: as built (scores are 0.97–0.99).
+- **Google Tag Manager on every page** (`GTM-NV899NTZ`). Visitors' browsers contact Google on each view (119 KB from `googletagmanager.com` on the landing). EU and UK visitors may need a consent notice and the privacy text should say what the container collects. Default: as built, no consent banner.
+- **The site's focus ring is under 3:1 in light mode** (`--gold` #c9a14a: 2.18:1 on the background; `src/styles/base.css:148`). Options: use `--gold-text` for focus in light mode, add an inner dark ring, or accept. Default: as built.
+- **Library tiny fixes** in section 4 (items 2, 4, 7, 8, 12, 14, 15, 18, 19): approve any for 1.8.0, or leave them for later.
+
+**Defaults taken (say if you disagree)**
+
+- The marquee pauses on hover, focus and reduced motion, but has no pause button (WCAG 2.2.2 asks for one).
+- The facts step runs the library's test suite on every docs build (counts never go stale; costs about 35 s per build).
+- Sizes use 1000-byte kilobytes everywhere.
+- Library logos are recoloured to the site's text colour (MUI's and Tailwind's guidelines ask for unaltered marks).
+- Changelog: 1.0.0–1.4.0 have no written notes and no release shows a date; nothing is invented.
+- Roadmap and site Arabic text are drafts that need a native review; "Spreadsheet mode" has no "how it works today" link (no cell-editing page yet).
+
+**Decided (not asked again)**
+
+- Library fixes: fixed for 1.8.0 (list in 4). Release as **1.8.0** (minor) with release notes.
+- Author link: tareqmozayek.com. Bundlephobia badge: removed.
+- Headings stay Big Shoulders 900 on the site; OG images use 800.
+- "Excel mode" is "Spreadsheet mode" (`#spreadsheet-mode`).
+- Trust policies accepted as written: SemVer, latest minor supported, aim to answer security reports within seven days.
+- `@vitest/coverage-v8` installed and `vitest` pinned to 5.0.1; network downloads done.
+- README size figures replaced by a link to the Trust page's sizes.
+
+## 7. Owner steps to launch
+
+1. **Push `master` after this report.** There is no `docs/launch-site` branch any more; all work is on `master`. `origin/master` already has every commit up to `6519b87` (last pushed 2026-10-07 12:20), so only this report is unpushed. Those pushes, and several earlier ones, came from outside the agents; check they were yours. Netlify is linked, so every push to `master` deploys.
+2. **Netlify: already done** (checked 2026-10-07). The site builds from `tmzm/slotsmith` with base directory `docs` and publish `dist`, both read from `netlify.toml`. Leave the UI build settings empty.
+3. **Domain: already done.** `slotsmith.dev` serves the site over HTTPS; `www.`, `http://` and `slotsmith-docs.netlify.app` 301 to it. Keep `slotsmith-docs.netlify.app` as a domain alias so the forced rule in `_redirects` keeps working, and keep Force HTTPS on.
+4. **Turn on private vulnerability reporting** (see 6).
+5. **Google Search Console:** the verification tag and file are live (`/google4048afc7f0404042.html` answers 200). Verify the `slotsmith.dev` property, submit `https://slotsmith.dev/sitemap.xml`, and run the Rich Results Test on `/` once.
+6. **Archive `tmzm/slotsmith-docs`.** Replace its README with one line pointing to https://slotsmith.dev, then Settings → Archive. (Anonymous requests get "Not Found", so it may be private already; archive it either way.)
+7. **Release 1.8.0.** Rename the README's `Unreleased` changelog entry to `1.8.0`, bump `version` in the root `package.json` and `packages/ai/package.json` (they share major and minor), then `npm publish` both. The docs' header badge, Changelog and Roadmap follow on the next build. Your rule: a version bump also updates the docs and the portfolio, and the portfolio is pushed to its default branch.
+8. **Publish `slotsmith-ai` 1.8.0 with it.** npm has 1.7.0 (the same as the repo today), but 1.8.0 adds the provider guides and the regenerated Ant Design date-picker and shadcn uploader adapters.
 
 ## Notes
 
-- **Four library issues fixed for 1.8.0** (owner decision). The autocomplete's and date picker's clear buttons and the autocomplete's tag remove buttons are 24px targets, so the verifier no longer allows `target-size` on them; the Ant Design date-picker adapter keeps focus on a picked day (the docs copy matches the regenerated adapter); the Arabic, Persian and Hebrew packs isolate the accepted types in the uploader's hint (`image/*` no longer reads `*/image`) and, likewise, the file names in its messages; and `VirtualFileUploader` scrolls through the whole list with the fallback stylesheet, so the virtual guide's demo no longer needs its `slotProps` workaround.
-- **`--ss-*` tokens set on a wrapper now reach the components** (fixed, owner decision). Before the fix every stylesheet resolved its component tokens on `:root` (`--sdt-accent: var(--ss-accent, …)`), and a custom property's `var()` is resolved where it is declared, so `--ss-*` set on an ordinary wrapper never reached the components inside it. That was not quite "the whole page or not at all": the `.dark, [data-theme="dark"]` re-declarations also resolved the tokens on any dark-marked element, so `--ss-*` set on a dark wrapper (or an ancestor below one) did reach its subtree. Now each component resolves internal `--_<prefix>-*` values on its own root and popup (`.sdt`, `.sac, .sac__popup`, `.sdp, .sdp__popup`, `.sfu`), reading the app's component token first, then `--ss-*`, then the default; the library no longer declares the public colour, radius and font-size tokens, so an app's own `--sdt-accent` on `:root`, a wrapper or the root still wins. The docs' `.site-demo` mapping now gives the demos the site palette, and the theme preview no longer re-declares the component token rules (`tokenRules` and the `base` prop are gone).
-- **Structured data limits.** Google shows FAQ rich results only for well-known government and health sites, so the landing's and the data-table overview's `FAQPage` will not show as rich results; it is kept because AI search engines read it. `TechArticle` carries the page's Open Graph image as `image` (so does the landing's `SoftwareSourceCode`); it has no `datePublished`, only the `dateModified` git gives.
-- **Library logos in "Works with what you have"** (owner decision: show the official marks). Each entry is the project's monochrome mark beside its name: shadcn/ui, MUI, Chakra UI, Ant Design, Tailwind CSS, TanStack Table and TanStack Query. Source: Simple Icons (simple-icons 16.28.0 via jsDelivr, slugs `shadcnui`, `mui`, `chakraui`, `antdesign`, `tailwindcss`, `tanstack`); Simple Icons releases the icon paths under CC0 1.0, and the trademarks belong to their owners (nominative use, naming libraries slotsmith works with). The files are in `src/components/logos/`, drawn with `fill="currentColor"`, `aria-hidden="true"` and no `<title>` (the name beside each mark is the link text). TanStack Table and TanStack Query share the TanStack mark (Simple Icons' `reacttable` and `reactquery` are the former React-era marks). Open question for the owner: MUI's and Tailwind's brand guidelines ask for their marks unaltered; here every mark is recoloured to the site's text colour (gold on hover). Keep the recolouring, or show those two in their brand colours?
-- **The first-load wave animates `border-color`** (accepted exception). DESIGN §6 asks for the panels to be outlined in gold as the first-load wave passes, while §7 says to animate only transforms, opacity and clip-path. The wave (`waveOrder` in `src/lib/landing-motion.ts`, Web Animations API, once per session, never under reduced motion) animates `border-color` for that flash; it is a short paint-only change on a few panels, with no layout cost.
-- Chakra UI's provider puts a reset and global styles on `html` and every element (colour, background, line height, font family, `font-feature-settings: "cv11"`, border colours). The swap demo's Chakra provider (`samples/adapters/provider-chakra.tsx`) scopes Chakra's system to `.chakra-scope` (`cssVarsRoot`, `preflight.scope`, scoped `globalCss`); with it, loading the Chakra variant changes no computed style outside the demo.
-- The swap demo has an Ant Design variant (owner request): `samples/landing/swap-antd.tsx` with the shipped Ant Design data-table adapter, under `ConfigProvider` (`theme.darkAlgorithm` or `defaultAlgorithm` from the site theme, `direction` from the page; `samples/adapters/provider-antd.tsx`). It loads only on interaction with its segment, like the others. Ant Design injects no global styles: every rule it adds is scoped to its own `.ant-*` / `.css-*` classes or the adapter's per-table class, and loading the variant changes no computed style outside the demo (checked in Chrome, en/ar, light/dark), so no scoping was needed.
-- The positioning sentence (hero `<h1>`, landing title and description) no longer reads as a fixed list of design systems (owner request, overriding the spec's wording): "…for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own." The swap lede, the parts table and the works-with copy likewise present shadcn/ui, MUI, Chakra and Ant Design as examples of well-known design systems, in English and Arabic.
-- The shipped shadcn data-table adapter's pagination now uses shadcn's `Button` (current page in the default variant with `aria-current="page"`, the rest ghost, outline previous / next with lucide chevrons drawn inline) and shadcn's `Select` (`npx shadcn add select`; `radix-ui` is no longer a direct peer of the adapter), and `text-muted-foreground` for the page summary. The landing shows that adapter unchanged, with no styling shim.
-- The shipped shadcn file-uploader adapter now renders correctly with the published shadcn/ui `Alert` and `Progress` (fixed, owner decision). `Rejections` is a destructive `Alert` led by lucide's `CircleAlert` drawn inline, so the alert's grid has two real columns; the messages list and the Dismiss button share the second, Dismiss at the inline end (also in right-to-left pages), and the region is `role="status"` with `aria-live="polite"` instead of shadcn's assertive `role="alert"`. `Progress` sets `aria-valuenow`, `aria-valuemin` and `aria-valuemax` itself, since shadcn's `Progress` keeps `value` for its indicator. The library's test kit `Alert` and `Progress` now behave like upstream (a 0-wide first column without an icon, no `aria-valuenow`), so its tests would catch a regression. The docs show the adapter unchanged.
-- The shadcn swap variant runs on Tailwind CSS v4 (`@tailwindcss/vite`) and the real shadcn/ui (new-york, Tailwind v4) `button`, `checkbox`, `select`, `skeleton` and `table` sources in `docs/src/components/ui/` (`lucide-react` is not installed: the checkbox and select draw lucide's icons inline). `samples/adapters/shadcn.css` scans only the adapter and the ui files (`source(none)` plus two `@source`s), nests every utility under `.shadcn-scope` (and the wrapper radix puts around the portalled select list), has no preflight (a scoped subset only), and is linked by the swap demo when the shadcn variant loads, never in the page's initial CSS. Loading it changes no pixel of the landing outside the demo (masked full-page screenshot diff, en/ar, light/dark).
-- **The docs' shadcn/ui sources now match upstream** (2026-10-06). `docs/src/components/ui/{alert,avatar,badge,button,checkbox,input,progress,select,skeleton,table}.tsx` had been written from memory; they were diffed against `npx shadcn@latest add` output (new-york, Tailwind v4) in a throwaway project and replaced with it, keeping the `@/lib/utils` import and the inline lucide icons in `checkbox` and `select`. Upstream differed in: `badge` (fully rounded, `ghost` and `link` variants, a `data-variant` attribute, `default` as the default variant), `avatar` (a `size` prop and `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount`), `button` (`xs` and `icon-xs` sizes), `table` (a row with an expanded control gets the hover background), `select` (`data-slot="select-item-indicator"`); the rest only in class order. The shadcn demos look the same in Chrome (en/ar, 360/1440, light/dark).
-- **shadcn/ui's `Progress` fills from the left on right-to-left pages.** Upstream moves the indicator with `translateX(-…%)`, a physical direction, so on `/ar/` the shadcn uploader's bar grows from the left while the page reads from the right. It is the app's own `ui/progress.tsx` (shadcn's file, copied into the project), so the adapter leaves it alone; an app that wants it mirrored edits that file.
-- **MUI's own labels are Arabic on `/ar/`** (done). The MUI adapter demos and the landing swap demo's MUI segment give the MUI theme the `arEG` locale on Arabic pages (`samples/adapters/provider-mui.tsx`; `SampleIsland` and `SwapDemo` pass the page language), so rows per page, `1–5 من 12` and the page buttons' names are Arabic.
-- **The MUI uploader's rejection ✕ in Arabic** (adapter cosmetic). MUI's `Alert` puts its close button at the inline end, so on `/ar/` the ✕ sits at the far left edge of the alert, away from the message on the right. It is MUI's own right-to-left layout, not a slotsmith bug.
-- **Open Graph images.** Every page has a 1200×630 image at `/og/<page>.png` (`src/lib/og.ts`, `src/pages/og/[...slug].png.ts`), drawn at build with `satori` and `@resvg/resvg-js` from the `woff` files of the `@fontsource` packages the site already uses (Big Shoulders 800, Geist 400, JetBrains Mono 500, Alexandria 800); nothing is downloaded. The landing's image says what slotsmith is: the hero sentence up to its colon, with the component names in gold, in each language. A title too long for the image gets smaller type and then ends in an ellipsis; it is never clipped. 100 images take about 4 s of the build and 3.8 MB of `dist`. `satori` has no right-to-left layout, so an Arabic title is split into words and set right to left by the image code; the result matches Chrome for the titles the site has. Two limits: Arabic vowel marks (the shadda in "المكوّنات") are left out of the image because `satori` draws them on top of the letters, and an `/ar/` page whose title is not translated yet shows its English title, as the page itself does. `verify-site` fails the build when a page has no `og:image` or the file is missing.
-- **Search covers the docs pages, not the landing.** Pagefind indexes what sits inside `data-pagefind-body`, which only the docs layout's article carries, so `/` and `/ar/` are not in the index and the landing's FAQ is not searchable (the same questions are answered on the docs pages). Demos, generated fallback and adapter source, and page chrome are left out of the index.
-- **Search on `/ar/` improves once Arabic prose exists.** Pagefind keeps one index per page language. The `/ar/` pages still show English prose, which the Arabic index does not stem, so results there are `/ar/` pages only but ranked less well than on the English pages; Arabic terms match the translated titles, headings and table labels.
-- **Landing scroll choreography: what was only checked by hand.** The forced exploded state (`--explode: 1`) was checked by hand. Pagination and PageSizeSelect sit below the fold of the scrolling demo box and get no floating label. Each floating label is placed where it covers no text, control or other label (`src/lib/label-placement.ts`); one with no free place stays hidden, as `{PageSizeSelect}` does in the slot model guide's X-ray on a 360px screen, and the parts list still names it. While the view is half open two labels can touch each other for a moment. The pin and the switch's mini explode run on screens at least 1024px wide and 660px tall that allow motion; below that the static labelled diagram stays. The languages sweep needs only motion to be allowed.
-- **Lighthouse CI** (`docs/lighthouserc.cjs`, docs workflow; reports in `docs/.lighthouseci/`, uploaded as the `lighthouse` artifact). Mobile preset, 3 runs each, gate ≥ 0.95 per category and CLS ≤ 0.01. First local run (2026-10-06, Chrome on Windows, strict build, 0 stubs) passed: `/` performance 0.98 / accessibility 0.97 / best practices 1 / SEO 1, CLS ≤ 0.0007; `/components/data-table/` 0.95–0.98 / 1 / 1 / 1, CLS 0.0011. Margins are thin: one data-table run scored performance 0.95 (LCP 2.6 s, FCP 2.0 s). Measured once, not gated: `/ar/` performance 0.89 (FCP 2.6 s, LCP 3.2 s), `/theming/` 0.99 / 0.97 / 1 / 1 with CLS 0.023 (a prose paragraph in the article moves), `/components/data-table/api/` 0.99 / 1 / 1 / 1 with CLS 0.015 (a prose paragraph in the API section moves). Netlify builds with `DOCS_STRICT=1` and still skips the verifier.
+- **Search** covers the docs pages, not the landing (only the docs layout carries `data-pagefind-body`). `/ar/` results rank less well until Arabic prose exists.
+- **Open Graph images** are drawn at build with `satori` and `@resvg/resvg-js` from local fonts (Big Shoulders 800, Geist, JetBrains Mono, Alexandria). Arabic titles are set right to left by the image code; Arabic vowel marks are left out because `satori` draws them on top of the letters.
+- **The first-load wave animates `border-color`** (accepted exception to DESIGN §7: a short paint-only gold flash).
+- **Design-system demos are scoped.** Chakra's global reset is confined to `.chakra-scope`; Ant Design adds no global styles; the shadcn variant runs on Tailwind v4 with a stylesheet scoped to `.shadcn-scope` and loaded only with that segment. None changes anything outside its demo (checked in Chrome, en/ar, light/dark).
+- **The docs' shadcn/ui files match upstream** `npx shadcn add` output (new-york, Tailwind v4), with lucide icons drawn inline.
+- **MUI demos use the `arEG` locale on `/ar/`**, so MUI's own labels are Arabic.
+- **Landing choreography** was checked by hand at the forced exploded state; floating labels never cover text and hide when they have no free place (`{PageSizeSelect}` in the slot guide's X-ray at 360px).
+- **Structured data:** `TechArticle` carries the page's OG image and a `dateModified` from git, no `datePublished`.
