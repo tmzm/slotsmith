@@ -5,7 +5,6 @@
 Finished data table, combobox, date picker and file uploader for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own. Every part is a slot; what you don't replace still looks finished.
 
 [![npm](https://img.shields.io/npm/v/slotsmith?color=e0a11b&label=npm)](https://www.npmjs.com/package/slotsmith)
-[![bundle](https://img.shields.io/bundlephobia/minzip/slotsmith?color=e0a11b)](https://bundlephobia.com/package/slotsmith)
 [![types](https://img.shields.io/npm/types/slotsmith?color=e0a11b)](https://www.npmjs.com/package/slotsmith)
 [![stars](https://img.shields.io/github/stars/tmzm/slotsmith?color=e0a11b)](https://github.com/tmzm/slotsmith)
 
@@ -168,21 +167,24 @@ Every component is also exercised, in every library, by an integration suite tha
 Set the same maps once on `SlotsmithProvider` instead of on every component: `components` takes one map per component, each the same shape as that component's own `components` prop, so an adapter works in either place.
 
 ```tsx
-import { SlotsmithProvider } from "slotsmith/provider";
+import { SlotsmithProvider, type SlotsmithComponents } from "slotsmith/provider";
 
-<SlotsmithProvider
-  components={{
-    dataTable: { Checkbox, Pagination },
-    autocomplete: { Option },
-    datePicker: { Day },
-    fileUploader: { Progress },
-  }}
->
-  <App />
-</SlotsmithProvider>
+// Outside the component, so the object keeps its identity between renders.
+const components: SlotsmithComponents = {
+  dataTable: { Checkbox, Pagination },
+  autocomplete: { Option },
+  datePicker: { Day },
+  fileUploader: { Progress },
+};
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return <SlotsmithProvider components={components}>{children}</SlotsmithProvider>;
+}
 ```
 
-Each slot resolves in three layers, the later one winning: the built-in fallback, then the provider's `components`, then the component's own `components` prop. Nested providers merge slot by slot and inherit what they do not name. The table's built-in page-size select is an `Autocomplete`, so it follows `components.autocomplete` unless a `PageSizeSelect` slot replaces it. Define the object outside your component (or memoise it) so it keeps its identity between renders; `slotProps` stay on each component.
+Each slot resolves in three layers, the later one winning: the built-in fallback, then the provider's `components`, then the component's own `components` prop. Nested providers merge slot by slot and inherit what they do not name. The table's built-in page-size select is an `Autocomplete`, so it follows `components.autocomplete` unless a `PageSizeSelect` slot replaces it. Provider-level autocomplete slots therefore receive every option type, including the table's page-size options (`{ value: number, label: string }`): the key is typed for an unknown option, so a `Tag` or `OptionLabel` written for one option shape is a type error there and goes on that autocomplete's own `components` prop instead. Define the object outside your component, as above (or memoise it), so it keeps its identity between renders; `slotProps` stay on each component.
+
+In the Next.js App Router, or any React Server Components framework, render the provider from a `"use client"` file such as the `Providers` above: the map holds functions, and functions cannot be passed from a Server Component to a client one.
 
 Not using a component library? Every fallback also exposes `data-*` state, so Tailwind alone is enough: `[&_tr[data-state=selected]]:bg-muted`.
 
@@ -296,7 +298,8 @@ pnpm test:ai     # the MCP server in packages/ai
 ## Changelog
 
 - **Unreleased** — Behaviour changes: component tokens (`--sdt-*`, `--sac-*`, `--sdp-*`, `--sfu-*`) are inputs only. The stylesheets no longer declare them, so read `var(--ss-accent, <default>)` instead of `var(--sdt-accent)` in your own CSS. `--ss-*` set on any wrapper now applies to the components inside it, and a component token still beats it wherever each is set (a `--sdt-accent` on `:root` beats a `--ss-accent` on a closer wrapper). A component token set on an inner part (for example `.sdt__row`) is no longer read; set it on the component or above. A popup portalled outside the wrapper does not see the wrapper's `--ss-*`; see [Theming](#theming).
-- `SlotsmithProvider` takes `components`: slot overrides for every component below it, one map per component (`dataTable`, `autocomplete`, `datePicker`, `fileUploader`), so a design system is applied once instead of on every component. A component's own `components` prop still wins slot by slot, and nested providers merge; see [Once, for the whole app](#once-for-the-whole-app). New type `SlotsmithComponents`, from `slotsmith/provider`.
+- `SlotsmithProvider` takes `components`: slot overrides for every component below it, one map per component (`dataTable`, `autocomplete`, `datePicker`, `fileUploader`), so a design system is applied once instead of on every component. A component's own `components` prop still wins slot by slot, and nested providers merge; see [Once, for the whole app](#once-for-the-whole-app). `components.autocomplete` also reaches the data table's built-in page-size select, so its slots are typed for any option and must not assume one option shape. New type `SlotsmithComponents`, from `slotsmith/provider`.
+- Fixes: the type declarations of `slotsmith/provider`, `slotsmith/locale`, the locale packs and every component but the data table no longer import `@tanstack/react-table`, so an app without that optional peer type-checks with `skipLibCheck: false`; and the main entry's and `slotsmith/locale`'s re-exports resolve to their declarations under `moduleResolution: "bundler"` instead of to the built scripts beside them, which had left them untyped.
 
 - **1.7.0** — Adapters for Ant Design and Radix Themes are now available through `slotsmith-ai`, alongside the existing MUI, shadcn/ui and Chakra UI ones — twenty ready-made adapters in all, copied into a project with `npx slotsmith-ai add` or buildable as a shadcn/ui registry; see [Ready-made adapters](#ready-made-adapters). Fixes: the data table's page-size menu follows `--sdt-*` token overrides, clicking its "Rows per page" label focuses it and its numbers use the table's locale digits, and the file uploader's size text no longer throws on a malformed locale tag.
 
@@ -318,8 +321,8 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ## Author
 
-Built by **[Tareq Al-Mozayek](https://tareq-mozayek-portfolio.netlify.app/en)** — full-stack developer, frontend-focused, Damascus.
-[Portfolio](https://tareq-mozayek-portfolio.netlify.app/en) · [LinkedIn](https://www.linkedin.com/in/tareq-al-mozayek-3ab2603a9/) · [Email](mailto:tareqmozayek@gmail.com)
+Built by **[Tareq Al-Mozayek](https://tareqmozayek.com)** — full-stack developer, frontend-focused, Damascus.
+[Portfolio](https://tareqmozayek.com) · [LinkedIn](https://www.linkedin.com/in/tareq-al-mozayek-3ab2603a9/) · [Email](mailto:tareqmozayek@gmail.com)
 
 If it saves you a day of work, a ⭐ on [the repo](https://github.com/tmzm/slotsmith) helps others find it.
 
