@@ -54,6 +54,7 @@ export const tr: SlotsmithLocale = defineLocale({
       placeholder: "Seçin…",
       search: "Ara…",
       clear: "Seçimi temizle",
+      toggle: "Seçenekleri göster",
       remove: (label) => `Kaldır: ${label}`,
       empty: "Sonuç yok",
       loading: "Yükleniyor…",

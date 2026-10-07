@@ -53,6 +53,7 @@ export const es: SlotsmithLocale = defineLocale({
       placeholder: "Seleccionar…",
       search: "Buscar…",
       clear: "Borrar selección",
+      toggle: "Mostrar opciones",
       remove: (label) => `Quitar ${label}`,
       empty: "Sin resultados",
       loading: "Cargando…",

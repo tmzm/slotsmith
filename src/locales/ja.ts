@@ -54,6 +54,7 @@ export const ja: SlotsmithLocale = defineLocale({
       placeholder: "選択してください",
       search: "検索…",
       clear: "選択をクリア",
+      toggle: "候補を表示",
       remove: (label) => `${label}を削除`,
       empty: "結果がありません",
       loading: "読み込み中…",

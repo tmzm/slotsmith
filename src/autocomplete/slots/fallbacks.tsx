@@ -75,6 +75,10 @@ export const autocompleteFallbacks: AutocompleteComponents = {
 
   Trigger: ({ className, ...props }) => <div className={cx(classes.trigger, className)} {...props} />,
 
+  TriggerInput: ({ className, ...props }) => <input className={cx(classes.triggerInput, className)} {...props} />,
+
+  Toggle: ({ className, ...props }) => <button className={cx(classes.toggle, className)} {...props} />,
+
   Value: ({ label, placeholder, empty }) => (
     <span className={cx(classes.value, empty && classes.valueEmpty)}>{empty ? placeholder : label}</span>
   ),
@@ -195,6 +199,7 @@ export const defaultAutocompleteLabels: AutocompleteLabels = {
   placeholder: "Select…",
   search: "Search…",
   clear: "Clear selection",
+  toggle: "Show options",
   remove: (label) => `Remove ${label}`,
   empty: "No results",
   loading: "Loading…",

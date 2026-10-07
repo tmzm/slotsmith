@@ -12,7 +12,7 @@
   "autocomplete": {
     "Options": ["options", "getOptionValue", "getOptionLabel", "optionDisabled", "getOptionGroup", "filter", "selected"],
     "Selection": ["multiple", "value", "defaultValue", "onChange", "clearable", "closeOnSelect", "name"],
-    "Search": ["searchable", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars"],
+    "Search": ["searchable", "searchIn", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars"],
     "Open state and keyboard": ["open", "defaultOpen", "onOpenChange", "loop", "autoHighlight", "disabled", "invalid", "onBlur"],
     "Remote options": ["loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore"],
     "Creating": ["creatable", "onCreate", "createLoading"],

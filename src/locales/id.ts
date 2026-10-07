@@ -53,6 +53,7 @@ export const id: SlotsmithLocale = defineLocale({
       placeholder: "Pilih…",
       search: "Cari…",
       clear: "Hapus pilihan",
+      toggle: "Tampilkan opsi",
       remove: (label) => `Hapus ${label}`,
       empty: "Tidak ada hasil",
       loading: "Memuat…",

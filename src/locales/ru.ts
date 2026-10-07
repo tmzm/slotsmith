@@ -53,6 +53,7 @@ export const ru: SlotsmithLocale = defineLocale({
       placeholder: "Выберите…",
       search: "Поиск…",
       clear: "Очистить выбор",
+      toggle: "Показать варианты",
       remove: (label) => `Удалить ${label}`,
       empty: "Ничего не найдено",
       loading: "Загрузка…",

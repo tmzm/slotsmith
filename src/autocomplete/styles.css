@@ -99,6 +99,93 @@
   outline-color: var(--_sac-danger);
 }
 
+/**
+ * The search in the trigger: the trigger is a field around an input that
+ * holds focus, so the ring follows :focus-within. The tags and the input
+ * share one wrapping row; the input takes what is left and drops to a row
+ * of its own when that is under 80px.
+ */
+.sac__trigger[data-search-in="trigger"] {
+  min-height: 36px;
+  gap: 0.25rem;
+  padding-block: 3px;
+  padding-inline: 4px;
+  cursor: text;
+}
+
+/** The same ring as the button trigger's, drawn while the input inside has focus. */
+.sac__trigger[data-search-in="trigger"]:focus-within {
+  outline: 2px solid var(--_sac-accent);
+  outline-offset: 2px;
+}
+
+.sac__trigger[data-search-in="trigger"][data-invalid]:focus-within {
+  outline-color: var(--_sac-danger);
+}
+
+.sac__trigger[data-search-in="trigger"][data-disabled] {
+  cursor: not-allowed;
+}
+
+.sac__trigger-input {
+  min-width: 80px;
+  height: 28px;
+  box-sizing: border-box;
+  flex: 1 0 80px;
+  padding-block: 0;
+  padding-inline: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.sac__trigger-input:focus {
+  outline: none;
+}
+
+.sac__trigger-input::placeholder {
+  color: var(--_sac-muted);
+  opacity: 1;
+}
+
+.sac__trigger-input:disabled {
+  cursor: not-allowed;
+}
+
+/** After the tags, the input sits closer: the tags already carry the inset. */
+.sac__tag ~ .sac__trigger-input,
+.sac__overflow ~ .sac__trigger-input {
+  padding-inline-start: 4px;
+}
+
+.sac__toggle {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0.375rem;
+  background: none;
+  color: var(--_sac-muted);
+  cursor: pointer;
+}
+
+.sac__toggle:hover:not(:disabled) {
+  background-color: var(--_sac-hover);
+}
+
+.sac__toggle:disabled {
+  cursor: not-allowed;
+}
+
+.sac__toggle[data-open] .sac__chevron {
+  transform: rotate(180deg);
+}
+
 .sac__body {
   display: flex;
   flex: 1;

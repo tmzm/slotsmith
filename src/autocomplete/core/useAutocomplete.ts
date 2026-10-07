@@ -77,6 +77,15 @@ export interface UseAutocompleteOptions<TOption> {
 
   /** Whether the search box renders. `false` makes it a select with typeahead. */
   searchable?: boolean;
+  /**
+   * Where the search box sits. `"popup"` puts it at the top of the popup,
+   * behind a trigger that is a button. `"trigger"` makes the trigger an
+   * editable combobox: an input inside the field, which keeps focus the whole
+   * time, shows the picked label while closed in single mode, and sits after
+   * the tags in multiple mode. Ignored when `searchable` is `false`, which
+   * keeps the button trigger. Default `"popup"`.
+   */
+  searchIn?: "popup" | "trigger";
   /** The search text. */
   searchQuery?: string;
   /** The search text while uncontrolled. */
@@ -206,6 +215,16 @@ export interface AutocompleteModel<TOption> {
   invalid: boolean;
   /** Whether the search box renders. */
   searchable: boolean;
+  /**
+   * Where the search box sits, as it takes effect: `"trigger"` only when
+   * `searchable` is on, so the input inside the trigger is the combobox.
+   */
+  searchIn: "popup" | "trigger";
+  /**
+   * What the input inside the trigger shows: the search text, or, in single
+   * mode while closed with nothing typed, the picked option's label.
+   */
+  inputValue: string;
   /** Whether several values are allowed. */
   multiple: boolean;
   /** Whether the clear control should render. */
@@ -252,6 +271,18 @@ export interface AutocompleteModel<TOption> {
   getTriggerProps: () => Record<string, unknown>;
   /** Props for the `Search` part. */
   getSearchProps: () => Record<string, unknown>;
+  /**
+   * Props for the `TriggerInput` part, the input that is the combobox when
+   * `searchIn` is `"trigger"`. Its ref is `searchRef`.
+   */
+  getTriggerInputProps: () => Record<string, unknown>;
+  /** Props for the `Toggle` part: a button outside the tab order that opens and closes the list. */
+  getToggleProps: () => Record<string, unknown>;
+  /**
+   * Props for the `Popup` part. With the search in the trigger, a press
+   * inside the popup is kept from taking focus out of the input.
+   */
+  getPopupProps: () => Record<string, unknown>;
   /** Props for the `List` part. */
   getListProps: () => Record<string, unknown>;
   /** Props for one `Option` part. */
@@ -290,6 +321,19 @@ const defaultGetOptionLabel = <TOption,>(option: TOption): string => {
   const record = option as Record<string, unknown>;
   return String(record?.label ?? record?.name ?? "");
 };
+
+/**
+ * Is composing
+ *
+ * Whether a key press belongs to an input method composition, as when
+ * typing Japanese or Chinese. Enter then confirms the composed text, so it
+ * must not also pick an option. Some browsers report only `keyCode` 229.
+ *
+ * @param event - The key press.
+ * @returns Whether to leave it to the input method.
+ */
+const isComposing = (event: KeyboardEvent<HTMLElement>) =>
+  (event.nativeEvent as globalThis.KeyboardEvent | undefined)?.isComposing === true || event.keyCode === 229;
 
 /**
  * useAutocomplete
@@ -333,6 +377,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     selected: selectedOptions,
     multiple = false,
     searchable = true,
+    searchIn: searchInOption = "popup",
     minChars = 0,
     loading = false,
     error,
@@ -353,12 +398,20 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   } = options;
 
   const reactId = useId();
+  /** The input inside the trigger is the combobox only when there is a search at all. */
+  const inTrigger = searchable && searchInOption === "trigger";
 
   const rootRef = useRef<HTMLElement | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const listRef = useRef<HTMLElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const sentinelRef = useRef<HTMLElement | null>(null);
+
+  /** Focus returns to whichever element is the combobox. */
+  const focusCombobox = useCallback(
+    () => (inTrigger ? searchRef.current : triggerRef.current)?.focus(),
+    [inTrigger],
+  );
 
   const [open, setOpenState] = useControllableState(options.open, options.defaultOpen ?? false, options.onOpenChange);
   const [query, setQueryState] = useControllableState(
@@ -496,6 +549,14 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
 
   const isSelected = useCallback((value: OptionValue) => values.includes(value), [values]);
 
+  /**
+   * The option to highlight once a pick has cleared the search. In multiple
+   * mode with the search in the trigger, picking empties the query so the
+   * next search starts fresh, and the highlight follows the picked option
+   * into the full list rather than jumping back to the top.
+   */
+  const highlightAfterPick = useRef<{ value: OptionValue } | null>(null);
+
   const select = useCallback(
     (value: OptionValue) => {
       if (disabled) return;
@@ -509,10 +570,13 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       }
       if (closeOnSelect) {
         setOpen(false);
-        triggerRef.current?.focus();
+        focusCombobox();
+      } else if (inTrigger && query !== "") {
+        highlightAfterPick.current = { value };
+        setQuery("");
       }
     },
-    [disabled, isOptionDisabled, multiple, values, emit, closeOnSelect, setOpen],
+    [disabled, isOptionDisabled, multiple, values, emit, closeOnSelect, setOpen, focusCombobox, inTrigger, query, setQuery],
   );
 
   const remove = useCallback(
@@ -526,7 +590,9 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   const clear = useCallback(() => {
     if (disabled) return;
     emit([]);
-  }, [disabled, emit]);
+    /** The clear control sits beside the input; the input is where the user carries on. */
+    if (inTrigger) searchRef.current?.focus();
+  }, [disabled, emit, inTrigger]);
 
   const searched = query.trim();
   /**
@@ -640,6 +706,28 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     setHighlightedIndex(firstEnabled());
   }, [autoHighlight, open, firstEnabled, query, loading]);
 
+  /** Lands the highlight on an option just picked, once the cleared search has brought the full list back. */
+  useEffect(() => {
+    const pending = highlightAfterPick.current;
+    if (!pending) return;
+    highlightAfterPick.current = null;
+    const index = visible.findIndex((option) => getOptionValue(option) === pending.value);
+    if (index >= 0) moveHighlight(index);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  /**
+   * A parent closing a controlled popup skips `setOpen`, so with the search
+   * in the trigger the query it would have cleared is cleared here, and the
+   * input goes back to showing the picked label.
+   */
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    const closed = wasOpen.current && !open;
+    wasOpen.current = open;
+    if (closed && inTrigger) setQueryState("");
+  }, [open, inTrigger, setQueryState]);
+
   /** Keep the highlighted row in view without scrolling the page. */
   useEffect(() => {
     if (!open || highlightedIndex < 0) return;
@@ -649,9 +737,14 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
 
   /* -------------------------------------------------------------- lifecycle */
 
-  /** Opening moves focus to the search box, so typing goes straight to it. */
+  /**
+   * Opening moves focus to the search box, so typing goes straight to it.
+   * With the search in the trigger, focus is normally there already.
+   */
   useEffect(() => {
-    if (open && searchable) searchRef.current?.focus();
+    if (!open || !searchable) return;
+    const search = searchRef.current;
+    if (search && search !== search.ownerDocument.activeElement) search.focus();
   }, [open, searchable]);
 
   /** A pointer going down outside the control closes the popup. */
@@ -709,7 +802,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
-      if (disabled) return;
+      if (disabled || isComposing(event)) return;
 
       if (!open) {
         if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -808,6 +901,74 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     ],
   );
 
+  /**
+   * Keyboard for the input inside the trigger
+   *
+   * The editable combobox of WAI-ARIA 1.2: the input keeps focus and owns
+   * the caret, so Space is typed, Home and End move the caret, and only the
+   * arrows, the page keys, Enter, Escape and Tab reach the list. Alt+ArrowDown
+   * opens without moving the highlight and Alt+ArrowUp closes. An Escape with
+   * the list already closed clears the search text.
+   */
+  const onTriggerInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>) => {
+      if (disabled || isComposing(event)) return;
+
+      /** Only when there is nothing to delete in the input itself. */
+      if (event.key === "Backspace") {
+        if (multiple && !query && values.length) {
+          event.preventDefault();
+          remove(values[values.length - 1]!);
+        }
+        return;
+      }
+
+      if (!open) {
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          event.preventDefault();
+          setOpenState(true);
+          if (event.altKey) return;
+          if (event.key === "ArrowUp") {
+            const index = lastEnabled();
+            if (index >= 0) moveHighlight(index);
+          } else {
+            setHighlightedIndex(firstEnabled());
+          }
+        } else if (event.key === "Escape" && query) {
+          event.preventDefault();
+          setQueryState("");
+        }
+        return;
+      }
+
+      switch (event.key) {
+        case "ArrowUp":
+          event.preventDefault();
+          if (event.altKey) setOpen(false);
+          else moveHighlight(highlightedIndex < 0 ? lastEnabled() : nextEnabled(highlightedIndex, -1));
+          break;
+        case "ArrowDown":
+        case "PageDown":
+        case "PageUp":
+        case "Enter":
+        case "Tab":
+          onKeyDown(event);
+          break;
+        case "Escape":
+          event.preventDefault();
+          setOpen(false);
+          break;
+      }
+    },
+    [
+      disabled, open, multiple, query, values, highlightedIndex,
+      firstEnabled, lastEnabled, nextEnabled, setOpen, setOpenState, setQueryState, remove, moveHighlight, onKeyDown,
+    ],
+  );
+
+  /** Whether the press that focused the input should select the label, so typing replaces it. */
+  const selectOnPress = useRef(false);
+
   /** Focus leaving the whole control is what a form library calls "touched". */
   const onBlurCapture = useCallback(
     (event: FocusEvent<HTMLElement>) => {
@@ -835,8 +996,36 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     [open, disabled, invalid, values.length, onBlurCapture],
   );
 
-  const getTriggerProps = useCallback(
+  /** The picked option's label, which the input inside the trigger shows in single mode. */
+  const selectedLabel = useMemo(() => {
+    if (multiple || values.length === 0) return "";
+    const option = findOption(values[0]!);
+    return option === undefined ? String(values[0]) : getOptionLabel(option);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [multiple, values, selected]);
+  const inputValue = inTrigger && !multiple && !open && query === "" ? selectedLabel : query;
+
+  /** The field around the input: a press anywhere on it that is not on the input puts focus in the input. */
+  const getFieldProps = useCallback(
     () => ({
+      ref: triggerRef,
+      "data-search-in": "trigger" as const,
+      "data-open": open || undefined,
+      "data-disabled": disabled || undefined,
+      "data-invalid": invalid || undefined,
+      "data-empty": values.length === 0 || undefined,
+      onMouseDown: (event: { target: EventTarget | null; preventDefault: () => void }) => {
+        const input = searchRef.current;
+        if (disabled || !input || event.target === input) return;
+        event.preventDefault();
+        input.focus();
+      },
+    }),
+    [open, disabled, invalid, values.length],
+  );
+
+  const getTriggerProps = useCallback(
+    (): Record<string, unknown> => inTrigger ? getFieldProps() : ({
       ref: triggerRef,
       id: ids.trigger,
       role: "combobox",
@@ -860,7 +1049,75 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       onClick: () => (open ? setOpen(false) : setOpen(true)),
       onKeyDown,
     }),
-    [ids, disabled, invalid, open, searchable, activeDescendant, values.length, setOpen, onKeyDown],
+    [inTrigger, getFieldProps, ids, disabled, invalid, open, searchable, activeDescendant, values.length, setOpen, onKeyDown],
+  );
+
+  const getTriggerInputProps = useCallback(
+    () => ({
+      ref: searchRef,
+      id: ids.trigger,
+      type: "text" as const,
+      role: "combobox" as const,
+      value: inputValue,
+      autoComplete: "off" as const,
+      spellCheck: false,
+      disabled: disabled || undefined,
+      "aria-expanded": open,
+      "aria-controls": open ? ids.list : undefined,
+      "aria-autocomplete": "list" as const,
+      "aria-activedescendant": activeDescendant,
+      /** The input holds the value here, so it is the element that is invalid. */
+      "aria-invalid": invalid || undefined,
+      onChange: (event: { target: { value: string } }) => {
+        setQuery(event.target.value);
+        if (!open) setOpen(true);
+      },
+      onKeyDown: onTriggerInputKeyDown,
+      /**
+       * Focus selects a shown label, so typing replaces it rather than
+       * appending to it. A pointer press puts the caret back, so the
+       * selection is made again when that press ends.
+       */
+      onFocus: (event: { target: HTMLInputElement }) => {
+        selectOnPress.current = inputValue !== "" && inputValue !== query;
+        if (selectOnPress.current) event.target.select();
+      },
+      onMouseUp: (event: { currentTarget: HTMLInputElement }) => {
+        const input = event.currentTarget;
+        if (selectOnPress.current && input.selectionStart === input.selectionEnd) input.select();
+        selectOnPress.current = false;
+      },
+      /** Leaving without a pick closes the list, which also restores the label. */
+      onBlur: (event: { relatedTarget: EventTarget | null }) => {
+        const next = event.relatedTarget as Node | null;
+        if (next && rootRef.current?.contains(next)) return;
+        if (open) setOpen(false);
+        else if (query) setQueryState("");
+      },
+    }),
+    [ids, inputValue, query, disabled, open, activeDescendant, invalid, setQuery, setOpen, setQueryState, onTriggerInputKeyDown],
+  );
+
+  const getToggleProps = useCallback(
+    () => ({
+      type: "button" as const,
+      tabIndex: -1,
+      disabled: disabled || undefined,
+      "aria-expanded": open,
+      "aria-controls": open ? ids.list : undefined,
+      "data-open": open || undefined,
+      onClick: () => {
+        setOpen(!open);
+        searchRef.current?.focus();
+      },
+    }),
+    [disabled, open, ids.list, setOpen],
+  );
+
+  const getPopupProps = useCallback(
+    (): Record<string, unknown> =>
+      inTrigger ? { onMouseDown: (event: { preventDefault: () => void }) => event.preventDefault() } : {},
+    [inTrigger],
   );
 
   const getSearchProps = useCallback(
@@ -976,8 +1233,15 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     disabled,
     invalid,
     searchable,
+    searchIn: inTrigger ? "trigger" : "popup",
+    inputValue,
     multiple,
-    showClear: clearable && values.length > 0 && !disabled,
+    /**
+     * In single mode with the search in the trigger, the input shows the
+     * query rather than the value while searching, so the clear control
+     * steps aside until the search ends.
+     */
+    showClear: clearable && values.length > 0 && !disabled && !(inTrigger && !multiple && (open || query !== "")),
     hasMore,
     loadingMore,
     loading,
@@ -997,6 +1261,9 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
 
     getTriggerProps,
     getSearchProps,
+    getTriggerInputProps,
+    getToggleProps,
+    getPopupProps,
     getListProps,
     getOptionProps,
     getGroupProps,

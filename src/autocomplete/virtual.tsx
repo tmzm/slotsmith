@@ -346,12 +346,12 @@ export type VirtualAutocompleteProps<TOption> = AutocompleteProps<TOption> & {
  * @param props - See {@link AutocompleteVirtualOptions}.
  */
 function VirtualPopup(props: AutocompleteVirtualOptions) {
-  const { components: C, slotProps, open, position } = useAutocompleteContext();
+  const { components: C, slotProps, open, position, getPopupProps } = useAutocompleteContext();
   if (!open) return null;
 
   return (
     <C.Popup
-      {...mergeProps(mergeProps({ style: position.style, "data-placement": position.placement }, slotProps.popup), {
+      {...mergeProps(mergeProps({ ...getPopupProps(), style: position.style, "data-placement": position.placement }, slotProps.popup), {
         ref: position.setPopup,
       })}
     >

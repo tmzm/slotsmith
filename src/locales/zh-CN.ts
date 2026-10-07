@@ -53,6 +53,7 @@ export const zhCN: SlotsmithLocale = defineLocale({
       placeholder: "请选择…",
       search: "搜索…",
       clear: "清除选择",
+      toggle: "显示选项",
       remove: (label) => `移除${label}`,
       empty: "无结果",
       loading: "加载中…",

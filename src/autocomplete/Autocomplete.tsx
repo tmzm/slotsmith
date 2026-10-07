@@ -20,6 +20,7 @@ import {
   AutocompleteStatusRows,
   AutocompleteTrigger,
   mergeProps,
+  TRIGGER_PROP_KEYS,
 } from "./parts";
 import { AutocompleteContext, useAutocompleteContext, type AutocompleteContextValue } from "./slots/context";
 import { autocompleteFallbacks, defaultAutocompleteLabels } from "./slots/fallbacks";
@@ -296,7 +297,7 @@ export type AutocompleteProps<TOption> = Omit<AutocompleteProviderProps<TOption>
 const PROVIDER_KEYS = [
   "options", "getOptionValue", "getOptionLabel", "optionDisabled", "getOptionGroup", "filter", "selected",
   "multiple", "value", "defaultValue", "onChange",
-  "searchable", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars",
+  "searchable", "searchIn", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars",
   "open", "defaultOpen", "onOpenChange",
   "loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore",
   "creatable", "onCreate", "createLoading",
@@ -361,25 +362,6 @@ export function splitAutocompleteProps<TOption, P extends AutocompleteProps<TOpt
 }
 
 /**
- * Trigger prop keys
- *
- * Attributes that name or validate the control. They belong on the element
- * carrying `role="combobox"`, not on the wrapper, because that element is
- * what assistive technology announces.
- */
-const TRIGGER_PROP_KEYS = new Set([
-  "id",
-  "title",
-  "aria-label",
-  "aria-labelledby",
-  "aria-describedby",
-  "aria-details",
-  "aria-errormessage",
-  "aria-invalid",
-  "aria-required",
-]);
-
-/**
  * Split root props
  *
  * Routes the naming and validation attributes to the trigger and leaves
@@ -439,6 +421,11 @@ function AutocompleteComponent<TOption>(props: AutocompleteProps<TOption>) {
  * stay one flat list; the groups follow the order their first option appears
  * in, and the keyboard follows the groups.
  *
+ * Set `searchIn="trigger"` to search from an input inside the trigger
+ * rather than from the top of the popup: the input is the combobox and
+ * keeps focus, shows the picked label while closed, and follows the tags in
+ * multiple mode.
+ *
  * @typeParam TOption - The option type.
  * @param props - See {@link AutocompleteProps}.
  *
@@ -453,6 +440,9 @@ function AutocompleteComponent<TOption>(props: AutocompleteProps<TOption>) {
  *
  * // Several at once.
  * <Autocomplete multiple options={tags} value={tagIds} onChange={setTagIds} />
+ *
+ * // Searched from the trigger itself.
+ * <Autocomplete searchIn="trigger" options={countries} value={code} onChange={setCode} aria-label="Country" />
  *
  * // In groups, labelled by each city's country.
  * <Autocomplete options={cities} getOptionGroup={(city) => city.country} value={cityId} onChange={setCityId} />

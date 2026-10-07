@@ -1,4 +1,5 @@
 import type {
+  ButtonHTMLAttributes,
   ComponentType,
   HTMLAttributes,
   InputHTMLAttributes,
@@ -43,9 +44,40 @@ export interface AutocompleteRootSlotProps extends DomProps<HTMLDivElement> {
  * With `invalid` set it carries `aria-invalid="true"` and `data-invalid`. A
  * skin built on a library component with an error prop (MUI's `error`, Ant
  * Design's `status`) reads either attribute and passes the prop on.
+ *
+ * With `searchIn="trigger"` it is the field around the `TriggerInput`
+ * instead: it carries `data-search-in="trigger"`, no role and no tab stop,
+ * and `data-open`, `data-disabled`, `data-invalid` and `data-empty` for
+ * styling, while `aria-invalid` moves to the input. Draw the focus ring with
+ * `:focus-within`, since focus sits on the input inside it.
  */
 export interface AutocompleteTriggerSlotProps extends DomProps<HTMLDivElement> {
   ref?: Ref<HTMLDivElement>;
+}
+
+/**
+ * Trigger input slot props
+ *
+ * The input inside the trigger when `searchIn` is `"trigger"`. It is the
+ * combobox: it carries `role="combobox"`, the aria wiring, the value and the
+ * key handler, and keeps focus while the list is open. Render a borderless
+ * input that grows to fill the row; the `Trigger` around it draws the field.
+ */
+export interface AutocompleteTriggerInputSlotProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "color" | "size"> {
+  ref?: Ref<HTMLInputElement>;
+}
+
+/**
+ * Toggle slot props
+ *
+ * The button that opens and closes the list when `searchIn` is `"trigger"`.
+ * It is left out of the tab order (`tabIndex={-1}`), carries `aria-label`,
+ * `aria-expanded` and `data-open`, and holds the `Indicator` as `children`.
+ * Pressing it never takes focus from the input.
+ */
+export interface AutocompleteToggleSlotProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color"> {
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -151,7 +183,8 @@ export interface AutocompleteSeparatorSlotProps extends Omit<LiHTMLAttributes<HT
 /**
  * Value slot props
  *
- * What the trigger shows: the selected label, or the placeholder.
+ * What the trigger shows: the selected label, or the placeholder. Not
+ * rendered with `searchIn="trigger"`, where the input shows the label.
  */
 export interface AutocompleteValueSlotProps {
   /** The selected option's text, when there is one. */
@@ -320,11 +353,13 @@ export interface AutocompleteLoadMoreSlotProps {
  *
  * Every replaceable part.
  *
- * Element parts — `Root`, `Trigger`, `Popup`, `Search`, `List`, `Option`,
- * `Separator` — receive DOM props with state as `data-*`, so a library's
- * primitives drop straight in. Widget parts receive semantic props and
- * usually need a short adapter. `Group`, `GroupLabel` and `Separator` render
- * only when `getOptionGroup` is set.
+ * Element parts — `Root`, `Trigger`, `TriggerInput`, `Toggle`, `Popup`,
+ * `Search`, `List`, `Option`, `Separator` — receive DOM props with state as
+ * `data-*`, so a library's primitives drop straight in. Widget parts receive
+ * semantic props and usually need a short adapter. `Group`, `GroupLabel` and
+ * `Separator` render only when `getOptionGroup` is set. `TriggerInput` and
+ * `Toggle` render only with `searchIn="trigger"`, which renders no `Search`
+ * and no `Value`.
  *
  * @typeParam TOption - The option type.
  *
@@ -340,6 +375,8 @@ export interface AutocompleteLoadMoreSlotProps {
 export interface AutocompleteComponents<TOption = any> {
   Root: ComponentType<AutocompleteRootSlotProps>;
   Trigger: ComponentType<AutocompleteTriggerSlotProps>;
+  TriggerInput: ComponentType<AutocompleteTriggerInputSlotProps>;
+  Toggle: ComponentType<AutocompleteToggleSlotProps>;
   Value: ComponentType<AutocompleteValueSlotProps>;
   Tag: ComponentType<AutocompleteTagSlotProps<TOption>>;
   Clear: ComponentType<AutocompleteClearSlotProps>;
@@ -369,6 +406,8 @@ export interface AutocompleteComponents<TOption = any> {
 export interface AutocompleteSlotProps {
   root?: AutocompleteRootSlotProps;
   trigger?: AutocompleteTriggerSlotProps;
+  /** The input inside the trigger, with `searchIn="trigger"`. */
+  triggerInput?: AutocompleteTriggerInputSlotProps;
   popup?: AutocompletePopupSlotProps;
   search?: AutocompleteSearchSlotProps;
   list?: AutocompleteListSlotProps;
@@ -388,6 +427,8 @@ export interface AutocompleteLabels {
   search: string;
   /** Accessible name for the clear control. */
   clear: string;
+  /** Accessible name for the button that opens and closes the list, with `searchIn="trigger"`. */
+  toggle: string;
   /** Accessible name for a tag's remove control. */
   remove: (label: string) => string;
   /** Shown when a search returned nothing. */

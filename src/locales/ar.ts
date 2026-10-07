@@ -55,6 +55,7 @@ export const ar: SlotsmithLocale = defineLocale({
       placeholder: "اختر…",
       search: "ابحث…",
       clear: "مسح التحديد",
+      toggle: "عرض الخيارات",
       remove: (label) => `حذف ${label}`,
       empty: "لا نتائج",
       loading: "جارٍ التحميل…",

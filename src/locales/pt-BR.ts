@@ -53,6 +53,7 @@ export const ptBR: SlotsmithLocale = defineLocale({
       placeholder: "Selecionar…",
       search: "Pesquisar…",
       clear: "Limpar seleção",
+      toggle: "Mostrar opções",
       remove: (label) => `Remover ${label}`,
       empty: "Nenhum resultado",
       loading: "Carregando…",

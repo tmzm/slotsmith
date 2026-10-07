@@ -29,6 +29,7 @@ const ARABIC: AutocompleteLabels = {
   placeholder: "اختر علامة",
   search: "ابحث",
   clear: "مسح الاختيار",
+  toggle: "عرض الخيارات",
   remove: (label) => `إزالة ${label}`,
   empty: "لا توجد نتائج",
   loading: "جارٍ التحميل…",

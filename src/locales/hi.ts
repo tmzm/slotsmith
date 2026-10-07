@@ -53,6 +53,7 @@ export const hi: SlotsmithLocale = defineLocale({
       placeholder: "चुनें…",
       search: "खोजें…",
       clear: "चयन हटाएँ",
+      toggle: "विकल्प दिखाएँ",
       remove: (label) => `${label} हटाएँ`,
       empty: "कोई परिणाम नहीं",
       loading: "लोड हो रहा है…",

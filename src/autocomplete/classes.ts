@@ -28,6 +28,8 @@ export const classes = {
   more: "sac__more",
   moreButton: "sac__more-button",
   trigger: "sac__trigger",
+  triggerInput: "sac__trigger-input",
+  toggle: "sac__toggle",
   value: "sac__value",
   valueEmpty: "sac__value--empty",
   popup: "sac__popup",

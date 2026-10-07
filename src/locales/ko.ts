@@ -53,6 +53,7 @@ export const ko: SlotsmithLocale = defineLocale({
       placeholder: "선택…",
       search: "검색…",
       clear: "선택 지우기",
+      toggle: "옵션 표시",
       remove: (label) => `${label} 제거`,
       empty: "결과 없음",
       loading: "불러오는 중…",

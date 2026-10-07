@@ -55,6 +55,7 @@ export const fa: SlotsmithLocale = defineLocale({
       placeholder: "انتخاب کنید…",
       search: "جست‌وجو…",
       clear: "پاک کردن انتخاب",
+      toggle: "نمایش گزینه‌ها",
       remove: (label) => `حذف ${label}`,
       empty: "نتیجه‌ای یافت نشد",
       loading: "در حال بارگیری…",

@@ -9,10 +9,35 @@ import { classes } from "./classes";
 export { mergeProps, mergeRefs };
 
 /**
+ * Trigger prop keys
+ *
+ * Attributes that name or validate the control. They belong on the element
+ * carrying `role="combobox"` — the trigger, or the input inside it with
+ * `searchIn="trigger"` — not on a wrapper, because that element is what
+ * assistive technology announces.
+ */
+export const TRIGGER_PROP_KEYS = new Set([
+  "id",
+  "title",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "aria-details",
+  "aria-errormessage",
+  "aria-invalid",
+  "aria-required",
+]);
+
+/**
  * Autocomplete.Trigger
  *
  * The `Trigger` part with what it contains: the selected value or its tags,
  * the clear control, and the indicator. Carries `role="combobox"`.
+ *
+ * With `searchIn="trigger"` it is a field instead: the tags, then the
+ * `TriggerInput` that is the combobox, the clear control and the `Toggle`.
+ * Naming and validation props (`id`, `aria-label`, `aria-describedby`…)
+ * then go to the input and the rest to the field.
  *
  * @example
  * ```tsx
@@ -44,14 +69,74 @@ export function AutocompleteTrigger(props: Record<string, unknown> = {}) {
     placeholder,
     maxTags,
     triggerRef,
+    searchRef,
+    searchIn,
     getTriggerProps,
+    getTriggerInputProps,
+    getToggleProps,
   } = useAutocompleteContext();
 
   const shown = selected.slice(0, maxTags);
   const overflow = values.length - shown.length;
   const first = selected[0];
+  const firstLabel = first?.option ? getOptionLabel(first.option) : first ? String(first.value) : undefined;
 
   const triggerProps = getTriggerProps();
+
+  const tags = (
+    <>
+      {shown.map(({ value, option }) => {
+        const label = option ? getOptionLabel(option) : String(value);
+        return (
+          <C.Tag
+            key={String(value)}
+            value={value}
+            option={option}
+            label={label}
+            removeLabel={labels.remove(label)}
+            disabled={disabled}
+            onRemove={() => remove(value)}
+          />
+        );
+      })}
+      {overflow > 0 ? <span className={classes.overflow}>{labels.more(overflow)}</span> : null}
+    </>
+  );
+
+  if (searchIn === "trigger") {
+    /** The naming and validation attributes belong on the input, which is the combobox; the rest style the field. */
+    const inputProps: Record<string, unknown> = {};
+    const fieldProps: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(props)) {
+      (TRIGGER_PROP_KEYS.has(key) ? inputProps : fieldProps)[key] = value;
+    }
+    /** The placeholder stands in only for an empty value; in single mode a picked label waits there while searching. */
+    const inputPlaceholder = values.length === 0 ? placeholder : multiple ? undefined : firstLabel;
+
+    return (
+      <C.Trigger
+        {...mergeProps(
+          mergeProps(triggerProps, slotProps.trigger),
+          { ...fieldProps, ref: mergeRefs(triggerRef, position.setTrigger) },
+        )}
+      >
+        <span className={classes.body}>
+          {multiple ? tags : null}
+          <C.TriggerInput
+            {...mergeProps(
+              mergeProps({ ...getTriggerInputProps(), placeholder: inputPlaceholder }, slotProps.triggerInput),
+              { ...inputProps, ref: searchRef },
+            )}
+          />
+        </span>
+
+        {showClear ? <C.Clear aria-label={labels.clear} onClick={clear} /> : null}
+        <C.Toggle {...getToggleProps()} aria-label={labels.toggle}>
+          <C.Indicator open={open} loading={loading} />
+        </C.Toggle>
+      </C.Trigger>
+    );
+  }
 
   return (
     <C.Trigger
@@ -65,27 +150,11 @@ export function AutocompleteTrigger(props: Record<string, unknown> = {}) {
           values.length === 0 ? (
             <C.Value placeholder={placeholder} empty />
           ) : (
-            <>
-              {shown.map(({ value, option }) => {
-                const label = option ? getOptionLabel(option) : String(value);
-                return (
-                  <C.Tag
-                    key={String(value)}
-                    value={value}
-                    option={option}
-                    label={label}
-                    removeLabel={labels.remove(label)}
-                    disabled={disabled}
-                    onRemove={() => remove(value)}
-                  />
-                );
-              })}
-              {overflow > 0 ? <span className={classes.overflow}>{labels.more(overflow)}</span> : null}
-            </>
+            tags
           )
         ) : (
           <C.Value
-            label={first?.option ? getOptionLabel(first.option) : first ? String(first.value) : undefined}
+            label={firstLabel}
             placeholder={placeholder}
             empty={values.length === 0}
           />
@@ -102,11 +171,12 @@ export function AutocompleteTrigger(props: Record<string, unknown> = {}) {
  * Autocomplete.Search
  *
  * The search box inside the popup. Renders nothing when `searchable` is off,
- * which is what makes the same component a plain select.
+ * which is what makes the same component a plain select, or when `searchIn`
+ * is `"trigger"`, where the input inside the trigger searches instead.
  */
 export function AutocompleteSearch(props: Record<string, unknown> = {}) {
-  const { components: C, labels, slotProps, searchable, searchRef, getSearchProps } = useAutocompleteContext();
-  if (!searchable) return null;
+  const { components: C, labels, slotProps, searchable, searchIn, searchRef, getSearchProps } = useAutocompleteContext();
+  if (!searchable || searchIn === "trigger") return null;
 
   return (
     <C.Search
@@ -358,12 +428,12 @@ export function AutocompleteList(props: Record<string, unknown> = {}) {
  * @param props - Extra DOM props for the popup element.
  */
 export function AutocompletePopup(props: Record<string, unknown> = {}) {
-  const { components: C, slotProps, open, position } = useAutocompleteContext();
+  const { components: C, slotProps, open, position, getPopupProps } = useAutocompleteContext();
   if (!open) return null;
 
   return (
     <C.Popup
-      {...mergeProps(mergeProps({ style: position.style, "data-placement": position.placement }, slotProps.popup), {
+      {...mergeProps(mergeProps({ ...getPopupProps(), style: position.style, "data-placement": position.placement }, slotProps.popup), {
         ...props,
         ref: position.setPopup,
       })}
