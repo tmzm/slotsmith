@@ -51,6 +51,16 @@ jobs:
       - name: Build the library
         run: pnpm build
 
+      # The docs facts step runs the library's own suite; these cover the rest.
+      - name: Typecheck the library
+        run: pnpm typecheck
+
+      - name: Typecheck slotsmith-ai
+        run: pnpm typecheck:ai
+
+      - name: Test slotsmith-ai
+        run: pnpm test:ai
+
       # The framework examples install the built library, the way an app would.
       - name: Build the Next.js example
         run: pnpm --filter example-next build
