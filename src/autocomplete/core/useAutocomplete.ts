@@ -112,6 +112,13 @@ export interface UseAutocompleteOptions<TOption> {
   autoHighlight?: boolean;
   /** Nothing can be opened, picked or cleared. */
   disabled?: boolean;
+  /**
+   * The value failed validation. Sets `aria-invalid` on the combobox and
+   * `data-invalid` on the root and trigger, so a skin can show its error
+   * style. Pair it with `aria-errormessage` or `aria-describedby` pointing at
+   * the message. Default `false`.
+   */
+  invalid?: boolean;
   /** Told when focus leaves the whole control, for form libraries. */
   onBlur?: (event: FocusEvent<HTMLElement>) => void;
 }
@@ -172,6 +179,8 @@ export interface AutocompleteModel<TOption> {
 
   /** Whether anything is interactive. */
   disabled: boolean;
+  /** Whether the value failed validation. */
+  invalid: boolean;
   /** Whether the search box renders. */
   searchable: boolean;
   /** Whether several values are allowed. */
@@ -288,6 +297,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     loop = false,
     autoHighlight = false,
     disabled = false,
+    invalid = false,
     onBlur,
   } = options;
 
@@ -703,10 +713,11 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       ref: rootRef,
       "data-open": open || undefined,
       "data-disabled": disabled || undefined,
+      "data-invalid": invalid || undefined,
       "data-empty": values.length === 0 || undefined,
       onBlur: onBlurCapture,
     }),
-    [open, disabled, values.length, onBlurCapture],
+    [open, disabled, invalid, values.length, onBlurCapture],
   );
 
   const getTriggerProps = useCallback(
@@ -721,13 +732,20 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       /** Only while focus is actually here — with a search box it is not. */
       "aria-activedescendant": searchable ? undefined : activeDescendant,
       "aria-disabled": disabled || undefined,
+      /**
+       * On the combobox only: it holds the value and is what focus returns
+       * to. The search box is a transient filter whose text is not the value,
+       * so marking it would report the filter itself as wrong.
+       */
+      "aria-invalid": invalid || undefined,
       "data-open": open || undefined,
       "data-disabled": disabled || undefined,
+      "data-invalid": invalid || undefined,
       "data-empty": values.length === 0 || undefined,
       onClick: () => (open ? setOpen(false) : setOpen(true)),
       onKeyDown,
     }),
-    [ids, disabled, open, searchable, activeDescendant, values.length, setOpen, onKeyDown],
+    [ids, disabled, invalid, open, searchable, activeDescendant, values.length, setOpen, onKeyDown],
   );
 
   const getSearchProps = useCallback(
@@ -809,6 +827,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     loadMore,
 
     disabled,
+    invalid,
     searchable,
     multiple,
     showClear: clearable && values.length > 0 && !disabled,

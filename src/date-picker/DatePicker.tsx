@@ -258,8 +258,8 @@ export interface DatePickerRootProps extends Omit<HTMLAttributes<HTMLDivElement>
 /**
  * DatePicker.Root
  *
- * The `Root` part, carrying `data-mode`, `data-open`, `data-disabled` and
- * `data-empty`, and the element the outside-click check measures against.
+ * The `Root` part, carrying `data-mode`, `data-open`, `data-disabled`,
+ * `data-invalid` and `data-empty`, and the element the outside-click check measures against.
  *
  * @param props - See {@link DatePickerRootProps}.
  */
@@ -288,7 +288,7 @@ const PROVIDER_KEYS = [
   "mode", "value", "defaultValue", "onChange",
   "open", "defaultOpen", "onOpenChange",
   "locale", "weekStartsOn", "weekdayFormat", "minDate", "maxDate", "disabledDates",
-  "clearable", "disabled", "closeOnSelect", "onBlur",
+  "clearable", "disabled", "invalid", "closeOnSelect", "onBlur",
   "placeholder", "presets", "format", "components", "labels", "slotProps", "placement", "popupOffset",
 ] as const;
 

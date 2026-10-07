@@ -42,6 +42,7 @@
   /** Text that sits on the accent. Flipped with the theme rather than guessed. */
   --_sdp-on-accent: var(--sdp-on-accent, var(--ss-on-accent, #ffffff));
   --_sdp-hover: var(--sdp-hover, var(--ss-hover, var(--sdt-hover, rgb(0 0 0 / 4%))));
+  --_sdp-danger: var(--sdp-danger, var(--ss-danger, var(--sdt-danger, #dc2626)));
   --_sdp-radius: var(--sdp-radius, var(--ss-radius, var(--sdt-radius, 8px)));
   --_sdp-font-size: var(--sdp-font-size, var(--ss-font-size, var(--sdt-font-size, 14px)));
 }
@@ -64,6 +65,7 @@
   --_sdp-accent: var(--sdp-accent, var(--ss-accent, var(--sdt-accent, #60a5fa)));
   --_sdp-on-accent: var(--sdp-on-accent, var(--ss-on-accent, #0b0b0c));
   --_sdp-hover: var(--sdp-hover, var(--ss-hover, var(--sdt-hover, rgb(255 255 255 / 6%))));
+  --_sdp-danger: var(--sdp-danger, var(--ss-danger, var(--sdt-danger, #f87171)));
 }
 
 /* ------------------------------------------------------------------- root */
@@ -112,6 +114,16 @@
 .sdp__trigger[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/** An invalid value: the border and the focus ring take the danger colour, open or not. */
+.sdp__trigger[data-invalid],
+.sdp__trigger[data-invalid]:hover {
+  border-color: var(--_sdp-danger);
+}
+
+.sdp__trigger[data-invalid]:focus-visible {
+  outline-color: var(--_sdp-danger);
 }
 
 .sdp__icon {

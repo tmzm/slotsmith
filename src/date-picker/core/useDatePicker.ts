@@ -96,6 +96,13 @@ export interface UseDatePickerOptions<M extends DatePickerMode = DatePickerMode>
   clearable?: boolean;
   /** Disables the whole control. Separate from `disabledDates`. */
   disabled?: boolean;
+  /**
+   * The value failed validation. Sets `aria-invalid` on the combobox and
+   * `data-invalid` on the root and trigger, so a skin can show its error
+   * style. Pair it with `aria-errormessage` or `aria-describedby` pointing at
+   * the message. Default `false`.
+   */
+  invalid?: boolean;
   /** Whether picking closes the popup. Defaults to `true` in single mode and `false` otherwise. */
   closeOnSelect?: boolean;
   /** Told when focus leaves the whole control, for form libraries. */
@@ -211,6 +218,8 @@ export interface DatePickerModel<M extends DatePickerMode = DatePickerMode> {
   weekStartsOn: WeekStart;
   /** Whether nothing is interactive. */
   disabled: boolean;
+  /** Whether the value failed validation. */
+  invalid: boolean;
   /** Whether the clear control should render. */
   showClear: boolean;
   /** Whether the control is laid out right to left, read when the popup opens. */
@@ -336,6 +345,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     disabledDates,
     clearable = true,
     disabled = false,
+    invalid = false,
     onBlur,
   } = options;
   const closeOnSelect = options.closeOnSelect ?? mode === "single";
@@ -729,10 +739,11 @@ export function useDatePicker<M extends DatePickerMode = "single">(
       "data-mode": mode,
       "data-open": open || undefined,
       "data-disabled": disabled || undefined,
+      "data-invalid": invalid || undefined,
       "data-empty": !hasValue || undefined,
       onBlur: onRootBlur,
     }),
-    [mode, open, disabled, hasValue, onRootBlur],
+    [mode, open, disabled, invalid, hasValue, onRootBlur],
   );
 
   const getTriggerProps = useCallback(
@@ -745,13 +756,16 @@ export function useDatePicker<M extends DatePickerMode = "single">(
       "aria-expanded": open,
       "aria-controls": open ? ids.popup : undefined,
       "aria-disabled": disabled || undefined,
+      /** On the combobox, which holds the value; the calendar's cells only choose one. */
+      "aria-invalid": invalid || undefined,
       "data-open": open || undefined,
       "data-disabled": disabled || undefined,
+      "data-invalid": invalid || undefined,
       "data-empty": !hasValue || undefined,
       onClick: () => setOpen(!open),
       onKeyDown: onTriggerKeyDown,
     }),
-    [ids, disabled, open, hasValue, setOpen, onTriggerKeyDown],
+    [ids, disabled, invalid, open, hasValue, setOpen, onTriggerKeyDown],
   );
 
   const getPopupProps = useCallback(
@@ -856,6 +870,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     locale,
     weekStartsOn,
     disabled,
+    invalid,
     showClear: clearable && hasValue && !disabled,
     rtl,
 

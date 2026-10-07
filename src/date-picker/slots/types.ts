@@ -20,7 +20,7 @@ type DomProps<E extends HTMLElement> = Omit<HTMLAttributes<E>, "color">;
  * Root slot props
  *
  * Element part: the box around the whole control. Carries `data-mode`,
- * `data-open`, `data-disabled` and `data-empty`, and is the element the
+ * `data-open`, `data-disabled`, `data-invalid` and `data-empty`, and is the element the
  * outside-click check measures against.
  */
 export interface DpRootProps extends DomProps<HTMLDivElement> {
@@ -34,6 +34,10 @@ export interface DpRootProps extends DomProps<HTMLDivElement> {
  * `role="combobox"` with `aria-haspopup="dialog"`, and is a `<div>` rather
  * than a `<button>` because the clear control inside it is a button and HTML
  * forbids nesting them.
+ *
+ * With `invalid` set it carries `aria-invalid="true"` and `data-invalid`. A
+ * skin built on a library component with an error prop (MUI's `error`, Ant
+ * Design's `status`) reads either attribute and passes the prop on.
  */
 export interface DpTriggerProps extends DomProps<HTMLDivElement> {
   ref?: Ref<HTMLDivElement>;

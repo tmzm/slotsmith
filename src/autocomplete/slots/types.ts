@@ -27,7 +27,7 @@ type DomProps<E extends HTMLElement> = Omit<HTMLAttributes<E>, "color">;
  * Root slot props
  *
  * The element the popup is positioned against. Carries `data-open`,
- * `data-disabled` and `data-empty`.
+ * `data-disabled`, `data-invalid` and `data-empty`.
  */
 export interface AutocompleteRootSlotProps extends DomProps<HTMLDivElement> {
   ref?: Ref<HTMLDivElement>;
@@ -39,6 +39,10 @@ export interface AutocompleteRootSlotProps extends DomProps<HTMLDivElement> {
  * The control that opens the list. It carries `role="combobox"` and is a
  * `<div>` rather than a `<button>`, because the tag and clear controls inside
  * it are buttons and HTML forbids nesting them.
+ *
+ * With `invalid` set it carries `aria-invalid="true"` and `data-invalid`. A
+ * skin built on a library component with an error prop (MUI's `error`, Ant
+ * Design's `status`) reads either attribute and passes the prop on.
  */
 export interface AutocompleteTriggerSlotProps extends DomProps<HTMLDivElement> {
   ref?: Ref<HTMLDivElement>;

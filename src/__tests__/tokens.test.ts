@@ -320,6 +320,27 @@ describe.each(Object.entries(SHEETS))("the --%s default look", (prefix, folder) 
   });
 });
 
+/** The components with an `invalid` prop, whose triggers turn the danger colour with it. */
+const INVALID_TRIGGERS = [
+  { folder: "autocomplete", prefix: "sac" },
+  { folder: "date-picker", prefix: "sdp" },
+];
+
+it.each(INVALID_TRIGGERS)("$folder draws an invalid trigger with its danger token", ({ folder, prefix }) => {
+  const css = read(folder);
+  const { light, dark } = tokenBlocks(css, prefix);
+  expect(light).toContain(`--_${prefix}-danger:`);
+  expect(dark).toContain(`--_${prefix}-danger:`);
+
+  const border = rule(css, `.${prefix}__trigger[data-invalid], .${prefix}__trigger[data-invalid]:hover`);
+  expect(value(border, "border-color")).toBe(`var(--_${prefix}-danger)`);
+  const ring = rule(css, `.${prefix}__trigger[data-invalid]:focus-visible`);
+  expect(value(ring, "outline-color")).toBe(`var(--_${prefix}-danger)`);
+
+  // Declared after the open rule, which has the same specificity, so an open invalid trigger stays red.
+  expect(css.indexOf(`.${prefix}__trigger[data-invalid]`)).toBeGreaterThan(css.indexOf(`.${prefix}__trigger[data-open]`));
+});
+
 /**
  * The page-size menu is not portalled, so inside the table the autocomplete's
  * colour, radius and font tokens read the table's: an app that restyles only

@@ -13,7 +13,7 @@
     "Options": ["options", "getOptionValue", "getOptionLabel", "optionDisabled", "filter", "selected"],
     "Selection": ["multiple", "value", "defaultValue", "onChange", "clearable", "closeOnSelect", "name"],
     "Search": ["searchable", "searchQuery", "defaultSearchQuery", "onSearchChange", "minChars"],
-    "Open state and keyboard": ["open", "defaultOpen", "onOpenChange", "loop", "autoHighlight", "disabled", "onBlur"],
+    "Open state and keyboard": ["open", "defaultOpen", "onOpenChange", "loop", "autoHighlight", "disabled", "invalid", "onBlur"],
     "Remote options": ["loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore"],
     "Creating": ["creatable", "onCreate", "createLoading"],
     "Rendering": ["components", "labels", "locale", "slotProps", "placeholder", "maxTags"],
@@ -29,7 +29,7 @@
     "Value and mode": ["mode", "value", "defaultValue", "onChange", "clearable", "closeOnSelect"],
     "Calendar": ["locale", "weekStartsOn", "weekdayFormat", "presets"],
     "Bounds": ["minDate", "maxDate", "disabledDates"],
-    "Open state": ["open", "defaultOpen", "onOpenChange", "disabled", "onBlur"],
+    "Open state": ["open", "defaultOpen", "onOpenChange", "disabled", "invalid", "onBlur"],
     "Display": ["placeholder", "format", "placement", "popupOffset"],
     "Slots and labels": ["components", "labels", "slotProps"]
   }

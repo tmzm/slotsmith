@@ -26,7 +26,7 @@ Each component also reads its own prefix, which overrides the shared token for t
 | --- | --- | --- |
 | `--sdt-*` | Data table | `accent`, `bg`, `border`, `checkbox-size`\*, `danger`, `font-size`\*, `header-bg`, `hover`, `max-height`, `muted`, `padding-x`\*, `padding-y`\*, `radius`, `selected`, `skeleton-bg`, `skeleton-bg-2`, `stripe`, `surface`, `text` |
 | `--sac-*` | Autocomplete | `accent`, `border`, `danger`, `font-size`, `hover`, `muted`, `radius`, `surface`, `text` |
-| `--sdp-*` | Date picker (falls back to `--sdt-*`) | `accent`, `border`, `cell`, `font-size`, `gap`, `hover`, `muted`, `on-accent`, `radius`, `surface`, `text` |
+| `--sdp-*` | Date picker (falls back to `--sdt-*`) | `accent`, `border`, `cell`, `danger`, `font-size`, `gap`, `hover`, `muted`, `on-accent`, `radius`, `surface`, `text` |
 | `--sfu-*` | File uploader (falls back to `--sdt-*`) | `accent`, `bg`, `border`, `danger`, `font-size`, `gap`, `hover`, `muted`, `radius`, `surface`, `text`, `tile-size` |
 
 \* The data table's density tokens (`--sdt-font-size`, `--sdt-padding-x`, `--sdt-padding-y`, `--sdt-checkbox-size`) are not declared by the stylesheet: the `size` prop supplies their values unless you set them, on `:root`, a wrapper or the table, and then yours win at every size. `--sdt-font-size` otherwise follows `--ss-font-size` (one pixel smaller at the default `sm` size).

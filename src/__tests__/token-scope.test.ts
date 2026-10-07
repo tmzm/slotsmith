@@ -210,6 +210,13 @@ describe("a wrapper's --ss-* tokens", () => {
     expect(computed(LIBRARY, [html(), wrapper({ "--ss-surface": "#fafafa" }), { classes: ["sdp__popup"] }], "--_sdp-surface")).toBe("#fafafa");
   });
 
+  it("reach the danger colour of the autocomplete's and the date picker's invalid state", () => {
+    const chain = (prefix: string) => [html(), wrapper({ "--ss-danger": "#b00020" }), { classes: [prefix] }];
+    expect(computed(LIBRARY, chain("sac"), "--_sac-danger")).toBe("#b00020");
+    expect(computed(LIBRARY, chain("sdp"), "--_sdp-danger")).toBe("#b00020");
+    expect(computed(LIBRARY, [html({ classes: ["dark"] }), { classes: ["sdp"] }], "--_sdp-danger")).toBe("#f87171");
+  });
+
   it("reach the table's page-size menu through the table", () => {
     const chain = [html(), wrapper({ "--ss-accent": "#ff0000" }), table, { classes: ["sac"] }, { classes: ["sac__popup"] }];
     expect(computed(LIBRARY, chain, "--_sac-accent")).toBe("#ff0000");

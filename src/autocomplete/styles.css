@@ -89,6 +89,16 @@
   cursor: not-allowed;
 }
 
+/** An invalid value: the border and the focus ring take the danger colour, open or not. */
+.sac__trigger[data-invalid],
+.sac__trigger[data-invalid]:hover {
+  border-color: var(--_sac-danger);
+}
+
+.sac__trigger[data-invalid]:focus-visible {
+  outline-color: var(--_sac-danger);
+}
+
 .sac__body {
   display: flex;
   flex: 1;

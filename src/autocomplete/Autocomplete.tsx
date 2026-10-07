@@ -264,7 +264,7 @@ export interface AutocompleteRootProps extends Omit<HTMLAttributes<HTMLDivElemen
 /**
  * Autocomplete.Root
  *
- * The `Root` part, carrying `data-open`, `data-disabled` and `data-empty`,
+ * The `Root` part, carrying `data-open`, `data-disabled`, `data-invalid` and `data-empty`,
  * and the element the outside-click check measures against.
  *
  * @param props - See {@link AutocompleteRootProps}.
@@ -297,7 +297,7 @@ const PROVIDER_KEYS = [
   "open", "defaultOpen", "onOpenChange",
   "loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore",
   "creatable", "onCreate", "createLoading",
-  "clearable", "closeOnSelect", "loop", "autoHighlight", "disabled", "onBlur",
+  "clearable", "closeOnSelect", "loop", "autoHighlight", "disabled", "invalid", "onBlur",
   "components", "labels", "locale", "slotProps", "placeholder", "maxTags",
   "placement", "popupOffset", "matchTriggerWidth", "popupMaxHeight", "name",
 ] as const;
