@@ -29,7 +29,10 @@ describe("Google tags", () => {
     const afterBody = html.slice(html.indexOf("<body")).replace(/^<body[^>]*>\s*(<!--.*?-->\s*)?/s, "");
     expect(afterBody.startsWith("<noscript><iframe")).toBe(true);
     expect(html).toContain(`https://www.googletagmanager.com/ns.html?id=${SITE.gtm}`);
-    expect(html).not.toContain("GTM-W8Z5FGWX");
+  });
+
+  it("names no tag manager container but the site's", () => {
+    expect(new Set(html.match(/GTM-[A-Z0-9]+/g))).toEqual(new Set([SITE.gtm]));
   });
 
   it("carries the Search Console verification tag", () => {
