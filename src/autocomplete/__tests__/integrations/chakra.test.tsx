@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { chakraAutocomplete } from "./chakra/components";
-import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Chakra wrapper
@@ -36,10 +36,28 @@ const Wrapper = ({ children }: { children: ReactNode }) => (
 const renderChakraAutocomplete = (props: Partial<AutocompleteProps<Brand>> = {}) =>
   renderIntegration(chakraAutocomplete, props, Wrapper);
 
+/**
+ * Invalid style
+ *
+ * jsdom does not resolve Chakra's `_invalid` condition, so the test reads the
+ * rule Chakra generated for the element's own class instead.
+ *
+ * @param element - An element styled through Chakra's style props.
+ * @returns The declarations of its `_invalid` rule, or `""`.
+ */
+const invalidStyle = (element: HTMLElement) =>
+  [...document.styleSheets]
+    .flatMap((sheet) => [...sheet.cssRules])
+    .map((rule) => rule.cssText)
+    .find((text) => [...element.classList].some((name) => text.startsWith(`.${name}:is([data-invalid]`))) ?? "";
+
 beforeAll(stubBrowserApis);
 
 describe("Chakra UI v3", () => {
   failOnReactWarnings();
+  itShowsTheInvalidState(renderChakraAutocomplete, (trigger) =>
+    expect(invalidStyle(trigger)).toContain("border-color: var(--chakra-colors-border-error)"),
+  );
 
   it("renders the popup with Chakra's parts", async () => {
     const user = renderChakraAutocomplete();

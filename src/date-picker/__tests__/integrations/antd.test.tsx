@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
 import { antdDatePicker } from "./antd/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Ant Design wrapper
@@ -57,6 +57,7 @@ freezeToday();
 
 describe("Ant Design v6", () => {
   failOnReactWarnings();
+  itShowsTheInvalidState((props) => renderAntdDatePicker(props), (trigger) => expect(trigger).toHaveStyle({ borderColor: "#ff4d4f" }));
   itKeepsFocusOnAPickedDay(renderAntdDatePicker);
 
   it("renders the calendar with Ant's primitives", async () => {

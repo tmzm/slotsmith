@@ -1,7 +1,7 @@
-import { render, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentType, ReactNode } from "react";
-import { afterEach, beforeEach, expect, vi, type MockInstance } from "vitest";
+import { afterEach, beforeEach, expect, it, vi, type MockInstance } from "vitest";
 import { Autocomplete, type AutocompleteComponents, type AutocompleteProps } from "../../index";
 import { BRANDS, trigger, type Brand } from "../builders";
 
@@ -114,3 +114,29 @@ export const tagLabels = () =>
   within(trigger())
     .queryAllByRole("button", { name: /^Remove / })
     .map((button) => button.getAttribute("aria-label")!.replace(/^Remove /, ""));
+
+/**
+ * Shows the invalid state
+ *
+ * Registers the test every library's `Trigger` must pass: with `invalid` the
+ * combobox carries `aria-invalid` and the search box does not, and the
+ * library's own error style appears, open or closed.
+ *
+ * @param renderAutocomplete - Renders the autocomplete with the library's parts.
+ * @param expectErrorStyle - Asserts the library's error marker on the trigger.
+ */
+export function itShowsTheInvalidState(
+  renderAutocomplete: (props?: Partial<AutocompleteProps<Brand>>) => ReturnType<typeof userEvent.setup>,
+  expectErrorStyle: (trigger: HTMLElement) => void,
+) {
+  it("shows the library's error style on an invalid trigger", async () => {
+    const user = renderAutocomplete({ invalid: true });
+    expect(trigger()).toHaveAttribute("aria-invalid", "true");
+    expectErrorStyle(trigger());
+
+    await user.click(trigger());
+    expect(screen.getByRole("searchbox")).not.toHaveAttribute("aria-invalid");
+    expect(trigger()).toHaveAttribute("aria-invalid", "true");
+    expectErrorStyle(trigger());
+  });
+}

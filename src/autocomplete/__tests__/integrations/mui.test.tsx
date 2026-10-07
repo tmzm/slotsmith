@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { muiAutocomplete } from "./mui/components";
-import { failOnReactWarnings, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * MUI wrapper
@@ -39,6 +39,7 @@ beforeAll(stubBrowserApis);
 
 describe("MUI v7", () => {
   failOnReactWarnings();
+  itShowsTheInvalidState(renderMuiAutocomplete, (trigger) => expect(trigger).toHaveClass("Mui-error"));
 
   it("renders the popup with MUI's primitives", async () => {
     const user = renderMuiAutocomplete();

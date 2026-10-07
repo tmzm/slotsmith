@@ -51,9 +51,13 @@ const MuiRoot = (props: AutocompleteRootSlotProps) => <Box sx={{ position: "rela
  * rather than off props, so it stays a plain element part. `Box` reads `color`
  * as a system prop, which is why the slot's props leave the DOM attribute of
  * that name out.
+ *
+ * An invalid value takes the theme's `error` colour and MUI's `Mui-error`
+ * state class, the way an outlined `TextField` with `error` shows one.
  */
-const MuiTrigger = (props: AutocompleteTriggerSlotProps) => (
+const MuiTrigger = ({ className, ...props }: AutocompleteTriggerSlotProps) => (
   <Box
+    className={[className, props["aria-invalid"] ? "Mui-error" : undefined].filter(Boolean).join(" ") || undefined}
     sx={{
       display: "flex",
       alignItems: "center",
@@ -66,6 +70,7 @@ const MuiTrigger = (props: AutocompleteTriggerSlotProps) => (
       cursor: "pointer",
       "&[data-open]": { borderColor: "primary.main" },
       "&[data-disabled]": { opacity: 0.5, cursor: "default" },
+      "&.Mui-error": { borderColor: "error.main" },
     }}
     {...props}
   />

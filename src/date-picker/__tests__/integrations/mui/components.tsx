@@ -73,10 +73,14 @@ export const muiDatePicker: Partial<DatePickerComponents> = {
     <Box className={className} sx={{ position: "relative", width: 1, maxWidth: 288 }} {...props} />
   ),
 
-  /** An outlined-input shell, so it sits beside MUI's TextFields without looking pasted in. */
+  /**
+   * An outlined-input shell, so it sits beside MUI's TextFields without
+   * looking pasted in. An invalid value takes the theme's `error` colour and
+   * MUI's `Mui-error` state class, as a `TextField` with `error` does.
+   */
   Trigger: ({ className, ...props }) => (
     <Box
-      className={className}
+      className={[className, props["aria-invalid"] ? "Mui-error" : undefined].filter(Boolean).join(" ") || undefined}
       sx={{
         cursor: "pointer",
         outline: 0,
@@ -99,6 +103,10 @@ export const muiDatePicker: Partial<DatePickerComponents> = {
           boxShadow: (theme) => `0 0 0 1px ${theme.palette.primary.main}`,
         },
         "&[aria-disabled='true']": { opacity: 0.5, cursor: "not-allowed" },
+        "&.Mui-error": { borderColor: "error.main" },
+        "&.Mui-error[data-open], &.Mui-error:focus-visible": {
+          boxShadow: (theme) => `0 0 0 1px ${theme.palette.error.main}`,
+        },
       }}
       {...props}
     />

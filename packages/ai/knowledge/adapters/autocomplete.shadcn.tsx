@@ -82,7 +82,9 @@ const ShadcnRoot = ({ className, ...props }: AutocompleteRootSlotProps) => (
  * Shadcn trigger
  *
  * The `select-trigger` look, driven by the `data-*` attributes the part
- * carries rather than by props of its own.
+ * carries rather than by props of its own. An invalid value gets shadcn's
+ * own `aria-invalid:` treatment: the destructive border, and the destructive
+ * ring while open or focused.
  */
 const ShadcnTrigger = ({ className, ...props }: AutocompleteTriggerSlotProps) => (
   <div
@@ -90,7 +92,11 @@ const ShadcnTrigger = ({ className, ...props }: AutocompleteTriggerSlotProps) =>
     className={cn(
       "flex min-h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none",
       "data-[open]:border-ring data-[open]:ring-[3px] data-[open]:ring-ring/50",
+      "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
       "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+      "aria-invalid:border-destructive",
+      "aria-invalid:data-[open]:border-destructive aria-invalid:data-[open]:ring-destructive/20 dark:aria-invalid:data-[open]:ring-destructive/40",
+      "aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:focus-visible:ring-destructive/40",
       className,
     )}
     {...props}

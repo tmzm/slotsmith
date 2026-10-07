@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi, type MockInstance } from "vitest";
 import { DatePicker, type DatePickerComponents, type DatePickerProps } from "../../index";
-import { day, focusedDate, open } from "../builders";
+import { day, focusedDate, open, trigger } from "../builders";
 
 /**
  * Stub browser APIs
@@ -126,5 +126,30 @@ export function itKeepsFocusOnAPickedDay(
     expect(day("2026-03-20")).toBe(end);
     expect(day("2026-03-20")).toHaveAttribute("data-selected");
     expect(document.activeElement).toBe(end);
+  });
+}
+
+/**
+ * Shows the invalid state
+ *
+ * Registers the test every library's `Trigger` must pass: with `invalid` the
+ * combobox carries `aria-invalid`, and the library's own error style appears,
+ * open or closed.
+ *
+ * @param renderPicker - Renders the picker with the library's parts.
+ * @param expectErrorStyle - Asserts the library's error marker on the trigger.
+ */
+export function itShowsTheInvalidState(
+  renderPicker: (props?: Partial<DatePickerProps>) => ReturnType<typeof userEvent.setup>,
+  expectErrorStyle: (trigger: HTMLElement) => void,
+) {
+  it("shows the library's error style on an invalid trigger", async () => {
+    const user = renderPicker({ invalid: true });
+    expect(trigger()).toHaveAttribute("aria-invalid", "true");
+    expectErrorStyle(trigger());
+
+    await open(user);
+    expect(trigger()).toHaveAttribute("aria-invalid", "true");
+    expectErrorStyle(trigger());
   });
 }

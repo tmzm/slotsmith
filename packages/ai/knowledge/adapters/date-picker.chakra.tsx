@@ -113,6 +113,8 @@ export const chakraDatePicker: Partial<DatePickerComponents> = {
         "&:hover": { borderColor: "border.emphasized" },
         "&[data-open], &:focus-visible": { borderColor: "colorPalette.solid" },
         "&[aria-disabled='true']": { opacity: 0.5, cursor: "not-allowed" },
+        /** Chakra's own invalid condition and token, as its `Input` uses them. */
+        _invalid: { borderColor: "border.error" },
       }}
       {...props}
     />

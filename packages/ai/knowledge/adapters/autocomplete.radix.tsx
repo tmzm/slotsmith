@@ -72,13 +72,17 @@ const RadixRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * Radix trigger
  *
  * The surface field of Radix's `TextField`: a hairline in the gray scale,
- * Radix's focus outline while open, and the disabled fill when disabled.
+ * Radix's focus outline while open, and the disabled fill when disabled. An
+ * invalid value switches the field to the red scale with
+ * `data-accent-color="red"`, which is what Radix's own `color="red"` sets.
  */
 function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
   const open = has(props, "data-open");
   const disabled = has(props, "data-disabled");
+  const invalid = has(props, "data-invalid");
   return (
     <div
+      data-accent-color={invalid ? "red" : undefined}
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -91,9 +95,9 @@ function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
         fontFamily: "var(--default-font-family)",
         fontSize: "var(--font-size-2)",
         background: disabled ? "var(--gray-a2)" : "var(--color-surface)",
-        boxShadow: "inset 0 0 0 1px var(--gray-a7)",
+        boxShadow: `inset 0 0 0 1px ${invalid ? "var(--red-a8)" : "var(--gray-a7)"}`,
         borderRadius: "var(--radius-2)",
-        outline: open ? "2px solid var(--focus-8)" : undefined,
+        outline: open ? `2px solid ${invalid ? "var(--red-8)" : "var(--focus-8)"}` : undefined,
         outlineOffset: -1,
         cursor: disabled ? "not-allowed" : "pointer",
         ...style,

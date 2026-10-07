@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
 import { radixDatePicker } from "./radix/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Radix Themes wrapper
@@ -44,6 +44,7 @@ freezeToday();
 
 describe("Radix Themes v3", () => {
   failOnReactWarnings();
+  itShowsTheInvalidState((props) => renderRadixDatePicker(props), (trigger) => expect(trigger).toHaveAttribute("data-accent-color", "red"));
   itKeepsFocusOnAPickedDay(renderRadixDatePicker);
 
   it("renders the calendar with Radix primitives", async () => {

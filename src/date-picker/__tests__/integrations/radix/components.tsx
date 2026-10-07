@@ -70,12 +70,18 @@ const captionStyle: CSSProperties = {
 export const radixDatePicker: Partial<DatePickerComponents> = {
   Root: ({ style, ...props }) => <div style={{ position: "relative", width: "100%", maxWidth: 288, ...style }} {...props} />,
 
-  /** The surface field of Radix's `TextField`, with its focus outline while open. */
+  /**
+   * The surface field of Radix's `TextField`, with its focus outline while
+   * open. An invalid value switches it to the red scale with
+   * `data-accent-color="red"`, which is what Radix's own `color="red"` sets.
+   */
   Trigger: function RadixTrigger({ style, ...props }) {
     const open = has(props, "data-open");
     const disabled = has(props, "data-disabled");
+    const invalid = has(props, "data-invalid");
     return (
       <div
+        data-accent-color={invalid ? "red" : undefined}
         style={{
           display: "flex",
           alignItems: "center",
@@ -88,9 +94,9 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
           fontSize: "var(--font-size-2)",
           textAlign: "start",
           background: disabled ? "var(--gray-a2)" : "var(--color-surface)",
-          boxShadow: "inset 0 0 0 1px var(--gray-a7)",
+          boxShadow: `inset 0 0 0 1px ${invalid ? "var(--red-a8)" : "var(--gray-a7)"}`,
           borderRadius: "var(--radius-2)",
-          outline: open ? "2px solid var(--focus-8)" : 0,
+          outline: open ? `2px solid ${invalid ? "var(--red-8)" : "var(--focus-8)"}` : 0,
           outlineOffset: -1,
           cursor: disabled ? "not-allowed" : "pointer",
           ...style,

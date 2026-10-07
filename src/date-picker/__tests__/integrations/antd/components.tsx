@@ -73,11 +73,18 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
   /** The box the popup is placed against, at the width of Ant's pickers. */
   Root: ({ style, ...props }) => <div style={{ position: "relative", width: "100%", maxWidth: 288, ...style }} {...props} />,
 
-  /** The outlined field of Ant's pickers: the primary border and focus ring while open. */
+  /**
+   * The outlined field of Ant's pickers: the primary border and focus ring
+   * while open, and the error border and ring of `status="error"` when the
+   * value is invalid.
+   */
   Trigger: function AntTrigger({ style, ...props }) {
     const { token } = theme.useToken();
     const open = has(props, "data-open");
     const disabled = has(props, "data-disabled");
+    const invalid = has(props, "data-invalid");
+    const edge = invalid ? token.colorError : open ? token.colorPrimary : token.colorBorder;
+    const ring = invalid ? token.colorErrorOutline : token.controlOutline;
     return (
       <div
         style={{
@@ -93,9 +100,9 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
           textAlign: "start",
           outline: 0,
           background: disabled ? token.colorBgContainerDisabled : token.colorBgContainer,
-          border: `${token.lineWidth}px ${token.lineType} ${open ? token.colorPrimary : token.colorBorder}`,
+          border: `${token.lineWidth}px ${token.lineType} ${edge}`,
           borderRadius: token.borderRadius,
-          boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${token.controlOutline}` : undefined,
+          boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${ring}` : undefined,
           cursor: disabled ? "not-allowed" : "pointer",
           transition: `all ${token.motionDurationMid}`,
           ...style,

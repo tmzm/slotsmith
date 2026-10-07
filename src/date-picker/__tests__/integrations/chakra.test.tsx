@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
 import { chakraDatePicker } from "./chakra/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Chakra wrapper
@@ -27,11 +27,29 @@ const Wrapper = ({ children }: { children: ReactNode }) => (
 const renderChakraDatePicker = (props: Partial<DatePickerProps> = {}) =>
   renderIntegration(chakraDatePicker, props, Wrapper);
 
+/**
+ * Invalid style
+ *
+ * jsdom does not resolve Chakra's `_invalid` condition, so the test reads the
+ * rule Chakra generated for the element's own class instead.
+ *
+ * @param element - An element styled through Chakra's style props.
+ * @returns The declarations of its `_invalid` rule, or `""`.
+ */
+const invalidStyle = (element: HTMLElement) =>
+  [...document.styleSheets]
+    .flatMap((sheet) => [...sheet.cssRules])
+    .map((rule) => rule.cssText)
+    .find((text) => [...element.classList].some((name) => text.startsWith(`.${name}:is([data-invalid]`))) ?? "";
+
 beforeAll(stubBrowserApis);
 freezeToday();
 
 describe("Chakra UI v3", () => {
   failOnReactWarnings();
+  itShowsTheInvalidState(renderChakraDatePicker, (trigger) =>
+    expect(invalidStyle(trigger)).toContain("border-color: var(--chakra-colors-border-error)"),
+  );
   itKeepsFocusOnAPickedDay(renderChakraDatePicker);
 
   it("renders the calendar with Chakra's parts", async () => {

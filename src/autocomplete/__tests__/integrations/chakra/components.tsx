@@ -38,7 +38,9 @@ const ChakraRoot = (props: AutocompleteRootSlotProps) => <Box position="relative
 /**
  * Chakra trigger
  *
- * A bordered `Box`, styled off the `data-*` attributes the part carries.
+ * A bordered `Box`, styled off the `data-*` attributes the part carries. An
+ * invalid value takes Chakra's `_invalid` condition and its `border.error`
+ * token, the way Chakra's own `Input` shows one.
  */
 const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
   <Box
@@ -53,6 +55,7 @@ const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
     css={{
       "&[data-open]": { borderColor: "colorPalette.solid" },
       "&[data-disabled]": { opacity: 0.5, cursor: "not-allowed" },
+      _invalid: { borderColor: "border.error" },
     }}
     {...props}
   />

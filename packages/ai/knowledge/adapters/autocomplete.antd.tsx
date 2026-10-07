@@ -64,12 +64,16 @@ const AntRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * Ant trigger
  *
  * The outlined field of Ant's select: the primary border and focus ring
- * while open, the disabled fill when disabled.
+ * while open, the disabled fill when disabled, and the error border and
+ * ring of `status="error"` when the value is invalid.
  */
 function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
   const { token } = theme.useToken();
   const open = has(props, "data-open");
   const disabled = has(props, "data-disabled");
+  const invalid = has(props, "data-invalid");
+  const edge = invalid ? token.colorError : open ? token.colorPrimary : token.colorBorder;
+  const ring = invalid ? token.colorErrorOutline : token.controlOutline;
   return (
     <div
       style={{
@@ -83,9 +87,9 @@ function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
         color: token.colorText,
         fontSize: token.fontSize,
         background: disabled ? token.colorBgContainerDisabled : token.colorBgContainer,
-        border: `${token.lineWidth}px ${token.lineType} ${open ? token.colorPrimary : token.colorBorder}`,
+        border: `${token.lineWidth}px ${token.lineType} ${edge}`,
         borderRadius: token.borderRadius,
-        boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${token.controlOutline}` : undefined,
+        boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${ring}` : undefined,
         cursor: disabled ? "not-allowed" : "pointer",
         transition: `all ${token.motionDurationMid}`,
         ...style,
