@@ -10,8 +10,8 @@ the two affordances the data table already has to every component: a **Provider 
 compound parts** for custom layouts, and an **optional virtualized list** behind
 `slotsmith/virtual`.
 
-Ported from meliving's `components/shared/autocomplete.tsx`, minus its bugs. That file is
-621 lines of composition over cmdk + Radix Popover + TanStack Query; roughly 70% of what
+Distilled from a typical app-level autocomplete, minus its usual bugs. Such a component is often
+hundreds of lines of composition over cmdk + Radix Popover + TanStack Query; roughly 70% of what
 makes it work lives in those libraries. This is that 70%, written once and made
 replaceable.
 
@@ -27,10 +27,10 @@ Each was chosen explicitly; the alternatives are recorded because they will be a
 | Remote options | **Dumb component + opt-in `useAsyncOptions` hook** returning props to spread. | `loadOptions` baked into the component; caller-owns-everything. |
 | Popup | **`Popup` slot + zero-dep fallback positioner**, plus `slotsmith/floating` wrapping `@floating-ui/react-dom` as an optional peer. | Hard dependency; inline-only. |
 | `value` | **Ids.** `onChange(value, option)` also hands back the option. `selected` labels an id whose option never loaded. | Option objects; a generic `getOptionValue` returning either. |
-| `multiple` typing | **Discriminated union**, like `date-picker/types.ts`. | Conditional generic `M extends boolean`, like meliving's autocomplete — it needs casts and mis-infers a dynamic boolean. |
+| `multiple` typing | **Discriminated union**, like `date-picker/types.ts`. | Conditional generic `M extends boolean`, as app-level autocompletes often do — it needs casts and mis-infers a dynamic boolean. |
 | `onChange` second arg, multiple mode | **`(TOption \| undefined)[]`, index-aligned with the values.** | `TOption[]` with unresolved entries filtered out — the arrays then silently disagree. |
 | Grouping | **Not in v1.** Render loop stays group-ready. | — |
-| Create flow | `creatable` + `onCreate(query)`. Extra fields (meliving's colour picker) come from replacing the `Create` slot. | Porting `withColorPicker` as a built-in second step. |
+| Create flow | `creatable` + `onCreate(query)`. Extra fields (a colour picker, say) come from replacing the `Create` slot. | Porting `withColorPicker` as a built-in second step. |
 
 ## Architecture
 
@@ -97,13 +97,13 @@ and in multiple mode `Backspace` on an empty search removes the last tag. The hi
 scrolls into view; wrapping is opt-in via `loop`.
 
 **Accessibility.** `aria-activedescendant` tracks the highlight while `aria-selected`
-marks what is chosen — meliving conflates them, so a screen reader never learns the
+marks what is chosen — implementations that conflate them mean a screen reader never learns the
 selection. `aria-multiselectable` on the list. Clear and tag-remove are real buttons with
 labels. A `role="status"` region announces result counts.
 
 **Paging.** The sentinel is observed against the **list's** scroll box, not the viewport.
 
-## Bugs fixed relative to meliving
+## Common autocomplete bugs this design avoids
 
 The trigger going blank when the selected option is not on the loaded page · `creatable`
 offering to create a duplicate while the list is still loading · an unhandled rejection
