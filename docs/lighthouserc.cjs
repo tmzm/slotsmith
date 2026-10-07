@@ -1,8 +1,9 @@
 /**
  * Lighthouse CI for the built docs site.
  *
- * Serves `dist/` (run after `pnpm build`) and audits the landing and the data
- * table overview three times each with the default mobile preset. Every
+ * Serves `dist/` (run after `pnpm build`) and audits the landing, the data
+ * table overview and API pages and the theming page three times each with the
+ * default mobile preset. Every
  * category must score at least 0.95, and layout shift must stay at or under
  * 0.01. Reports are written to `.lighthouseci/`, never to public storage.
  *
@@ -26,7 +27,12 @@ module.exports = {
   ci: {
     collect: {
       staticDistDir: "./dist",
-      url: ["http://localhost/", "http://localhost/components/data-table/"],
+      url: [
+        "http://localhost/",
+        "http://localhost/components/data-table/",
+        "http://localhost/components/data-table/api/",
+        "http://localhost/theming/",
+      ],
       numberOfRuns: 3,
       chromePath: chromePath(),
     },
