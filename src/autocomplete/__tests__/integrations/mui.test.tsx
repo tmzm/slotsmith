@@ -84,6 +84,16 @@ describe("MUI v7", () => {
     expect(options()).toHaveLength(BRANDS.length);
   });
 
+  it("shows the input's error for an aria-invalid given as a string", () => {
+    renderMuiAutocomplete({
+      searchIn: "trigger",
+      "aria-label": "Brand",
+      slotProps: { triggerInput: { "aria-invalid": "true" } },
+    } as Partial<AutocompleteProps<Brand>>);
+
+    expect(screen.getByRole("combobox").closest(".MuiInputBase-root")).toHaveClass("Mui-error");
+  });
+
   it("picks a value from a MenuItem and shows it on the trigger", async () => {
     const onChange = vi.fn();
     const user = renderMuiAutocomplete({ onChange });

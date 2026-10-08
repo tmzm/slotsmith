@@ -121,7 +121,7 @@ const MuiTriggerInput = ({ ref, value, onChange, placeholder, disabled, ...input
     onChange={onChange}
     placeholder={placeholder}
     disabled={disabled}
-    error={input["aria-invalid"] === true}
+    error={isTrue(input["aria-invalid"])}
     inputProps={input}
     sx={{ flex: "1 0 80px", minWidth: 80, px: 0.5 }}
   />
