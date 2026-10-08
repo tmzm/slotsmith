@@ -41,6 +41,14 @@ import type {
 const ChakraRoot = (props: AutocompleteRootSlotProps) => <Box position="relative" {...props} />;
 
 /**
+ * No touch zoom
+ *
+ * Touch browsers zoom into a focused input whose text is under 16px, so on
+ * a coarse pointer the search inputs never go below it.
+ */
+const NO_TOUCH_ZOOM = { "@media (pointer: coarse)": { fontSize: "max(16px, 1em)" } };
+
+/**
  * Chakra trigger
  *
  * A bordered `Box`, styled off the `data-*` attributes the part carries. An
@@ -80,10 +88,11 @@ const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
  *
  * Chakra's `Input`, unstyled, since the field around it draws the border.
  * It is the combobox when the search is in the trigger, and takes the space
- * the tags leave.
+ * the tags leave. On a coarse pointer its text stays at 16px or more, so a
+ * touch browser does not zoom in on focus.
  */
 const ChakraTriggerInput = (props: AutocompleteTriggerInputSlotProps) => (
-  <Input unstyled flex="1 0 80px" minW="20" h="8" px="2" bg="transparent" outline="none" {...props} />
+  <Input unstyled flex="1 0 80px" minW="20" h="8" px="2" bg="transparent" outline="none" css={NO_TOUCH_ZOOM} {...props} />
 );
 
 /**
@@ -174,10 +183,11 @@ const ChakraPopup = (props: AutocompletePopupSlotProps) => (
  * Chakra search
  *
  * Chakra's `Input`. Its `size` is a recipe prop rather than the HTML
- * attribute, which is why the slot's props leave `size` out.
+ * attribute, which is why the slot's props leave `size` out. On a coarse
+ * pointer its text stays at 16px or more, as in the trigger input.
  */
 const ChakraSearch = (props: AutocompleteSearchSlotProps) => (
-  <Input size="sm" borderWidth="0" borderBottomWidth="1px" borderRadius="0" {...props} />
+  <Input size="sm" borderWidth="0" borderBottomWidth="1px" borderRadius="0" css={NO_TOUCH_ZOOM} {...props} />
 );
 
 /**

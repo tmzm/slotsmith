@@ -375,6 +375,17 @@
   outline: none;
 }
 
+/**
+ * Touch browsers zoom into a focused input whose text is under 16px, so on a
+ * coarse pointer neither search input goes below it.
+ */
+@media (pointer: coarse) {
+  .sac__trigger-input,
+  .sac__search {
+    font-size: max(16px, 1em);
+  }
+}
+
 .sac__list {
   flex: 1;
   margin: 0;
