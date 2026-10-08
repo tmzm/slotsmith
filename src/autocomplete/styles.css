@@ -391,6 +391,9 @@
   margin: 0;
   padding: 0.25rem;
   overflow-y: auto;
+  /* A thin bar in the border colour, so a dark popup has no bright default scrollbar. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--_sac-border) transparent;
   list-style: none;
 }
 

@@ -148,7 +148,7 @@ function ShadcnTrigger({ className, ...props }: AutocompleteTriggerSlotProps) {
  * never reach it; its `px-2` stands in for them.
  */
 const ShadcnTriggerInput = ({ className, ...props }: AutocompleteTriggerInputSlotProps) => (
-  <InputGroupInput className={cn("h-7 min-w-20 basis-20 px-2", className)} {...props} />
+  <InputGroupInput className={cn("h-7 min-w-16 basis-16 px-2", className)} {...props} />
 );
 
 /**
@@ -291,7 +291,7 @@ const ShadcnSearch = ({ className, ...props }: AutocompleteSearchSlotProps) => (
  * goes on.
  */
 const ShadcnList = ({ className, ...props }: AutocompleteListSlotProps) => (
-  <ul data-slot="command-list" className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-1", className)} {...props} />
+  <ul data-slot="command-list" className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-1 [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin]", className)} {...props} />
 );
 
 /**
