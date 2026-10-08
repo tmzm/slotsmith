@@ -75,7 +75,7 @@ const AntRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * With the search in the trigger it is the field around the borderless
  * `Input`, and the border and ring also follow focus in that input.
  */
-function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
+function AntTrigger({ style, onFocus, onBlur, ...props }: AutocompleteTriggerSlotProps) {
   const { token } = theme.useToken();
   const [focused, setFocused] = useState(false);
   const searchInTrigger = has(props, "data-search-in");
@@ -86,9 +86,13 @@ function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
   const ring = invalid ? token.colorErrorOutline : token.controlOutline;
   return (
     <div
-      onFocus={() => setFocused(true)}
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
       onBlur={(event: FocusEvent<HTMLDivElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+        onBlur?.(event);
       }}
       style={{
         display: "flex",

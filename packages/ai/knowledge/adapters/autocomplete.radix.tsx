@@ -84,7 +84,7 @@ const RadixRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * With the search in the trigger it is the field around the `TextField`,
  * and the focus outline also follows focus in that input.
  */
-function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
+function RadixTrigger({ style, onFocus, onBlur, ...props }: AutocompleteTriggerSlotProps) {
   const [focused, setFocused] = useState(false);
   const searchInTrigger = has(props, "data-search-in");
   const open = has(props, "data-open") || (searchInTrigger && focused);
@@ -92,9 +92,13 @@ function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
   const invalid = has(props, "data-invalid");
   return (
     <div
-      onFocus={() => setFocused(true)}
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
       onBlur={(event: FocusEvent<HTMLDivElement>) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+        onBlur?.(event);
       }}
       data-accent-color={invalid ? "red" : undefined}
       style={{
