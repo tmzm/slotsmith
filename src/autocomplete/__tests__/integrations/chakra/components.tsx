@@ -173,10 +173,11 @@ const ChakraIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
  * Chakra popup
  *
  * A panel `Box`. The component positions it, so the part only receives the
- * computed style and adds the surface.
+ * computed style and adds the surface. It is a column the list fills, so the
+ * list scrolls inside the height it is given and the search box stays put.
  */
 const ChakraPopup = (props: AutocompletePopupSlotProps) => (
-  <Box bg="bg.panel" borderWidth="1px" borderRadius="md" boxShadow="md" overflow="auto" zIndex="dropdown" {...props} />
+  <Box bg="bg.panel" borderWidth="1px" borderRadius="md" boxShadow="md" display="flex" flexDirection="column" overflow="hidden" zIndex="dropdown" {...props} />
 );
 
 /**
@@ -187,16 +188,17 @@ const ChakraPopup = (props: AutocompletePopupSlotProps) => (
  * pointer its text stays at 16px or more, as in the trigger input.
  */
 const ChakraSearch = (props: AutocompleteSearchSlotProps) => (
-  <Input size="sm" borderWidth="0" borderBottomWidth="1px" borderRadius="0" css={NO_TOUCH_ZOOM} {...props} />
+  <Input size="sm" flexShrink="0" borderWidth="0" borderBottomWidth="1px" borderRadius="0" css={NO_TOUCH_ZOOM} {...props} />
 );
 
 /**
  * Chakra list
  *
- * `List.Root` renders the `<ul>` the listbox role goes on.
+ * `List.Root` renders the `<ul>` the listbox role goes on, and is the part
+ * that scrolls.
  */
 const ChakraList = (props: AutocompleteListSlotProps) => (
-  <List.Root listStyleType="none" gap="0" p="1" m="0" maxH="100%" overflowY="auto" {...props} />
+  <List.Root listStyleType="none" gap="0" p="1" m="0" flex="1" minH="0" overflowY="auto" {...props} />
 );
 
 /**

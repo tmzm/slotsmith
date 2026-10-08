@@ -243,13 +243,15 @@ const ShadcnIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) => (
  * Shadcn popup
  *
  * The `popover-content` surface. The component positions it, so the part only
- * receives the computed style and adds the look.
+ * receives the computed style and adds the look. It is a column the list
+ * fills, so the list scrolls inside the height it is given and the search row
+ * stays put.
  */
 const ShadcnPopup = ({ className, ...props }: AutocompletePopupSlotProps) => (
   <div
     data-slot="popover-content"
     className={cn(
-      "z-50 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
+      "z-50 flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
       className,
     )}
     {...props}
@@ -262,7 +264,7 @@ const ShadcnPopup = ({ className, ...props }: AutocompletePopupSlotProps) => (
  * The `command-input` row: an `Input` with the search icon beside it.
  */
 const ShadcnSearch = ({ className, ...props }: AutocompleteSearchSlotProps) => (
-  <div data-slot="command-input-wrapper" className="flex items-center border-b px-3">
+  <div data-slot="command-input-wrapper" className="flex shrink-0 items-center border-b px-3">
     <Input className={cn("h-9 border-0 px-0 shadow-none focus-visible:ring-0", className)} {...props} />
   </div>
 );
@@ -274,7 +276,7 @@ const ShadcnSearch = ({ className, ...props }: AutocompleteSearchSlotProps) => (
  * goes on.
  */
 const ShadcnList = ({ className, ...props }: AutocompleteListSlotProps) => (
-  <ul data-slot="command-list" className={cn("max-h-full overflow-x-hidden overflow-y-auto p-1", className)} {...props} />
+  <ul data-slot="command-list" className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-1", className)} {...props} />
 );
 
 /**

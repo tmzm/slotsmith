@@ -208,10 +208,11 @@ const MuiIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
  * MUI popup
  *
  * A raised `Paper`. The component positions it, so the part only receives the
- * computed style and adds the surface.
+ * computed style and adds the surface. It is a column the list fills, so the
+ * list scrolls inside the height it is given and the search box stays put.
  */
 const MuiPopup = (props: AutocompletePopupSlotProps) => (
-  <Paper elevation={8} sx={{ overflow: "auto" }} {...props} />
+  <Paper elevation={8} sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }} {...props} />
 );
 
 /**
@@ -232,16 +233,19 @@ const MuiSearch = ({ ref, value, onChange, placeholder, ...input }: Autocomplete
     onChange={onChange}
     placeholder={placeholder}
     inputProps={input}
-    sx={{ px: 1.5, py: 0.5, borderBottom: 1, borderColor: "divider" }}
+    sx={{ flexShrink: 0, px: 1.5, py: 0.5, borderBottom: 1, borderColor: "divider" }}
   />
 );
 
 /**
  * MUI list
  *
- * A dense `List`, which renders the `<ul>` the listbox role goes on.
+ * A dense `List`, which renders the `<ul>` the listbox role goes on, and is
+ * the part that scrolls.
  */
-const MuiList = (props: AutocompleteListSlotProps) => <List dense disablePadding {...props} />;
+const MuiList = (props: AutocompleteListSlotProps) => (
+  <List dense disablePadding sx={{ flex: 1, minHeight: 0, overflowY: "auto" }} {...props} />
+);
 
 /**
  * MUI option

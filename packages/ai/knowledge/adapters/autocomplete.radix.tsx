@@ -202,13 +202,18 @@ const RadixIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) => (
  * Radix popup
  *
  * The solid panel of Radix's menus. The component positions it, so the part
- * only adds the surface to the style it receives.
+ * only adds the surface to the style it receives. It is a column the list
+ * fills, so the list scrolls inside the height it is given and the search
+ * box stays put.
  */
 const RadixPopup = ({ style, ...props }: AutocompletePopupSlotProps) => (
   <div
     style={{
       zIndex: 50,
-      overflow: "auto",
+      display: "flex",
+      flexDirection: "column",
+      boxSizing: "border-box",
+      overflow: "hidden",
       padding: "var(--space-1)",
       color: "var(--gray-12)",
       fontFamily: "var(--default-font-family)",
@@ -236,7 +241,7 @@ const RadixPopup = ({ style, ...props }: AutocompletePopupSlotProps) => (
  * controlled input never reads, is dropped.
  */
 const RadixSearch = ({ value, type, defaultValue: _defaultValue, ...props }: AutocompleteSearchSlotProps) => (
-  <Box mb="1">
+  <Box mb="1" flexShrink="0">
     <TextField.Root
       size="2"
       type={type as TextField.RootProps["type"]}
@@ -282,10 +287,10 @@ const RadixToggle = (props: AutocompleteToggleSlotProps) => (
 /**
  * Radix list
  *
- * The `<ul>` the listbox role goes on.
+ * The `<ul>` the listbox role goes on, and the part that scrolls.
  */
 const RadixList = ({ style, ...props }: AutocompleteListSlotProps) => (
-  <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  <ul style={{ flex: 1, minHeight: 0, margin: 0, padding: 0, overflowY: "auto", listStyle: "none", ...style }} {...props} />
 );
 
 /**

@@ -201,7 +201,9 @@ function AntIndicator({ open, loading }: AutocompleteIndicatorSlotProps) {
  * Ant popup
  *
  * The elevated surface of Ant's dropdowns. The component positions it, so
- * the part only adds the surface to the style it receives.
+ * the part only adds the surface to the style it receives. It is a column
+ * the list fills, so the list scrolls inside the height it is given and the
+ * search box stays put.
  */
 function AntPopup({ style, ...props }: AutocompletePopupSlotProps) {
   const { token } = theme.useToken();
@@ -209,7 +211,10 @@ function AntPopup({ style, ...props }: AutocompletePopupSlotProps) {
     <div
       style={{
         zIndex: token.zIndexPopupBase,
-        overflow: "auto",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+        overflow: "hidden",
         padding: token.paddingXXS,
         background: token.colorBgElevated,
         borderRadius: token.borderRadiusLG,
@@ -250,7 +255,7 @@ function AntSearch({ ref, style, ...props }: AutocompleteSearchSlotProps) {
       ref={inputRef}
       variant="borderless"
       prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-      style={{ borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`, borderRadius: 0, ...style }}
+      style={{ flexShrink: 0, borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`, borderRadius: 0, ...style }}
       {...props}
     />
   );
@@ -290,10 +295,10 @@ const AntToggle = ({ type: _type, ...props }: AutocompleteToggleSlotProps) => (
 /**
  * Ant list
  *
- * The `<ul>` the listbox role goes on.
+ * The `<ul>` the listbox role goes on, and the part that scrolls.
  */
 const AntList = ({ style, ...props }: AutocompleteListSlotProps) => (
-  <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  <ul style={{ flex: 1, minHeight: 0, margin: 0, padding: 0, overflowY: "auto", listStyle: "none", ...style }} {...props} />
 );
 
 /**
