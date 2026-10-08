@@ -108,7 +108,7 @@ const ShadcnRoot = ({ className, ...props }: AutocompleteRootSlotProps) => (
  * keeps it at the `h-9` of a plain `InputGroup` while it holds one row.
  */
 function ShadcnTrigger({ className, ...props }: AutocompleteTriggerSlotProps) {
-  if ("data-search-in" in props) {
+  if ((props as Record<string, unknown>)["data-search-in"] !== undefined) {
     return (
       <InputGroup
         className={cn(
