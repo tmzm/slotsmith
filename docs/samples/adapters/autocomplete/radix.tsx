@@ -10,8 +10,8 @@
  * bare Radix primitives wants the shadcn/ui adapter, which is built on them.
  */
 import { CheckIcon, ChevronDownIcon, Cross2Icon, CrossCircledIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { Badge, Box, Button, Flex, IconButton, Spinner, Text, TextField } from "@radix-ui/themes";
-import type { ReactNode } from "react";
+import { Badge, Box, Button, Flex, IconButton, Separator, Spinner, Text, TextField } from "@radix-ui/themes";
+import { useState, type FocusEvent, type ReactNode } from "react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -19,6 +19,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -28,7 +30,10 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
@@ -72,13 +77,30 @@ const RadixRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * Radix trigger
  *
  * The surface field of Radix's `TextField`: a hairline in the gray scale,
- * Radix's focus outline while open, and the disabled fill when disabled.
+ * Radix's focus outline while open, and the disabled fill when disabled. An
+ * invalid value switches the field to the red scale with
+ * `data-accent-color="red"`, which is what Radix's own `color="red"` sets.
+ *
+ * With the search in the trigger it is the field around the `TextField`,
+ * and the focus outline also follows focus in that input.
  */
-function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
-  const open = has(props, "data-open");
+function RadixTrigger({ style, onFocus, onBlur, ...props }: AutocompleteTriggerSlotProps) {
+  const [focused, setFocused] = useState(false);
+  const searchInTrigger = has(props, "data-search-in");
+  const open = has(props, "data-open") || (searchInTrigger && focused);
   const disabled = has(props, "data-disabled");
+  const invalid = has(props, "data-invalid");
   return (
     <div
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event: FocusEvent<HTMLDivElement>) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+        onBlur?.(event);
+      }}
+      data-accent-color={invalid ? "red" : undefined}
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -91,11 +113,11 @@ function RadixTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
         fontFamily: "var(--default-font-family)",
         fontSize: "var(--font-size-2)",
         background: disabled ? "var(--gray-a2)" : "var(--color-surface)",
-        boxShadow: "inset 0 0 0 1px var(--gray-a7)",
+        boxShadow: `inset 0 0 0 1px ${invalid ? "var(--red-a8)" : "var(--gray-a7)"}`,
         borderRadius: "var(--radius-2)",
-        outline: open ? "2px solid var(--focus-8)" : undefined,
+        outline: open ? `2px solid ${invalid ? "var(--red-8)" : "var(--focus-8)"}` : undefined,
         outlineOffset: -1,
-        cursor: disabled ? "not-allowed" : "pointer",
+        cursor: disabled ? "not-allowed" : searchInTrigger ? "text" : "pointer",
         ...style,
       }}
       {...props}
@@ -180,13 +202,18 @@ const RadixIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) => (
  * Radix popup
  *
  * The solid panel of Radix's menus. The component positions it, so the part
- * only adds the surface to the style it receives.
+ * only adds the surface to the style it receives. It is a column the list
+ * fills, so the list scrolls inside the height it is given and the search
+ * box stays put.
  */
 const RadixPopup = ({ style, ...props }: AutocompletePopupSlotProps) => (
   <div
     style={{
       zIndex: 50,
-      overflow: "auto",
+      display: "flex",
+      flexDirection: "column",
+      boxSizing: "border-box",
+      overflow: "hidden",
       padding: "var(--space-1)",
       color: "var(--gray-12)",
       fontFamily: "var(--default-font-family)",
@@ -214,7 +241,7 @@ const RadixPopup = ({ style, ...props }: AutocompletePopupSlotProps) => (
  * controlled input never reads, is dropped.
  */
 const RadixSearch = ({ value, type, defaultValue: _defaultValue, ...props }: AutocompleteSearchSlotProps) => (
-  <Box mb="1">
+  <Box mb="1" flexShrink="0">
     <TextField.Root
       size="2"
       type={type as TextField.RootProps["type"]}
@@ -229,12 +256,41 @@ const RadixSearch = ({ value, type, defaultValue: _defaultValue, ...props }: Aut
 );
 
 /**
+ * Radix trigger input
+ *
+ * A `TextField` that is the combobox when the search is in the trigger. The
+ * field around it draws the border and the focus outline, so its own are
+ * cleared; it hands the ref, the role, the aria wiring and the key handler
+ * to its `<input>`, and narrows `value` and `type` as the search box does.
+ */
+const RadixTriggerInput = ({ value, type, defaultValue: _defaultValue, style, ...props }: AutocompleteTriggerInputSlotProps) => (
+  <TextField.Root
+    size="2"
+    variant="soft"
+    color="gray"
+    type={type as TextField.RootProps["type"]}
+    value={value === undefined ? undefined : String(value)}
+    style={{ flex: "1 0 80px", minWidth: 80, background: "transparent", boxShadow: "none", outline: "none", ...style }}
+    {...props}
+  />
+);
+
+/**
+ * Radix toggle
+ *
+ * A ghost `IconButton` holding the chevron, kept out of the tab order.
+ */
+const RadixToggle = (props: AutocompleteToggleSlotProps) => (
+  <IconButton size="1" variant="ghost" color="gray" style={{ margin: 0 }} {...props} type="button" />
+);
+
+/**
  * Radix list
  *
- * The `<ul>` the listbox role goes on.
+ * The `<ul>` the listbox role goes on, and the part that scrolls.
  */
 const RadixList = ({ style, ...props }: AutocompleteListSlotProps) => (
-  <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  <ul style={{ flex: 1, minHeight: 0, margin: 0, padding: 0, overflowX: "hidden", overflowY: "auto", listStyle: "none", ...style }} {...props} />
 );
 
 /**
@@ -267,6 +323,54 @@ function RadixOption({ style, ...props }: AutocompleteOptionSlotProps) {
     />
   );
 }
+
+/**
+ * Radix group
+ *
+ * The group's own `<ul>`, carrying `role="group"`, inside a bare `<li>`.
+ * Radix's `Select.Group` needs the select's context, so it cannot be used on
+ * its own.
+ */
+const RadixGroup = ({ label: _label, labelId: _labelId, style, ...props }: AutocompleteGroupSlotProps) => (
+  <li role="none">
+    <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  </li>
+);
+
+/**
+ * Radix group label
+ *
+ * The look of `Select.Label`: a row's height and padding in the muted gray,
+ * at the small size.
+ */
+const RadixGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) => (
+  <li
+    style={{
+      display: "flex",
+      alignItems: "center",
+      /* 28px, the virtual list's default groupLabelSize. */
+      minHeight: "calc(var(--space-5) + var(--space-1))",
+      paddingInline: "var(--space-3)",
+      color: "var(--gray-a10)",
+      cursor: "default",
+      userSelect: "none",
+    }}
+    {...props}
+  >
+    <Text size="1">{label}</Text>
+  </li>
+);
+
+/**
+ * Radix separator
+ *
+ * Radix's `Separator` in a hidden list item, run out to the popup's edges.
+ */
+const RadixSeparator = ({ style, ...props }: AutocompleteSeparatorSlotProps) => (
+  <li style={{ marginBlock: "var(--space-1)", marginInline: "calc(var(--space-1) * -1)", ...style }} {...props}>
+    <Separator size="4" />
+  </li>
+);
 
 /**
  * Radix option label
@@ -382,6 +486,8 @@ const RadixLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMore
 export const radixComponents: Partial<AutocompleteComponents> = {
   Root: RadixRoot,
   Trigger: RadixTrigger,
+  TriggerInput: RadixTriggerInput,
+  Toggle: RadixToggle,
   Value: RadixValue,
   Tag: RadixTag,
   Clear: RadixClear,
@@ -392,6 +498,9 @@ export const radixComponents: Partial<AutocompleteComponents> = {
   Option: RadixOption,
   OptionLabel: RadixOptionLabel,
   Check: RadixCheck,
+  Group: RadixGroup,
+  GroupLabel: RadixGroupLabel,
+  Separator: RadixSeparator,
   Empty: RadixEmpty,
   Loading: RadixLoading,
   Error: RadixError,

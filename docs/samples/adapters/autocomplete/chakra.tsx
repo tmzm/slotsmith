@@ -6,7 +6,7 @@
  * want, and pass the map as `components={chakraComponents}`; every slot left
  * out keeps its fallback.
  */
-import { Box, Button, EmptyState, IconButton, Input, List, Span, Spinner, Tag, Text } from "@chakra-ui/react";
+import { Box, Button, EmptyState, IconButton, Input, List, Separator, Span, Spinner, Tag, Text } from "@chakra-ui/react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -14,6 +14,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -23,7 +25,10 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
@@ -36,9 +41,24 @@ import type {
 const ChakraRoot = (props: AutocompleteRootSlotProps) => <Box position="relative" {...props} />;
 
 /**
+ * No touch zoom
+ *
+ * Touch browsers zoom into a focused input whose text is under 16px, so on
+ * a coarse pointer the search inputs never go below it.
+ */
+const NO_TOUCH_ZOOM = { "@media (pointer: coarse)": { fontSize: "max(16px, 1em)" } };
+
+/**
  * Chakra trigger
  *
- * A bordered `Box`, styled off the `data-*` attributes the part carries.
+ * A bordered `Box`, styled off the `data-*` attributes the part carries. An
+ * invalid value takes Chakra's `_invalid` condition and its `border.error`
+ * token, the way Chakra's own `Input` shows one.
+ *
+ * With the search in the trigger it is the field around the `Input`: it
+ * wraps the tags, and takes Chakra's focus ring while the input inside has
+ * focus, through `_focusWithin`. The error border follows `data-invalid`,
+ * since `aria-invalid` is on the input then.
  */
 const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
   <Box
@@ -53,10 +73,34 @@ const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
     css={{
       "&[data-open]": { borderColor: "colorPalette.solid" },
       "&[data-disabled]": { opacity: 0.5, cursor: "not-allowed" },
+      _invalid: { borderColor: "border.error" },
+      "&[data-search-in]": { flexWrap: "wrap", gap: "1", px: "1", py: "0.5", cursor: "text" },
+      "&[data-search-in]:focus-within": { borderColor: "colorPalette.focusRing", outline: "1px solid", outlineColor: "colorPalette.focusRing" },
+      "&[data-search-in][data-invalid]": { borderColor: "border.error" },
+      "&[data-search-in][data-invalid]:focus-within": { outlineColor: "border.error" },
     }}
     {...props}
   />
 );
+
+/**
+ * Chakra trigger input
+ *
+ * Chakra's `Input`, unstyled, since the field around it draws the border.
+ * It is the combobox when the search is in the trigger, and takes the space
+ * the tags leave. On a coarse pointer its text stays at 16px or more, so a
+ * touch browser does not zoom in on focus.
+ */
+const ChakraTriggerInput = (props: AutocompleteTriggerInputSlotProps) => (
+  <Input unstyled flex="1 0 80px" minW="20" h="8" px="2" bg="transparent" outline="none" css={NO_TOUCH_ZOOM} {...props} />
+);
+
+/**
+ * Chakra toggle
+ *
+ * A ghost `IconButton` holding the chevron, kept out of the tab order.
+ */
+const ChakraToggle = (props: AutocompleteToggleSlotProps) => <IconButton size="xs" variant="ghost" {...props} />;
 
 /**
  * Chakra value
@@ -129,29 +173,32 @@ const ChakraIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
  * Chakra popup
  *
  * A panel `Box`. The component positions it, so the part only receives the
- * computed style and adds the surface.
+ * computed style and adds the surface. It is a column the list fills, so the
+ * list scrolls inside the height it is given and the search box stays put.
  */
 const ChakraPopup = (props: AutocompletePopupSlotProps) => (
-  <Box bg="bg.panel" borderWidth="1px" borderRadius="md" boxShadow="md" overflow="auto" zIndex="dropdown" {...props} />
+  <Box bg="bg.panel" borderWidth="1px" borderRadius="md" boxShadow="md" display="flex" flexDirection="column" overflow="hidden" zIndex="dropdown" {...props} />
 );
 
 /**
  * Chakra search
  *
  * Chakra's `Input`. Its `size` is a recipe prop rather than the HTML
- * attribute, which is why the slot's props leave `size` out.
+ * attribute, which is why the slot's props leave `size` out. On a coarse
+ * pointer its text stays at 16px or more, as in the trigger input.
  */
 const ChakraSearch = (props: AutocompleteSearchSlotProps) => (
-  <Input size="sm" borderWidth="0" borderBottomWidth="1px" borderRadius="0" {...props} />
+  <Input size="sm" flexShrink="0" borderWidth="0" borderBottomWidth="1px" borderRadius="0" css={NO_TOUCH_ZOOM} {...props} />
 );
 
 /**
  * Chakra list
  *
- * `List.Root` renders the `<ul>` the listbox role goes on.
+ * `List.Root` renders the `<ul>` the listbox role goes on, and is the part
+ * that scrolls.
  */
 const ChakraList = (props: AutocompleteListSlotProps) => (
-  <List.Root listStyleType="none" gap="0" p="1" m="0" maxH="100%" overflowY="auto" {...props} />
+  <List.Root listStyleType="none" gap="0" p="1" m="0" flex="1" minH="0" overflowY="auto" {...props} />
 );
 
 /**
@@ -184,6 +231,42 @@ const ChakraOption = (props: AutocompleteOptionSlotProps) => (
  * The row's text.
  */
 const ChakraOptionLabel = ({ label }: AutocompleteOptionLabelSlotProps) => <Span>{label}</Span>;
+
+/**
+ * Chakra group
+ *
+ * A nested `List.Root` carrying `role="group"`, inside a bare `List.Item`.
+ * Chakra's combobox `ItemGroup` needs its own machine's context, so it cannot
+ * be used on its own.
+ */
+const ChakraGroup = ({ label: _label, labelId: _labelId, ...props }: AutocompleteGroupSlotProps) => (
+  <List.Item role="none">
+    <List.Root listStyleType="none" gap="0" p="0" m="0" {...props} />
+  </List.Item>
+);
+
+/**
+ * Chakra group label
+ *
+ * The look of the combobox recipe's `itemGroupLabel`: medium weight, the
+ * rows' padding, in the muted foreground at the small text style.
+ */
+const ChakraGroupLabel = ({ label, ...props }: AutocompleteGroupLabelSlotProps) => (
+  <List.Item px="3" py="1.5" textStyle="xs" fontWeight="medium" color="fg.muted" cursor="default" {...props}>
+    {label}
+  </List.Item>
+);
+
+/**
+ * Chakra separator
+ *
+ * Chakra's `Separator` in a hidden list item, run out to the list's edges.
+ */
+const ChakraSeparator = (props: AutocompleteSeparatorSlotProps) => (
+  <List.Item my="1" mx="-1" {...props}>
+    <Separator />
+  </List.Item>
+);
 
 /**
  * Chakra check
@@ -280,6 +363,8 @@ const ChakraLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMor
 export const chakraComponents: Partial<AutocompleteComponents> = {
   Root: ChakraRoot,
   Trigger: ChakraTrigger,
+  TriggerInput: ChakraTriggerInput,
+  Toggle: ChakraToggle,
   Value: ChakraValue,
   Tag: ChakraTag,
   Clear: ChakraClear,
@@ -290,6 +375,9 @@ export const chakraComponents: Partial<AutocompleteComponents> = {
   Option: ChakraOption,
   OptionLabel: ChakraOptionLabel,
   Check: ChakraCheck,
+  Group: ChakraGroup,
+  GroupLabel: ChakraGroupLabel,
+  Separator: ChakraSeparator,
   Empty: ChakraEmpty,
   Loading: ChakraLoading,
   Error: ChakraError,

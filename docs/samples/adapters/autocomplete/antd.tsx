@@ -7,9 +7,9 @@
  * out keeps its fallback.
  */
 import { CheckOutlined, CloseCircleFilled, DownOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Empty, Input, Spin, Tag, Typography, theme } from "antd";
+import { Button, Divider, Empty, Input, Spin, Tag, Typography, theme } from "antd";
 import type { InputRef } from "antd";
-import { useCallback, type ReactNode, type Ref } from "react";
+import { useCallback, useState, type FocusEvent, type ReactNode, type Ref } from "react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -17,6 +17,8 @@ import type {
   AutocompleteCreateSlotProps,
   AutocompleteEmptySlotProps,
   AutocompleteErrorSlotProps,
+  AutocompleteGroupLabelSlotProps,
+  AutocompleteGroupSlotProps,
   AutocompleteIndicatorSlotProps,
   AutocompleteListSlotProps,
   AutocompleteLoadMoreSlotProps,
@@ -26,7 +28,10 @@ import type {
   AutocompletePopupSlotProps,
   AutocompleteRootSlotProps,
   AutocompleteSearchSlotProps,
+  AutocompleteSeparatorSlotProps,
   AutocompleteTagSlotProps,
+  AutocompleteToggleSlotProps,
+  AutocompleteTriggerInputSlotProps,
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
@@ -64,14 +69,31 @@ const AntRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
  * Ant trigger
  *
  * The outlined field of Ant's select: the primary border and focus ring
- * while open, the disabled fill when disabled.
+ * while open, the disabled fill when disabled, and the error border and
+ * ring of `status="error"` when the value is invalid.
+ *
+ * With the search in the trigger it is the field around the borderless
+ * `Input`, and the border and ring also follow focus in that input.
  */
-function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
+function AntTrigger({ style, onFocus, onBlur, ...props }: AutocompleteTriggerSlotProps) {
   const { token } = theme.useToken();
-  const open = has(props, "data-open");
+  const [focused, setFocused] = useState(false);
+  const searchInTrigger = has(props, "data-search-in");
+  const open = has(props, "data-open") || (searchInTrigger && focused);
   const disabled = has(props, "data-disabled");
+  const invalid = has(props, "data-invalid");
+  const edge = invalid ? token.colorError : open ? token.colorPrimary : token.colorBorder;
+  const ring = invalid ? token.colorErrorOutline : token.controlOutline;
   return (
     <div
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event: FocusEvent<HTMLDivElement>) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+        onBlur?.(event);
+      }}
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -83,10 +105,10 @@ function AntTrigger({ style, ...props }: AutocompleteTriggerSlotProps) {
         color: token.colorText,
         fontSize: token.fontSize,
         background: disabled ? token.colorBgContainerDisabled : token.colorBgContainer,
-        border: `${token.lineWidth}px ${token.lineType} ${open ? token.colorPrimary : token.colorBorder}`,
+        border: `${token.lineWidth}px ${token.lineType} ${edge}`,
         borderRadius: token.borderRadius,
-        boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${token.controlOutline}` : undefined,
-        cursor: disabled ? "not-allowed" : "pointer",
+        boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${ring}` : undefined,
+        cursor: disabled ? "not-allowed" : searchInTrigger ? "text" : "pointer",
         transition: `all ${token.motionDurationMid}`,
         ...style,
       }}
@@ -179,7 +201,9 @@ function AntIndicator({ open, loading }: AutocompleteIndicatorSlotProps) {
  * Ant popup
  *
  * The elevated surface of Ant's dropdowns. The component positions it, so
- * the part only adds the surface to the style it receives.
+ * the part only adds the surface to the style it receives. It is a column
+ * the list fills, so the list scrolls inside the height it is given and the
+ * search box stays put.
  */
 function AntPopup({ style, ...props }: AutocompletePopupSlotProps) {
   const { token } = theme.useToken();
@@ -187,7 +211,10 @@ function AntPopup({ style, ...props }: AutocompletePopupSlotProps) {
     <div
       style={{
         zIndex: token.zIndexPopupBase,
-        overflow: "auto",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+        overflow: "hidden",
         padding: token.paddingXXS,
         background: token.colorBgElevated,
         borderRadius: token.borderRadiusLG,
@@ -228,19 +255,50 @@ function AntSearch({ ref, style, ...props }: AutocompleteSearchSlotProps) {
       ref={inputRef}
       variant="borderless"
       prefix={<SearchOutlined style={{ color: token.colorTextQuaternary }} />}
-      style={{ borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`, borderRadius: 0, ...style }}
+      style={{ flexShrink: 0, borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`, borderRadius: 0, ...style }}
       {...props}
     />
   );
 }
 
 /**
+ * Ant trigger input
+ *
+ * A borderless `Input` that is the combobox when the search is in the
+ * trigger, taking the space the tags leave. It shows `status="error"` when
+ * invalid. As with the search box, the engine's ref is handed the input
+ * from Ant's ref object.
+ */
+function AntTriggerInput({ ref, style, ...props }: AutocompleteTriggerInputSlotProps) {
+  const inputRef = useCallback((instance: InputRef | null) => assignRef(ref, instance?.input ?? null), [ref]);
+  return (
+    <Input
+      ref={inputRef}
+      variant="borderless"
+      status={props["aria-invalid"] ? "error" : undefined}
+      style={{ flex: "1 0 80px", minWidth: 80, paddingInline: 4, ...style }}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Ant toggle
+ *
+ * A text `Button` holding the chevron, kept out of the tab order. Ant's
+ * `type` is its look, so the HTML type goes through `htmlType`.
+ */
+const AntToggle = ({ type: _type, ...props }: AutocompleteToggleSlotProps) => (
+  <Button type="text" htmlType="button" size="small" {...props} />
+);
+
+/**
  * Ant list
  *
- * The `<ul>` the listbox role goes on.
+ * The `<ul>` the listbox role goes on, and the part that scrolls.
  */
 const AntList = ({ style, ...props }: AutocompleteListSlotProps) => (
-  <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  <ul style={{ flex: 1, minHeight: 0, margin: 0, padding: 0, overflowX: "hidden", overflowY: "auto", listStyle: "none", ...style }} {...props} />
 );
 
 /**
@@ -273,6 +331,58 @@ function AntOption({ style, ...props }: AutocompleteOptionSlotProps) {
       }}
       {...props}
     />
+  );
+}
+
+/**
+ * Ant group
+ *
+ * The group's own `<ul>`, carrying `role="group"`, inside a bare `<li>`.
+ */
+const AntGroup = ({ label: _label, labelId: _labelId, style, ...props }: AutocompleteGroupSlotProps) => (
+  <li role="none">
+    <ul style={{ margin: 0, padding: 0, listStyle: "none", ...style }} {...props} />
+  </li>
+);
+
+/**
+ * Ant group label
+ *
+ * The look of a group title in Ant's select menu, in the description colour
+ * at the small font size, compacted to 28px: the virtual list's default
+ * `groupLabelSize`.
+ */
+function AntGroupLabel({ label, ...props }: AutocompleteGroupLabelSlotProps) {
+  const { token } = theme.useToken();
+  return (
+    <li
+      style={{
+        minHeight: 28,
+        paddingBlock: (28 - token.fontSizeSM * token.lineHeightSM) / 2,
+        paddingInline: token.paddingSM,
+        color: token.colorTextDescription,
+        fontSize: token.fontSizeSM,
+        cursor: "default",
+        boxSizing: "border-box",
+      }}
+      {...props}
+    >
+      {label}
+    </li>
+  );
+}
+
+/**
+ * Ant separator
+ *
+ * Ant's `Divider` in a hidden list item, run out to the popup's edges.
+ */
+function AntSeparator({ style, ...props }: AutocompleteSeparatorSlotProps) {
+  const { token } = theme.useToken();
+  return (
+    <li style={{ marginInline: -token.paddingXXS, ...style }} {...props}>
+      <Divider style={{ marginBlock: token.marginXXS }} />
+    </li>
   );
 }
 
@@ -388,6 +498,8 @@ const AntLoadMore = ({ ref, onLoadMore, loading, label }: AutocompleteLoadMoreSl
 export const antdComponents: Partial<AutocompleteComponents> = {
   Root: AntRoot,
   Trigger: AntTrigger,
+  TriggerInput: AntTriggerInput,
+  Toggle: AntToggle,
   Value: AntValue,
   Tag: AntTag,
   Clear: AntClear,
@@ -398,6 +510,9 @@ export const antdComponents: Partial<AutocompleteComponents> = {
   Option: AntOption,
   OptionLabel: AntOptionLabel,
   Check: AntCheck,
+  Group: AntGroup,
+  GroupLabel: AntGroupLabel,
+  Separator: AntSeparator,
   Empty: AntEmpty,
   Loading: AntLoading,
   Error: AntError,

@@ -59,6 +59,10 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
         "data-[open]:border-ring data-[open]:ring-3 data-[open]:ring-ring/25",
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25",
         "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+        /** shadcn's own invalid treatment: the destructive border, and the destructive ring while open or focused. */
+        "aria-invalid:border-destructive aria-invalid:hover:border-destructive",
+        "aria-invalid:data-[open]:border-destructive aria-invalid:data-[open]:ring-destructive/20 dark:aria-invalid:data-[open]:ring-destructive/40",
+        "aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:focus-visible:ring-destructive/40",
         className,
       )}
       {...props}
