@@ -86,7 +86,12 @@ export interface UseAutocompleteOptions<TOption> {
    * keeps the button trigger. Default `"popup"`.
    */
   searchIn?: "popup" | "trigger";
-  /** The search text. */
+  /**
+   * The search text. With `searchIn="trigger"` the parent owns what the
+   * input shows while this is not empty, open or closed; the picked label
+   * returns once the parent sets it back to `""`, which a close asks for
+   * through `onSearchChange("")`.
+   */
   searchQuery?: string;
   /** The search text while uncontrolled. */
   defaultSearchQuery?: string;
@@ -719,14 +724,17 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   /**
    * A parent closing a controlled popup skips `setOpen`, so with the search
    * in the trigger the query it would have cleared is cleared here, and the
-   * input goes back to showing the picked label.
+   * input goes back to showing the picked label. A close through `setOpen`
+   * has already cleared it, so nothing is reported twice.
    */
   const wasOpen = useRef(open);
+  /** The render in which a parent closed the popup still holds the old query; the input shows past it. */
+  const closingWithQuery = inTrigger && wasOpen.current && !open && query !== "";
   useEffect(() => {
     const closed = wasOpen.current && !open;
     wasOpen.current = open;
-    if (closed && inTrigger) setQueryState("");
-  }, [open, inTrigger, setQueryState]);
+    if (closed && inTrigger && query !== "") setQueryState("");
+  }, [open, inTrigger, query, setQueryState]);
 
   /** Keep the highlighted row in view without scrolling the page. */
   useEffect(() => {
@@ -1003,7 +1011,8 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     return option === undefined ? String(values[0]) : getOptionLabel(option);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [multiple, values, selected]);
-  const inputValue = inTrigger && !multiple && !open && query === "" ? selectedLabel : query;
+  const shownQuery = closingWithQuery ? "" : query;
+  const inputValue = inTrigger && !multiple && !open && shownQuery === "" ? selectedLabel : shownQuery;
 
   /** The field around the input: a press anywhere on it that is not on the input puts focus in the input. */
   const getFieldProps = useCallback(
