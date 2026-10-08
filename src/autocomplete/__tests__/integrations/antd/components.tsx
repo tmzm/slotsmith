@@ -298,7 +298,7 @@ const AntToggle = ({ type: _type, ...props }: AutocompleteToggleSlotProps) => (
  * The `<ul>` the listbox role goes on, and the part that scrolls.
  */
 const AntList = ({ style, ...props }: AutocompleteListSlotProps) => (
-  <ul style={{ flex: 1, minHeight: 0, margin: 0, padding: 0, overflowY: "auto", listStyle: "none", ...style }} {...props} />
+  <ul style={{ flex: 1, minHeight: 0, margin: 0, padding: 0, overflowX: "hidden", overflowY: "auto", listStyle: "none", ...style }} {...props} />
 );
 
 /**
