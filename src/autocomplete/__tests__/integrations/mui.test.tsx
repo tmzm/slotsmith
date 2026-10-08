@@ -48,7 +48,11 @@ beforeAll(stubBrowserApis);
 
 describe("MUI v7", () => {
   failOnReactWarnings();
-  itShowsTheInvalidState(renderMuiAutocomplete, (trigger) => expect(trigger).toHaveClass("Mui-error"));
+  itShowsTheInvalidState(
+    renderMuiAutocomplete,
+    (trigger) => expect(trigger).toHaveClass("Mui-error"),
+    (trigger) => expect(trigger).not.toHaveClass("Mui-error"),
+  );
   itSearchesInTheTrigger(
     renderMuiAutocomplete,
     ({ input, toggle }) => {
@@ -58,6 +62,10 @@ describe("MUI v7", () => {
     (field, input) => {
       expect(field).toHaveClass("Mui-error");
       expect(input.closest(".MuiInputBase-root")).toHaveClass("Mui-error");
+    },
+    (field, input) => {
+      expect(field).not.toHaveClass("Mui-error");
+      expect(input.closest(".MuiInputBase-root")).not.toHaveClass("Mui-error");
     },
   );
   itRendersGroups(renderMuiAutocomplete, ({ label, separator }) => {

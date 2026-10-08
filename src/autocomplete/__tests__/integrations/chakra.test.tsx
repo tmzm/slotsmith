@@ -51,6 +51,9 @@ const invalidStyle = (element: HTMLElement) =>
     .map((rule) => rule.cssText)
     .find((text) => [...element.classList].some((name) => text.startsWith(`.${name}:is([data-invalid]`))) ?? "";
 
+/** What Chakra's `_invalid` condition matches, so a valid part can be checked against it. */
+const CHAKRA_INVALID = "[data-invalid], [aria-invalid=true]";
+
 beforeAll(stubBrowserApis);
 
 describe("Chakra UI v3", () => {
@@ -59,8 +62,10 @@ describe("Chakra UI v3", () => {
     expect(label).toHaveClass("chakra-list__item");
     expect(separator.querySelector(".chakra-separator")).not.toBeNull();
   });
-  itShowsTheInvalidState(renderChakraAutocomplete, (trigger) =>
-    expect(invalidStyle(trigger)).toContain("border-color: var(--chakra-colors-border-error)"),
+  itShowsTheInvalidState(
+    renderChakraAutocomplete,
+    (trigger) => expect(invalidStyle(trigger)).toContain("border-color: var(--chakra-colors-border-error)"),
+    (trigger) => expect(trigger.matches(CHAKRA_INVALID)).toBe(false),
   );
   itSearchesInTheTrigger(
     renderChakraAutocomplete,
@@ -69,6 +74,10 @@ describe("Chakra UI v3", () => {
       expect(toggle).toHaveClass("chakra-button");
     },
     (field) => expect(invalidStyle(field)).toContain("border-color: var(--chakra-colors-border-error)"),
+    (field, input) => {
+      expect(field.matches(CHAKRA_INVALID)).toBe(false);
+      expect(input.matches(CHAKRA_INVALID)).toBe(false);
+    },
   );
 
   it("renders the popup with Chakra's parts", async () => {

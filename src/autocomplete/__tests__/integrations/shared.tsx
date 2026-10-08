@@ -120,15 +120,29 @@ export const tagLabels = () =>
  *
  * Registers the test every library's `Trigger` must pass: with `invalid` the
  * combobox carries `aria-invalid` and the search box does not, and the
- * library's own error style appears, open or closed.
+ * library's own error style appears, open or closed; without it, neither
+ * the attribute nor the error style is there.
  *
  * @param renderAutocomplete - Renders the autocomplete with the library's parts.
  * @param expectErrorStyle - Asserts the library's error marker on the trigger.
+ * @param expectNoErrorStyle - Asserts the library's error marker is absent from the trigger.
  */
 export function itShowsTheInvalidState(
   renderAutocomplete: (props?: Partial<AutocompleteProps<Brand>>) => ReturnType<typeof userEvent.setup>,
   expectErrorStyle: (trigger: HTMLElement) => void,
+  expectNoErrorStyle: (trigger: HTMLElement) => void,
 ) {
+  it("shows no error style on a valid trigger", async () => {
+    const user = renderAutocomplete();
+    expect(trigger()).not.toHaveAttribute("aria-invalid");
+    expect(trigger()).not.toHaveAttribute("data-invalid");
+    expectNoErrorStyle(trigger());
+
+    await user.click(trigger());
+    expect(trigger()).not.toHaveAttribute("aria-invalid");
+    expectNoErrorStyle(trigger());
+  });
+
   it("shows the library's error style on an invalid trigger", async () => {
     const user = renderAutocomplete({ invalid: true });
     expect(trigger()).toHaveAttribute("aria-invalid", "true");
@@ -154,11 +168,13 @@ export function itShowsTheInvalidState(
  * @param renderAutocomplete - Renders the autocomplete with the library's parts.
  * @param expectLibraryParts - Asserts the library's markers on the field, the input and the toggle.
  * @param expectErrorStyle - Asserts the library's error marker on the field.
+ * @param expectNoErrorStyle - Asserts the library's error marker is absent from the field and the input.
  */
 export function itSearchesInTheTrigger(
   renderAutocomplete: (props?: Partial<AutocompleteProps<Brand>>) => ReturnType<typeof userEvent.setup>,
   expectLibraryParts: (parts: { field: HTMLElement; input: HTMLElement; toggle: HTMLElement }) => void,
   expectErrorStyle: (field: HTMLElement, input: HTMLElement) => void,
+  expectNoErrorStyle: (field: HTMLElement, input: HTMLElement) => void,
 ) {
   const inTrigger = (props: Partial<AutocompleteProps<Brand>> = {}) =>
     renderAutocomplete({ searchIn: "trigger", "aria-label": "Brand", ...props } as Partial<AutocompleteProps<Brand>>);
@@ -227,6 +243,17 @@ export function itSearchesInTheTrigger(
     expectErrorStyle(field(), input());
     await user.click(input());
     expectErrorStyle(field(), input());
+  });
+
+  it("shows no error style on a valid field", async () => {
+    const user = inTrigger();
+
+    expect(input()).not.toHaveAttribute("aria-invalid");
+    expect(field()).not.toHaveAttribute("data-invalid");
+    expectNoErrorStyle(field(), input());
+    await user.click(input());
+    await user.keyboard("a");
+    expectNoErrorStyle(field(), input());
   });
 }
 

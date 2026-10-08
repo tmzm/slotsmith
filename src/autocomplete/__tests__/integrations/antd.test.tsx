@@ -57,7 +57,11 @@ describe("Ant Design v6", () => {
     expect(label).toHaveStyle({ fontSize: "12px" });
     expect(separator.querySelector(".ant-divider")).not.toBeNull();
   });
-  itShowsTheInvalidState(renderAntdAutocomplete, (trigger) => expect(trigger).toHaveStyle({ borderColor: "#ff4d4f" }));
+  itShowsTheInvalidState(
+    renderAntdAutocomplete,
+    (trigger) => expect(trigger).toHaveStyle({ borderColor: "#ff4d4f" }),
+    (trigger) => expect(trigger).not.toHaveStyle({ borderColor: "#ff4d4f" }),
+  );
   itSearchesInTheTrigger(
     renderAntdAutocomplete,
     ({ input, toggle }) => {
@@ -67,6 +71,10 @@ describe("Ant Design v6", () => {
     (field, input) => {
       expect(field).toHaveStyle({ borderColor: "#ff4d4f" });
       expect(input).toHaveClass("ant-input-status-error");
+    },
+    (field, input) => {
+      expect(field).not.toHaveStyle({ borderColor: "#ff4d4f" });
+      expect(input).not.toHaveClass("ant-input-status-error");
     },
   );
 

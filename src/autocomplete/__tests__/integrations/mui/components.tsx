@@ -45,6 +45,17 @@ import type {
 } from "../../../index";
 
 /**
+ * Is true
+ *
+ * Whether an `aria-*` value means true: the boolean, or the string `"true"`
+ * a consumer may pass through the slot props.
+ *
+ * @param value - The attribute's value.
+ * @returns Whether it is set to true.
+ */
+const isTrue = (value: unknown) => value === true || value === "true";
+
+/**
  * MUI root
  *
  * A `Box` the popup is measured against.
@@ -68,7 +79,8 @@ const MuiRoot = (props: AutocompleteRootSlotProps) => <Box sx={{ position: "rela
  * `aria-invalid` is on the input then.
  */
 const MuiTrigger = ({ className, ...props }: AutocompleteTriggerSlotProps) => {
-  const invalid = props["aria-invalid"] || "data-invalid" in props;
+  /** The part always passes the `data-invalid` key, so its value is what counts. */
+  const invalid = isTrue(props["aria-invalid"]) || (props as Record<string, unknown>)["data-invalid"] !== undefined;
   return (
     <Box
       className={[className, invalid ? "Mui-error" : undefined].filter(Boolean).join(" ") || undefined}

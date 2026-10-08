@@ -34,7 +34,11 @@ describe("shadcn/ui", () => {
     expect(label).toHaveClass("text-muted-foreground", "text-xs");
     expect(separator.querySelector('[data-slot="separator"]')).not.toBeNull();
   });
-  itShowsTheInvalidState(renderShadcnAutocomplete, (trigger) => expect(trigger).toHaveClass("aria-invalid:border-destructive"));
+  itShowsTheInvalidState(
+    renderShadcnAutocomplete,
+    (trigger) => expect(trigger).toHaveClass("aria-invalid:border-destructive"),
+    (trigger) => expect(trigger.matches("[aria-invalid=true]")).toBe(false),
+  );
   itSearchesInTheTrigger(
     renderShadcnAutocomplete,
     ({ field, input, toggle }) => {
@@ -44,6 +48,7 @@ describe("shadcn/ui", () => {
       expect(toggle).toHaveAttribute("data-size", "icon-xs");
     },
     (field) => expect(field).toHaveClass("has-[[data-slot][aria-invalid=true]]:border-destructive"),
+    (field) => expect(field.querySelector("[data-slot][aria-invalid=true]")).toBeNull(),
   );
 
   it("renders the popup with shadcn's parts", async () => {

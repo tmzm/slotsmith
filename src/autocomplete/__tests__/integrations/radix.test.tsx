@@ -44,7 +44,11 @@ describe("Radix Themes v3", () => {
     expect(label.querySelector(".rt-Text")).not.toBeNull();
     expect(separator.querySelector(".rt-Separator")).not.toBeNull();
   });
-  itShowsTheInvalidState(renderRadixAutocomplete, (trigger) => expect(trigger).toHaveAttribute("data-accent-color", "red"));
+  itShowsTheInvalidState(
+    renderRadixAutocomplete,
+    (trigger) => expect(trigger).toHaveAttribute("data-accent-color", "red"),
+    (trigger) => expect(trigger).not.toHaveAttribute("data-accent-color"),
+  );
   itSearchesInTheTrigger(
     renderRadixAutocomplete,
     ({ input, toggle }) => {
@@ -52,6 +56,7 @@ describe("Radix Themes v3", () => {
       expect(toggle).toHaveClass("rt-IconButton");
     },
     (field) => expect(field).toHaveAttribute("data-accent-color", "red"),
+    (field) => expect(field).not.toHaveAttribute("data-accent-color"),
   );
 
   it("renders the popup with Radix primitives and variables", async () => {
