@@ -268,6 +268,62 @@ describe("the value in the input, single mode", () => {
     );
     expect(input()).toHaveValue("Dux");
   });
+
+  it("neither searches nor loads when focus lands on a shown label", async () => {
+    const onSearchChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const onLoadMore = vi.fn();
+    const { user } = renderInTrigger({ defaultValue: "b3", onSearchChange, onOpenChange, onLoadMore, hasMore: true });
+
+    await user.click(input());
+    await user.tab({ shift: true });
+    await user.tab();
+
+    expect(input()).toHaveValue("Cassina");
+    expect(onSearchChange).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onLoadMore).not.toHaveBeenCalled();
+  });
+
+  it("counts only typed text, not a shown label, towards minChars", async () => {
+    const onSearchChange = vi.fn();
+    const { user } = renderInTrigger({ defaultValue: "b3", minChars: 2, options: [], onSearchChange });
+
+    await user.click(input());
+    await user.keyboard("{ArrowDown}");
+    expect(listbox()).toHaveTextContent("Type 2 or more characters to search");
+    expect(onSearchChange).not.toHaveBeenCalled();
+
+    await user.keyboard("D");
+    expect(listbox()).toHaveTextContent("Type 2 or more characters to search");
+    expect(onSearchChange).toHaveBeenLastCalledWith("D");
+  });
+
+  it("shows a default search query in place of the label while closed", () => {
+    renderInTrigger({ defaultValue: "b3", defaultSearchQuery: "Du" });
+
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(input()).toHaveValue("Du");
+  });
+
+  it("shows a controlled query while it is not empty, and the label once the parent clears it", () => {
+    const { rerender } = renderInTrigger({ defaultValue: "b3", searchQuery: "Du" });
+    expect(input()).toHaveValue("Du");
+
+    rerender(
+      <Autocomplete<Brand> searchIn="trigger" aria-label="Brand" options={BRANDS} getOptionLabel={(b) => b.name} defaultValue="b3" searchQuery="" />,
+    );
+    expect(input()).toHaveValue("Cassina");
+  });
+
+  it("puts aria-describedby and aria-errormessage on the input, not the field", () => {
+    renderInTrigger({ invalid: true, "aria-describedby": "hint", "aria-errormessage": "error" } as Partial<AutocompleteProps<Brand>>);
+
+    expect(input()).toHaveAttribute("aria-describedby", "hint");
+    expect(input()).toHaveAttribute("aria-errormessage", "error");
+    expect(field()).not.toHaveAttribute("aria-describedby");
+    expect(field()).not.toHaveAttribute("aria-errormessage");
+  });
 });
 
 describe("the value in the field, multiple mode", () => {
@@ -369,7 +425,22 @@ describe("the keyboard", () => {
     expect(input()).toHaveValue(" ");
   });
 
-  it("closes on the first Escape and clears the query on the next", async () => {
+  it("closes and clears the query on the first Escape, reporting the clear once", async () => {
+    const onSearchChange = vi.fn();
+    const { user } = renderInTrigger({ onSearchChange });
+
+    await user.click(input());
+    await user.keyboard("Du");
+    expect(listbox()).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(input()).toHaveValue("");
+    expect(onSearchChange).toHaveBeenLastCalledWith("");
+    expect(onSearchChange.mock.calls.filter(([query]) => query === "")).toHaveLength(1);
+  });
+
+  it("clears on Escape a query left standing behind a list the parent keeps shut", async () => {
     const onSearchChange = vi.fn();
     /** A parent that keeps the list shut leaves the query standing while closed. */
     const { user } = renderInTrigger({ open: false, onSearchChange });
@@ -555,5 +626,50 @@ describe("useAutocomplete", () => {
     expect(input()).toHaveValue("Du");
     act(() => screen.getByRole("button", { name: "Close" }).click());
     expect(input()).toHaveValue("Cassina");
+  });
+
+  it("never shows the old query after a controlled close, and asks once to clear it", () => {
+    const shown: unknown[] = [];
+    const onSearchChange = vi.fn();
+    function Controlled() {
+      const [open, setOpen] = useState(true);
+      const [query, setQuery] = useState("");
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(false)}>
+            Close
+          </button>
+          <Autocomplete<Brand>
+            searchIn="trigger"
+            aria-label="Brand"
+            options={BRANDS}
+            getOptionLabel={(b) => b.name}
+            defaultValue="b3"
+            open={open}
+            onOpenChange={setOpen}
+            searchQuery={query}
+            onSearchChange={(next) => {
+              onSearchChange(next);
+              setQuery(next);
+            }}
+            components={{
+              TriggerInput: (props) => {
+                shown.push(props.value);
+                return <input {...props} />;
+              },
+            }}
+          />
+        </>
+      );
+    }
+    renderWithUser(<Controlled />);
+    fireEvent.change(input(), { target: { value: "Du" } });
+    shown.length = 0;
+    onSearchChange.mockClear();
+
+    act(() => screen.getByRole("button", { name: "Close" }).click());
+    expect(input()).toHaveValue("Cassina");
+    expect(shown).not.toContain("Du");
+    expect(onSearchChange.mock.calls).toEqual([[""]]);
   });
 });
