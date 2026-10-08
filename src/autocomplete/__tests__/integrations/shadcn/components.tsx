@@ -51,7 +51,7 @@ const ChevronDown = () => (
 
 /** Stands in for `lucide-react`'s Check icon. */
 const Check = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5" aria-hidden="true">
     <path d="M20 6 9 17l-5-5" />
   </svg>
 );
@@ -60,6 +60,14 @@ const Check = () => (
 const X = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3" aria-hidden="true">
     <path d="M18 6 6 18M6 6l12 12" />
+  </svg>
+);
+
+/** Stands in for `lucide-react`'s Search icon. */
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4 shrink-0 opacity-50" aria-hidden="true">
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
   </svg>
 );
 
@@ -96,14 +104,15 @@ const ShadcnRoot = ({ className, ...props }: AutocompleteRootSlotProps) => (
  *
  * With the search in the trigger it is an `InputGroup` instead: the group
  * draws the field, its ring and its destructive state off the input inside,
- * and grows to wrap the badges.
+ * and grows to wrap the badges. Its 3px block padding around the 28px input
+ * keeps it at the `h-9` of a plain `InputGroup` while it holds one row.
  */
 function ShadcnTrigger({ className, ...props }: AutocompleteTriggerSlotProps) {
   if ("data-search-in" in props) {
     return (
       <InputGroup
         className={cn(
-          "h-auto min-h-9 cursor-text gap-1 py-0.5 ps-1",
+          "h-auto min-h-9 cursor-text gap-1 px-1 py-[3px]",
           "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
           className,
         )}
@@ -134,7 +143,9 @@ function ShadcnTrigger({ className, ...props }: AutocompleteTriggerSlotProps) {
  *
  * The `InputGroupInput` that is the combobox when the search is in the
  * trigger. It takes the space the badges leave and wraps below them when
- * that is too little.
+ * that is too little. It sits in the part's body beside the badges rather
+ * than directly in the group, so the group's own `[&>input]` padding rules
+ * never reach it; its `px-2` stands in for them.
  */
 const ShadcnTriggerInput = ({ className, ...props }: AutocompleteTriggerInputSlotProps) => (
   <InputGroupInput className={cn("h-7 min-w-20 basis-20 px-2", className)} {...props} />
@@ -143,13 +154,15 @@ const ShadcnTriggerInput = ({ className, ...props }: AutocompleteTriggerInputSlo
 /**
  * Shadcn toggle
  *
- * An icon `InputGroupButton` in an inline-end `InputGroupAddon`, holding the
- * chevron. It stays out of the tab order and never takes focus from the
- * input.
+ * A 28px icon `InputGroupButton` in the inline-end `InputGroupAddon`,
+ * holding the chevron. It stays out of the tab order and never takes focus
+ * from the input. The addon's own inline-end padding and pull are physical
+ * (right-hand) upstream, so they are cleared and the field's `px-1` insets
+ * it instead, the same on either side in a right-to-left layout.
  */
 const ShadcnToggle = ({ className, ...props }: AutocompleteToggleSlotProps) => (
-  <InputGroupAddon align="inline-end" className="ps-0">
-    <InputGroupButton size="icon-xs" className={cn("text-muted-foreground", className)} {...props} />
+  <InputGroupAddon align="inline-end" className="p-0 has-[>button]:mr-0">
+    <InputGroupButton size="icon-xs" className={cn("size-7 text-muted-foreground", className)} {...props} />
   </InputGroupAddon>
 );
 
@@ -167,16 +180,17 @@ const ShadcnValue = ({ label, placeholder, empty }: AutocompleteValueSlotProps) 
 /**
  * Shadcn tag
  *
- * A secondary `Badge` per selected value, with a real button for removing it.
+ * A secondary `Badge` per selected value, with a real 20px button for
+ * removing it in the muted foreground.
  */
 const ShadcnTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlotProps) => (
-  <Badge variant="secondary">
+  <Badge variant="secondary" className={cn("h-5.5 gap-0.5 rounded-sm py-0", !disabled && "pe-0.5")}>
     {label}
     {!disabled && (
       <button
         type="button"
         aria-label={removeLabel}
-        className="rounded-xs opacity-60 hover:opacity-100"
+        className="grid size-5 place-items-center rounded-sm text-muted-foreground hover:text-foreground"
         onClick={(event) => {
           event.stopPropagation();
           onRemove();
@@ -191,24 +205,24 @@ const ShadcnTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSl
 /**
  * Shadcn clear
  *
- * A ghost icon `Button`. The click is stopped so it does not also reach the
- * trigger and reopen the popup.
+ * A ghost icon `Button` in the muted foreground, like the chevron beside it.
+ * The click is stopped so it does not also reach the trigger and reopen the
+ * popup.
  *
  * shadcn's `Button` sets no `type`, so inside a form it would submit it;
  * this and every other `Button` here passes `type="button"`.
  *
- * With the search in the trigger it is an icon `InputGroupButton` in an
- * inline-end `InputGroupAddon`, beside the toggle.
+ * With the search in the trigger it is an icon `InputGroupButton` placed
+ * straight in the group, so the group's `gap-1` is all that separates it
+ * from the toggle's addon: the two read as one inline-end cluster.
  */
 function ShadcnClear({ onClick, ...aria }: AutocompleteClearSlotProps) {
   const { searchIn } = useAutocompleteContext();
   if (searchIn === "trigger") {
     return (
-      <InputGroupAddon align="inline-end" className="pe-0">
-        <InputGroupButton size="icon-xs" onClick={onClick} {...aria}>
-          <X />
-        </InputGroupButton>
-      </InputGroupAddon>
+      <InputGroupButton size="icon-xs" className="text-muted-foreground" onClick={onClick} {...aria}>
+        <X />
+      </InputGroupButton>
     );
   }
   return (
@@ -216,7 +230,7 @@ function ShadcnClear({ onClick, ...aria }: AutocompleteClearSlotProps) {
       type="button"
       variant="ghost"
       size="icon"
-      className="ms-auto"
+      className="ms-auto text-muted-foreground"
       onClick={(event) => {
         event.stopPropagation();
         onClick();
@@ -264,7 +278,8 @@ const ShadcnPopup = ({ className, ...props }: AutocompletePopupSlotProps) => (
  * The `command-input` row: an `Input` with the search icon beside it.
  */
 const ShadcnSearch = ({ className, ...props }: AutocompleteSearchSlotProps) => (
-  <div data-slot="command-input-wrapper" className="flex shrink-0 items-center border-b px-3">
+  <div data-slot="command-input-wrapper" className="flex shrink-0 items-center gap-2 border-b px-3">
+    <SearchIcon />
     <Input className={cn("h-9 border-0 px-0 shadow-none focus-visible:ring-0", className)} {...props} />
   </div>
 );
@@ -283,15 +298,16 @@ const ShadcnList = ({ className, ...props }: AutocompleteListSlotProps) => (
  * Shadcn option
  *
  * The `command-item` row. Disabled rows stay visible and only look
- * unavailable: the engine is what refuses them.
+ * unavailable: the engine is what refuses them. The inline-end padding keeps
+ * a long label clear of the check mark.
  */
 const ShadcnOption = ({ className, ...props }: AutocompleteOptionSlotProps) => (
   <li
     data-slot="command-item"
     className={cn(
-      "relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none",
+      "relative flex cursor-default items-center gap-2 rounded-sm py-1.5 ps-2 pe-8 text-sm outline-none select-none",
       "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-      "data-[disabled]:pointer-events-auto data-[disabled]:opacity-50",
+      "data-[disabled]:pointer-events-auto data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
       className,
     )}
     {...props}
@@ -343,12 +359,13 @@ const ShadcnOptionLabel = ({ label }: AutocompleteOptionLabelSlotProps) => <span
 /**
  * Shadcn check
  *
- * The mark on a selected row. The icon is hidden from assistive technology, so
- * it stays out of the option's accessible name.
+ * The mark on a selected row, pinned to the row's inline end. The icon is
+ * hidden from assistive technology, so it stays out of the option's
+ * accessible name.
  */
 const ShadcnCheck = ({ selected }: AutocompleteCheckSlotProps) =>
   selected ? (
-    <span className="ms-auto text-primary">
+    <span className="absolute end-2 flex text-primary">
       <Check />
     </span>
   ) : null;
