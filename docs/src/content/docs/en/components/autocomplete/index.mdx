@@ -26,9 +26,9 @@ The slotsmith Autocomplete is a React combobox and select in one component: it f
 The demo below uses the fallbacks only. Open a picker with the mouse or with <kbd>↓</kbd>, type to filter, and pick with <kbd>Enter</kbd>. The topics picker keeps several values as tags; its last topic is archived and cannot be picked.
 
 {/* Reserved height measured in Chrome: the two labelled pickers and the two output lines. */}
-<Demo name="autocomplete/overview" height="20.5rem" fallback />
+<Demo name="autocomplete/overview" height="23.125rem" fallback />
 
-Each feature has a guide with its own live demo: [select or combobox](./guides/select-or-combobox/), [multiple values](./guides/multiple/), [remote options](./guides/remote-options/) with debounce, cancellation and paging, the [loading, empty and error states](./guides/states/), [creatable options](./guides/creatable/), [virtual lists](./guides/virtual/) for long lists, and [the compound parts](./guides/compound-parts/) for your own layout.
+Each feature has a guide with its own live demo: [select or combobox](./guides/select-or-combobox/) with auto highlight, [search in the trigger](./guides/search-in-trigger/), [multiple values](./guides/multiple/), [groups and separators](./guides/groups/), [remote options](./guides/remote-options/) with debounce, cancellation and paging, the [loading, empty and error states](./guides/states/), [validation](./guides/validation/), [creatable options](./guides/creatable/), [virtual lists](./guides/virtual/) for long lists, and [the compound parts](./guides/compound-parts/) for your own layout.
 
 ## Install
 
@@ -38,7 +38,7 @@ Each feature has a guide with its own live demo: [select or combobox](./guides/s
 
 Pass `options`, `value` and `onChange`, and name the combobox with `aria-label` or `aria-labelledby`. Options with `value` and `label` (or `id` and `name`) need no further props.
 
-<QuickStart height="3.5rem" />
+<QuickStart height="4.25rem" />
 
 ## Guides
 
@@ -60,12 +60,15 @@ The autocomplete follows the ARIA combobox pattern, with the listbox in a popup:
 
 - **The trigger** is the element with `role="combobox"`. It is in the tab order, and carries `aria-expanded`, `aria-haspopup="listbox"` and, while open, `aria-controls` pointing at the list. The naming and validation attributes you pass to `Autocomplete` (`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and the like, plus `id`) go to this element, not to the wrapper.
 - **The search box** gets focus when the popup opens. It has `role="searchbox"`, `aria-autocomplete="list"`, and is named by the [`search`](./api/#label-search) label. See [select or combobox](./guides/select-or-combobox/).
+- **Search in the trigger.** With `searchIn="trigger"` the combobox is an input inside the trigger, the WAI-ARIA 1.2 editable combobox. It carries `role="combobox"`, `aria-autocomplete="list"`, `aria-expanded`, `aria-activedescendant` and the naming props, keeps focus while the list is open, and a `<label for>` names it. The chevron is a button outside the tab order, named by the [`toggle`](./api/#label-toggle) label. See [search in the trigger](./guides/search-in-trigger/).
 - **The highlight** is announced through `aria-activedescendant`: on the search box, or on the trigger itself when `searchable` is `false`, so focus never leaves the field while you move through the options.
 - **The list** has `role="listbox"`, with `aria-multiselectable="true"` in multiple mode and `aria-busy="true"` while `loading` is set: with `useAsyncOptions`, while each search loads its first page, even when the last options still show. Loading more at the end of the list does not set it. Each option has `role="option"` and `aria-selected`; an option ruled out by `optionDisabled` has `aria-disabled="true"` and the arrow keys skip it. See [multiple values](./guides/multiple/).
+- **Groups.** With `getOptionGroup`, each group has `role="group"` and is named by its label through `aria-labelledby`. The line between groups is hidden from assistive technology. See [groups and separators](./guides/groups/).
+- **Invalid values.** `invalid` sets `aria-invalid="true"` on the combobox, never on the popup's search box. Point it at your error message with `aria-describedby`. See [validation](./guides/validation/).
 - **Result counts** are read out: a visually hidden `role="status"` region (`aria-live="polite"`) says "12 results" as the list changes, from the [`results`](./api/#label-results) label. It is empty while the popup is closed or shows a status row. See [remote options](./guides/remote-options/).
 - **Tags and clearing.** Each tag's remove button is named by the [`remove`](./api/#label-remove) label ("Remove Forms"), and the clear button by [`clear`](./api/#label-clear). Spinners are hidden from assistive technology. See [the states](./guides/states/).
 
-With focus on the closed trigger:
+With focus on the closed trigger (the default, `searchIn="popup"`):
 
 <KeyboardTable rows={[
   { keys: ["↓", "Enter", "Space"], action: "Open the popup and highlight the first option." },
@@ -86,14 +89,27 @@ With the popup open:
   { keys: ["A–Z"], action: "With searchable set to false: jump to the next option that starts with the typed letters." },
 ]} />
 
+With `searchIn="trigger"` the input keeps the caret, so <kbd>Space</kbd>, <kbd>Home</kbd> and <kbd>End</kbd> stay in the text:
+
+<KeyboardTable rows={[
+  { keys: ["A–Z"], action: "Type into the search. The list opens and narrows." },
+  { keys: ["↓", "↑"], action: "Open the list on the first or the last option; with the list open, move the highlight." },
+  { keys: ["Alt+↓", "Alt+↑"], action: "Open the list without moving the highlight, or close it." },
+  { keys: ["PgDn", "PgUp"], action: "With the list open: move the highlight ten options." },
+  { keys: ["Enter"], action: "Pick the highlighted option. Nothing is picked while an input method is composing." },
+  { keys: ["Esc"], action: "Close the list and clear the search. In single mode the picked label comes back." },
+  { keys: ["Backspace"], action: "In multiple mode, with the input empty, remove the last tag." },
+]} />
+
 Picking an option in single mode closes the popup and returns focus to the trigger; in multiple mode the popup stays open. A pointer press outside the control closes it. Every label can be translated or replaced; see [Labels & locales](./api/#labels).
 
 ## Limitations
 
 <Note kind="limitation">
 - It does not fetch. `Autocomplete` renders the options you pass; [`useAsyncOptions`](./guides/remote-options/) calls your own `load` function.
-- The trigger is not a text field: typing goes to the search box in the popup. For an editable input as the trigger, or a command palette, build on the [`useAutocomplete`](./guides/compound-parts/) hook.
-- No option groups: the list is flat.
+- No inline completion: the input never fills in the rest of the top match as you type. For that, or for a command palette, build on the [`useAutocomplete`](./guides/compound-parts/) hook.
+- Groups are one level deep and take their order from the options; there are no nested groups. See [groups and separators](./guides/groups/).
+- The "Load more" and "Retry" buttons in the list are reached with the pointer only: the keyboard stays in the search.
 - An option's label is a string, because the trigger, the filter and typeahead read it. A richer row goes in the `OptionLabel` slot. See [remote options](./guides/remote-options/).
 - The popup is not in a portal. It uses `position: fixed`, so it escapes `overflow: hidden`, but an ancestor with a `transform` or `filter` becomes its containing block.
 </Note>

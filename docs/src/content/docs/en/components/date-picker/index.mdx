@@ -28,7 +28,7 @@ The demo below uses the fallbacks only. Open a picker with the mouse or with <kb
 {/* Reserved height measured in Chrome: the two labelled pickers and the two output lines. */}
 <Demo name="date-picker/overview" height="23.25rem" fallback />
 
-Each feature has a guide with its own live demo: [single, range and multiple](./guides/modes/), [bounds and blocked days](./guides/bounds-and-blocked-days/), [presets](./guides/presets/) and the "Go to today" control, [day content](./guides/day-content/) such as a price under each date, and [the compound parts](./guides/compound-parts/) for your own layout.
+Each feature has a guide with its own live demo: [single, range and multiple](./guides/modes/), [bounds and blocked days](./guides/bounds-and-blocked-days/), [presets](./guides/presets/) and the "Go to today" control, [day content](./guides/day-content/) such as a price under each date, [validation](./guides/validation/) with an error message, and [the compound parts](./guides/compound-parts/) for your own layout.
 
 ## Install
 
@@ -59,6 +59,7 @@ The date picker works with any design system. Each slot takes a component, so a 
 The date picker follows the ARIA date picker dialog pattern: a combobox that opens a dialog holding a grid.
 
 - **The trigger** is the element with `role="combobox"`. It is in the tab order, and carries `aria-haspopup="dialog"`, `aria-expanded` and, while open, `aria-controls` pointing at the popup. The naming and validation attributes you pass to `DatePicker` (`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and the like, plus `id`) go to this element, not to the wrapper. With no name given, the [`placeholder`](./api/#label-placeholder) label names it.
+- **Invalid values.** `invalid` sets `aria-invalid="true"` on the trigger and `data-invalid` on the root and the trigger, and the default stylesheet draws the border in the danger colour. Point the trigger at your error message with `aria-describedby`. See [validation](./guides/validation/).
 - **The popup** has `role="dialog"` and is not modal (`aria-modal="false"`): focus is not trapped. It is named by the [`dialog`](./api/#label-dialog) label. Opening it moves focus to the picked day, or to today. When that day is outside `minDate` and `maxDate`, focus goes to the first day within them in the nearest allowed month.
 - **The month** is a `role="grid"` named by the month and year ("March 2026"), with `row`, `columnheader` and `gridcell` inside. Each column header is named with the full weekday, so a one-letter header is still read as "Monday". In [multiple and range mode](./guides/modes/) the grid has `aria-multiselectable="true"`.
 - **Each day** is a button named with its full date ("Monday, March 16, 2026"). Its cell has `aria-selected`, and today has `aria-current="date"`. One day at a time is in the tab order (a roving `tabindex`); the arrow keys move it.
