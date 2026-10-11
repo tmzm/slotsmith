@@ -35,6 +35,7 @@ coverage
 .cache
 *.local
 graphify-out/
+.claude/worktrees/
 
 # Next.js
 .next
