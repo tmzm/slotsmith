@@ -56,8 +56,8 @@ Prompts are ready-made requests you start yourself. In Claude Code they are slas
 
 ## Versions
 
-`slotsmith-ai` shares its major and minor version with `slotsmith`: `slotsmith-ai` 1.7 describes `slotsmith` 1.7. When the server starts, it looks for `node_modules/slotsmith` in the directory the client starts it in, then in each parent directory, the way Node finds a package.
+`slotsmith-ai` shares its major and minor version with `slotsmith`: each `slotsmith-ai` release describes the `slotsmith` release with the same major and minor number. When the server starts, it looks for `node_modules/slotsmith` in the directory the client starts it in, then in each parent directory, the way Node finds a package.
 
 If the installed major or minor version differs from the one the server describes, every tool result starts with a one-line warning that names both versions. The agent then knows to check the installed types, or to suggest installing the matching `slotsmith`. A different patch version never warns, because patch releases do not change the API. When the server finds no `slotsmith` at all, for example because the client started it outside your project, it does not warn.
 
-To keep the server on the release your project uses, put the version in its arguments, for example `"slotsmith-ai@1.7"` in place of `"slotsmith-ai"`.
+To keep the server on the release your project uses, pin it to your `slotsmith` major and minor version in its arguments: `"slotsmith-ai@<major>.<minor>"` in place of `"slotsmith-ai"`.

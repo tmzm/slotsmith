@@ -157,6 +157,14 @@ Hand-written inputs live next to the generated output: `knowledge/guides/*.md` a
 
 ## Changelog
 
+- **Unreleased** — Describes `slotsmith` 1.8.0; copy any adapter you use again with `add`:
+  - The props, slots and labels of 1.8.0 reach every tool: the autocomplete's `autoHighlight`, `invalid`, `getOptionGroup` (slots `Group`, `GroupLabel`, `Separator`) and `searchIn` (slots `TriggerInput`, `Toggle`, the `toggle` label), and the date picker's `invalid` and `--sdp-danger` token.
+  - Every autocomplete and date-picker adapter, in all five libraries, shows its library's error style when `invalid`, and every autocomplete adapter draws option groups and the search input inside the trigger with its library's own parts. The shadcn/ui autocomplete adapter now matches shadcn/ui's combobox, built on `InputGroup` and `Separator`.
+  - Adapter fixes: every autocomplete list scrolls inside its popup (and the Ant Design and Radix Themes lists no longer scroll sideways); the trigger input is 16px on touch screens, so phones do not zoom into it; the shadcn/ui table's pagination is styled and the Chakra UI table's has room; the shadcn/ui uploader renders with shadcn/ui's `Alert` and `Progress`; the Ant Design date picker keeps focus on the picked day.
+  - The guides cover the provider-level `components` map (`SlotsmithProvider components`), including the rule that provider autocomplete slots must not assume one option shape, and the `theming` guide covers `--ss-*` tokens set on a wrapper.
+  - For shadcn/ui, `add` now lists `input-group` and `separator` in its `npx shadcn@latest add` line.
+  - The package ships the ISC `LICENSE` text.
+
 - **1.7.0** — `1.5.0` and `1.6.0` were version bumps in git only and were never published; this release describes everything an upgrading agent gains since the last published version, `1.4.0`:
   - `list_components` names the locale packs available for each component's `locale` prop.
   - The `i18n` and `theming` guides now cover locale packs, the shared tokens and the six themes; a new `adapters` guide covers the `add` command, the libraries and the registry. Reordering knowledge is folded into the `data-table` guide.
