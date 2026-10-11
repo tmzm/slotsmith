@@ -40,11 +40,13 @@ const libraries = ADAPTER_LIBRARIES.filter((library) => `adapters/${slug}/${libr
 });
 /**
  * The tallest of each component's adapter demos at rest, from 360px to 1440px in English and Arabic (measured in
- * Chrome), so none shifts the page as it loads. Open popups float over the page and need no room here.
+ * Chrome), so none shifts the page as it loads. The autocomplete's also holds its open list (320px at most, below
+ * the field), so the list opens downward inside the demo instead of over the text around it; the date picker's
+ * calendar floats over the page.
  */
 const DEMO_HEIGHT: Record<ComponentSlug, string> = {
   "data-table": "30.5rem",
-  autocomplete: "5rem",
+  autocomplete: "28.5rem",
   "date-picker": "4.5rem",
   "file-uploader": "19rem",
 };

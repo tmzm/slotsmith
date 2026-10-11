@@ -60,6 +60,8 @@ const optionTexts = () => screen.queryAllByRole("option").map((option) => option
 /** The autocomplete's own live region (`aria-live="polite"`, visually hidden). */
 const liveRegion = (container: HTMLElement) => container.querySelector<HTMLElement>('.sac__sr-only[role="status"]')!;
 const tagLabels = (combobox: HTMLElement) => within(combobox).queryAllByRole("button", { name: /^Remove / }).map((b) => b.getAttribute("aria-label"));
+/** The names of the open list's groups, from the label each one points at. */
+const groupNames = () => within(screen.getByRole("listbox")).queryAllByRole("group").map((group) => group.getAttribute("aria-labelledby") && document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent);
 
 describe("autocomplete: catalog", () => {
   it("answers one page at a time, deterministically, after a delay", async () => {
@@ -326,7 +328,6 @@ describe("autocomplete guide: select or combobox, autoHighlight", () => {
 });
 
 describe("autocomplete guide: groups", () => {
-  const groupNames = () => screen.queryAllByRole("group").map((group) => group.getAttribute("aria-labelledby") && document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent);
 
   it("labels each region, orders the groups by their first option, and hides a group the search empties", () => {
     render(<Groups />);
@@ -458,19 +459,35 @@ describe("autocomplete adapter demos", () => {
     })) as typeof window.matchMedia;
   });
 
-  it.each(ADAPTER_DEMOS)("%s: renders two tags with the library's parts, opens, and removes a tag", { timeout: 60000 }, (name, Demo, marker) => {
+  it.each(ADAPTER_DEMOS)("%s: searches in the trigger, groups the regions, picks with Enter and removes a tag", { timeout: 60000 }, (name, Demo, marker) => {
     const Provider = PROVIDERS[name];
     const { container } = render(
       <Provider theme="dark" dir="ltr">
         <Demo />
       </Provider>,
     );
-    const combobox = screen.getByRole("combobox", { name: "Topics" });
+    // The visible <label> names the input, which is the combobox.
+    const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Countries" });
+    expect(input.tagName).toBe("INPUT");
     expect(container.querySelector(marker), `${name} parts`).not.toBeNull();
-    expect(tagLabels(combobox)).toEqual(["Remove Accessibility", "Remove Forms"]);
-    fireEvent.click(combobox);
-    expect(screen.getAllByRole("option").length).toBeGreaterThan(5);
-    key(screen.getByRole("searchbox"), "Backspace");
-    expect(tagLabels(combobox)).toEqual(["Remove Accessibility"]);
+    const field = input.closest<HTMLElement>("[data-search-in='trigger']")!;
+    expect(tagLabels(field)).toEqual(["Remove Algeria", "Remove Japan"]);
+
+    act(() => input.focus());
+    fireEvent.change(input, { target: { value: "ge" } });
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    // Some libraries draw a check mark beside a picked option, so only the name is compared.
+    expect(optionTexts().map((text) => text?.match(/^[A-Za-z ]+/)?.[0])).toEqual(["Germany", "Georgia", "Algeria", "Nigeria", "Niger"]);
+    expect(groupNames()).toEqual(["Europe", "Africa"]);
+    // autoHighlight puts the highlight on the top match, so Enter picks it. Two tags show; the third counts as "+1".
+    key(input, "Enter");
+    expect(input.value).toBe("");
+    expect(liveRegion(container).textContent).toBe("12 results");
+    expect(field.textContent).toContain("+1");
+
+    key(input, "Backspace");
+    expect(field.textContent).not.toContain("+1");
+    key(input, "Backspace");
+    expect(tagLabels(field)).toEqual(["Remove Algeria"]);
   });
 });

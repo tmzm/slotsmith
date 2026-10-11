@@ -1,17 +1,31 @@
+import { useId } from "react";
 import { Autocomplete } from "slotsmith/autocomplete";
-import { topics } from "../../shared/options";
+import { countriesByRegion, type RegionCountry } from "../../shared/options";
 import { muiComponents } from "./mui";
 
 export default function MuiAutocomplete() {
+  const id = useId();
+
   return (
-    <Autocomplete
-      multiple
-      options={topics}
-      optionDisabled={(topic) => !!topic.archived}
-      defaultValue={["accessibility", "forms"]}
-      components={muiComponents}
-      aria-label="Topics"
-      style={{ maxWidth: 360 }}
-    />
+    <div style={{ display: "grid", gap: "0.375rem", maxWidth: 360 }}>
+      {/* With the search in the trigger the input is the combobox, so a plain <label for> names it. */}
+      <label htmlFor={id} style={{ fontSize: 14, fontWeight: 500 }}>
+        Countries
+      </label>
+      <Autocomplete<RegionCountry>
+        id={id}
+        searchIn="trigger"
+        multiple
+        autoHighlight
+        options={countriesByRegion}
+        getOptionValue={(country) => country.code}
+        getOptionLabel={(country) => country.name}
+        getOptionGroup={(country) => country.region}
+        optionDisabled={(country) => !!country.disabled}
+        defaultValue={["dz", "jp"]}
+        placeholder="Search countries"
+        components={muiComponents}
+      />
+    </div>
   );
 }
