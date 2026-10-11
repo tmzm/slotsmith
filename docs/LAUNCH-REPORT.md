@@ -220,11 +220,18 @@ https://slotsmith-docs.netlify.app/*  https://slotsmith.dev/:splat  301!
 
 - **The live Trust page has no axe table.** Netlify skips the verifier's browser checks (`DOCS_SKIP_VERIFY=1`, no browser in its build image; the static checks still run there), so the deployed page shows a short note linking to the workflow runs (checked live). Options: publish the CI-built `dist` (the `docs-dist` artifact) to Netlify from the workflow; install Chromium in the Netlify build; or keep the note. Default: keep the note.
 - **Arabic fonts slow `/ar/`** (performance 0.89, LCP 3.6 s). Options: subset Noto Sans Arabic to the characters the site uses, drop a weight (400, 500 and 700 all load), or preload fewer. Default: as built; `/ar/` is not in the Lighthouse gate.
-- **No `LICENSE` file** (both packages say ISC; GitHub shows no license) and **no `SECURITY.md`**. Adding both at the root is a small owner commit; the Trust page would then link them.
+- ~~**No `LICENSE` file** and **no `SECURITY.md`**.~~ Done (2026-10-08): `LICENSE` (ISC) at the root and in `packages/ai`, and `SECURITY.md` at the root; the Trust page links both, and its Security section points at `SECURITY.md` and the advisory form. Private vulnerability reporting itself is still an owner action (above).
 - **Landing initial JS is about 123 KB gzipped against a 90 KB budget.** Measured from the landing's Lighthouse run (scripts it loaded, gzipped locally): 170 KB in all, of which GSAP, ScrollTrigger and the motion code (47 KB) load after first paint and sit outside the budget. The rest is mostly React (64 KB) and the data table with its autocomplete and floating-ui (34 KB). GSAP also downloads on phones, where the pin never runs. Options: load GSAP only on screens ≥ 1024×660, render the swap table server-only until first interaction, or raise the budget. Default: as built (scores are 0.97–0.99).
 - **Google Tag Manager on every page** (`GTM-NV899NTZ`). Visitors' browsers contact Google on each view (119 KB from `googletagmanager.com` on the landing). EU and UK visitors may need a consent notice and the privacy text should say what the container collects. Default: as built, no consent banner.
 - **The site's focus ring is under 3:1 in light mode** (`--gold` #c9a14a: 2.18:1 on the background; `src/styles/base.css:148`). Options: use `--gold-text` for focus in light mode, add an inner dark ring, or accept. Default: as built.
 - **Library tiny fixes** in section 4 (items 2, 4, 7, 8, 12, 14, 15, 18, 19): approve any for 1.8.0, or leave them for later.
+
+**Still open after the 1.8.0 docs (2026-10-08)**
+
+- Private vulnerability reporting: owner action in the GitHub settings (blocks launch, above).
+- Arabic font subsetting for `/ar/` (above).
+- Landing initial JS against the 90 KB budget (above).
+- Google Tag Manager consent notice and privacy text (above).
 
 **Defaults taken (say if you disagree)**
 
