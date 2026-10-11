@@ -8,7 +8,9 @@
  * variables, whose names the site does not use. The stylesheet is linked
  * on demand, so only a page that shows the Radix variant loads it. A root
  * `Theme` is at least as tall as the viewport (it expects to wrap the whole
- * app); inside a demo it takes the table's height instead.
+ * app); inside a demo it takes the table's height instead. It also makes a
+ * stacking context (`z-index: 0`), which in an app holds the whole page; in
+ * a demo it would hold a popup under the content that follows, so it does not.
  */
 import { Theme } from "@radix-ui/themes";
 import { Direction } from "radix-ui";
@@ -44,7 +46,7 @@ export function loadRadixStyles(): Promise<void> {
 
 export function RadixProvider({ children, theme, dir }: { children: ReactNode; theme: "dark" | "light"; dir: "ltr" | "rtl" }) {
   return (
-    <Theme appearance={theme} style={{ minHeight: 0 }}>
+    <Theme appearance={theme} style={{ minHeight: 0, zIndex: "auto" }}>
       <Direction.Provider dir={dir}>{children}</Direction.Provider>
     </Theme>
   );

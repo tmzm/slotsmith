@@ -210,9 +210,11 @@ const MuiIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
  * A raised `Paper`. The component positions it, so the part only receives the
  * computed style and adds the surface. It is a column the list fills, so the
  * list scrolls inside the height it is given and the search box stays put.
+ * It sits on the theme's `modal` layer, as the popper of MUI's own
+ * autocomplete does, so it is drawn above the page around it.
  */
 const MuiPopup = (props: AutocompletePopupSlotProps) => (
-  <Paper elevation={8} sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }} {...props} />
+  <Paper elevation={8} sx={{ zIndex: "modal", display: "flex", flexDirection: "column", overflow: "hidden" }} {...props} />
 );
 
 /**
