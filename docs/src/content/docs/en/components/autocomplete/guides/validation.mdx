@@ -1,0 +1,37 @@
+---
+title: "Validation"
+description: "Show a failed check on the slotsmith Autocomplete: the invalid prop, an error message tied to the combobox, and the label and message styles your app adds."
+---
+
+The Autocomplete takes `invalid` for a value that failed your check. It marks the combobox with `aria-invalid="true"` and draws the trigger's border in the danger colour. The error message, its wording and the label's colour are your app's markup, tied to the combobox with `aria-describedby`.
+
+{/* Reserved height measured in Chrome: the label, the picker, the message, the button and the status line. */}
+<Demo name="autocomplete/validation" height="12rem" fallback />
+
+Press Continue with nothing picked: the field turns red, the message appears and focus returns to the picker. Pick a country and the error clears.
+
+## What `invalid` does
+
+[`invalid`](../../api/#prop-invalid) (default `false`) sets:
+
+- `aria-invalid="true"` on the combobox: the trigger, or the input with [`searchIn="trigger"`](../search-in-trigger/). Not on the popup's search box, whose text is only a filter, not the value.
+- `data-invalid` on the root and on the trigger, so a skin or your CSS can style the error state.
+- In the default stylesheet, the trigger's border and focus ring in the `--ss-danger` token (`#dc2626` light, `#f87171` dark). Set `--ss-danger`, or `--sac-danger` for the autocomplete alone; see [Theming](../../../../theming/).
+
+The component does not validate and does not render a message. When to check, and what to say, is up to your form code or form library.
+
+## Tying the message to the field
+
+Give the message an `id` and point the combobox at it. The naming and validation props you pass to `Autocomplete` go to the combobox, not to the wrapper.
+
+- `aria-describedby` is read by every major screen reader, after the field's name. The demo uses it, and sets it only while the message shows.
+- `aria-errormessage` is meant for exactly this, but screen reader support is uneven. If you use it, keep `aria-describedby` as well.
+- `aria-required="true"` tells screen readers the field must be filled.
+
+The `id` you pass also lands on the combobox, so after a failed submit `document.getElementById(id).focus()` moves focus straight to the field, as the demo does.
+
+## The label and the message
+
+The demo colours its label and message with `var(--ss-danger, #dc2626)`, so they match the trigger's border in both themes. Colour is not the only signal: the message text says what is wrong, and `aria-invalid` tells assistive technology.
+
+The [ready-made adapters](../../adapters/) show each library's own error style on the trigger: shadcn/ui's destructive border and ring, MUI's `error` colour, Chakra UI's `_invalid` style, Ant Design's `status="error"` and Radix Themes' red accent. The date picker takes the same prop; see [its validation guide](../../../date-picker/guides/validation/).

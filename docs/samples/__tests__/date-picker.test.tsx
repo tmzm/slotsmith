@@ -14,6 +14,7 @@ import Modes from "@samples/date-picker/modes";
 import Overview from "@samples/date-picker/overview";
 import Presets from "@samples/date-picker/presets";
 import QuickStart from "@samples/date-picker/quick-start";
+import Validation from "@samples/date-picker/validation";
 
 /** A Monday. The samples read today from the clock once mounted, so the tests pin it. */
 const NOW = new Date(2026, 2, 16, 12);
@@ -318,6 +319,26 @@ describe("date picker guide: compound parts", () => {
     expect(screen.getByText(/2 days picked/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.getByText("No days picked.")).toBeTruthy();
+  });
+});
+
+describe("date picker guide: validation", () => {
+  it("marks the combobox invalid on submit, points it at the message, and clears it once a day is picked", () => {
+    render(<Validation />);
+    const combobox = screen.getByRole("combobox", { name: "Start date" });
+    expect(combobox.getAttribute("aria-invalid")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(combobox.getAttribute("aria-invalid")).toBe("true");
+    expect(combobox.closest("[data-invalid]")).not.toBeNull();
+    expect(document.getElementById(combobox.getAttribute("aria-describedby")!)?.textContent).toBe("The start date is required.");
+    expect(document.activeElement).toBe(combobox);
+
+    key(combobox, "ArrowDown");
+    fireEvent.click(day("2026-03-16"));
+    expect(combobox.getAttribute("aria-invalid")).toBeNull();
+    expect(screen.queryByText("The start date is required.")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Sent: 2026-03-16")).toBeTruthy();
   });
 });
 

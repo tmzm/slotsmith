@@ -1,0 +1,29 @@
+---
+title: "Validation"
+description: "Show a failed check on the slotsmith DatePicker: the invalid prop, an error message tied to the combobox, and the --sdp-danger token."
+---
+
+The date picker takes `invalid` for a value that failed your check. It marks the combobox with `aria-invalid="true"` and draws the trigger's border in the danger colour. The error message and the label's colour are your app's markup, tied to the combobox with `aria-describedby`.
+
+{/* Reserved height measured in Chrome: the label, the picker, the message, the button and the status line. */}
+<Demo name="date-picker/validation" height="12rem" fallback />
+
+Press Continue with no date picked: the field turns red, the message appears and focus returns to the picker. Pick a day and the error clears.
+
+## What `invalid` does
+
+[`invalid`](../../api/#prop-invalid) (default `false`) sets:
+
+- `aria-invalid="true"` on the trigger, the element with `role="combobox"`.
+- `data-invalid` on the root and on the trigger, for your own styles.
+- In the default stylesheet, the trigger's border and focus ring in the danger colour, read from `--sdp-danger`, then the shared `--ss-danger` (`#dc2626` light, `#f87171` dark). See [Theming](../../../../theming/).
+
+The picker does not validate and does not render a message. A rule such as "the end must be after the start" belongs in your form code; the picker shows the result.
+
+## Tying the message to the field
+
+The naming and validation props you pass to `DatePicker` go to the combobox. Give the message an `id` and pass it as `aria-describedby`, which every major screen reader reads after the field's name. `aria-errormessage` is meant for this too, but support is uneven, so keep `aria-describedby` beside it. Add `aria-required="true"` for a required date.
+
+The `id` you pass also lands on the combobox, so after a failed submit `document.getElementById(id).focus()` moves focus to the field, as the demo does.
+
+The demo colours its label and message with `var(--ss-danger, #dc2626)`, to match the border in both themes; the message text carries the meaning, so colour is not the only signal. The [ready-made adapters](../../adapters/) show each library's own error style on the trigger. The [autocomplete's validation guide](../../../autocomplete/guides/validation/) covers the same pattern for a picker.
