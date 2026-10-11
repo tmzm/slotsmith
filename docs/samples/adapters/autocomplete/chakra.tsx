@@ -117,19 +117,24 @@ const ChakraValue = ({ label, placeholder, empty }: AutocompleteValueSlotProps) 
  * Chakra tag
  *
  * `Tag.Root` with Chakra's own close trigger, which already renders a button
- * and its icon; the accessible name is the only thing it needs.
+ * and its icon; the accessible name is the only thing it needs. The trigger
+ * sits in `Tag.EndElement`, as in Chakra's closable tag, which is what
+ * gives the icon its size: on its own the button has none and the icon does
+ * not show.
  */
 const ChakraTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlotProps) => (
   <Tag.Root size="md" variant="subtle">
     <Tag.Label>{label}</Tag.Label>
     {!disabled && (
-      <Tag.CloseTrigger
-        aria-label={removeLabel}
-        onClick={(event) => {
-          event.stopPropagation();
-          onRemove();
-        }}
-      />
+      <Tag.EndElement>
+        <Tag.CloseTrigger
+          aria-label={removeLabel}
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove();
+          }}
+        />
+      </Tag.EndElement>
     )}
   </Tag.Root>
 );
