@@ -42,6 +42,8 @@ export const SLOT_SELECTORS: Record<ComponentSlug, Record<string, string>> = {
   autocomplete: {
     Root: c(ac.root),
     Trigger: c(ac.trigger),
+    TriggerInput: c(ac.triggerInput),
+    Toggle: c(ac.toggle),
     Value: c(ac.value),
     Tag: c(ac.tag),
     Clear: c(ac.clear),
@@ -52,6 +54,9 @@ export const SLOT_SELECTORS: Record<ComponentSlug, Record<string, string>> = {
     Option: c(ac.option),
     OptionLabel: c(ac.label),
     Check: c(ac.tick),
+    Group: c(ac.group),
+    GroupLabel: c(ac.groupLabel),
+    Separator: c(ac.separator),
     Empty: c(ac.message),
     Loading: c(ac.message),
     Error: c(ac.error),

@@ -7,7 +7,7 @@
     "ExpandToggle": ["data-expanded"]
   },
   "autocomplete": {
-    "Trigger": ["data-open", "data-disabled", "data-empty"],
+    "Trigger": ["data-open", "data-disabled", "data-empty", "data-search-in"],
     "Popup": ["data-placement"]
   },
   "date-picker": {
