@@ -145,7 +145,13 @@ html[lang="ar"] .display [lang="en"] {
   color: var(--on-gold);
 }
 
-:focus-visible {
+/*
+ * The site's own focus ring. A demo shows only the focus styles of the library it renders, as an app
+ * would: this rule is not in a cascade layer, so inside a demo it would beat the libraries' layered
+ * resets and draw a second ring on the input inside a field that already draws one. `:where()` keeps
+ * the specificity of a bare `:focus-visible`.
+ */
+:focus-visible:where(:not(.sample-stage *)) {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
