@@ -102,7 +102,7 @@ export type RequirementKey = "react" | "node" | "license" | "version" | "support
 /**
  * The requirement rows: React's peer range, the Node range `slotsmith-ai`
  * declares, the license, the version, and the release line that gets
- * security fixes (the latest minor, `1.7.x`).
+ * security fixes (the latest minor, e.g. `1.8.x`).
  *
  * @throws When `packages/ai/package.json` declares no `engines.node`.
  */
