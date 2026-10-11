@@ -10,13 +10,16 @@ import RadixDemo from "@samples/adapters/autocomplete/radix-demo";
 import ShadcnDemo from "@samples/adapters/autocomplete/shadcn-demo";
 import CompoundParts from "@samples/autocomplete/compound-parts";
 import Creatable from "@samples/autocomplete/creatable";
+import Groups from "@samples/autocomplete/groups";
 import Labels from "@samples/autocomplete/labels";
 import Multiple from "@samples/autocomplete/multiple";
 import Overview from "@samples/autocomplete/overview";
 import QuickStart from "@samples/autocomplete/quick-start";
 import RemoteOptions from "@samples/autocomplete/remote-options";
+import SearchInTrigger from "@samples/autocomplete/search-in-trigger";
 import SelectOrCombobox from "@samples/autocomplete/select-or-combobox";
 import States from "@samples/autocomplete/states";
+import Validation from "@samples/autocomplete/validation";
 import Virtual from "@samples/autocomplete/virtual";
 import * as catalog from "@samples/shared/fake-catalog";
 
@@ -305,6 +308,114 @@ describe("autocomplete guide: compound parts", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(tagLabels(combobox)).toEqual([]);
     expect(screen.getByText("Nothing selected.")).toBeTruthy();
+  });
+});
+
+describe("autocomplete guide: select or combobox, autoHighlight", () => {
+  it("highlights the top match as the list opens and narrows, so Enter picks it", () => {
+    render(<SelectOrCombobox />);
+    fireEvent.click(screen.getByRole("checkbox", { name: /autoHighlight/ }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Country" }));
+    const search = screen.getByRole("searchbox");
+    expect(document.getElementById(search.getAttribute("aria-activedescendant")!)?.textContent).toBe("Argentina");
+    fireEvent.change(search, { target: { value: "nor" } });
+    expect(document.getElementById(search.getAttribute("aria-activedescendant")!)?.textContent).toBe("Norway");
+    key(search, "Enter");
+    expect(screen.getByText("Selected: no")).toBeTruthy();
+  });
+});
+
+describe("autocomplete guide: groups", () => {
+  const groupNames = () => screen.queryAllByRole("group").map((group) => group.getAttribute("aria-labelledby") && document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent);
+
+  it("labels each region, orders the groups by their first option, and hides a group the search empties", () => {
+    render(<Groups />);
+    const combobox = screen.getByRole("combobox", { name: "Country" });
+    fireEvent.click(combobox);
+    expect(groupNames()).toEqual(["Africa", "Americas", "Asia", "Europe"]);
+    // Australia has no group: it sits in the unlabelled section where it first appears.
+    expect(optionTexts()[0]).toBe("Australia");
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "jap" } });
+    expect(groupNames()).toEqual(["Asia"]);
+    key(screen.getByRole("searchbox"), "Escape");
+
+    // Unsorted, the groups follow the order of their first option: Argentina, Egypt, France, India.
+    fireEvent.click(screen.getByRole("checkbox", { name: /Sort by region/ }));
+    fireEvent.click(combobox);
+    expect(groupNames()).toEqual(["Americas", "Africa", "Europe", "Asia"]);
+  });
+
+  it("moves the highlight through the options only, in the order on screen", () => {
+    render(<Groups />);
+    const combobox = screen.getByRole("combobox", { name: "Country" });
+    act(() => combobox.focus());
+    key(combobox, "ArrowDown");
+    const search = screen.getByRole("searchbox");
+    const highlighted = () => document.getElementById(search.getAttribute("aria-activedescendant")!)?.textContent;
+    expect(highlighted()).toBe("Australia");
+    key(search, "ArrowDown");
+    expect(highlighted()).toBe("Egypt");
+    key(search, "End");
+    expect(highlighted()).toBe("United Kingdom");
+  });
+});
+
+describe("autocomplete guide: search in the trigger", () => {
+  it("shows the picked label in the input, searches as you type, and puts the label back on Escape", () => {
+    render(<SearchInTrigger />);
+    const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Country" });
+    expect(input.tagName).toBe("INPUT");
+    expect(input.value).toBe("Japan");
+    act(() => input.focus());
+    fireEvent.change(input, { target: { value: "ger" } });
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    expect(optionTexts()).toEqual(["Germany"]);
+    key(input, "ArrowDown");
+    key(input, "Enter");
+    expect(input.value).toBe("Germany");
+    expect(screen.getByText(/^Country: de\./)).toBeTruthy();
+    expect(document.activeElement).toBe(input);
+
+    fireEvent.change(input, { target: { value: "xyz" } });
+    key(input, "Escape");
+    expect(input.getAttribute("aria-expanded")).toBe("false");
+    expect(input.value).toBe("Germany");
+  });
+
+  it("keeps the tags before the input in multiple mode, and Backspace in the empty input removes the last one", () => {
+    render(<SearchInTrigger />);
+    const input = screen.getByRole<HTMLInputElement>("combobox", { name: "Topics" });
+    expect(screen.getByRole("button", { name: "Remove Forms" })).toBeTruthy();
+    act(() => input.focus());
+    fireEvent.change(input, { target: { value: "test" } });
+    key(input, "ArrowDown");
+    key(input, "Enter");
+    // A pick clears the search and keeps the list open.
+    expect(input.value).toBe("");
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByText(/Topics: forms, testing\./)).toBeTruthy();
+    key(input, "Backspace");
+    expect(screen.getByText(/Topics: forms\./)).toBeTruthy();
+  });
+});
+
+describe("autocomplete guide: validation", () => {
+  it("marks the combobox invalid on submit, points it at the message, and clears it once a country is picked", () => {
+    render(<Validation />);
+    const combobox = screen.getByRole("combobox", { name: "Shipping country" });
+    expect(combobox.getAttribute("aria-invalid")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(combobox.getAttribute("aria-invalid")).toBe("true");
+    expect(combobox.closest("[data-invalid]")).not.toBeNull();
+    expect(document.getElementById(combobox.getAttribute("aria-describedby")!)?.textContent).toBe("Pick a country to continue.");
+    expect(document.activeElement).toBe(combobox);
+
+    fireEvent.click(combobox);
+    fireEvent.click(screen.getByRole("option", { name: "Kenya" }));
+    expect(combobox.getAttribute("aria-invalid")).toBeNull();
+    expect(screen.queryByText("Pick a country to continue.")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Sent: ke")).toBeTruthy();
   });
 });
 

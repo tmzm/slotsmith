@@ -29,9 +29,9 @@ describe("static paths", () => {
     expect(componentPaths()).toHaveLength(8);
   });
 
-  it("has (8 + 7 + 5 + 7) x 2 guide entries", () => {
+  it("has (8 + 10 + 6 + 7) x 2 guide entries", () => {
     const paths = guidePaths();
-    expect(paths).toHaveLength(54);
-    expect(new Set(paths.map((p) => `${p.params.lang}/${p.params.component}/${p.params.guide}`)).size).toBe(54);
+    expect(paths).toHaveLength(62);
+    expect(new Set(paths.map((p) => `${p.params.lang}/${p.params.component}/${p.params.guide}`)).size).toBe(62);
   });
 });
