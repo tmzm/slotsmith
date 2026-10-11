@@ -6,7 +6,7 @@ description: "Use the slotsmith Autocomplete as a combobox that filters as you t
 The Autocomplete is a combobox by default: its popup holds a search box that filters the options as you type. Set `searchable` to `false` and the same component is a select: no search box, and typing jumps to a matching option.
 
 {/* Reserved height measured in Chrome: the checkbox, the picker and the output line. */}
-<Demo name="autocomplete/select-or-combobox" height="10.5rem" fallback />
+<Demo name="autocomplete/select-or-combobox" height="12rem" fallback />
 
 Untick `searchable` and focus the picker, then type <kbd>J</kbd>: the popup opens on Japan. Type <kbd>J</kbd> again for Jordan.
 
@@ -25,6 +25,14 @@ With `searchable={false}` there is no search box, and focus stays on the trigger
 - Letters typed within 0.7 seconds of each other build one search: "ca" lands on the first option starting with "ca", and only if none does, on one containing it.
 - The same letter again moves to the next option starting with it, so <kbd>J</kbd>, <kbd>J</kbd> goes from Japan to Jordan.
 - Typing on the closed trigger opens the popup on the match.
+
+## Highlighting the top match
+
+By default nothing is highlighted until you press an arrow key, so <kbd>Enter</kbd> on a fresh search picks nothing. Tick `autoHighlight` in the demo, open the picker and type "nor": Norway is highlighted, and <kbd>Enter</kbd> picks it.
+
+With [`autoHighlight`](../../api/#prop-autoHighlight), the first option that can be picked is highlighted whenever the list opens and whenever its contents change: as the search narrows it, or as a [remote page](../remote-options/) arrives. Disabled options are skipped. A highlight you move with the arrow keys or the pointer stays put until the search changes. While a first page is still loading nothing is highlighted, so a row from the previous search is never picked.
+
+It suits a picker people drive from the keyboard, where typing a few letters and pressing <kbd>Enter</kbd> is the fast path. It works the same with [search in the trigger](../search-in-trigger/).
 
 ## Options and values
 
