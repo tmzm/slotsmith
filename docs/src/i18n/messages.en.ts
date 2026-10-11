@@ -342,6 +342,7 @@ export const en = {
   "guide.autocomplete.selectOrCombobox": "Select or combobox",
   "guide.autocomplete.multiple": "Multiple values",
   "guide.autocomplete.remoteOptions": "Remote options",
+  "guide.autocomplete.groups": "Groups and separators",
   "guide.autocomplete.states": "Loading, empty and error states",
   "guide.autocomplete.creatable": "Creatable options",
   "guide.autocomplete.virtual": "Virtual lists",

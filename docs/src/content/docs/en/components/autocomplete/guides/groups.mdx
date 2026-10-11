@@ -1,0 +1,42 @@
+---
+title: "Groups and separators"
+description: "Group the slotsmith Autocomplete's options under labels with getOptionGroup: group order, groups that span pages, virtual lists and the ARIA roles."
+---
+
+The Autocomplete groups its options when you pass `getOptionGroup`, a function that returns an option's group name or `undefined`. The name is also the group's label. Options stay one flat list, and a hairline separates the sections.
+
+{/* Reserved height measured in Chrome: the checkbox, the picker and the output line. */}
+<Demo name="autocomplete/groups" height="12rem" fallback />
+
+Open the picker, then untick "Sort by region" and open it again: the groups change order, but each region's countries stay together.
+
+## Order
+
+[`getOptionGroup`](../../api/#prop-getOptionGroup) does not sort anything. The order comes from `options`:
+
+- Groups appear in the order of their first option. Sort the options by group first, as the demo does, to choose the group order.
+- An option joins its group wherever it sits in the list, so a group's options need not be next to each other.
+- Options with no group form one unlabelled section, placed where the first of them appears. In the demo that is Australia.
+- A group the search empties disappears, with its label and its separator.
+
+The keyboard follows the order on screen. The arrow keys, <kbd>Home</kbd>, <kbd>End</kbd>, <kbd>PgUp</kbd>, <kbd>PgDn</kbd>, typeahead and [`autoHighlight`](../select-or-combobox/#highlighting-the-top-match) move through the options only. Labels and separators are never highlighted.
+
+## Remote pages and virtual lists
+
+With [remote options](../remote-options/), each new page joins the groups already on screen. A page that brings more countries from Europe adds them under the existing Europe label, not under a second one.
+
+[`VirtualAutocomplete`](../virtual/) renders labels and separators as rows of their own. Their heights come from `virtual.groupLabelSize` (28 by default) and `virtual.separatorSize` (9). Change them if your `GroupLabel` or `Separator` slot is taller. When a label scrolls out of view, the list keeps a hidden copy of it, so the group still has a name.
+
+## Changing the parts
+
+Three slots draw the groups:
+
+- [`Group`](../../api/#slot-Group) wraps one group's options.
+- [`GroupLabel`](../../api/#slot-GroupLabel) is the label. It receives `hidden` for the virtual list's hidden copy, so pass that on.
+- [`Separator`](../../api/#slot-Separator) is the line between sections.
+
+In your own layout, the compound parts `Autocomplete.Group`, `Autocomplete.GroupLabel` and `Autocomplete.Separator` render the same parts; see [compound parts](../compound-parts/). The headless `useAutocomplete` returns `sections` and the matching prop getters. The [adapters](../../adapters/) draw groups with each library's own label and divider.
+
+## Accessibility
+
+Each group has `role="group"` and is named by its label through `aria-labelledby`. The label itself has `role="presentation"`, so it is not read as an extra item. The separator is hidden from assistive technology, because a listbox may only contain options and groups.

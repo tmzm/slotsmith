@@ -334,6 +334,7 @@ export const ar: Record<MessageKey, string> = {
   "guide.autocomplete.selectOrCombobox": "قائمة اختيار أو قائمة بحث",
   "guide.autocomplete.multiple": "قيم متعددة",
   "guide.autocomplete.remoteOptions": "خيارات بعيدة",
+  "guide.autocomplete.groups": "المجموعات والفواصل",
   "guide.autocomplete.states": "حالات التحميل والفراغ والخطأ",
   "guide.autocomplete.creatable": "خيارات قابلة للإنشاء",
   "guide.autocomplete.virtual": "القوائم الافتراضية",

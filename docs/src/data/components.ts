@@ -37,6 +37,7 @@ export const COMPONENTS: ComponentMeta[] = [
       { slug: "select-or-combobox", title: "guide.autocomplete.selectOrCombobox" },
       { slug: "multiple", title: "guide.autocomplete.multiple" },
       { slug: "remote-options", title: "guide.autocomplete.remoteOptions" },
+      { slug: "groups", title: "guide.autocomplete.groups" },
       { slug: "states", title: "guide.autocomplete.states" },
       { slug: "creatable", title: "guide.autocomplete.creatable" },
       { slug: "virtual", title: "guide.autocomplete.virtual" },
