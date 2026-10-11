@@ -18,6 +18,7 @@ import ListSubheader from "@mui/material/ListSubheader";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { createSvgIcon } from "@mui/material/utils";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -61,6 +62,26 @@ const isTrue = (value: unknown) => value === true || value === "true";
  * A `Box` the popup is measured against.
  */
 const MuiRoot = (props: AutocompleteRootSlotProps) => <Box sx={{ position: "relative" }} {...props} />;
+
+/**
+ * Arrow drop down icon
+ *
+ * The path of `@mui/icons-material`'s `ArrowDropDown`, the chevron of MUI's
+ * own autocomplete, built with `createSvgIcon` so the adapter needs no icons
+ * package.
+ */
+const ArrowDropDownIcon = createSvgIcon(<path d="M7 10l5 5 5-5z" />, "ArrowDropDown");
+
+/**
+ * Close icon
+ *
+ * The path of `@mui/icons-material`'s `Close`, the clear icon of MUI's own
+ * autocomplete.
+ */
+const CloseIcon = createSvgIcon(
+  <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />,
+  "Close",
+);
 
 /**
  * MUI trigger
@@ -182,7 +203,7 @@ const MuiClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
     }}
     {...aria}
   >
-    ×
+    <CloseIcon fontSize="small" />
   </IconButton>
 );
 
@@ -195,13 +216,7 @@ const MuiIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
   loading ? (
     <CircularProgress size={16} sx={{ ml: "auto" }} />
   ) : (
-    <Box
-      component="span"
-      aria-hidden="true"
-      sx={{ ml: "auto", color: "text.secondary", transform: open ? "rotate(180deg)" : "none" }}
-    >
-      ▾
-    </Box>
+    <ArrowDropDownIcon fontSize="small" sx={{ ml: "auto", color: "action.active", transform: open ? "rotate(180deg)" : "none" }} />
   );
 
 /**

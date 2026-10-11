@@ -56,9 +56,9 @@ const Check = () => (
   </svg>
 );
 
-/** Stands in for `lucide-react`'s X icon. */
-const X = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3" aria-hidden="true">
+/** Stands in for `lucide-react`'s X icon: 12px in a badge, 16px like the chevron where it clears. */
+const X = ({ className = "size-3" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
     <path d="M18 6 6 18M6 6l12 12" />
   </svg>
 );
@@ -221,7 +221,7 @@ function ShadcnClear({ onClick, ...aria }: AutocompleteClearSlotProps) {
   if (searchIn === "trigger") {
     return (
       <InputGroupButton size="icon-xs" className="text-muted-foreground" onClick={onClick} {...aria}>
-        <X />
+        <X className="size-4" />
       </InputGroupButton>
     );
   }
@@ -237,7 +237,7 @@ function ShadcnClear({ onClick, ...aria }: AutocompleteClearSlotProps) {
       }}
       {...aria}
     >
-      <X />
+      <X className="size-4" />
     </Button>
   );
 }

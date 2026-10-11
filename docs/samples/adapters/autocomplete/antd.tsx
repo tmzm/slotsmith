@@ -165,22 +165,26 @@ const AntTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlotP
 /**
  * Ant clear
  *
- * A text `Button` with Ant's clear icon. The click is stopped so it does not
- * also reach the trigger and reopen the popup.
+ * A text `Button` with Ant's clear icon, at the select's icon size and in
+ * its quaternary text colour, the same as the chevron beside it. The click is
+ * stopped so it does not also reach the trigger and reopen the popup.
  */
-const AntClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
-  <Button
-    type="text"
-    size="small"
-    icon={<CloseCircleFilled />}
-    style={{ marginInlineStart: "auto" }}
-    onClick={(event) => {
-      event.stopPropagation();
-      onClick();
-    }}
-    {...aria}
-  />
-);
+function AntClear({ onClick, ...aria }: AutocompleteClearSlotProps) {
+  const { token } = theme.useToken();
+  return (
+    <Button
+      type="text"
+      size="small"
+      icon={<CloseCircleFilled style={{ fontSize: token.fontSizeIcon, color: token.colorTextQuaternary }} />}
+      style={{ marginInlineStart: "auto" }}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      {...aria}
+    />
+  );
+}
 
 /**
  * Ant indicator
@@ -192,7 +196,7 @@ function AntIndicator({ open, loading }: AutocompleteIndicatorSlotProps) {
   const { token } = theme.useToken();
   return (
     <span aria-hidden="true" style={{ display: "inline-flex", marginInlineStart: "auto", color: token.colorTextQuaternary }}>
-      {loading ? <Spin size="small" /> : <DownOutlined rotate={open ? 180 : 0} style={{ fontSize: token.fontSizeSM }} />}
+      {loading ? <Spin size="small" /> : <DownOutlined rotate={open ? 180 : 0} style={{ fontSize: token.fontSizeIcon }} />}
     </span>
   );
 }
@@ -302,11 +306,13 @@ function AntTriggerInput({ ref, style, ...props }: AutocompleteTriggerInputSlotP
 /**
  * Ant toggle
  *
- * A text `Button` holding the chevron, kept out of the tab order. Ant's
- * `type` is its look, so the HTML type goes through `htmlType`.
+ * A text `Button` holding the chevron, kept out of the tab order. The
+ * chevron goes in as its `icon`, so it is Ant's square icon-only button,
+ * the same size as the clear button. Ant's `type` is its look, so the HTML
+ * type goes through `htmlType`.
  */
-const AntToggle = ({ type: _type, ...props }: AutocompleteToggleSlotProps) => (
-  <Button type="text" htmlType="button" size="small" {...props} />
+const AntToggle = ({ type: _type, children, ...props }: AutocompleteToggleSlotProps) => (
+  <Button type="text" htmlType="button" size="small" icon={children} {...props} />
 );
 
 /**

@@ -6,7 +6,7 @@
  * want, and pass the map as `components={chakraAutocomplete}`; every slot left
  * out keeps its fallback.
  */
-import { Box, Button, EmptyState, IconButton, Input, List, Separator, Span, Spinner, Tag, Text } from "@chakra-ui/react";
+import { Box, Button, chakra, EmptyState, IconButton, Input, List, Separator, Span, Spinner, Tag, Text } from "@chakra-ui/react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -49,11 +49,22 @@ const ChakraRoot = (props: AutocompleteRootSlotProps) => <Box position="relative
 const NO_TOUCH_ZOOM = { "@media (pointer: coarse)": { fontSize: "max(16px, 1em)" } };
 
 /**
+ * Glyph
+ *
+ * A styled `<svg>` from Chakra's factory, 16px like the icons in Chakra's
+ * own combobox, so the clear icon and the chevron share one size.
+ */
+const Glyph = chakra("svg", {
+  base: { width: "4", height: "4", flex: "none", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+});
+
+/**
  * Chakra trigger
  *
  * A bordered `Box`, styled off the `data-*` attributes the part carries. An
  * invalid value takes Chakra's `_invalid` condition and its `border.error`
- * token, the way Chakra's own `Input` shows one.
+ * token, the way Chakra's own `Input` shows one. Its text is the `sm`
+ * style of Chakra's own combobox, which the input inside inherits.
  *
  * With the search in the trigger it is the field around the `Input`: it
  * wraps the tags, and takes Chakra's focus ring while the input inside has
@@ -67,6 +78,7 @@ const ChakraTrigger = (props: AutocompleteTriggerSlotProps) => (
     gap="2"
     minH="10"
     px="3"
+    textStyle="sm"
     borderWidth="1px"
     borderRadius="md"
     cursor="pointer"
@@ -156,7 +168,9 @@ const ChakraClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
     }}
     {...aria}
   >
-    ✕
+    <Glyph viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </Glyph>
   </IconButton>
 );
 
@@ -169,20 +183,21 @@ const ChakraIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
   loading ? (
     <Spinner size="xs" ms="auto" />
   ) : (
-    <Span aria-hidden="true" ms="auto" color="fg.muted" transform={open ? "rotate(180deg)" : undefined}>
-      ▾
-    </Span>
+    <Glyph viewBox="0 0 24 24" aria-hidden="true" ms="auto" color="fg.muted" transition="transform 0.2s" transform={open ? "rotate(180deg)" : undefined}>
+      <path d="m6 9 6 6 6-6" />
+    </Glyph>
   );
 
 /**
  * Chakra popup
  *
  * A panel `Box`. The component positions it, so the part only receives the
- * computed style and adds the surface. It is a column the list fills, so the
- * list scrolls inside the height it is given and the search box stays put.
+ * computed style and adds the surface, at the `sm` text style of Chakra's
+ * combobox rows. It is a column the list fills, so the list scrolls inside
+ * the height it is given and the search box stays put.
  */
 const ChakraPopup = (props: AutocompletePopupSlotProps) => (
-  <Box bg="bg.panel" borderWidth="1px" borderRadius="md" boxShadow="md" display="flex" flexDirection="column" overflow="hidden" zIndex="dropdown" {...props} />
+  <Box bg="bg.panel" textStyle="sm" borderWidth="1px" borderRadius="md" boxShadow="md" display="flex" flexDirection="column" overflow="hidden" zIndex="dropdown" {...props} />
 );
 
 /**
