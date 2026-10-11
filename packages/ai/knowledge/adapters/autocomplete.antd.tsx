@@ -201,7 +201,8 @@ function AntIndicator({ open, loading }: AutocompleteIndicatorSlotProps) {
  * Ant popup
  *
  * The elevated surface of Ant's dropdowns. The component positions it, so
- * the part only adds the surface to the style it receives. It is a column
+ * the part only adds the surface to the style it receives, with the text
+ * size of Ant's select menu. It is a column
  * the list fills, so the list scrolls inside the height it is given and the
  * search box stays put.
  */
@@ -216,6 +217,9 @@ function AntPopup({ style, ...props }: AutocompletePopupSlotProps) {
         boxSizing: "border-box",
         overflow: "hidden",
         padding: token.paddingXXS,
+        color: token.colorText,
+        fontSize: token.fontSize,
+        lineHeight: token.lineHeight,
         background: token.colorBgElevated,
         borderRadius: token.borderRadiusLG,
         boxShadow: token.boxShadowSecondary,
@@ -266,17 +270,30 @@ function AntSearch({ ref, style, ...props }: AutocompleteSearchSlotProps) {
  *
  * A borderless `Input` that is the combobox when the search is in the
  * trigger, taking the space the tags leave. It shows `status="error"` when
- * invalid. As with the search box, the engine's ref is handed the input
- * from Ant's ref object.
+ * invalid. The field around it draws the border and the focus ring, so the
+ * input draws none of its own, and it is as tall as a tag of Ant's select,
+ * so the field keeps the select's height. As with the search box, the
+ * engine's ref is handed the input from Ant's ref object.
  */
 function AntTriggerInput({ ref, style, ...props }: AutocompleteTriggerInputSlotProps) {
+  const { token } = theme.useToken();
   const inputRef = useCallback((instance: InputRef | null) => assignRef(ref, instance?.input ?? null), [ref]);
   return (
     <Input
       ref={inputRef}
       variant="borderless"
       status={props["aria-invalid"] ? "error" : undefined}
-      style={{ flex: "1 0 80px", minWidth: 80, paddingInline: 4, ...style }}
+      style={{
+        flex: "1 0 80px",
+        minWidth: 80,
+        height: token.controlHeight - token.paddingXXS * 2,
+        paddingBlock: 0,
+        paddingInline: 4,
+        border: 0,
+        outline: "none",
+        boxShadow: "none",
+        ...style,
+      }}
       {...props}
     />
   );
