@@ -332,6 +332,7 @@ export const ar: Record<MessageKey, string> = {
   "guide.dataTable.footers": "التذييلات",
   "guide.dataTable.headlessHook": "الخطاف بلا واجهة",
   "guide.autocomplete.selectOrCombobox": "قائمة اختيار أو قائمة بحث",
+  "guide.autocomplete.searchInTrigger": "البحث داخل الحقل",
   "guide.autocomplete.multiple": "قيم متعددة",
   "guide.autocomplete.remoteOptions": "خيارات بعيدة",
   "guide.autocomplete.groups": "المجموعات والفواصل",

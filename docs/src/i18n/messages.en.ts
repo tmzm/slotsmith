@@ -340,6 +340,7 @@ export const en = {
   "guide.dataTable.footers": "Footers",
   "guide.dataTable.headlessHook": "The headless hook",
   "guide.autocomplete.selectOrCombobox": "Select or combobox",
+  "guide.autocomplete.searchInTrigger": "Search in the trigger",
   "guide.autocomplete.multiple": "Multiple values",
   "guide.autocomplete.remoteOptions": "Remote options",
   "guide.autocomplete.groups": "Groups and separators",

@@ -1,0 +1,67 @@
+---
+title: "Search in the trigger"
+description: "Put the slotsmith Autocomplete's search box inside the trigger with searchIn=\"trigger\": an editable combobox, its single and multiple modes, keys and IME."
+---
+
+By default the Autocomplete's trigger is a button and the search box sits in the popup. With `searchIn="trigger"` the search box is an input inside the trigger itself, and that input is the combobox: you type straight into the field, and focus never moves to the popup.
+
+{/* Reserved height measured in Chrome: two labelled pickers and the output line. */}
+<Demo name="autocomplete/search-in-trigger" height="17rem" fallback />
+
+Click into Country and type "ger": the list opens on Germany. In Topics, type to add a topic, and press <kbd>Backspace</kbd> in the empty input to remove the last tag.
+
+## Popup or trigger
+
+[`searchIn`](../../api/#prop-searchIn) takes two values:
+
+- `"popup"`, the default. The trigger is a button with `role="combobox"`, and opening it moves focus to a search box at the top of the popup. Good for a select-like field that shows the choice first.
+- `"trigger"`. The trigger is a text field: an input inside it is the combobox, and it keeps focus while the list is open. Good for a field people type into, as in a form or a filter bar.
+
+With [`searchable={false}`](../select-or-combobox/) there is nothing to type into, so `searchIn` is ignored and the trigger stays a button.
+
+The input takes the `id` and the naming props (`aria-label`, `aria-labelledby`, `aria-describedby` and the like). Because it is a real `<input>`, a plain `<label for>` names it, as in the demo.
+
+## One value
+
+In single mode the input shows the picked label while the list is closed.
+
+- Focusing the input selects the label, so typing replaces it with the search.
+- Leaving without a pick, with <kbd>Esc</kbd>, <kbd>Tab</kbd> or a click elsewhere, puts the label back.
+- The [`placeholder`](../../api/#prop-placeholder) shows only while nothing is picked.
+- The clear button is hidden while you type a search.
+
+## Several values
+
+In [multiple mode](../multiple/) the tags sit before the input, on the same line, and wrap when they fill it. As in popup mode, tags beyond [`maxTags`](../../api/#prop-maxTags) (2 by default) collapse into `+N`. A pick clears the search and keeps the list open, so you can type the next one. <kbd>Backspace</kbd> in the empty input removes the last tag.
+
+## The field
+
+The trigger becomes a field around the input. It is not a tab stop: a press anywhere on it moves focus to the input.
+
+- The clear button stays in the tab order. It returns focus to the input.
+- The chevron is the [`Toggle`](../../api/#slot-Toggle) slot: a button outside the tab order that opens and closes the list without taking focus. The [`toggle`](../../api/#label-toggle) label names it ("Show options").
+- The input is the [`TriggerInput`](../../api/#slot-TriggerInput) slot, with its own `slotProps.triggerInput`.
+- The trigger carries `data-search-in="trigger"` for styling. The `Search` and `Value` parts do not render in this mode.
+
+## Keyboard
+
+The input follows the WAI-ARIA editable combobox. It owns the caret, so <kbd>Space</kbd>, <kbd>Home</kbd> and <kbd>End</kbd> stay in the text.
+
+<KeyboardTable rows={[
+  { keys: ["A–Z"], action: "Type into the search. The list opens and narrows." },
+  { keys: ["↓", "↑"], action: "Open the list on the first or the last option; with the list open, move the highlight." },
+  { keys: ["Alt+↓"], action: "Open the list without moving the highlight." },
+  { keys: ["Alt+↑"], action: "Close the list." },
+  { keys: ["PgDn", "PgUp"], action: "With the list open: move the highlight ten options." },
+  { keys: ["Home", "End"], action: "Move the caret to the start or the end of the text." },
+  { keys: ["Enter"], action: "Pick the highlighted option. With nothing highlighted and a create row offered, create." },
+  { keys: ["Esc"], action: "Close the list and clear the search. In single mode the picked label comes back. With the list closed, clear the search." },
+  { keys: ["Tab"], action: "Close the list, and move focus on as usual." },
+  { keys: ["Backspace"], action: "In multiple mode, with the input empty, remove the last tag." },
+]} />
+
+While an input method is composing, as when typing Japanese or Chinese, <kbd>Enter</kbd> confirms the composition and picks nothing. The popup's search box behaves the same way.
+
+## Controlling the search
+
+[`searchQuery`](../../api/#prop-searchQuery) with [`onSearchChange`](../../api/#prop-onSearchChange) works as in popup mode, with one difference: while `searchQuery` is not empty, the parent owns what the input shows, open or closed. The picked label comes back only once you set it to `""`. A close asks for that by calling `onSearchChange("")`, so store what it passes.

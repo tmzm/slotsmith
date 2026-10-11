@@ -35,6 +35,7 @@ export const COMPONENTS: ComponentMeta[] = [
     summary: "summary.autocomplete",
     guides: [
       { slug: "select-or-combobox", title: "guide.autocomplete.selectOrCombobox" },
+      { slug: "search-in-trigger", title: "guide.autocomplete.searchInTrigger" },
       { slug: "multiple", title: "guide.autocomplete.multiple" },
       { slug: "remote-options", title: "guide.autocomplete.remoteOptions" },
       { slug: "groups", title: "guide.autocomplete.groups" },
