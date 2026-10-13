@@ -45,7 +45,7 @@ back to look up one prop.
 
 ## Author
 
-Tareq Al-Mozayek — full-stack developer, frontend-focused, Damascus. The
+Tareq Al-Mozayek — Full-Stack Engineer, frontend-focused, Damascus. The
 About page links the ways to reach him. More components are planned under the
 same idea; the Roadmap page lists what is planned.
 

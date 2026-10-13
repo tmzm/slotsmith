@@ -337,7 +337,7 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ## Author
 
-Built by **[Tareq Al-Mozayek](https://tareqmozayek.com)** — full-stack developer, frontend-focused, Damascus.
+Built by **[Tareq Al-Mozayek](https://tareqmozayek.com)** — Full-Stack Engineer, frontend-focused, Damascus.
 [Portfolio](https://tareqmozayek.com) · [LinkedIn](https://www.linkedin.com/in/tareq-al-mozayek-3ab2603a9/) · [Email](mailto:tareqmozayek@gmail.com)
 
 If it saves you a day of work, a ⭐ on [the repo](https://github.com/tmzm/slotsmith) helps others find it.
