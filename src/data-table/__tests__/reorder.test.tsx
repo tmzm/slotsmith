@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import axe from "axe-core";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DataTable, type DataTableProps } from "../DataTable";
+import { DataTable, resetProviderWarnings, type DataTableProps } from "../DataTable";
 import type { DataTableColumnDef } from "../core/features";
 import type { RowOrderChange } from "../core/reorder";
 import { bodyRows, columns, renderTable, users, type User } from "./builders";
@@ -296,5 +296,44 @@ describe("row reordering, rendered", () => {
     key(handle, " ");
     key(handle, "ArrowDown");
     expect(await violations(container)).toEqual([]);
+  });
+});
+
+describe("row reordering with a Row slot defined during render", () => {
+  /** A table whose Row slot is a new component on every render, so every row is re-created each time. */
+  function InlineRowTable({ onMove }: { onMove: (change: RowOrderChange<User>) => void }) {
+    const [rows, setRows] = useState(() => users(3));
+    return (
+      <DataTable<User>
+        data={rows}
+        columns={columns}
+        components={{ Row: (props) => <tr {...props} /> }}
+        enableRowReorder
+        enablePagination={false}
+        onRowOrderChange={(change) => {
+          onMove(change);
+          setRows(change.data);
+        }}
+      />
+    );
+  }
+
+  it("keeps a keyboard drag going while the rows are re-created, and warns once while building", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    resetProviderWarnings();
+    const onMove = vi.fn();
+    const { rerender } = render(<InlineRowTable onMove={onMove} />);
+    // The parent re-renders, as an app does: each time the Row slot is a new component.
+    for (let n = 0; n < 3; n++) rerender(<InlineRowTable onMove={onMove} />);
+
+    act(() => handles()[0]!.focus());
+    fireEvent.keyDown(handles()[0]!, { key: " " });
+    expect(handles()[0]).toHaveFocus();
+    fireEvent.keyDown(document.activeElement!, { key: "ArrowDown" });
+    fireEvent.keyDown(document.activeElement!, { key: " " });
+
+    expect(onMove).toHaveBeenCalledTimes(1);
+    expect(names()).toEqual(["User 02", "User 01", "User 03"]);
+    expect(warn.mock.calls.filter(([message]) => String(message).includes("Row slot"))).toHaveLength(1);
   });
 });

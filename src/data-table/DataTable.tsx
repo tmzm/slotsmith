@@ -1,5 +1,6 @@
 import type { RowData } from "@tanstack/react-table";
-import { useCallback, useContext, useMemo, useRef, type HTMLAttributes, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, type HTMLAttributes, type ReactNode } from "react";
+import { createDevWarnings } from "../shared/dev";
 import { useShallowStable } from "../shared/useShallowStable";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
@@ -53,6 +54,37 @@ export interface DataTableProviderProps<T extends RowData> extends UseDataTableO
   children?: ReactNode;
 }
 
+const warnings = createDevWarnings();
+
+/** Forgets which provider warnings were logged. For tests. */
+export function resetProviderWarnings(): void {
+  warnings.reset();
+}
+
+/**
+ * useStableRowWarning
+ *
+ * Says once, while building, that the `Row` slot is a new component on most
+ * renders: React then re-creates every row each time. Dragging copes, but it
+ * is slow and resets any state inside the rows.
+ *
+ * @param row - The resolved `Row` slot.
+ */
+function useStableRowWarning(row: DataTableComponents["Row"]): void {
+  const last = useRef(row);
+  const changes = useRef(0);
+  useEffect(() => {
+    if (last.current !== row) changes.current += 1;
+    last.current = row;
+    if (changes.current >= 3) {
+      warnings.warn(
+        "row-slot",
+        "slotsmith: the data table's Row slot is a new component on every render, so React re-creates every row each time. Define it outside the component that renders the table.",
+      );
+    }
+  });
+}
+
 /**
  * DataTable.Provider
  *
@@ -93,6 +125,7 @@ export function DataTableProvider<T extends RowData>({
   const model = useDataTable(options, { labels: resolvedLabels, virtual });
   /** The fallbacks, then the provider's slots, then the caller's own. */
   const parts = useSlots("dataTable", fallbackComponents, useShallowStable(components));
+  useStableRowWarning(parts.Row);
   const stableSlotProps = useShallowStable(slotProps);
   const resolvedSlotProps = useMemo((): DataTableSlotProps<T> => stableSlotProps ?? {}, [stableSlotProps]);
 

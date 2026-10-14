@@ -295,7 +295,7 @@ describe("useRowReorder, pointer", () => {
     });
   });
 
-  it("ends the drag when its handle is re-created, and a new drag can start", () => {
+  it("keeps a pointer drag going when its rows are re-created, and drops it", () => {
     const model: { current: RowReorderModel | null } = { current: null };
     const onRowOrderChange = vi.fn();
     const { container, rerender } = render(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} />);
@@ -303,20 +303,30 @@ describe("useRowReorder, pointer", () => {
     pointerDrag(handleOf("a"), 20, 110);
 
     rerender(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} keySuffix="-new" />);
+    expect(model.current!.draggingId).toBe("a");
+    expect(container.querySelector('[data-row-id="a"]')).toHaveAttribute("data-dragging");
     fireEvent.pointerUp(window, { pointerId: 1, clientY: 110 });
     settleTimer();
 
-    expect(onRowOrderChange).not.toHaveBeenCalled();
-    expect(model.current).toMatchObject({ draggingId: null, target: null });
-    for (const row of Array.from(container.querySelectorAll<HTMLElement>("[data-row-id]"))) {
-      expect(row).not.toHaveAttribute("data-dragging");
-      expect(row.style.transform).toBe("");
-    }
-
-    pointerDrag(handleOf("a"), 20, 110);
-    expect(model.current!.draggingId).toBe("a");
-    fireEvent.pointerUp(handleOf("a"), { pointerId: 1, clientY: 110 });
     expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    expect(model.current).toMatchObject({ draggingId: null, target: null });
+  });
+
+  it("keeps a keyboard drag going when its rows are re-created, with focus on the new handle", () => {
+    const model: { current: RowReorderModel | null } = { current: null };
+    const onRowOrderChange = vi.fn();
+    const { container, rerender } = render(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} />);
+    const handleOf = (id: string) => container.querySelector<HTMLElement>(`[data-row-id="${id}"] button`)!;
+    act(() => handleOf("a").focus());
+    fireEvent.keyDown(handleOf("a"), { key: " " });
+
+    rerender(<Harness data={items("abcd")} model={model} onRowOrderChange={onRowOrderChange} keySuffix="-new" />);
+    expect(handleOf("a")).toHaveFocus();
+    fireEvent.keyDown(handleOf("a"), { key: "ArrowDown" });
+    fireEvent.keyDown(handleOf("a"), { key: " " });
+
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    expect(onRowOrderChange.mock.calls[0]![0]).toMatchObject({ rowId: "a", targetId: "b", position: "after" });
   });
 
   it("follows a pointer released away from the handle", () => {

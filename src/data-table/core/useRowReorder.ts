@@ -203,6 +203,19 @@ interface Session {
   detach: () => void;
 }
 
+/**
+ * Handle in
+ *
+ * A row's drag handle: the element whose `aria-describedby` names the
+ * table's instructions. Found this way, not by ref, because a function
+ * component slot does not receive `ref` on React 18.
+ */
+function handleIn(row: Element, instructionsId: string): HTMLElement | undefined {
+  return Array.from(row.querySelectorAll<HTMLElement>("[aria-describedby]")).find((element) =>
+    element.getAttribute("aria-describedby")!.split(/\s+/).includes(instructionsId),
+  );
+}
+
 /** A settle waiting for React to render the drop. */
 interface PendingSettle {
   parent: HTMLElement;
@@ -384,8 +397,8 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
   const [state, dispatch] = useReducer(reducer, initialState);
   const instructionsId = useId();
 
-  const latest = useRef({ options });
-  latest.current = { options };
+  const latest = useRef({ options, instructionsId });
+  latest.current = { options, instructionsId };
   const session = useRef<Session | null>(null);
   const pendingSettle = useRef<PendingSettle | null>(null);
   const pendingFocus = useRef<string | null>(null);
@@ -636,6 +649,38 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       if (s?.mode === "keyboard" && s.id === rowId) cancel();
     }
 
+    /**
+     * Relocate
+     *
+     * Keeps a drag going when React re-creates its rows (a `Row` slot defined
+     * during render is a new component each time): the session finds its row
+     * again by `data-row-id`, takes the new handle and the new row group,
+     * moves keyboard focus to the new handle, and redraws the rows where
+     * they were, with no transition.
+     *
+     * @returns Whether the drag can go on: its row is still rendered.
+     */
+    function relocate(s: Session): boolean {
+      if (s.handle.isConnected && s.parent.isConnected) return true;
+      const scope: ParentNode = s.parent.isConnected ? s.parent : document;
+      const row = Array.from(scope.querySelectorAll<HTMLElement>("[data-row-id]")).find(
+        (candidate) => candidate.getAttribute("data-row-id") === s.id,
+      );
+      const handle = row && handleIn(row, latest.current.instructionsId);
+      if (!row?.parentElement || !handle) return false;
+      // A removed element takes focus with it: focus is then on the body.
+      const lostFocus = !document.activeElement || document.activeElement === document.body;
+      s.handle = handle;
+      s.parent = row.parentElement;
+      if (s.mode === "keyboard" && lostFocus) handle.focus({ preventScroll: true });
+      if (!s.reduced) {
+        if (s.mode === "pointer") drawPointer(s);
+        else applyOffsets(s.parent, targetOffsets(s, s.target), s.moving, false);
+        for (const moved of rowsIn(s.parent)) moved.style.transition = "none";
+      }
+      return true;
+    }
+
     /** Ends a drag whose row or table went away, without animating. */
     function abandon(): void {
       const s = session.current;
@@ -644,17 +689,17 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       dispatch({ type: "end", announcement: labelsNow().reorderCancelled });
     }
 
-    return { onPointerDown, onKeyDown, onBlur, abandon, stop };
+    return { onPointerDown, onKeyDown, onBlur, abandon, relocate, stop };
   }, []);
 
   /**
    * A drag is cancelled when the rows change under it (they were measured at
-   * the start), when its handle was unmounted (its events would never
-   * arrive), or when the table turned reordering off.
+   * the start), when its row is no longer rendered, or when the table turned
+   * reordering off. Rows that were only re-created are found again.
    */
   useEffect(() => {
     const s = session.current;
-    if (s && (!enabled || !s.handle.isConnected || !sameIds(s.shown, visibleIds))) engine.abandon();
+    if (s && (!enabled || !sameIds(s.shown, visibleIds) || !engine.relocate(s))) engine.abandon();
   });
 
   /** Unmounting mid-drag removes every listener and inline style. */
@@ -684,9 +729,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     if (id === null || (document.activeElement && document.activeElement !== document.body)) return;
     for (const row of Array.from(document.querySelectorAll("[data-row-id]"))) {
       if (row.getAttribute("data-row-id") !== id) continue;
-      const handle = Array.from(row.querySelectorAll<HTMLElement>("[aria-describedby]")).find((element) =>
-        element.getAttribute("aria-describedby")!.split(/\s+/).includes(instructionsId),
-      );
+      const handle = handleIn(row, instructionsId);
       if (handle) {
         handle.focus();
         return;

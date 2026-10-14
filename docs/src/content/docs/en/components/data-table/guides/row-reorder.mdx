@@ -80,13 +80,11 @@ The handle is the [`DragHandle`](../../api/#slot-DragHandle) slot. A replacement
 
 A drop while a column is sorted still reorders `data`, but the view stays sorted, so the row slides back to where the sort puts it. Turn sorting off on a table that is ordered by hand, as both demos do with `enableSorting: false`. With pagination, a row moves within its page.
 
-A custom [`Row`](../../api/#slot-Row) slot must keep a stable identity: define the component once, outside the component that renders the table. A row component created during render is a new type each time, so React re-creates every row and each drag is cancelled.
+A drag survives its rows being re-created: when a custom [`Row`](../../api/#slot-Row) slot is defined during render, React makes every row anew on each render, and the drag finds its row and handle again (a keyboard drag keeps focus on the handle). It is still slow, and it resets any state inside the rows, so define the slot once, outside the component that renders the table; a development warning says so.
 
 <Note kind="limitation">
 - `VirtualDataTable` ignores row reorder. See [virtual rows](../virtual-rows/).
 - A drop while the table is sorted reorders `data`, but the view stays sorted.
-- No dragging between tables, no multi-row drag, and no moving a row to another parent.
-- A custom `Row` slot must keep a stable identity.
-</Note>
+- No dragging between tables, no multi-row drag, and no moving a row to another parent.</Note>
 
 To reorder rows in markup of your own, the [headless hook](../headless-hook/) returns the same engine as `reorder`.
