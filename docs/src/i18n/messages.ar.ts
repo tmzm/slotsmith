@@ -44,7 +44,7 @@ export const ar: Record<MessageKey, string> = {
   "search.devOnly": "البحث يحتاج إلى الموقع المبني: خادم التطوير بلا فهرس. شغّل pnpm build ثم اعرض dist.",
   "search.failed": "تعذّر تحميل البحث. أعد تحميل الصفحة وحاول مجددًا.",
   "common.footerLicense": "رخصة ISC",
-  "common.footerAuthor": "من تطوير Tareq Al-Mozayek",
+  "common.footerAuthor": "من تطوير وصيانة طارق المزيك (Tareq Al-Mozayek)",
 
   "switch.theme": "سمة الألوان",
   "switch.light": "فاتح",

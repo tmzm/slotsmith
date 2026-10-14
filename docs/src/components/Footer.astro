@@ -1,5 +1,5 @@
 ---
-/** Footer: wordmark, license, author, and the project links. */
+/** Footer: wordmark, the project links, license, and the author credit, which links to the About page. */
 import Wordmark from "./Wordmark.astro";
 import { localePath, t, type Lang } from "@/i18n";
 import { SITE } from "../../site.config.ts";
@@ -20,6 +20,6 @@ const { lang } = Astro.props;
       <li><a href={`https://www.npmjs.com/package/${SITE.npm}`}>{t(lang, "common.npm")}</a></li>
       <li>{t(lang, "common.footerLicense")}</li>
     </ul>
-    <span>{t(lang, "common.footerAuthor")}</span>
+    <a href={localePath(lang, "/about/")}>{t(lang, "common.footerAuthor")}</a>
   </div>
 </footer>

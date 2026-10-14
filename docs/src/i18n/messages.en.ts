@@ -42,7 +42,7 @@ export const en = {
   "search.devOnly": "Search needs the built site: the dev server has no index. Run pnpm build, then serve dist.",
   "search.failed": "Search could not load. Reload the page and try again.",
   "common.footerLicense": "ISC license",
-  "common.footerAuthor": "By Tareq Al-Mozayek",
+  "common.footerAuthor": "Created and maintained by Tareq Al-Mozayek (طارق المزيك)",
 
   "switch.theme": "Color theme",
   "switch.light": "Light",
