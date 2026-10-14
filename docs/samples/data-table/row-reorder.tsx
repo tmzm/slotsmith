@@ -12,8 +12,8 @@ const plan: Step[] = [
   { id: "s6", title: "Announce the release", owner: "Omar Haddad", estimate: "30m" },
 ];
 
-// Sorting is off: a sorted view keeps its order after a drop, so a table
-// ordered by hand should not also sort.
+// Sorting is off: this table is ordered by hand. (A drop while sorted would
+// keep the order on screen and clear the sort.)
 const columns: DataTableColumnDef<Step>[] = [
   { accessorKey: "title", header: "Step", enableSorting: false },
   { accessorKey: "owner", header: "Owner", enableSorting: false },

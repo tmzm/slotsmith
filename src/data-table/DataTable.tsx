@@ -251,7 +251,7 @@ const PROVIDER_KEYS = [
   "pageSizeOptions", "enablePagination",
   "enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange",
   "getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows",
-  "enableRowReorder", "onRowOrderChange", "reorderHandleColumn",
+  "enableRowReorder", "onRowOrderChange", "reorderHandleColumn", "reorderWhileSorted",
   "loading", "error", "onRetry", "tableOptions",
   "components", "labels", "locale", "slotProps", "onRowClick",
 ] as const;

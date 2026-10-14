@@ -689,10 +689,10 @@ describe("useRowReorder, in useDataTable", () => {
   const handleOf = (container: HTMLElement, id: string) =>
     container.querySelector<HTMLElement>(`[data-row-id="${id}"] button`)!;
 
-  it("moves within data, not within a sorted view", () => {
+  it("moves within the sorted order while sorted, so the stored order is the one on screen", () => {
     const onRowOrderChange = vi.fn();
     const { container } = render(<Table data={items("abcd")} sort onRowOrderChange={onRowOrderChange} />);
-    // Sorted descending and paged by three: the view is d, c, b.
+    // Sorted descending and paged by three: the view is d, c, b, of d, c, b, a.
     const handle = handleOf(container, "d");
     key(handle, " ");
     key(handle, "ArrowDown");
@@ -701,7 +701,7 @@ describe("useRowReorder, in useDataTable", () => {
 
     const change = onRowOrderChange.mock.calls[0]![0] as RowOrderChange<Item>;
     expect(change).toMatchObject({ targetId: "b", position: "after" });
-    expect(ids(change.data)).toBe("abdc");
+    expect(ids(change.data)).toBe("cbda");
   });
 
   it("uses indexes in data, not in the page", () => {
@@ -968,7 +968,7 @@ describe("useRowReorder, in a tree table", () => {
     expect(model.current!.draggingId).toBeNull();
   });
 
-  it("moves within the parent's children, not within a sorted view", () => {
+  it("moves within the parent's sorted children while sorted", () => {
     // Sorted descending: a's children show as a3, a2, a1.
     const { handle, change, onRowOrderChange } = setupTree({ sort: true });
     key(handle("a3"), " ");
@@ -978,7 +978,7 @@ describe("useRowReorder, in a tree table", () => {
 
     expect(onRowOrderChange).toHaveBeenCalledTimes(1);
     expect(change()).toMatchObject({ targetId: "a1", position: "after", parentId: "a" });
-    expect(names(change().siblings)).toBe("a1,a3,a2");
+    expect(names(change().siblings)).toBe("a2,a1,a3");
   });
 
   it("uses indexes among the parent's children and in data, not in the page", () => {

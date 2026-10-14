@@ -246,18 +246,33 @@ export function blockRowOffsets(
 /**
  * Can reorder
  *
- * The one place that decides whether rows can be dragged. Sorting is
- * deliberately not part of it: a drop reorders the data even while the view is
- * sorted by a column. A tree is not part of it either: its rows move among
- * their siblings.
+ * The one place that decides whether rows can be dragged. A tree is not part
+ * of it: its rows move among their siblings. While a column sort is active,
+ * `reorderWhileSorted` decides: `"block"` turns dragging off, and
+ * `"clearSort"` (the default) leaves it on and clears the sort on a drop.
  *
  * @param state - What the table is doing.
  * @returns Whether dragging is on.
  */
-export function canReorder(state: { enabled: boolean; virtual: boolean; rowCount: number }): boolean {
-  // TODO(reorder-sorting): decide what a drop means while a column sort is active (block it, or clear the sort).
+export function canReorder(state: {
+  enabled: boolean;
+  virtual: boolean;
+  rowCount: number;
+  sorted?: boolean;
+  whileSorted?: ReorderWhileSorted;
+}): boolean {
+  if (state.sorted && state.whileSorted === "block") return false;
   return state.enabled && !state.virtual && state.rowCount > 1;
 }
+
+/**
+ * Reorder while sorted
+ *
+ * What a drop means while a column sort is active. `"clearSort"`: the drop
+ * reorders the data and the sort is cleared, so the new order shows.
+ * `"block"`: the handles are disabled until the sort is cleared.
+ */
+export type ReorderWhileSorted = "clearSort" | "block";
 
 /**
  * Scroll speed

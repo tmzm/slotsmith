@@ -337,3 +337,44 @@ describe("row reordering with a Row slot defined during render", () => {
     expect(warn.mock.calls.filter(([message]) => String(message).includes("Row slot"))).toHaveLength(1);
   });
 });
+
+describe("row reordering while a column is sorted", () => {
+  /** A reorderable table that stores each new order, sorted by name, descending. */
+  function SortedTable(props: Partial<DataTableProps<User>>) {
+    const [rows, setRows] = useState(() => users(3));
+    return (
+      <DataTable<User>
+        data={rows}
+        columns={columns}
+        enableRowReorder
+        enablePagination={false}
+        defaultSorting={[{ id: "name", desc: true }]}
+        onRowOrderChange={(change) => setRows(change.data)}
+        {...props}
+      />
+    );
+  }
+
+  it("clears the sort on a drop by default, so the new order shows", () => {
+    const onSortingChange = vi.fn();
+    render(<SortedTable onSortingChange={onSortingChange} />);
+    expect(names()).toEqual(["User 03", "User 02", "User 01"]);
+
+    act(() => handles()[0]!.focus());
+    fireEvent.keyDown(handles()[0]!, { key: " " });
+    fireEvent.keyDown(handles()[0]!, { key: "ArrowDown" });
+    fireEvent.keyDown(handles()[0]!, { key: " " });
+
+    expect(onSortingChange).toHaveBeenLastCalledWith([]);
+    // The order on screen, with User 03 moved below User 02, is what is stored and shown.
+    expect(names()).toEqual(["User 02", "User 03", "User 01"]);
+    expect(headerCells().find((cell) => cell.textContent === "Name")).toHaveAttribute("aria-sort", "none");
+  });
+
+  it("disables the handles while sorted with reorderWhileSorted=\"block\"", () => {
+    const { rerender } = render(<SortedTable reorderWhileSorted="block" />);
+    expect(handles().every((handle) => handle.hasAttribute("disabled"))).toBe(true);
+    rerender(<SortedTable reorderWhileSorted="block" sorting={[]} />);
+    expect(handles().some((handle) => handle.hasAttribute("disabled"))).toBe(false);
+  });
+});

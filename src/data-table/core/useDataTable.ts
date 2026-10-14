@@ -18,7 +18,7 @@ import {
   type DataTableInstance,
   type DataTableRow,
 } from "./features";
-import { canReorder, type RowOrderChange } from "./reorder";
+import { canReorder, type ReorderWhileSorted, type RowOrderChange } from "./reorder";
 import type { DataTableLabels } from "../slots/types";
 import { defaultReorderLabels, type ReorderLabels } from "./reorderLabels";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
@@ -149,6 +149,13 @@ export interface UseDataTableOptions<T extends RowData> {
   onRowOrderChange?: (change: RowOrderChange<T>) => void;
   /** Adds a leading column with each row's drag handle. `false` lets you place `DataTable.DragHandle` yourself. Defaults to `true`. */
   reorderHandleColumn?: boolean;
+  /**
+   * What a drop means while a column sort is active. `"clearSort"`: the
+   * drop reorders the data and the sort is cleared (through
+   * `onSortingChange`), so the new order shows. `"block"`: the handles are
+   * disabled until the sort is cleared. Defaults to `"clearSort"`.
+   */
+  reorderWhileSorted?: ReorderWhileSorted;
   /**
    * Text for a table rendered with this hook alone. The hook reads the reorder
    * keys (the handle's name, its instructions and the announcements); any key
@@ -461,11 +468,19 @@ export function useDataTable<T extends RowData>(
   const enableRowReorder = options.enableRowReorder ?? false;
   const reorderable = canReorder({ enabled: enableRowReorder, virtual, rowCount: Infinity });
   const coreRowModel = table.getCoreRowModel();
+  const whileSorted = options.reorderWhileSorted ?? "clearSort";
+  const sorted = sorting.length > 0;
+  /**
+   * The order a drop moves rows in: the data's own order, or, while a sort
+   * is shown and a drop clears it, the sorted order, so that what is stored
+   * is the order that was on screen, with the move applied.
+   */
+  const orderModel = sorted && whileSorted === "clearSort" ? table.getSortedRowModel() : coreRowModel;
 
-  /** A tree's rows by id, from the data's own order (not the sorted or paged view), for sibling moves. */
+  /** A tree's rows by id, in the order a drop moves them (never the paged view), for sibling moves. */
   const reorderTree = useMemo((): ReorderTree<T> | undefined => {
     if (!hasSubRows) return undefined;
-    const byId = new Map(coreRowModel.flatRows.map((row) => [row.id, row]));
+    const byId = new Map(orderModel.flatRows.map((row) => [row.id, row]));
     return {
       levelOf: (id) => {
         const row = byId.get(id);
@@ -476,7 +491,7 @@ export function useDataTable<T extends RowData>(
         return parent && { parent: parent.original, rows: parent.subRows };
       },
     };
-  }, [hasSubRows, coreRowModel]);
+  }, [hasSubRows, orderModel]);
 
   const headlessLabels = useMemo(
     () => (internals.labels ? null : withEngineDefaults(options.labels)),
@@ -485,12 +500,16 @@ export function useDataTable<T extends RowData>(
   const engineLabels = internals.labels ?? headlessLabels!;
 
   const reorder = useRowReorder<T>({
-    enabled: canReorder({ enabled: enableRowReorder, virtual, rowCount: visibleRowCount }),
+    enabled: canReorder({ enabled: enableRowReorder, virtual, rowCount: visibleRowCount, sorted, whileSorted }),
     visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
-    rows: coreRowModel.rows,
+    rows: orderModel.rows,
     tree: reorderTree,
     labels: engineLabels,
-    onRowOrderChange: options.onRowOrderChange,
+    onRowOrderChange: (change) => {
+      options.onRowOrderChange?.(change);
+      // The drop reordered the data; clearing the sort shows that order.
+      if (sorted && whileSorted === "clearSort") setSorting([]);
+    },
   });
 
   const spreadsheetOption = options.spreadsheet ?? false;

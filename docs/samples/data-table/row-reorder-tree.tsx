@@ -26,7 +26,7 @@ const project: Task[] = [
   { id: "t3", title: "Launch", owner: "Hana Kim" },
 ];
 
-// Sorting is off: a sorted view keeps its order after a drop.
+// Sorting is off: this table is ordered by hand.
 const columns: DataTableColumnDef<Task>[] = [
   { accessorKey: "title", header: "Task", enableSorting: false },
   { accessorKey: "owner", header: "Owner", enableSorting: false },

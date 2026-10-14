@@ -35,7 +35,7 @@ export { useDataTable, defaultGetRowId, DEFAULT_PAGE_SIZE_OPTIONS } from "./core
 export type { UseDataTableOptions, DataTableModel, DataTableStatus } from "./core/useDataTable";
 export type { RowReorderAttributes, RowReorderModel } from "./core/useRowReorder";
 export { moveItem } from "./core/reorder";
-export type { DropPosition, RowOrderChange } from "./core/reorder";
+export type { DropPosition, ReorderWhileSorted, RowOrderChange } from "./core/reorder";
 
 export type {
   DataTableColumnEdit,

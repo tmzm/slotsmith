@@ -221,7 +221,7 @@ export const en = {
   "roadmap.serverLocales": "Locales that cross the server and client boundary",
   "roadmap.serverLocalesDetail": "A locale pack holds functions, so a server component cannot pass one to a client component. A serialisable form of a locale is planned.",
   "roadmap.reorderSorting": "Row reorder while a column is sorted",
-  "roadmap.reorderSortingDetail": "A drop reorders the data, but the view stays sorted and the row slides back. What such a drop should do is still to be decided: block it, or clear the sort.",
+  "roadmap.reorderSortingDetail": "A drop while a column is sorted keeps the order on screen, with the row moved, and clears the sort; `reorderWhileSorted=\"block\"` disables dragging while sorted instead.",
   "roadmap.theming": "Shared tokens and themes",
   "roadmap.themingDetail": "One set of `--ss-*` tokens restyles every component, and six themes ship with a light and a dark palette each.",
   "roadmap.languages": "Locale packs and right-to-left",

@@ -39,13 +39,6 @@ export const ROADMAP: RoadmapItem[] = [
     todo: "server-locales",
     link: "/languages/#nextjs",
   },
-  {
-    title: "roadmap.reorderSorting",
-    detail: "roadmap.reorderSortingDetail",
-    status: "planned",
-    todo: "reorder-sorting",
-    link: "/components/data-table/guides/row-reorder/#sorting-and-custom-rows",
-  },
 
   // Shipped: the four components (the page lists each one's guides under it), then what they share.
   { title: "nav.dataTable", detail: "summary.dataTable", status: "shipped", link: "/components/data-table/" },
@@ -54,6 +47,7 @@ export const ROADMAP: RoadmapItem[] = [
   { title: "nav.fileUploader", detail: "summary.fileUploader", status: "shipped", link: "/components/file-uploader/" },
   { title: "roadmap.spreadsheetMode", detail: "roadmap.spreadsheetModeDetail", status: "shipped", link: "/components/data-table/guides/spreadsheet/" },
   { title: "roadmap.renderPerformance", detail: "roadmap.renderPerformanceDetail", status: "shipped", link: "/components/data-table/guides/spreadsheet/#storing-the-rows" },
+  { title: "roadmap.reorderSorting", detail: "roadmap.reorderSortingDetail", status: "shipped", link: "/components/data-table/guides/row-reorder/#sorting-and-custom-rows" },
   { title: "roadmap.theming", detail: "roadmap.themingDetail", status: "shipped", link: "/theming/" },
   { title: "roadmap.languages", detail: "roadmap.languagesDetail", status: "shipped", link: "/languages/" },
   { title: "roadmap.aiTools", detail: "roadmap.aiToolsDetail", status: "shipped", link: "/ai-tools/" },
