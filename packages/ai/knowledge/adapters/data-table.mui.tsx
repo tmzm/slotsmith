@@ -178,7 +178,7 @@ const MuiCell = (props: CellSlotProps) => <TableCell sx={cellSx} {...props} />;
  * MUI cell editor
  *
  * Text and numbers are edited in an `InputBase`, borderless so the cell
- * itself is the field, with the validation message in an error chip below
+ * itself is the field, with the validation message in an error chip above
  * the cell. Selects and dates keep the built-in editor, the slotsmith
  * `Autocomplete` and `DatePicker`, which wear the MUI adapters given to
  * `SlotsmithProvider`.
@@ -211,10 +211,10 @@ function MuiCellEditor(props: CellEditorSlotProps) {
           variant="caption"
           sx={{
             position: "absolute",
-            top: "100%",
+            bottom: "100%",
             insetInlineStart: 0,
             zIndex: 3,
-            mt: 0.25,
+            mb: 0.25,
             px: 1,
             borderRadius: 1,
             whiteSpace: "nowrap",
@@ -232,7 +232,7 @@ function MuiCellEditor(props: CellEditorSlotProps) {
 /**
  * MUI fill handle
  *
- * A small primary square on the selection's corner, ringed in the paper colour.
+ * A small primary square inside the selection's corner, ringed in the paper colour.
  */
 const MuiFillHandle = (props: FillHandleSlotProps) => (
   <Box
@@ -240,8 +240,8 @@ const MuiFillHandle = (props: FillHandleSlotProps) => (
     sx={{
       position: "absolute",
       zIndex: 2,
-      insetBlockEnd: -4,
-      insetInlineEnd: -4,
+      insetBlockEnd: 0,
+      insetInlineEnd: 0,
       width: 7,
       height: 7,
       boxSizing: "border-box",

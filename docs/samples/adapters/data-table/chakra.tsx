@@ -152,7 +152,7 @@ const cellCss = {
  *
  * Text and numbers are edited in an `Input` with no border of its own, so
  * the cell itself is the field, with the validation message on an error chip
- * below the cell. Selects and dates keep the built-in editor, the slotsmith
+ * above the cell. Selects and dates keep the built-in editor, the slotsmith
  * `Autocomplete` and `DatePicker`, which wear the Chakra adapters given to
  * `SlotsmithProvider`.
  */
@@ -170,7 +170,8 @@ function ChakraCellEditor(props: CellEditorSlotProps) {
         minH="0"
         px="0"
         fontSize="inherit"
-        _focusVisible={{ boxShadow: "none" }}
+        outline="none"
+        _focusVisible={{ boxShadow: "none", outline: "none" }}
         value={props.value}
         onChange={(event) => onValueChange(event.target.value)}
         inputMode={props.kind === "number" ? "decimal" : undefined}
@@ -186,10 +187,10 @@ function ChakraCellEditor(props: CellEditorSlotProps) {
           role="alert"
           textStyle="xs"
           position="absolute"
-          top="100%"
+          bottom="100%"
           insetInlineStart="0"
           zIndex="3"
-          mt="0.5"
+          mb="0.5"
           px="2"
           borderRadius="sm"
           whiteSpace="nowrap"
@@ -206,15 +207,15 @@ function ChakraCellEditor(props: CellEditorSlotProps) {
 /**
  * Chakra fill handle
  *
- * A small square in the palette's solid colour on the selection's corner.
+ * A small square in the palette's solid colour inside the selection's corner, so it never overflows the scroll area.
  */
 const ChakraFillHandle = (props: FillHandleSlotProps) => (
   <Box
     as="span"
     position="absolute"
     zIndex="2"
-    insetBlockEnd="-4px"
-    insetInlineEnd="-4px"
+    insetBlockEnd="0"
+    insetInlineEnd="0"
     w="7px"
     h="7px"
     boxSizing="border-box"

@@ -343,10 +343,10 @@ const DragHandle = ({ className, ...props }: DragHandleSlotProps) => (
  *
  * Inline as well as in the stylesheet, because a design-system skin hands
  * selects and dates to this editor in an app that may not load `styles.css`:
- * the control fills the cell, and the message hangs below it.
+ * the control fills the cell, and the message shows above it, so a last row's never overflows the scroll area.
  */
 const EDITOR_LAYOUT = { display: "flex", alignItems: "center", flex: 1, minWidth: 0 } as const;
-const ERROR_LAYOUT = { position: "absolute", top: "100%", insetInlineStart: 0, zIndex: 3, whiteSpace: "nowrap" } as const;
+const ERROR_LAYOUT = { position: "absolute", bottom: "100%", insetInlineStart: 0, zIndex: 3, whiteSpace: "nowrap" } as const;
 
 /**
  * Cell editor fallback

@@ -76,7 +76,7 @@ const ShadcnCell = ({ className, ...props }: CellSlotProps) => (
  *
  * Text and numbers are edited in an `Input` with its border and ring taken
  * off, so the cell itself is the field, with the validation message on a
- * destructive chip below the cell. Selects and dates keep the built-in
+ * destructive chip above the cell. Selects and dates keep the built-in
  * editor, the slotsmith `Autocomplete` and `DatePicker`, which wear the
  * shadcn adapters given to `SlotsmithProvider`.
  */
@@ -87,7 +87,7 @@ function ShadcnCellEditor(props: CellEditorSlotProps) {
   return (
     <div className="flex min-w-0 flex-1 items-center px-2">
       <Input
-        className="h-auto rounded-none border-0 bg-transparent p-0 text-[length:inherit] shadow-none focus-visible:ring-0 dark:bg-transparent"
+        className="h-auto rounded-none border-0 bg-transparent p-0 text-[length:inherit] shadow-none outline-none focus-visible:ring-0 focus-visible:outline-none dark:bg-transparent"
         value={props.value}
         onChange={(event) => onValueChange(event.target.value)}
         inputMode={props.kind === "number" ? "decimal" : undefined}
@@ -101,7 +101,7 @@ function ShadcnCellEditor(props: CellEditorSlotProps) {
         <span
           id={errorId}
           role="alert"
-          className="absolute start-0 top-full z-30 mt-0.5 rounded-sm bg-destructive px-2 text-xs whitespace-nowrap text-white"
+          className="absolute start-0 bottom-full z-30 mb-0.5 rounded-sm bg-destructive px-2 text-xs whitespace-nowrap text-white"
         >
           {error}
         </span>
@@ -113,12 +113,12 @@ function ShadcnCellEditor(props: CellEditorSlotProps) {
 /**
  * Shadcn fill handle
  *
- * A small square in the primary colour on the selection's corner.
+ * A small square in the primary colour inside the selection's corner, so it never overflows the scroll area.
  */
 const ShadcnFillHandle = ({ className, ...props }: FillHandleSlotProps) => (
   <span
     className={cn(
-      "absolute -end-1 -bottom-1 z-20 size-[7px] cursor-crosshair touch-none border border-background bg-primary",
+      "absolute end-0 bottom-0 z-20 size-[7px] cursor-crosshair touch-none border border-background bg-primary",
       className,
     )}
     {...props}

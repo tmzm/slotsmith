@@ -492,13 +492,18 @@
   border: 0;
 }
 
-/** Spreadsheet mode */
+/**
+ * Spreadsheet mode
+ *
+ * The cell rules are scoped to the built-in table and weigh one class
+ * (`:where`), so a design system's own cell styles always win over them.
+ */
 
-[data-spreadsheet] {
+.sdt :where([data-spreadsheet]) {
   user-select: none;
 }
 
-[data-spreadsheet] [data-column-id] {
+.sdt :where([data-spreadsheet] [data-column-id]) {
   position: relative;
   cursor: cell;
   outline: none;
@@ -510,7 +515,7 @@
   --_sdt-edge-end: 0px;
 }
 
-[data-spreadsheet] [data-column-id][data-selected] {
+.sdt :where([data-spreadsheet] [data-column-id][data-selected]) {
   background: color-mix(in srgb, var(--_sdt-accent) 10%, transparent);
   box-shadow:
     inset 0 var(--_sdt-edge-top) 0 0 var(--_sdt-accent),
@@ -519,13 +524,13 @@
     inset calc(-1 * var(--_sdt-edge-end)) 0 0 0 var(--_sdt-accent);
 }
 
-[data-spreadsheet] [data-column-id][data-range-edge~="top"] { --_sdt-edge-top: 1px; }
-[data-spreadsheet] [data-column-id][data-range-edge~="bottom"] { --_sdt-edge-bottom: 1px; }
-[data-spreadsheet] [data-column-id][data-range-edge~="start"] { --_sdt-edge-start: 1px; }
-[data-spreadsheet] [data-column-id][data-range-edge~="end"] { --_sdt-edge-end: 1px; }
+.sdt :where([data-spreadsheet] [data-column-id][data-range-edge~="top"]) { --_sdt-edge-top: 1px; }
+.sdt :where([data-spreadsheet] [data-column-id][data-range-edge~="bottom"]) { --_sdt-edge-bottom: 1px; }
+.sdt :where([data-spreadsheet] [data-column-id][data-range-edge~="start"]) { --_sdt-edge-start: 1px; }
+.sdt :where([data-spreadsheet] [data-column-id][data-range-edge~="end"]) { --_sdt-edge-end: 1px; }
 
 /* Start and end are logical: in right-to-left the inset shadows swap sides. */
-[data-spreadsheet]:dir(rtl) [data-column-id][data-selected] {
+.sdt :where([data-spreadsheet]:dir(rtl) [data-column-id][data-selected]) {
   box-shadow:
     inset 0 var(--_sdt-edge-top) 0 0 var(--_sdt-accent),
     inset 0 calc(-1 * var(--_sdt-edge-bottom)) 0 0 var(--_sdt-accent),
@@ -534,29 +539,30 @@
 }
 
 /* The active cell: a ring drawn inside it, as in a spreadsheet. */
-[data-spreadsheet] [data-column-id][data-active],
-[data-spreadsheet] [data-column-id][data-editing] {
+.sdt :where([data-spreadsheet] [data-column-id][data-active]),
+.sdt :where([data-spreadsheet] [data-column-id][data-editing]) {
   box-shadow: inset 0 0 0 2px var(--_sdt-accent);
 }
 
-[data-spreadsheet] [data-column-id][data-copied] {
+.sdt :where([data-spreadsheet] [data-column-id][data-copied]) {
   background: color-mix(in srgb, var(--_sdt-accent) 6%, transparent);
 }
 
-[data-spreadsheet] [data-column-id][data-fill-preview] {
+.sdt :where([data-spreadsheet] [data-column-id][data-fill-preview]) {
   background: color-mix(in srgb, var(--_sdt-accent) 6%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--_sdt-accent) 60%, transparent);
 }
 
-[data-spreadsheet] [data-column-id][aria-readonly="true"] {
+.sdt :where([data-spreadsheet] [data-column-id][aria-readonly="true"]) {
   color: var(--_sdt-muted);
 }
 
 .sdt__fill-handle {
   position: absolute;
   z-index: 2;
-  inset-block-end: -4px;
-  inset-inline-end: -4px;
+  /* Inside the cell's corner, so the last row and column never overflow the scroll area. */
+  inset-block-end: 0;
+  inset-inline-end: 0;
   width: 7px;
   height: 7px;
   box-sizing: border-box;
@@ -572,7 +578,7 @@
 }
 
 /* The editor lies over the cell, exactly its size. The cell draws the one ring. */
-[data-spreadsheet] [data-column-id][data-editing] {
+.sdt :where([data-spreadsheet] [data-column-id][data-editing]) {
   background: var(--_sdt-bg);
 }
 
@@ -638,12 +644,13 @@
   vertical-align: middle;
 }
 
+/* Above the cell, so the last row's message never overflows the scroll area. */
 .sdt__editor-error {
   position: absolute;
   z-index: 3;
   inset-inline-start: 0;
-  top: 100%;
-  margin-top: 2px;
+  bottom: 100%;
+  margin-bottom: 2px;
   padding: 2px 8px;
   font-size: 0.85em;
   white-space: nowrap;
