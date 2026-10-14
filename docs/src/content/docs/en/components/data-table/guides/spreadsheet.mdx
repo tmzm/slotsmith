@@ -120,6 +120,20 @@ Every change, whatever made it, is one step of the history: Ctrl+Z undoes it and
 
 Sub-rows of a [tree](../tree-rows/) are edited too when you pass `spreadsheet.setSubRows(row, subRows)`, which writes new children into a copy of a row: the table needs it to write an edited sub-row back into its parent, up to the top level. Without it only top-level rows are editable.
 
+## With a design system
+
+The [ready-made adapters](../../adapters/) draw spreadsheet mode in each library's look: the selection and the active cell in the library's primary colour, a borderless input of the library's own for text and numbers, its fill handle, and its checkbox in checkbox columns. Selects and dates open the slotsmith `Autocomplete` and `DatePicker`, so give their adapters to the same `SlotsmithProvider` and the whole sheet matches. Both tables below are the demo's columns, with nothing changed but the provider.
+
+MUI:
+
+{/* Reserved height: five rows, the header and the panel padding. */}
+<Demo name="data-table/spreadsheet-mui" provider="mui" height="20rem" />
+
+shadcn/ui:
+
+{/* Reserved height: five rows, the header and the panel padding. */}
+<Demo name="data-table/spreadsheet-shadcn" provider="shadcn" height="20rem" />
+
 ## Styling
 
 Every grid cell carries `data-column-id`, and its part in the selection: `data-active` on the active cell, `data-selected` and `data-range-edge` (`top`, `bottom`, `start`, `end`) across a selected range, `data-editing` while it is edited, `data-fill-preview` under a fill drag, `data-copied` after a copy, and `data-editable` when it can be edited. The table carries `data-spreadsheet`. The built-in stylesheet draws them in the accent colour; a design system's adapter styles them itself. The fill handle is the [`FillHandle`](../../api/#slot-FillHandle) slot.

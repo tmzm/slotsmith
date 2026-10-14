@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import SampleIsland from "@/islands/SampleIsland";
 import type { ComponentType } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -9,6 +9,8 @@ import Chakra from "@samples/adapters/data-table/chakra-demo";
 import Mui from "@samples/adapters/data-table/mui-demo";
 import Radix from "@samples/adapters/data-table/radix-demo";
 import Shadcn from "@samples/adapters/data-table/shadcn-demo";
+import SpreadsheetMui from "@samples/data-table/spreadsheet-mui";
+import SpreadsheetShadcn from "@samples/data-table/spreadsheet-shadcn";
 
 /** Each adapter demo and an element only that library renders. */
 const DEMOS: [name: ProviderName, Demo: ComponentType, marker: string][] = [
@@ -108,5 +110,32 @@ describe("MUI provider language", () => {
       </Provider>,
     );
     expect(container.textContent).toContain("1–5 of 12");
+  });
+});
+
+describe("spreadsheet demos with a design system", () => {
+  const SHEETS: [name: ProviderName, Demo: ComponentType, marker: string][] = [
+    ["mui", SpreadsheetMui, ".MuiTableCell-root[data-column-id]"],
+    ["shadcn", SpreadsheetShadcn, '[data-slot="table-cell"][data-column-id]'],
+  ];
+
+  it.each(SHEETS)("%s: renders a grid in its library's cells and opens its editor on a click", async (name, Demo, marker) => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const Provider = PROVIDERS[name];
+    const { container } = render(
+      <Provider theme="dark" dir="ltr">
+        <Demo />
+      </Provider>,
+    );
+    expect(container.querySelector('[role="grid"]')).not.toBeNull();
+    const cell = container.querySelector<HTMLElement>(marker)!;
+    expect(cell).not.toBeNull();
+    // The Active column shows the library's checkbox.
+    expect(container.querySelectorAll('tbody [role="checkbox"], tbody input[type="checkbox"]').length).toBe(5);
+    fireEvent.pointerDown(cell, { button: 0, pointerId: 1 });
+    fireEvent.pointerUp(window, { pointerId: 1 });
+    await waitFor(() => expect(cell.querySelector("input")).not.toBeNull());
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 });
