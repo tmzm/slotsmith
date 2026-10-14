@@ -14,7 +14,7 @@ Drag a row by its handle, or focus a handle and press Space, an arrow key, then 
 
 The order is yours: `onRowOrderChange` receives a `RowOrderChange` and the table shows the new order only once `data` changes. Store it in the same event, and save it to a server afterwards; a table that waits for the reply shows the row slide back, then jump.
 
-- `row` and `rowId`: the row that moved.
+- `row` and `rowId`: the row that was dragged; `rows` and `rowIds`: every row that moved, in their new order (see [several rows at once](#several-rows-at-once)).
 - `target` and `targetId`: the row it was dropped next to, always one of its siblings.
 - `position`: `"before"` or `"after"` the target.
 - `data`: the top-level rows in their new order.
@@ -30,6 +30,10 @@ In a tree table a row moves among its siblings, and takes its expanded sub-rows 
 <Demo name="data-table/row-reorder-tree" height="clamp(25.7rem, 80.3rem - 208vw, 30.9rem)" fallback />
 
 Drag Design below Build: its three open sub-rows travel with it. Drag a sub-row of Design: it stays inside Design. A row with no visible sibling, such as the only open child of a parent, has its handle disabled.
+
+## Several rows at once
+
+With [row selection](../sorting-and-selection/) on, dragging a selected row drags every selected sibling with it. The selected rows close up under the dragged one as it is lifted, the other rows make room, and the group lands together, in its own order, at the gap it is dropped in; a scattered selection dropped where it started is put together there. `rows` and `rowIds` list the rows that moved, and `data` and `siblings` hold the new order as usual. Dragging a row that is not selected moves it alone. A group moves among the dragged row's siblings, and only the selected rows that are shown move with it.
 
 ## Moving across parents
 
@@ -96,7 +100,7 @@ A drag survives its rows being re-created: when a custom [`Row`](../../api/#slot
 
 <Note kind="limitation">
 - `VirtualDataTable` ignores row reorder. See [virtual rows](../virtual-rows/).
-- No dragging between tables, and no multi-row drag.
+- No dragging between tables.
 </Note>
 
 To reorder rows in markup of your own, the [headless hook](../headless-hook/) returns the same engine as `reorder`.

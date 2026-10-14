@@ -3,6 +3,8 @@ import {
   blockRowOffsets,
   canReorder,
   depthRange,
+  groupOrder,
+  layoutOffsets,
   moveInTree,
   placementAt,
   type TreeNode,
@@ -310,5 +312,19 @@ describe("moving across parents", () => {
 
     const outdented = moveInTree(toNodes(tree), "a1", { parentId: null, index: 1 }, setSubRows);
     expect(outdented.map((node) => node.id)).toEqual(["a", "a1", "b", "c"]);
+  });
+});
+
+describe("moving a group", () => {
+  const blocks = ["a", "b", "c", "d", "e"].map((id, index) => ({ id, top: index * 10, bottom: index * 10 + 10, ids: [id] }));
+
+  it("puts a group back together at a gap, in its own order", () => {
+    expect(groupOrder(["a", "b", "c", "d", "e"], ["d", "b"], 0)).toEqual(["b", "d", "a", "c", "e"]);
+    expect(groupOrder(["a", "b", "c", "d", "e"], ["b", "d"], 3)).toEqual(["a", "c", "e", "b", "d"]);
+  });
+
+  it("draws each block where a new order puts it", () => {
+    const offsets = layoutOffsets(blocks, ["b", "d", "a", "c", "e"]);
+    expect(Object.fromEntries(offsets)).toEqual({ b: -10, d: -20, a: 20, c: 10 });
   });
 });

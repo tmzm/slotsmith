@@ -378,3 +378,65 @@ describe("row reordering while a column is sorted", () => {
     expect(handles().some((handle) => handle.hasAttribute("disabled"))).toBe(false);
   });
 });
+
+describe("dragging several selected rows", () => {
+  function SelectableTable({ onMove }: { onMove: (change: RowOrderChange<User>) => void }) {
+    const [rows, setRows] = useState(() => users(5));
+    return (
+      <DataTable<User>
+        data={rows}
+        columns={columns}
+        enableRowSelection
+        enableRowReorder
+        enablePagination={false}
+        onRowOrderChange={(change) => {
+          onMove(change);
+          setRows(change.data);
+        }}
+      />
+    );
+  }
+
+  const select = (name: string) =>
+    fireEvent.click(within(bodyRows().find((row) => row.textContent?.includes(name))!).getByRole("checkbox"));
+
+  it("moves every selected sibling with the dragged one, together and in their order", () => {
+    const onMove = vi.fn();
+    render(<SelectableTable onMove={onMove} />);
+    select("User 01");
+    select("User 03");
+
+    act(() => handles()[0]!.focus());
+    fireEvent.keyDown(handles()[0]!, { key: " " });
+    expect(bodyRows()[2]).toHaveAttribute("data-dragging-child");
+    fireEvent.keyDown(document.activeElement!, { key: "ArrowDown" });
+    fireEvent.keyDown(document.activeElement!, { key: " " });
+
+    expect(onMove).toHaveBeenCalledTimes(1);
+    expect(onMove.mock.calls[0]![0]).toMatchObject({ rowId: "u1", rowIds: ["u1", "u3"], targetId: "u4", position: "before" });
+    expect(names()).toEqual(["User 02", "User 01", "User 03", "User 04", "User 05"]);
+  });
+
+  it("puts a scattered selection together where it is dropped, even without moving", () => {
+    const onMove = vi.fn();
+    render(<SelectableTable onMove={onMove} />);
+    select("User 02");
+    select("User 05");
+    act(() => handles()[1]!.focus());
+    fireEvent.keyDown(handles()[1]!, { key: " " });
+    fireEvent.keyDown(document.activeElement!, { key: " " });
+    expect(names()).toEqual(["User 01", "User 02", "User 05", "User 03", "User 04"]);
+  });
+
+  it("moves the dragged row alone when it is not selected", () => {
+    const onMove = vi.fn();
+    render(<SelectableTable onMove={onMove} />);
+    select("User 03");
+    act(() => handles()[0]!.focus());
+    fireEvent.keyDown(handles()[0]!, { key: " " });
+    fireEvent.keyDown(handles()[0]!, { key: "ArrowDown" });
+    fireEvent.keyDown(handles()[0]!, { key: " " });
+    expect(onMove.mock.calls[0]![0]).toMatchObject({ rowIds: ["u1"] });
+    expect(names()).toEqual(["User 02", "User 01", "User 03", "User 04", "User 05"]);
+  });
+});

@@ -36,6 +36,12 @@ export interface RowOrderChange<T> {
   /** The row that was moved. */
   row: T;
   rowId: string;
+  /**
+   * Every row that moved, in their new order: the dragged row alone, or, when
+   * it was dragged among other selected rows, all the selected siblings.
+   */
+  rows: T[];
+  rowIds: string[];
   /** The row it was dropped next to (one of its new siblings), or, for `"inside"`, its new parent. */
   target: T;
   targetId: string;
@@ -457,4 +463,46 @@ export function moveInTree<T>(
     return list;
   };
   return build(roots, null);
+}
+
+/**
+ * Layout offsets
+ *
+ * Where each row is drawn when blocks are laid out in another order, packed
+ * from the first block's top: the offset of each row from its place at rest.
+ *
+ * @param blocks - The blocks at rest, top to bottom.
+ * @param order - Every block's id, in the order to draw them.
+ * @returns Offsets in pixels, by row id; rows that stay put are absent.
+ */
+export function layoutOffsets(blocks: readonly RowBlock[], order: readonly string[]): Map<string, number> {
+  const byId = new Map(blocks.map((block) => [block.id, block]));
+  const offsets = new Map<string, number>();
+  let top = blocks[0]?.top ?? 0;
+  for (const id of order) {
+    const block = byId.get(id);
+    if (!block) continue;
+    const offset = top - block.top;
+    if (offset !== 0) for (const row of block.ids) offsets.set(row, offset);
+    top += block.bottom - block.top;
+  }
+  return offsets;
+}
+
+/**
+ * Group order
+ *
+ * The blocks' order with a group of them taken out and put back together at
+ * a gap among the rest, in their own order.
+ *
+ * @param ids - Every block's id, in order.
+ * @param group - The ids that move together.
+ * @param gap - Where they go among the other ids, from 0 to their count.
+ * @returns The new order.
+ */
+export function groupOrder(ids: readonly string[], group: readonly string[], gap: number): string[] {
+  const moving = new Set(group);
+  const rest = ids.filter((id) => !moving.has(id));
+  const together = ids.filter((id) => moving.has(id));
+  return [...rest.slice(0, gap), ...together, ...rest.slice(gap)];
 }

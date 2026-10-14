@@ -524,6 +524,8 @@ export function useDataTable<T extends RowData>(
       if (sorted && whileSorted === "clearSort") setSorting([]);
     },
     acrossParents: hasSubRows && options.reorderAcrossParents === true,
+    // Dragging a selected row drags the other selected siblings with it.
+    selectedIds: useMemo(() => new Set(Object.keys(rowSelection).filter((id) => rowSelection[id])), [rowSelection]),
     setSubRows: options.setSubRows,
     canDrop: options.canDrop,
   });

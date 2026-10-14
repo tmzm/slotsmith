@@ -14,6 +14,8 @@ import {
   blockRowOffsets,
   depthRange,
   dropTargetAt,
+  groupOrder,
+  layoutOffsets,
   landingIndex,
   moveInTree,
   moveItem,
@@ -148,6 +150,8 @@ export interface UseRowReorderOptions<T> {
   setSubRows?: (row: T, subRows: T[]) => T;
   /** Whether a row may land at a place; places it may not are skipped. */
   canDrop?: (move: RowMove<T>) => boolean;
+  /** The selected rows: dragging one of them drags every selected sibling with it. */
+  selectedIds?: ReadonlySet<string>;
 }
 
 type Mode = "pointer" | "keyboard";
@@ -227,6 +231,12 @@ interface Session {
   parentId: string | null;
   /** A drag across parents: the place it would land, picked by height and depth. `null` among siblings. */
   across: AcrossDrag | null;
+  /**
+   * A drag of several selected rows: the selected siblings move together as
+   * one group, put back together at a gap among the other rows. `null` for
+   * a drag of one row.
+   */
+  group: GroupDrag | null;
   /** The pointer's horizontal position: when the drag started, and now. */
   startX: number;
   clientX: number;
@@ -271,6 +281,52 @@ interface AcrossDrag {
   /** One depth's indent, in pixels. */
   indent: number;
   rtl: boolean;
+}
+
+/**
+ * Group drag
+ *
+ * A drag of every selected sibling at once. The group is drawn stacked under
+ * the pointer, the other rows close up around it, and it lands together, in
+ * its own order, at the gap it is dropped in.
+ */
+interface GroupDrag {
+  /** The selected siblings' ids, top to bottom: the dragged row is one of them. */
+  ids: string[];
+  /** The other siblings, top to bottom, at rest. */
+  rest: RowBlock[];
+  /** The gap the group would land in, among `rest`. */
+  gap: number;
+  /** The gap it sat in when the drag started: the dragged row's place among `rest`. */
+  ownGap: number;
+}
+
+/**
+ * Group target
+ *
+ * The target a group drag marks on the rows: before the row below the gap,
+ * or after the last row.
+ */
+function groupTarget(group: GroupDrag): DropTarget | null {
+  const { rest, gap } = group;
+  if (!rest.length) return null;
+  return gap < rest.length ? { id: rest[gap]!.id, position: "before" } : { id: rest[rest.length - 1]!.id, position: "after" };
+}
+
+/**
+ * Group offsets
+ *
+ * Where every row is drawn in a group drag: laid out with the group put
+ * together at its gap. A pointer drag adds the pointer's travel to the group,
+ * so it follows the pointer from there.
+ */
+function groupOffsets(s: Session, group: GroupDrag, travel: number | null): Map<string, number> {
+  const offsets = layoutOffsets(s.blocks, groupOrder(s.ids, group.ids, group.gap));
+  for (const id of s.moving) if (!offsets.has(id)) offsets.set(id, 0);
+  if (travel === null) return offsets;
+  const delta = travel - (offsets.get(s.id) ?? 0);
+  for (const id of s.moving) offsets.set(id, offsets.get(id)! + delta);
+  return offsets;
 }
 
 /**
@@ -451,6 +507,10 @@ function drawPointer(s: Session): void {
   const last = s.blocks[s.blocks.length - 1]!;
   const y = s.clientY - contentOrigin(s.area);
   const travel = clamp(y - s.startY, first.top - own.top, last.bottom - own.bottom);
+  if (s.group) {
+    applyOffsets(s.parent, groupOffsets(s, s.group, travel), s.moving, false);
+    return;
+  }
   for (const id of s.moving) offsets.set(id, travel);
   applyOffsets(s.parent, offsets, s.moving, false, shiftOf(s));
 }
@@ -666,6 +726,8 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       onRowOrderChange?.({
         row: originalOf(s.id)!,
         rowId: s.id,
+        rows: [originalOf(s.id)!],
+        rowIds: [s.id],
         target: originalOf(target.id)!,
         targetId: target.id,
         position: target.position,
@@ -680,9 +742,64 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       return `${labelsNow().reorderDropped(placement.index + 1, ids.length)} ${labelsNow().reorderLevel(placement.depth + 1)}`;
     }
 
+    /** Reports a group drop: the group put together, in the data's order, at its gap. */
+    function commitGroup(s: Session, group: GroupDrag): string {
+      const { rows: top, tree, onRowOrderChange } = latest.current.options;
+      const { parentId } = s;
+      const family = parentId === null ? { parent: null, rows: top } : tree?.childrenOf(parentId);
+      const shown = groupTarget(group);
+      if (!family || !shown) return labelsNow().reorderCancelled;
+      const moving = new Set(group.ids);
+      const rest = family.rows.filter((row) => !moving.has(row.id));
+      const members = family.rows.filter((row) => moving.has(row.id));
+      // The gap is among the rows shown; the data may hold more (other pages): place by the row next to it.
+      const at = rest.findIndex((row) => row.id === shown.id) + (shown.position === "after" ? 1 : 0);
+      const order = [...rest.slice(0, at), ...members, ...rest.slice(at)];
+      if (order.every((row, index) => row.id === family.rows[index]!.id)) return labelsNow().reorderCancelled;
+      const siblings = order.map((row) => row.original);
+      const dragged = family.rows.find((row) => row.id === s.id)!;
+      onRowOrderChange?.({
+        row: dragged.original,
+        rowId: s.id,
+        rows: members.map((row) => row.original),
+        rowIds: members.map((row) => row.id),
+        target: rest.find((row) => row.id === shown.id)!.original,
+        targetId: shown.id,
+        position: shown.position,
+        data: parentId === null ? siblings : top.map((row) => row.original),
+        parentId,
+        parent: family.parent,
+        siblings: parentId === null ? siblings.slice() : siblings,
+        index: order.findIndex((row) => row.id === s.id),
+        fromParentId: parentId,
+        fromParent: family.parent,
+      });
+      return labelsNow().reorderDropped(group.gap + 1, group.rest.length + 1);
+    }
+
+    /** Shows a group drag's target, and reads its place aloud. */
+    function showGroup(s: Session, group: GroupDrag): void {
+      const target = groupTarget(group);
+      s.target = target;
+      dispatch({
+        type: "target",
+        target,
+        edgeId: edgeOf(s, target),
+        announcement: labelsNow().reorderMoved(group.gap + 1, group.rest.length + 1),
+      });
+    }
+
     function commit(): void {
       const s = session.current;
       if (!s) return;
+      if (s.group) {
+        const group = s.group;
+        stop(s, true);
+        const announcement = commitGroup(s, group);
+        if (s.mode === "keyboard") pendingFocus.current = s.id;
+        dispatch({ type: "end", announcement });
+        return;
+      }
       if (s.across) {
         const across = s.across;
         stop(s, true);
@@ -709,6 +826,8 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
             onRowOrderChange?.({
               row: rows[from]!.original,
               rowId: s.id,
+              rows: [rows[from]!.original],
+              rowIds: [s.id],
               target: rows[to]!.original,
               targetId: target.id,
               position: target.position,
@@ -758,8 +877,15 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       const ids = blocks.map((block) => block.id);
       const own = blocks[ids.indexOf(rowId)]!;
       const ownLevel = levels.find((level) => level.id === rowId)!;
+      // A selected row drags every selected sibling with it.
+      const { selectedIds } = latest.current.options;
+      const groupIds = !across && selectedIds?.has(rowId) ? ids.filter((id) => selectedIds.has(id)) : [];
+      const grouped = groupIds.length > 1;
+      const groupRest = grouped ? blocks.filter((block) => !groupIds.includes(block.id)) : [];
+      const groupGap = ids.slice(0, ids.indexOf(rowId)).filter((id) => !groupIds.includes(id)).length;
 
       const s: Session = {
+        group: grouped ? { ids: groupIds, rest: groupRest, gap: groupGap, ownGap: groupGap } : null,
         across: across
           ? {
               rest: levels.filter((level) => !own.ids.includes(level.id)),
@@ -781,7 +907,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
         parent,
         blocks,
         ids,
-        moving: new Set(own.ids),
+        moving: new Set(grouped ? blocks.filter((block) => groupIds.includes(block.id)).flatMap((block) => block.ids) : own.ids),
         parentId: levels.find((level) => level.id === rowId)!.parentId,
         shown: latest.current.options.visibleIds.slice(),
         saved: saveStyles(parent),
@@ -799,17 +925,35 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       dispatch({
         type: "start",
         id: rowId,
-        children: own.ids.slice(1),
+        children: [...s.moving].filter((id) => id !== rowId),
         mode,
-        announcement: labelsNow().reorderLifted(ids.indexOf(rowId) + 1, ids.length),
+        announcement: s.group
+          ? labelsNow().reorderLifted(groupGap + 1, groupRest.length + 1)
+          : labelsNow().reorderLifted(ids.indexOf(rowId) + 1, ids.length),
       });
+      // A group closes up at once: the selected rows stack under the dragged one.
+      if (s.group) {
+        showGroup(s, s.group);
+        if (!s.reduced) applyOffsets(parent, groupOffsets(s, s.group, null), s.moving, true);
+      }
       return s;
     }
 
     /** Follows the pointer: the target now, the transform on the next frame. */
     function track(s: Session): void {
       s.dirty = true;
-      const { across } = s;
+      const { across, group } = s;
+      if (group) {
+        // The height picks the gap among the other rows, at rest.
+        const hit = dropTargetAt(group.rest, s.clientY - contentOrigin(s.area));
+        const index = hit ? group.rest.findIndex((block) => block.id === hit.id) : -1;
+        const gap = !hit || index < 0 ? group.gap : hit.position === "before" ? index : index + 1;
+        if (gap !== group.gap) {
+          group.gap = gap;
+          showGroup(s, group);
+        }
+        return;
+      }
       if (!across) {
         setTarget(s, pointerTarget(s, s.clientY - contentOrigin(s.area)));
         return;
@@ -861,7 +1005,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
         }
         track(s);
         // Across parents a sideways move alone is a move too.
-        if (s.across ? s.across.placement : s.target) commit();
+        if (s.group || (s.across ? s.across.placement : s.target)) commit();
         else cancel();
       };
       const onCancel = (e: Event) => {
@@ -899,6 +1043,14 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     }
 
     function step(s: Session, direction: -1 | 1): void {
+      if (s.group) {
+        const group = s.group;
+        group.gap = clamp(group.gap + direction, 0, group.rest.length);
+        showGroup(s, group);
+        if (!s.reduced) applyOffsets(s.parent, groupOffsets(s, group, null), s.moving, true);
+        reveal(s, groupTarget(group)?.id ?? s.id);
+        return;
+      }
       if (s.across) {
         const across = s.across;
         placeAcross(s, across, clamp(across.gap + direction, 0, across.rest.length), across.depth);
