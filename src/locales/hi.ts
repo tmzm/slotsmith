@@ -43,6 +43,7 @@ export const hi: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `${number(total)} में से स्थान ${number(position)}।`,
       reorderDropped: (position, total) => `पंक्ति ${number(total)} में से स्थान ${number(position)} पर छोड़ी गई।`,
       reorderCancelled: "क्रम बदलना रद्द किया गया।",
+      reorderLevel: (level) => `स्तर ${number(level)}।`,
       editCell: (column) => `${column} संपादित करें`,
       invalidNumber: "कोई संख्या दर्ज करें।",
       invalidOption: "विकल्पों में से एक चुनें।",

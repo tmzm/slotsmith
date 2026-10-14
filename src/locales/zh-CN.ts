@@ -43,6 +43,7 @@ export const zhCN: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `第${number(position)}行，共${number(total)}行。`,
       reorderDropped: (position, total) => `已将该行放到第${number(position)}行，共${number(total)}行。`,
       reorderCancelled: "已取消调整顺序。",
+      reorderLevel: (level) => `第 ${number(level)} 级。`,
       editCell: (column) => `编辑${column}`,
       invalidNumber: "请输入数字。",
       invalidOption: "请选择其中一个选项。",

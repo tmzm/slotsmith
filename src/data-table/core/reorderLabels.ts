@@ -8,7 +8,7 @@ import type { DataTableLabels } from "../slots/types";
  */
 export type ReorderLabels = Pick<
   DataTableLabels,
-  "reorderRow" | "reorderInstructions" | "reorderLifted" | "reorderMoved" | "reorderDropped" | "reorderCancelled"
+  "reorderRow" | "reorderInstructions" | "reorderLifted" | "reorderMoved" | "reorderDropped" | "reorderCancelled" | "reorderLevel"
 >;
 
 /**
@@ -24,4 +24,5 @@ export const defaultReorderLabels: ReorderLabels = {
   reorderMoved: (position, total) => `Position ${position} of ${total}.`,
   reorderDropped: (position, total) => `Row dropped at position ${position} of ${total}.`,
   reorderCancelled: "Reordering cancelled.",
+  reorderLevel: (level) => `Level ${level}.`,
 };

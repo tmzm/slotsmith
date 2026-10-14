@@ -45,6 +45,7 @@ export const fa: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `موقعیت ${number(position)} از ${number(total)}.`,
       reorderDropped: (position, total) => `ردیف در موقعیت ${number(position)} از ${number(total)} رها شد.`,
       reorderCancelled: "جابه‌جایی لغو شد.",
+      reorderLevel: (level) => `سطح ${number(level)}.`,
       editCell: (column) => `ویرایش ${column}`,
       invalidNumber: "یک عدد وارد کنید.",
       invalidOption: "یکی از گزینه‌ها را انتخاب کنید.",

@@ -24,12 +24,23 @@ Give rows a stable id with [`getRowId`](../../api/#props); `rowId`, `targetId` a
 
 ## Tree tables
 
-In a tree table a row moves among its siblings only, and takes its expanded sub-rows with it. For a sub-row, `data` is the unchanged top level: store `siblings` as the children of `parent`, as `placeSiblings` does here.
+In a tree table a row moves among its siblings, and takes its expanded sub-rows with it; to move rows to other parents too, see [moving across parents](#moving-across-parents). For a sub-row, `data` is the unchanged top level: store `siblings` as the children of `parent`, as `placeSiblings` does here.
 
 {/* Reserved height measured in Chrome: 30.9rem at 380px and below, where cells wrap, 25.7rem from 420px. */}
 <Demo name="data-table/row-reorder-tree" height="clamp(25.7rem, 80.3rem - 208vw, 30.9rem)" fallback />
 
 Drag Design below Build: its three open sub-rows travel with it. Drag a sub-row of Design: it stays inside Design. A row with no visible sibling, such as the only open child of a parent, has its handle disabled.
+
+## Moving across parents
+
+With [`reorderAcrossParents`](../../api/#props), a row of a tree can move to another parent and another depth. Drag it up or down to pick the gap between two rows, and sideways to pick the depth: one indent to the right makes it a child of the row above, one to the left takes it out a level. From the keyboard, the left and right arrow keys do the same while a row is lifted. The rows make room as before, and the lifted row is drawn at its new depth.
+
+{/* Reserved height: seven rows and the line under the table. */}
+<Demo name="data-table/row-reorder-across" height="24rem" fallback />
+
+Drag API endpoints under Design, or drag Sketch the flows out to the top level. Launch only moves among the top-level tasks: `canDrop` refuses every other place for it.
+
+The table builds the new tree itself, so it needs [`setSubRows`](../../api/#props), which writes new children into a copy of a row; `getSubRows` reads them. A drop then reports the whole new tree as `data`: store it. `fromParentId` and `fromParent` say where the row came from, `parentId`, `parent`, `index` and `siblings` where it went, and `position` is `"inside"` when it became a child of the target (its first shown child, or its last when the target is collapsed). [`canDrop`](../../api/#props) receives every place before it is offered (the row, the new `parent` and `parentId`, and the `index`), and the places it refuses are skipped. A row is never dropped inside its own sub-rows. Each step announces the level too, through the [`reorderLevel`](../../api/#label-reorderLevel) label. The library also exports `moveInTree`, the same move on your own nodes.
 
 ## Keyboard
 
@@ -37,7 +48,8 @@ Each handle is a `<button>`, so it is in the tab order. With focus on a handle:
 
 <KeyboardTable rows={[
   { keys: ["Space", "Enter"], action: "Lift the row." },
-  { keys: ["↑", "↓"], action: "Move the lifted row up or down one place among its siblings." },
+  { keys: ["↑", "↓"], action: "Move the lifted row up or down one place among its siblings (across parents: one gap)." },
+  { keys: ["←", "→"], action: "With reorderAcrossParents, move the lifted row one level out or in." },
   { keys: ["Space", "Enter"], action: "Drop the row in its new place. Focus stays on its handle." },
   { keys: ["Esc"], action: "Cancel. The row goes back where it was." },
   { keys: ["Tab"], action: "Cancel, and move focus on as usual. Leaving the handle any other way cancels too." },
@@ -84,7 +96,7 @@ A drag survives its rows being re-created: when a custom [`Row`](../../api/#slot
 
 <Note kind="limitation">
 - `VirtualDataTable` ignores row reorder. See [virtual rows](../virtual-rows/).
-- No dragging between tables, no multi-row drag, and no moving a row to another parent.
+- No dragging between tables, and no multi-row drag.
 </Note>
 
 To reorder rows in markup of your own, the [headless hook](../headless-hook/) returns the same engine as `reorder`.

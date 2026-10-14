@@ -12,18 +12,26 @@ import {
 import type { DragHandleSlotProps } from "../slots/types";
 import {
   blockRowOffsets,
+  depthRange,
   dropTargetAt,
   landingIndex,
+  moveInTree,
   moveItem,
+  placementAt,
   rowOffsets,
   scrollSpeed,
   siblingBlocks,
   stepTarget,
+  type DropPlace,
   type DropPosition,
   type DropTarget,
+  type Placement,
   type RowBlock,
   type RowLevel,
+  type RowMove,
   type RowOrderChange,
+  type RowRect,
+  type TreeNode,
 } from "./reorder";
 import type { ReorderLabels } from "./reorderLabels";
 import {
@@ -50,7 +58,7 @@ export interface RowReorderAttributes {
   /** Set on the visible sub-rows of the row being moved, which move with it (tree tables). */
   "data-dragging-child"?: "";
   /** Set on the row it would be dropped next to, naming the side. */
-  "data-drop-position"?: DropPosition;
+  "data-drop-position"?: DropPlace;
   /**
    * Set on the row whose edge the moved row would land against: the target
    * row for `"before"`, and for `"after"` the last visible row of the
@@ -70,7 +78,7 @@ export interface RowReorderModel {
   /** The id of the row being moved, if any. */
   draggingId: string | null;
   /** Where it would land if dropped now. */
-  target: { id: string; position: DropPosition } | null;
+  target: { id: string; position: DropPlace } | null;
   /** The latest announcement for assistive technology. */
   announcement: string;
   /**
@@ -125,21 +133,33 @@ export interface UseRowReorderOptions<T> {
   enabled: boolean;
   /** The ids of the visible rows, in the order shown. */
   visibleIds: readonly string[];
-  /** Every top-level row, in the order of `data`. */
-  rows: readonly { id: string; original: T }[];
+  /** Every top-level row, in the order of `data`, with its sub-rows. */
+  rows: readonly TreeNode<T>[];
   /** A tree table's structure. Omit for a flat table: every row is then top-level. */
   tree?: ReorderTree<T>;
   labels: ReorderLabels;
   onRowOrderChange?: (change: RowOrderChange<T>) => void;
+  /**
+   * In a tree, rows may move to another parent and another depth, not only
+   * among their siblings. Needs `setSubRows`, to build the new tree.
+   */
+  acrossParents?: boolean;
+  /** Writes new children into a copy of a row, to build the tree after a move across parents. */
+  setSubRows?: (row: T, subRows: T[]) => T;
+  /** Whether a row may land at a place; places it may not are skipped. */
+  canDrop?: (move: RowMove<T>) => boolean;
 }
 
 type Mode = "pointer" | "keyboard";
+
+/** The target shown on the rows: a side of a row, or inside it. */
+type ShownTarget = { id: string; position: DropPlace };
 
 interface State {
   draggingId: string | null;
   /** The dragged row's visible sub-rows, which move with it. */
   children: readonly string[];
-  target: DropTarget | null;
+  target: ShownTarget | null;
   /** The row whose edge the dragged row would land against. */
   edgeId: string | null;
   announcement: string;
@@ -150,7 +170,7 @@ interface State {
 
 type Action =
   | { type: "start"; id: string; children: readonly string[]; mode: Mode; announcement: string }
-  | { type: "target"; target: DropTarget | null; edgeId: string | null; announcement: string }
+  | { type: "target"; target: ShownTarget | null; edgeId: string | null; announcement: string }
   | { type: "end"; announcement: string };
 
 const initialState: State = {
@@ -205,6 +225,11 @@ interface Session {
   moving: Set<string>;
   /** The dragged row's parent; `null` at the top level. */
   parentId: string | null;
+  /** A drag across parents: the place it would land, picked by height and depth. `null` among siblings. */
+  across: AcrossDrag | null;
+  /** The pointer's horizontal position: when the drag started, and now. */
+  startX: number;
+  clientX: number;
   /** The `visibleIds` the drag started with; any change to them ends it. */
   shown: readonly string[];
   saved: Map<string, SavedStyle>;
@@ -220,6 +245,54 @@ interface Session {
   dirty: boolean;
   frame: number | null;
   detach: () => void;
+}
+
+/**
+ * Across drag
+ *
+ * A drag that may change the row's parent. In such a drag every visible row
+ * is a block of its own (the dragged row keeps its sub-rows), so the rows make
+ * room in the flat order, and the depth is picked apart from the height: by
+ * dragging sideways, or with the left and right arrow keys.
+ */
+interface AcrossDrag {
+  /** The visible rows, the moved ones left out, top to bottom. */
+  rest: RowLevel[];
+  /** The gap the dragged row sits in, at rest. */
+  ownGap: number;
+  /** The dragged row's depth and index among its siblings, at rest. */
+  ownDepth: number;
+  ownIndex: number;
+  /** The gap and the depth picked now. */
+  gap: number;
+  depth: number;
+  /** Where it would land; `null` when it would stay where it is, or may not land there. */
+  placement: Placement | null;
+  /** One depth's indent, in pixels. */
+  indent: number;
+  rtl: boolean;
+}
+
+/**
+ * Flat blocks
+ *
+ * Every visible row as a block of its own, but the dragged row, whose block
+ * spans its visible sub-rows: the blocks of a drag across parents.
+ */
+function flatBlocks(rows: readonly RowLevel[], rects: readonly RowRect[], draggingId: string): RowBlock[] {
+  const rectOf = new Map(rects.map((rect) => [rect.id, rect]));
+  const blocks: RowBlock[] = [];
+  for (let index = 0; index < rows.length; index++) {
+    const row = rows[index]!;
+    const ids = [row.id];
+    if (row.id === draggingId) {
+      while (index + 1 < rows.length && rows[index + 1]!.depth > row.depth) ids.push(rows[++index]!.id);
+    }
+    const first = rectOf.get(ids[0]!);
+    const last = rectOf.get(ids[ids.length - 1]!);
+    if (first && last) blocks.push({ id: row.id, top: first.top, bottom: last.bottom, ids });
+  }
+  return blocks;
 }
 
 /**
@@ -243,6 +316,9 @@ interface PendingSettle {
 }
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/** One depth's indent in the tree, in rem: the first cell's padding per level. */
+const INDENT_REM = 1.25;
 
 /** One row handle's event handlers. */
 type RowHandlers = Pick<DragHandleSlotProps, "onPointerDown" | "onKeyDown" | "onBlur">;
@@ -376,20 +452,69 @@ function drawPointer(s: Session): void {
   const y = s.clientY - contentOrigin(s.area);
   const travel = clamp(y - s.startY, first.top - own.top, last.bottom - own.bottom);
   for (const id of s.moving) offsets.set(id, travel);
-  applyOffsets(s.parent, offsets, s.moving, false);
+  applyOffsets(s.parent, offsets, s.moving, false, shiftOf(s));
+}
+
+/**
+ * Shift of
+ *
+ * How far to the side the dragged rows are drawn: in a drag across parents,
+ * one indent per level the row would move by; otherwise none.
+ */
+function shiftOf(s: Session): number {
+  const { across } = s;
+  if (!across?.placement) return 0;
+  return (across.placement.depth - across.ownDepth) * across.indent * (across.rtl ? -1 : 1);
 }
 
 /**
  * Edge row
  *
  * @returns The row whose edge a drop on `target` lands against: the target
- *   for `"before"`, the last row of its block for `"after"`.
+ *   for `"before"`, the last row of its block for `"after"`, the target itself
+ *   for `"inside"`.
  */
-function edgeOf(s: Session, target: DropTarget | null): string | null {
+function edgeOf(s: Session, target: ShownTarget | null): string | null {
   if (!target) return null;
-  if (target.position === "before") return target.id;
+  if (target.position !== "after") return target.id;
   const block = s.blocks.find((candidate) => candidate.id === target.id);
   return block ? block.ids[block.ids.length - 1]! : target.id;
+}
+
+/**
+ * Flat target
+ *
+ * The target in the flat order of a drag across parents, for the rows that
+ * make room: before the row below the gap, or after the last row.
+ *
+ * @returns The target; `null` for the gap the row already sits in.
+ */
+function flatTarget(across: AcrossDrag): DropTarget | null {
+  const { rest, gap, ownGap } = across;
+  if (gap === ownGap) return null;
+  return gap < rest.length ? { id: rest[gap]!.id, position: "before" } : { id: rest[rest.length - 1]!.id, position: "after" };
+}
+
+/**
+ * Shown target
+ *
+ * The target a drag across parents reports, always one of the new siblings
+ * or the new parent: inside the row above when the row becomes its child,
+ * before the row below when that is a new sibling, else after the new
+ * sibling above. `edge` is the row to draw the drop line on: the row right
+ * above or below the gap.
+ */
+function shownTarget(across: AcrossDrag): { target: ShownTarget; edge: string } | null {
+  const { rest, gap, placement } = across;
+  if (!placement) return null;
+  const { depth } = placement;
+  const above = rest[gap - 1];
+  const below = rest[gap];
+  if (above && depth === above.depth + 1) return { target: { id: above.id, position: "inside" }, edge: above.id };
+  if (below && below.depth === depth) return { target: { id: below.id, position: "before" }, edge: below.id };
+  let anchor = above;
+  while (anchor && anchor.depth > depth) anchor = rest.find((row) => row.id === anchor!.parentId);
+  return anchor && above ? { target: { id: anchor.id, position: "after" }, edge: above.id } : null;
 }
 
 /**
@@ -461,9 +586,111 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       dispatch({ type: "end", announcement: labelsNow().reorderCancelled });
     }
 
+    /** A parent's child ids in the data's order (`null` for the top level), the dragged row left out. */
+    function childIds(parentId: string | null, draggingId: string): string[] {
+      const { rows, tree } = latest.current.options;
+      const children = parentId === null ? rows : (tree?.childrenOf(parentId)?.rows ?? []);
+      return children.map((row) => row.id).filter((id) => id !== draggingId);
+    }
+
+    /** Every row of the tree by id, for the rows a move reports. */
+    function originalOf(id: string): T | undefined {
+      const visit = (nodes: readonly TreeNode<T>[]): T | undefined => {
+        for (const node of nodes) {
+          if (node.id === id) return node.original;
+          const found = node.subRows && visit(node.subRows);
+          if (found !== undefined) return found;
+        }
+        return undefined;
+      };
+      return visit(latest.current.options.rows);
+    }
+
+    /**
+     * Place across
+     *
+     * Picks where a drag across parents lands for a gap and a wished depth:
+     * the allowed depth nearest the wish whose place `canDrop` accepts. The
+     * row's own place is no move (`placement` `null`), as is a gap where no
+     * depth is accepted.
+     */
+    function placeAcross(s: Session, across: AcrossDrag, gap: number, wish: number): void {
+      const { canDrop } = latest.current.options;
+      const { min, max } = depthRange(across.rest[gap - 1], across.rest[gap]);
+      const depths = Array.from({ length: max - min + 1 }, (_, n) => min + n).sort(
+        (a, b) => Math.abs(a - wish) - Math.abs(b - wish) || a - b,
+      );
+      across.gap = gap;
+      across.placement = null;
+      across.depth = clamp(wish, min, max);
+      const row = originalOf(s.id);
+      for (const depth of depths) {
+        const placement = placementAt(across.rest, gap, depth, (parentId) => childIds(parentId, s.id));
+        if (placement.parentId === s.parentId && placement.index === across.ownIndex) {
+          across.depth = depth;
+          return;
+        }
+        const parent = placement.parentId === null ? null : (originalOf(placement.parentId) ?? null);
+        if (canDrop && row !== undefined && !canDrop({ row, rowId: s.id, parent, parentId: placement.parentId, index: placement.index })) {
+          continue;
+        }
+        across.depth = depth;
+        across.placement = placement;
+        return;
+      }
+    }
+
+    /** Shows a drag across parents: its target on the rows, and where it would land, read aloud. */
+    function showAcross(s: Session, across: AcrossDrag): void {
+      const shown = shownTarget(across);
+      const target = shown?.target ?? null;
+      s.target = flatTarget(across);
+      const place = across.placement ?? { parentId: s.parentId, index: across.ownIndex, depth: across.ownDepth };
+      const total = childIds(place.parentId, s.id).length + 1;
+      dispatch({
+        type: "target",
+        target,
+        edgeId: shown?.edge ?? null,
+        announcement: `${labelsNow().reorderMoved(place.index + 1, total)} ${labelsNow().reorderLevel(place.depth + 1)}`,
+      });
+    }
+
+    /** Reports a drop across parents: the whole new tree, built with `setSubRows`. */
+    function commitAcross(s: Session, across: AcrossDrag): string {
+      const { rows, onRowOrderChange, setSubRows } = latest.current.options;
+      const { placement } = across;
+      if (!placement || !setSubRows) return labelsNow().reorderCancelled;
+      const ids = childIds(placement.parentId, s.id);
+      ids.splice(placement.index, 0, s.id);
+      const { target } = shownTarget(across)!;
+      onRowOrderChange?.({
+        row: originalOf(s.id)!,
+        rowId: s.id,
+        target: originalOf(target.id)!,
+        targetId: target.id,
+        position: target.position,
+        data: moveInTree(rows, s.id, placement, setSubRows),
+        parentId: placement.parentId,
+        parent: placement.parentId === null ? null : (originalOf(placement.parentId) ?? null),
+        siblings: ids.map((id) => originalOf(id)!),
+        index: placement.index,
+        fromParentId: s.parentId,
+        fromParent: s.parentId === null ? null : (originalOf(s.parentId) ?? null),
+      });
+      return `${labelsNow().reorderDropped(placement.index + 1, ids.length)} ${labelsNow().reorderLevel(placement.depth + 1)}`;
+    }
+
     function commit(): void {
       const s = session.current;
       if (!s) return;
+      if (s.across) {
+        const across = s.across;
+        stop(s, true);
+        const announcement = commitAcross(s, across);
+        if (s.mode === "keyboard") pendingFocus.current = s.id;
+        dispatch({ type: "end", announcement });
+        return;
+      }
       const { rows: top, tree, onRowOrderChange } = latest.current.options;
       const { target, parentId } = s;
       const announcement = labelsNow().reorderDropped(positionOf(s, target), s.ids.length);
@@ -489,6 +716,9 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
               parentId,
               parent: family.parent,
               siblings: parentId === null ? siblings.slice() : siblings,
+              index: order.findIndex((row) => row.id === s.id),
+              fromParentId: parentId,
+              fromParent: family.parent,
             });
           }
         }
@@ -519,15 +749,32 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
 
       const area = scrollAreaOf(parent);
       const rects = geometry.current?.measure(parent, area) ?? measure(parent, area);
-      const { tree } = latest.current.options;
+      const { tree, acrossParents, setSubRows } = latest.current.options;
       const levels = rects.map(({ id }) => tree?.levelOf(id) ?? { id, parentId: null, depth: 0 });
-      const blocks = siblingBlocks(levels, rects, rowId);
+      const across = Boolean(acrossParents && tree && setSubRows);
+      const blocks = across ? flatBlocks(levels, rects, rowId) : siblingBlocks(levels, rects, rowId);
       // Not rendered, or an only child: nothing to move among.
       if (blocks.length < 2) return null;
       const ids = blocks.map((block) => block.id);
       const own = blocks[ids.indexOf(rowId)]!;
+      const ownLevel = levels.find((level) => level.id === rowId)!;
 
       const s: Session = {
+        across: across
+          ? {
+              rest: levels.filter((level) => !own.ids.includes(level.id)),
+              ownGap: levels.indexOf(ownLevel),
+              ownDepth: ownLevel.depth,
+              ownIndex: childIds(ownLevel.parentId, "").indexOf(rowId),
+              gap: levels.indexOf(ownLevel),
+              depth: ownLevel.depth,
+              placement: null,
+              indent: (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) * INDENT_REM,
+              rtl: getComputedStyle(parent).direction === "rtl",
+            }
+          : null,
+        startX: 0,
+        clientX: 0,
         id: rowId,
         mode,
         handle,
@@ -561,8 +808,23 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
 
     /** Follows the pointer: the target now, the transform on the next frame. */
     function track(s: Session): void {
-      setTarget(s, pointerTarget(s, s.clientY - contentOrigin(s.area)));
       s.dirty = true;
+      const { across } = s;
+      if (!across) {
+        setTarget(s, pointerTarget(s, s.clientY - contentOrigin(s.area)));
+        return;
+      }
+      // The height picks the gap; sideways, one indent per level picks the depth.
+      const hit = dropTargetAt(s.blocks, s.clientY - contentOrigin(s.area));
+      const index = hit ? across.rest.findIndex((row) => row.id === hit.id) : -1;
+      const gap = !hit || hit.id === s.id || index < 0 ? across.ownGap : hit.position === "before" ? index : index + 1;
+      const sideways = (s.clientX - s.startX) * (across.rtl ? -1 : 1);
+      const wish = across.ownDepth + Math.round(sideways / across.indent);
+      const before = { gap: across.gap, placement: across.placement };
+      placeAcross(s, across, gap, wish);
+      if (before.gap !== across.gap || before.placement?.parentId !== across.placement?.parentId || before.placement?.index !== across.placement?.index) {
+        showAcross(s, across);
+      }
     }
 
     function onPointerDown(rowId: string, event: ReactPointerEvent<HTMLElement>): void {
@@ -574,6 +836,8 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
 
       s.pointerId = event.pointerId;
       s.clientY = event.clientY;
+      s.clientX = event.clientX;
+      s.startX = event.clientX;
       s.startY = event.clientY - contentOrigin(s.area);
       try {
         handle.setPointerCapture?.(event.pointerId);
@@ -584,17 +848,20 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       const onMove = (e: PointerEvent) => {
         if (e.pointerId !== s.pointerId) return;
         s.clientY = e.clientY;
+        s.clientX = e.clientX;
         track(s);
       };
       const onUp = (e: PointerEvent) => {
         if (e.pointerId !== s.pointerId) return;
         s.clientY = e.clientY;
+        s.clientX = e.clientX;
         if (releasedOffRows(s, e.clientX, e.clientY)) {
           cancel();
           return;
         }
         track(s);
-        if (s.target) commit();
+        // Across parents a sideways move alone is a move too.
+        if (s.across ? s.across.placement : s.target) commit();
         else cancel();
       };
       const onCancel = (e: Event) => {
@@ -632,10 +899,39 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     }
 
     function step(s: Session, direction: -1 | 1): void {
+      if (s.across) {
+        const across = s.across;
+        placeAcross(s, across, clamp(across.gap + direction, 0, across.rest.length), across.depth);
+        showAcross(s, across);
+        drawKeyboard(s);
+        return;
+      }
       const target = stepTarget(s.ids, s.id, s.target, direction);
       setTarget(s, target, true);
       if (!s.reduced) applyOffsets(s.parent, targetOffsets(s, target), s.moving, true);
-      const shown = target?.id ?? s.id;
+      reveal(s, target?.id ?? s.id);
+    }
+
+    /** Moves a drag across parents one level in or out, with the left and right arrow keys. */
+    function stepDepth(s: Session, across: AcrossDrag, direction: -1 | 1): void {
+      placeAcross(s, across, across.gap, across.depth + direction);
+      showAcross(s, across);
+      drawKeyboard(s);
+    }
+
+    /** Draws a keyboard drag across parents: the rows make room, the dragged row slides to its depth. */
+    function drawKeyboard(s: Session): void {
+      if (!s.reduced) {
+        const offsets = targetOffsets(s, s.target);
+        for (const id of s.moving) if (!offsets.has(id)) offsets.set(id, 0);
+        applyOffsets(s.parent, offsets, s.moving, true, shiftOf(s));
+      }
+      const target = s.target;
+      reveal(s, target?.id ?? s.id);
+    }
+
+    /** Scrolls a row into view, rendered or not. */
+    function reveal(s: Session, shown: string): void {
       const element = rowsIn(s.parent).find((row) => row.getAttribute("data-row-id") === shown);
       // A windowed body may not have the row rendered: its geometry scrolls to it.
       if (element) element.scrollIntoView?.({ block: "nearest" });
@@ -657,6 +953,11 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       if (key === "ArrowDown" || key === "ArrowUp") {
         event.preventDefault();
         step(s, key === "ArrowDown" ? 1 : -1);
+      } else if (s.across && (key === "ArrowRight" || key === "ArrowLeft")) {
+        event.preventDefault();
+        // Right goes one level in, left one level out; the other way round right to left.
+        const inward = (key === "ArrowRight") !== s.across.rtl;
+        stepDepth(s, s.across, inward ? 1 : -1);
       } else if (key === " " || key === "Enter") {
         event.preventDefault();
         commit();
@@ -772,8 +1073,10 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       siblingCounts.set(parentId, (siblingCounts.get(parentId) ?? 0) + 1);
     }
   }
+  // Across parents a row is never alone: it can move to another parent.
+  const across = Boolean(options.acrossParents && options.setSubRows);
   const alone = (rowId: string) =>
-    tree !== undefined && (siblingCounts.get(tree.levelOf(rowId)?.parentId ?? null) ?? 0) < 2;
+    tree !== undefined && !across && (siblingCounts.get(tree.levelOf(rowId)?.parentId ?? null) ?? 0) < 2;
 
   /** Each row's handlers, made once, so a row's handle props stay equal between renders and memoized rows can skip. */
   const handlersOf = (rowId: string): RowHandlers => {
@@ -811,7 +1114,8 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       if (draggingId === rowId) attributes["data-dragging"] = "";
       else if (children.includes(rowId)) attributes["data-dragging-child"] = "";
       if (target?.id === rowId) attributes["data-drop-position"] = target.position;
-      if (target && edgeId === rowId) attributes["data-drop-edge"] = target.position;
+      // "inside" draws its line under the new parent, as "after" does.
+      if (target && edgeId === rowId) attributes["data-drop-edge"] = target.position === "before" ? "before" : "after";
       return attributes;
     },
   };

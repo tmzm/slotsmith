@@ -44,6 +44,7 @@ export const ja: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `${number(total)}行中${number(position)}番目です。`,
       reorderDropped: (position, total) => `行を${number(total)}行中${number(position)}番目に配置しました。`,
       reorderCancelled: "並べ替えをキャンセルしました。",
+      reorderLevel: (level) => `レベル${number(level)}。`,
       editCell: (column) => `${column}を編集`,
       invalidNumber: "数値を入力してください。",
       invalidOption: "選択肢から選んでください。",

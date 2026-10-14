@@ -3,7 +3,7 @@ import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VirtualDataTable } from "../../virtual";
 import type { DataTableColumnDef } from "../features";
-import type { RowOrderChange } from "../reorder";
+import type { RowMove, RowOrderChange } from "../reorder";
 import { defaultReorderLabels } from "../reorderLabels";
 import type { DataTableLabels } from "../../slots/types";
 import { resetReorderWarnings, useDataTable, type DataTableModel } from "../useDataTable";
@@ -803,6 +803,9 @@ describe("useRowReorder, in a tree table", () => {
     pageSize?: number;
     onRowOrderChange: (change: RowOrderChange<Node>) => void;
     model?: { current: RowReorderModel | null };
+    /** Rows may move to another parent. */
+    across?: boolean;
+    canDrop?: (move: RowMove<Node>) => boolean;
   }
 
   function Tree(props: TreeProps) {
@@ -816,6 +819,9 @@ describe("useRowReorder, in a tree table", () => {
       defaultSorting: props.sort ? [{ id: "id", desc: true }] : [],
       enablePagination: props.pageSize !== undefined,
       defaultPagination: { pageIndex: props.page ?? 0, pageSize: props.pageSize ?? 10 },
+      reorderAcrossParents: props.across,
+      setSubRows: (row, subRows) => ({ ...row, children: subRows }),
+      canDrop: props.canDrop,
     });
     if (props.model) props.model.current = model.reorder;
     return (
@@ -845,6 +851,78 @@ describe("useRowReorder, in a tree table", () => {
     const change = () => onRowOrderChange.mock.calls[0]![0];
     return { ...utils, data, model, onRowOrderChange, row, handle, change };
   }
+
+  /** The tree as nested ids: `a(a1,a2(a21))`. */
+  const shape = (rows: readonly Node[]): string =>
+    rows.map((row) => (row.children?.length ? `${row.id}(${shape(row.children)})` : row.id)).join(",");
+
+  describe("across parents", () => {
+    it("outdents a sub-row with the left arrow: it becomes a sibling after its old parent's subtree", () => {
+      const { handle, change } = setupTree({ across: true });
+      key(handle("a3"), " ");
+      key(handle("a3"), "ArrowLeft");
+      key(handle("a3"), " ");
+      expect(change()).toMatchObject({ rowId: "a3", fromParentId: "a", parentId: null, index: 1, position: "before", targetId: "b" });
+      expect(shape(change().data)).toBe("a(a1,a2(a21)),a3,b,c(c1)");
+    });
+
+    it("indents a row under its previous sibling with the right arrow", () => {
+      const { handle, change } = setupTree({ across: true });
+      key(handle("b"), " ");
+      key(handle("b"), "ArrowRight");
+      key(handle("b"), " ");
+      expect(change()).toMatchObject({ rowId: "b", fromParentId: null, parentId: "a", index: 3, position: "after" });
+      expect(shape(change().data)).toBe("a(a1,a2(a21),a3,b),c(c1)");
+    });
+
+    it("moves a row into another parent's children with the arrow keys, its subtree with it", () => {
+      const { handle, change } = setupTree({ across: true });
+      key(handle("a2"), " ");
+      // Past a3, b and into c, as c's first child.
+      key(handle("a2"), "ArrowDown");
+      key(handle("a2"), "ArrowDown");
+      key(handle("a2"), "ArrowDown");
+      key(handle("a2"), "ArrowRight");
+      key(handle("a2"), " ");
+      expect(change()).toMatchObject({ rowId: "a2", fromParentId: "a", parentId: "c", index: 0, position: "inside", targetId: "c" });
+      expect(shape(change().data)).toBe("a(a1,a3),b,c(a2(a21),c1)");
+    });
+
+    it("announces the level as well as the position", () => {
+      const { handle, model } = setupTree({ across: true });
+      key(handle("a3"), " ");
+      key(handle("a3"), "ArrowLeft");
+      expect(model.current!.announcement).toBe("Position 2 of 4. Level 1.");
+    });
+
+    it("skips the depths canDrop refuses", () => {
+      // c takes no children.
+      const { handle, onRowOrderChange } = setupTree({ across: true, canDrop: (move) => move.parentId !== "c" });
+      key(handle("b"), " ");
+      key(handle("b"), "ArrowDown");
+      key(handle("b"), "ArrowRight");
+      key(handle("b"), " ");
+      // Between c and c1 only depth 1 is allowed, inside c: refused, so nothing moves.
+      expect(onRowOrderChange).not.toHaveBeenCalled();
+    });
+
+    it("lets a lone child be dragged out", () => {
+      const { handle } = setupTree({ across: true, data: [node("p", [node("only")]), node("q")] });
+      expect(handle("only")).not.toBeDisabled();
+    });
+
+    it("moves a row a level in when the pointer goes sideways, and reports the new tree on release", () => {
+      const { handle, change, row } = setupTree({ across: true });
+      // b sits at 200; dragging it one indent (20px) right puts it one level in, after a3.
+      fireEvent.pointerDown(handle("b"), { pointerId: 1, button: 0, clientX: 10, clientY: 220 });
+      fireEvent.pointerMove(window, { pointerId: 1, clientX: 30, clientY: 222 });
+      frame();
+      expect(row("b").style.transform.startsWith("translate3d(20px, ")).toBe(true);
+      fireEvent.pointerUp(window, { pointerId: 1, clientX: 30, clientY: 222 });
+      expect(change()).toMatchObject({ rowId: "b", parentId: "a", fromParentId: null });
+      expect(shape(change().data)).toBe("a(a1,a2(a21),a3,b),c(c1)");
+    });
+  });
 
   it("moves a top-level parent below its sibling, its subtree with it", () => {
     const { handle, onRowOrderChange, change, data } = setupTree();

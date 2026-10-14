@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   blockRowOffsets,
   canReorder,
+  depthRange,
+  moveInTree,
+  placementAt,
+  type TreeNode,
   dropTargetAt,
   landingIndex,
   moveItem,
@@ -242,5 +246,69 @@ describe("reordering over blocks", () => {
     expect(entries(blockRowOffsets(blocks, rowOffsets(blocks, "a", target)))).toEqual(
       entries(rowOffsets(rects, "a", target)),
     );
+  });
+});
+
+describe("moving across parents", () => {
+  // a                 depth 0
+  //   a1              depth 1
+  //   a2              depth 1
+  // b                 depth 0 (collapsed, with b1 hidden)
+  // c                 depth 0
+  const rows = [
+    { id: "a", parentId: null, depth: 0 },
+    { id: "a1", parentId: "a", depth: 1 },
+    { id: "a2", parentId: "a", depth: 1 },
+    { id: "b", parentId: null, depth: 0 },
+    { id: "c", parentId: null, depth: 0 },
+  ];
+  const children: Record<string, string[]> = { root: ["a", "b", "c"], a: ["a1", "a2"], b: ["b1"] };
+  const childrenOf = (parentId: string | null) => children[parentId ?? "root"] ?? [];
+
+  it("allows depths from the row below to one under the row above", () => {
+    expect(depthRange(rows[2], rows[3])).toEqual({ min: 0, max: 2 });
+    expect(depthRange(rows[0], rows[1])).toEqual({ min: 1, max: 1 });
+    expect(depthRange(undefined, rows[0])).toEqual({ min: 0, max: 0 });
+    expect(depthRange(rows[4], undefined)).toEqual({ min: 0, max: 1 });
+  });
+
+  it("places a row as a sibling before the row below", () => {
+    expect(placementAt(rows, 3, 0, childrenOf)).toEqual({ parentId: null, index: 1, depth: 0 });
+  });
+
+  it("places a row after the row above's ancestor at a shallower depth", () => {
+    // Between a2 and b, at depth 1: after a2, inside a.
+    expect(placementAt(rows, 3, 1, childrenOf)).toEqual({ parentId: "a", index: 2, depth: 1 });
+  });
+
+  it("places a row as the last child of a collapsed row above", () => {
+    // Between b and c, one deeper than b: after b's hidden b1.
+    expect(placementAt(rows, 4, 1, childrenOf)).toEqual({ parentId: "b", index: 1, depth: 1 });
+  });
+
+  it("places a row as the first shown child of an expanded row above", () => {
+    expect(placementAt(rows, 1, 1, childrenOf)).toEqual({ parentId: "a", index: 0, depth: 1 });
+  });
+
+  it("rebuilds only the rows on the way, with setSubRows", () => {
+    type Node = { id: string; kids?: Node[] };
+    const tree: Node[] = [
+      { id: "a", kids: [{ id: "a1" }, { id: "a2" }] },
+      { id: "b", kids: [{ id: "b1" }] },
+      { id: "c" },
+    ];
+    const toNodes = (nodes: Node[], parent?: string): TreeNode<Node>[] =>
+      nodes.map((node) => ({ id: node.id, original: node, subRows: node.kids ? toNodes(node.kids, node.id) : undefined }));
+    const setSubRows = (row: Node, subRows: Node[]) => ({ ...row, kids: subRows });
+
+    const next = moveInTree(toNodes(tree), "a2", { parentId: "c", index: 0 }, setSubRows);
+    expect(next.map((node) => node.id)).toEqual(["a", "b", "c"]);
+    expect(next[0]!.kids!.map((node) => node.id)).toEqual(["a1"]);
+    expect(next[1]).toBe(tree[1]);
+    expect(next[2]!.kids!.map((node) => node.id)).toEqual(["a2"]);
+    expect(next[2]!.kids![0]).toBe(tree[0]!.kids![1]);
+
+    const outdented = moveInTree(toNodes(tree), "a1", { parentId: null, index: 1 }, setSubRows);
+    expect(outdented.map((node) => node.id)).toEqual(["a", "a1", "b", "c"]);
   });
 });

@@ -495,6 +495,8 @@ export interface DataTableLabels {
   reorderDropped: (position: number, total: number) => string;
   /** Announced when a move is cancelled. Default: "Reordering cancelled." */
   reorderCancelled: string;
+  /** Announced after a step or a drop that moves a row across parents, with its depth from 1. Default: `Level ${level}.` */
+  reorderLevel: (level: number) => string;
   /** Spreadsheet mode: the cell editor's accessible name. Default: `Edit ${column}`. */
   editCell: (column: string) => string;
   /** Spreadsheet mode: a number cell got text that is not a number. Default: "Enter a number." */

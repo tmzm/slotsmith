@@ -18,7 +18,7 @@ import {
   type DataTableInstance,
   type DataTableRow,
 } from "./features";
-import { canReorder, type ReorderWhileSorted, type RowOrderChange } from "./reorder";
+import { canReorder, type ReorderWhileSorted, type RowMove, type RowOrderChange } from "./reorder";
 import type { DataTableLabels } from "../slots/types";
 import { defaultReorderLabels, type ReorderLabels } from "./reorderLabels";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
@@ -156,6 +156,22 @@ export interface UseDataTableOptions<T extends RowData> {
    * disabled until the sort is cleared. Defaults to `"clearSort"`.
    */
   reorderWhileSorted?: ReorderWhileSorted;
+  /**
+   * In a tree table, rows may be dragged to another parent and another depth,
+   * not only among their siblings: drag sideways (or press the left and right
+   * arrow keys while a row is lifted) to move it in or out a level. Needs
+   * `getSubRows` and `setSubRows`; a drop then reports the whole new tree as
+   * `change.data`. Defaults to `false`.
+   */
+  reorderAcrossParents?: boolean;
+  /**
+   * Writes new children into a copy of a tree row and returns it: how the
+   * table builds the new tree after a move across parents
+   * (`reorderAcrossParents`) or an edit of a sub-row in spreadsheet mode.
+   */
+  setSubRows?: (row: T, subRows: T[]) => T;
+  /** Whether a dragged row may land at a place; places it may not are skipped while dragging. */
+  canDrop?: (move: RowMove<T>) => boolean;
   /**
    * Text for a table rendered with this hook alone. The hook reads the reorder
    * keys (the handle's name, its instructions and the announcements); any key
@@ -507,14 +523,31 @@ export function useDataTable<T extends RowData>(
       // The drop reordered the data; clearing the sort shows that order.
       if (sorted && whileSorted === "clearSort") setSorting([]);
     },
+    acrossParents: hasSubRows && options.reorderAcrossParents === true,
+    setSubRows: options.setSubRows,
+    canDrop: options.canDrop,
   });
+
+  /** Moving across parents builds a new tree, which needs both halves of it: say so while building. */
+  useEffect(() => {
+    if (options.reorderAcrossParents && (!hasSubRows || !options.setSubRows)) {
+      warnings.warn(
+        "across-parents",
+        "slotsmith: reorderAcrossParents needs getSubRows and setSubRows; rows move among their siblings only until both are given.",
+      );
+    }
+  }, [options.reorderAcrossParents, hasSubRows, options.setSubRows]);
 
   const spreadsheetOption = options.spreadsheet ?? false;
   const spreadsheet = useSpreadsheet<T>({
     enabled: spreadsheetOption !== false,
     options: useMemo(
-      (): DataTableSpreadsheetOptions<T> => (typeof spreadsheetOption === "object" ? spreadsheetOption : {}),
-      [spreadsheetOption],
+      (): DataTableSpreadsheetOptions<T> => {
+        const own = typeof spreadsheetOption === "object" ? spreadsheetOption : {};
+        // The table's own setSubRows serves editing too.
+        return own.setSubRows || !options.setSubRows ? own : { ...own, setSubRows: options.setSubRows };
+      },
+      [spreadsheetOption, options.setSubRows],
     ),
     table,
     labels: engineLabels,

@@ -44,6 +44,7 @@ export const tr: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `Konum ${number(position)} / ${number(total)}.`,
       reorderDropped: (position, total) => `Satır bırakıldı. Konum ${number(position)} / ${number(total)}.`,
       reorderCancelled: "Sıralama iptal edildi.",
+      reorderLevel: (level) => `Düzey ${number(level)}.`,
       editCell: (column) => `${column} düzenle`,
       invalidNumber: "Bir sayı girin.",
       invalidOption: "Seçeneklerden birini seçin.",

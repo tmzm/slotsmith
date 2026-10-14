@@ -29,6 +29,7 @@ export const nl = defineLocale({
       reorderMoved: (position, total) => `Positie ${number(position)} van ${number(total)}.`,
       reorderDropped: (position, total) => `Rij neergezet op positie ${number(position)} van ${number(total)}.`,
       reorderCancelled: "Verplaatsen geannuleerd.",
+      reorderLevel: (level) => `Niveau ${number(level)}.`,
       editCell: (column) => `${column} bewerken`,
       invalidNumber: "Voer een getal in.",
       invalidOption: "Kies een van de opties.",

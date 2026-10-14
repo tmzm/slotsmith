@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import { afterEach, describe, expect, it, vi } from "vitest";
 import HeadlessHook from "@samples/data-table/headless-hook";
 import RowReorder from "@samples/data-table/row-reorder";
+import RowReorderAcross from "@samples/data-table/row-reorder-across";
 import RowReorderTree from "@samples/data-table/row-reorder-tree";
 import TreeRows from "@samples/data-table/tree-rows";
 import VirtualRows from "@samples/data-table/virtual-rows";
@@ -148,6 +149,28 @@ describe("data-table guide: headless hook", () => {
     key(handle, " ");
     key(handle, "Escape");
     expect(liveRegion()).toHaveProperty("textContent", "Move cancelled.");
+    expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe("data-table guide: row reorder across parents", () => {
+  it("moves a sub-row out to the top level with the left arrow, and keeps Launch at the top", () => {
+    const error = vi.spyOn(console, "error");
+    const { container } = render(<RowReorderAcross />);
+    const ids = () => bodyRows(container).map((row) => row.getAttribute("data-row-id"));
+    expect(ids()).toEqual(["t1", "t1.1", "t1.2", "t2", "t2.1", "t2.2", "t3"]);
+
+    const handle = within(bodyRows(container)[2]!).getByRole("button", { name: "Reorder row" });
+    act(() => handle.focus());
+    key(handle, " ");
+    key(handle, "ArrowLeft");
+    expect(liveRegion()).toHaveProperty("textContent", "Position 2 of 4. Level 1.");
+    key(handle, " ");
+
+    // The order on screen is the same; the row is now top-level.
+    expect(ids()).toEqual(["t1", "t1.1", "t1.2", "t2", "t2.1", "t2.2", "t3"]);
+    expect(bodyRows(container)[2]!.getAttribute("data-depth")).toBe("0");
+    expect(screen.getByText(/rowId: "t1.2", fromParentId: "t1", parentId: null, index: 1/)).toBeTruthy();
     expect(error).not.toHaveBeenCalled();
   });
 });

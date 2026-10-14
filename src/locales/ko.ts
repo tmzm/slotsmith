@@ -43,6 +43,7 @@ export const ko: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `${number(total)}개 중 ${number(position)}번째 위치입니다.`,
       reorderDropped: (position, total) => `행을 ${number(total)}개 중 ${number(position)}번째 위치에 놓았습니다.`,
       reorderCancelled: "순서 변경을 취소했습니다.",
+      reorderLevel: (level) => `수준 ${number(level)}.`,
       editCell: (column) => `${column} 편집`,
       invalidNumber: "숫자를 입력하세요.",
       invalidOption: "옵션 중 하나를 선택하세요.",

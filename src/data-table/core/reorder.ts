@@ -1,6 +1,14 @@
 /** Which side of a row another row is dropped on. */
 export type DropPosition = "before" | "after";
 
+/**
+ * Drop place
+ *
+ * Where a dropped row lands against its target: before or after it, or,
+ * when rows move across parents, inside it as a child.
+ */
+export type DropPlace = DropPosition | "inside";
+
 /** A place to drop: a row and a side of it. */
 export interface DropTarget {
   id: string;
@@ -19,7 +27,8 @@ export interface RowRect {
  *
  * What a drop reports. The table does not reorder itself: store `data`, or,
  * for a sub-row of a tree table, store `siblings` as the children of `parent`.
- * A row only ever moves among its siblings, together with its sub-rows.
+ * A row moves together with its sub-rows, among its siblings, or, with
+ * `reorderAcrossParents`, to another parent: `data` is then the whole new tree.
  *
  * @typeParam T - The row data type.
  */
@@ -27,22 +36,47 @@ export interface RowOrderChange<T> {
   /** The row that was moved. */
   row: T;
   rowId: string;
-  /** The row it was dropped next to: always one of its siblings. */
+  /** The row it was dropped next to (one of its new siblings), or, for `"inside"`, its new parent. */
   target: T;
   targetId: string;
-  /** Which side of the target it landed on. */
-  position: DropPosition;
+  /** Which side of the target it landed on, or `"inside"` it. */
+  position: DropPlace;
   /**
    * The top-level rows: `data` with the row moved when it is a top-level row,
-   * `data` unchanged when it is a sub-row (store `siblings` then).
+   * `data` unchanged when it is a sub-row (store `siblings` then). After a
+   * move to another parent, the whole new tree, built with `setSubRows`.
    */
   data: T[];
-  /** The id of the moved row's parent; `null` for a top-level row. */
+  /** The id of the moved row's parent after the move; `null` for the top level. */
   parentId: string | null;
-  /** The moved row's parent; `null` for a top-level row. */
+  /** The moved row's parent after the move; `null` for the top level. */
   parent: T | null;
   /** The parent's children in their new order; for a top-level row, the same rows as `data`. */
   siblings: T[];
+  /** The row's index among `siblings`. */
+  index: number;
+  /** The id of the parent the row came from; the same as `parentId` unless it moved across parents. */
+  fromParentId: string | null;
+  /** The parent the row came from. */
+  fromParent: T | null;
+}
+
+/**
+ * Row move
+ *
+ * A place a row could be dropped, as `canDrop` sees it.
+ *
+ * @typeParam T - The row data type.
+ */
+export interface RowMove<T> {
+  /** The row being moved. */
+  row: T;
+  rowId: string;
+  /** The parent it would have; `null` for the top level. */
+  parent: T | null;
+  parentId: string | null;
+  /** Its index among the parent's children. */
+  index: number;
 }
 
 /**
@@ -289,4 +323,138 @@ export function scrollSpeed(y: number, top: number, bottom: number, edge = 40, m
   if (y < top + edge) return -Math.min(max, Math.ceil(((top + edge - y) / edge) * max));
   if (y > bottom - edge) return Math.min(max, Math.ceil(((y - (bottom - edge)) / edge) * max));
   return 0;
+}
+
+/**
+ * Placement
+ *
+ * Where a row lands in a tree: under a parent, at an index among the
+ * parent's other children, at a depth.
+ */
+export interface Placement {
+  /** The new parent's id; `null` for the top level. */
+  parentId: string | null;
+  /** The index among the parent's children, the moved row left out. */
+  index: number;
+  depth: number;
+}
+
+/**
+ * Depth range
+ *
+ * The depths a row may land at in a gap of the visible rows (the moved rows
+ * left out): no shallower than the row below, which must not end up inside
+ * it, and at most one deeper than the row above, as its child.
+ *
+ * @param above - The row above the gap, if any.
+ * @param below - The row below the gap, if any.
+ * @returns The shallowest and the deepest depth allowed.
+ */
+export function depthRange(above: RowLevel | undefined, below: RowLevel | undefined): { min: number; max: number } {
+  return { min: below ? below.depth : 0, max: above ? above.depth + 1 : 0 };
+}
+
+/**
+ * Placement at
+ *
+ * Turns a gap and a depth into a placement in the tree.
+ *
+ * @param rows - The visible rows, top to bottom, the moved rows left out.
+ * @param gap - The gap, from 0 (above the first row) to `rows.length` (below the last).
+ * @param depth - The depth, within {@link depthRange}.
+ * @param childrenOf - Every child id of a parent (`null` for the top level), in
+ *   the data's order, the moved row left out.
+ * @returns The placement.
+ */
+export function placementAt(
+  rows: readonly RowLevel[],
+  gap: number,
+  depth: number,
+  childrenOf: (parentId: string | null) => readonly string[],
+): Placement {
+  const above = rows[gap - 1];
+  const below = rows[gap];
+  if (above && depth === above.depth + 1) {
+    // A child of the row above: before its first shown child, or last among hidden ones.
+    const children = childrenOf(above.id);
+    const index = below && below.depth === depth ? children.indexOf(below.id) : children.length;
+    return { parentId: above.id, index: Math.max(index, 0), depth };
+  }
+  if (below && below.depth === depth) {
+    return { parentId: below.parentId, index: Math.max(childrenOf(below.parentId).indexOf(below.id), 0), depth };
+  }
+  // After the row above's ancestor at this depth.
+  let anchor = above;
+  while (anchor && anchor.depth > depth) anchor = rows.find((row) => row.id === anchor!.parentId);
+  const parentId = anchor ? anchor.parentId : null;
+  const index = anchor ? childrenOf(parentId).indexOf(anchor.id) + 1 : 0;
+  return { parentId, index, depth };
+}
+
+/**
+ * Tree node
+ *
+ * A row of a tree with its children, as TanStack's rows have them.
+ *
+ * @typeParam T - The row data type.
+ */
+export interface TreeNode<T> {
+  id: string;
+  original: T;
+  subRows?: readonly TreeNode<T>[];
+}
+
+/**
+ * Move in tree
+ *
+ * The rows with one row (and its whole subtree) moved to a placement. Only the
+ * rows on the way to the old and the new parent are copied, with
+ * `setSubRows`; the rest are kept as they are.
+ *
+ * @typeParam T - The row data type.
+ * @param roots - The top-level rows.
+ * @param rowId - The row to move.
+ * @param to - Where it goes.
+ * @param setSubRows - Writes new children into a copy of a row.
+ * @returns The new top-level rows.
+ */
+export function moveInTree<T>(
+  roots: readonly TreeNode<T>[],
+  rowId: string,
+  to: { parentId: string | null; index: number },
+  setSubRows: (row: T, subRows: T[]) => T,
+): T[] {
+  let moving: TreeNode<T> | undefined;
+  const touched = new Set<string>();
+  /** Marks the nodes on the way to `id`, and returns whether it is in `nodes`. */
+  const mark = (nodes: readonly TreeNode<T>[], id: string, path: string[]): boolean => {
+    for (const node of nodes) {
+      if (node.id === id) {
+        if (id === rowId) moving = node;
+        for (const step of path) touched.add(step);
+        touched.add(node.id);
+        return true;
+      }
+      if (node.subRows && mark(node.subRows, id, [...path, node.id])) return true;
+    }
+    return false;
+  };
+  mark(roots, rowId, []);
+  if (to.parentId !== null) mark(roots, to.parentId, []);
+  if (!moving) return roots.map((node) => node.original);
+
+  const build = (nodes: readonly TreeNode<T>[], parentId: string | null): T[] => {
+    const list = nodes
+      .filter((node) => node.id !== rowId)
+      .map((node) => {
+        if (!touched.has(node.id) || node.id === rowId) return node.original;
+        const children = build(node.subRows ?? [], node.id);
+        const before = (node.subRows ?? []).map((child) => child.original);
+        const same = children.length === before.length && children.every((child, i) => child === before[i]);
+        return same ? node.original : setSubRows(node.original, children);
+      });
+    if (parentId === to.parentId) list.splice(Math.min(to.index, list.length), 0, moving!.original);
+    return list;
+  };
+  return build(roots, null);
 }

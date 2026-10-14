@@ -4,8 +4,8 @@
     "Sorting": ["sorting", "onSortingChange", "defaultSorting", "manualSorting", "enableMultiSort"],
     "Pagination": ["pagination", "onPaginationChange", "defaultPagination", "manualPagination", "rowCount", "pageSizeOptions", "enablePagination", "hidePagination"],
     "Selection": ["enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange"],
-    "Tree rows": ["getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows"],
-    "Row reordering": ["enableRowReorder", "onRowOrderChange", "reorderHandleColumn", "reorderWhileSorted"],
+    "Tree rows": ["getSubRows", "setSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows"],
+    "Row reordering": ["enableRowReorder", "onRowOrderChange", "reorderHandleColumn", "reorderWhileSorted", "reorderAcrossParents", "canDrop"],
     "Spreadsheet": ["spreadsheet", "onValueChange"],
     "Status": ["loading", "error", "onRetry"],
     "Rendering": ["components", "labels", "locale", "slotProps", "onRowClick", "size", "striped", "tableOptions", "virtual"]

@@ -21,7 +21,7 @@ export interface SavedStyle {
 /** The rows the engine has written a transform on, so it clears only its own. */
 const moved = new WeakSet<HTMLElement>();
 
-const translate = (y: number) => `translate3d(0, ${y}px, 0)`;
+const translate = (y: number, x = 0) => `translate3d(${x ? `${x}px` : 0}, ${y}px, 0)`;
 
 /**
  * Prefers reduced motion
@@ -95,12 +95,15 @@ export function restoreStyles(parent: Element, saved: ReadonlyMap<string, SavedS
  * @param offsets - Vertical offsets in pixels, by row id.
  * @param dragging - The rows being moved, by id.
  * @param animate - Whether the dragged rows slide too.
+ * @param shift - How far the dragged rows are drawn to the side, in pixels: a
+ *   row moved to another depth of a tree is drawn at that depth's indent.
  */
 export function applyOffsets(
   parent: Element,
   offsets: ReadonlyMap<string, number>,
   dragging: ReadonlySet<string>,
   animate: boolean,
+  shift = 0,
 ): void {
   for (const row of rowsIn(parent)) {
     const id = idOf(row);
@@ -115,7 +118,7 @@ export function applyOffsets(
       continue;
     }
 
-    const transform = translate(offset);
+    const transform = translate(offset, dragging.has(id) ? shift : 0);
     moved.add(row);
     if (row.style.transition !== transition) row.style.transition = transition;
     if (row.style.transform !== transform) row.style.transform = transform;
