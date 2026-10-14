@@ -1,9 +1,9 @@
 ---
 title: "Virtual lists"
-description: "Use VirtualFileUploader from slotsmith/virtual for batches of hundreds of files: only the rows in view are rendered, and the rest works as in FileUploader."
+description: "Pass virtual to the slotsmith FileUploader for batches of hundreds of files: only the rows in view are rendered, and the rest works as before."
 ---
 
-For batches of hundreds of files, use `VirtualFileUploader` from `slotsmith/virtual`: the file uploader with a virtual list. It takes the same props as `FileUploader`, but renders only the rows in view inside a scroll area. The queue, progress, retry and every slot work the same.
+For hundreds of files, pass `virtual` to the file uploader with the virtualizer hook as `use` (`useVirtualizer` from `@tanstack/react-virtual`): it renders only the rows in view inside a scroll area. `VirtualFileUploader` from `slotsmith/virtual` passes the hook for you. The queue, progress, retry and every slot work the same.
 
 {/* Reserved height measured in Chrome: the drop zone and the 320px list. */}
 <Demo name="file-uploader/virtual" height="34.25rem" fallback />
@@ -12,7 +12,7 @@ The list holds 300 stored scans and scrolls inside 320px; only about a dozen row
 
 ## Install
 
-`VirtualFileUploader` is built on TanStack Virtual, an optional peer dependency. Install it next to `slotsmith`:
+The hook comes from TanStack Virtual, an optional peer dependency that slotsmith never imports itself. Install it next to `slotsmith`:
 
 ```bash
 npm i @tanstack/react-virtual
@@ -20,7 +20,7 @@ npm i @tanstack/react-virtual
 
 ## The virtual option
 
-The `virtual` prop takes three numbers:
+The `virtual` prop takes the hook as `use` (`VirtualFileUploader` passes it for you), and three numbers:
 
 - `estimateSize`: the height of one row in pixels, 56 by default. The rows are not measured, so set it to your row height plus the gap between rows: a fallback row is 64.5px and the gap 8px, so the demo uses 72.5.
 - `maxHeight`: the height of the scroll area in pixels, 400 by default.

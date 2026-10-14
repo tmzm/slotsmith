@@ -2,6 +2,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SlotsmithProvider } from "../../provider";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { FileUploader } from "../FileUploader";
 import { VirtualFileUploader } from "../virtual";
 import { fileInput, items, makeFile } from "./builders";
 
@@ -148,5 +150,16 @@ describe("VirtualFileUploader under a SlotsmithProvider", () => {
     );
     expect(screen.getByTestId("own-icon")).toBeInTheDocument();
     expect(screen.queryByTestId("provider-icon")).not.toBeInTheDocument();
+  });
+});
+
+describe("FileUploader with virtual", () => {
+  it("windows the items with the hook it is given, from the main entry", async () => {
+    const user = userEvent.setup();
+    render(<FileUploader multiple maxFiles={300} virtual={{ use: useVirtualizer, estimateSize: 56, overscan: 2 }} />);
+    const files = Array.from({ length: 120 }, (_, index) => makeFile(`file-${index}.png`));
+    await user.upload(fileInput(), files);
+    expect(rows().length).toBeGreaterThan(0);
+    expect(rows().length).toBeLessThan(files.length);
   });
 });

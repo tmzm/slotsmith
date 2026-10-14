@@ -214,8 +214,8 @@ export interface DataTableModel<T extends RowData> {
   /** Row reordering: its state, and the props for rows and drag handles. */
   reorder: RowReorderModel;
   /**
-   * Whether row reordering is on for this table: `enableRowReorder`, in a
-   * non-virtual table. It stays on while too few rows show for a drag,
+   * Whether row reordering is on for this table: `enableRowReorder`. It
+   * stays on while too few rows show for a drag,
    * so handles, the live region and the instructions do not come and go with
    * the row count; `reorder.enabled` says whether a drag can start now.
    */
@@ -230,14 +230,12 @@ export interface DataTableModel<T extends RowData> {
  * Data table internals
  *
  * What `DataTable.Provider` hands the headless hook beyond the public
- * options: the resolved reorder labels (English when absent) and whether the
- * body is virtualized.
+ * options: the resolved reorder and spreadsheet labels (English when absent).
  *
  * @internal
  */
 export interface DataTableInternals {
   labels?: ReorderLabels & SpreadsheetLabels;
-  virtual?: boolean;
 }
 
 const warnings = createDevWarnings();
@@ -464,9 +462,8 @@ export function useDataTable<T extends RowData>(
   const visibleRowCount = visibleRows.length;
 
   const hasSubRows = getSubRows !== undefined;
-  const virtual = internals.virtual ?? false;
   const enableRowReorder = options.enableRowReorder ?? false;
-  const reorderable = canReorder({ enabled: enableRowReorder, virtual, rowCount: Infinity });
+  const reorderable = canReorder({ enabled: enableRowReorder, rowCount: Infinity });
   const coreRowModel = table.getCoreRowModel();
   const whileSorted = options.reorderWhileSorted ?? "clearSort";
   const sorted = sorting.length > 0;
@@ -500,7 +497,7 @@ export function useDataTable<T extends RowData>(
   const engineLabels = internals.labels ?? headlessLabels!;
 
   const reorder = useRowReorder<T>({
-    enabled: canReorder({ enabled: enableRowReorder, virtual, rowCount: visibleRowCount, sorted, whileSorted }),
+    enabled: canReorder({ enabled: enableRowReorder, rowCount: visibleRowCount, sorted, whileSorted }),
     visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
     rows: orderModel.rows,
     tree: reorderTree,
@@ -534,15 +531,6 @@ export function useDataTable<T extends RowData>(
     }
   }, [spreadsheetOption, options.onValueChange]);
 
-  /** Reordering a virtual table is not supported yet: say so while building. */
-  useEffect(() => {
-    if (enableRowReorder && virtual) {
-      warnings.warn(
-        "virtual",
-        "slotsmith: enableRowReorder is ignored in VirtualDataTable; rows can be reordered in a non-virtual table only.",
-      );
-    }
-  }, [enableRowReorder, virtual]);
   const hasError = isPresent(error);
   const pageCount = table.getPageCount();
 

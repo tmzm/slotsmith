@@ -68,6 +68,10 @@ export type {
   UploadStatus,
 } from "./core/types";
 
+export { FileUploaderVirtualList } from "./virtualList";
+export type { FileUploaderVirtualOptions } from "./virtualList";
+export type { UseVirtualizer, Virtualizer, VirtualizerOptions, VirtualRange, VirtualRow } from "../shared/virtualizer";
+
 export { useFileUploaderContext, useUploadItem } from "./slots/context";
 export type { FileUploaderContextValue } from "./slots/context";
 

@@ -54,14 +54,16 @@ describe("data-table guide: virtual rows", () => {
 });
 
 describe("data-table guide: virtual rows", () => {
-  it("ignores row reorder: no drag handles, and one warning while developing", () => {
+  it("reorders rows too, with no warning", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
     const rows = [{ id: "a" }, { id: "b" }];
-    render(<VirtualDataTable data={rows} columns={[{ accessorKey: "id", header: "Id" }]} enableRowReorder onRowOrderChange={() => {}} />);
-    expect(screen.queryByRole("button", { name: "Reorder row" })).toBeNull();
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(String(warn.mock.calls[0]![0])).toContain("enableRowReorder is ignored in VirtualDataTable");
+    const { container } = render(
+      <VirtualDataTable data={rows} columns={[{ accessorKey: "id", header: "Id" }]} enableRowReorder onRowOrderChange={() => {}} />,
+    );
+    // jsdom has no layout, so no row is in the window; the handle column is there.
+    expect(container.querySelector("th[data-slot=drag]")).not.toBeNull();
+    expect(warn).not.toHaveBeenCalled();
   });
 });
 

@@ -111,10 +111,14 @@ describe("rowOffsets", () => {
 });
 
 describe("canReorder", () => {
-  const on = { enabled: true, virtual: false, rowCount: 5 };
+  const on = { enabled: true, rowCount: 5 };
   it("is on for a table with rows, flat or tree", () => expect(canReorder(on)).toBe(true));
   it("is off when not enabled", () => expect(canReorder({ ...on, enabled: false })).toBe(false));
-  it("is off for a virtual table", () => expect(canReorder({ ...on, virtual: true })).toBe(false));
+  it("is off while sorted only when asked to block", () => {
+    expect(canReorder({ ...on, sorted: true })).toBe(true);
+    expect(canReorder({ ...on, sorted: true, whileSorted: "clearSort" })).toBe(true);
+    expect(canReorder({ ...on, sorted: true, whileSorted: "block" })).toBe(false);
+  });
   it("is off with fewer than two rows", () => expect(canReorder({ ...on, rowCount: 1 })).toBe(false));
 });
 

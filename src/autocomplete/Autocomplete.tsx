@@ -24,6 +24,7 @@ import {
 } from "./parts";
 import { AutocompleteContext, useAutocompleteContext, type AutocompleteContextValue } from "./slots/context";
 import { autocompleteFallbacks, defaultAutocompleteLabels } from "./slots/fallbacks";
+import { AutocompleteVirtualList, AutocompleteVirtualPopup, type AutocompleteVirtualOptions } from "./virtualList";
 import type { AutocompleteComponents, AutocompleteLabels, AutocompleteSlotProps } from "./slots/types";
 
 /**
@@ -287,7 +288,14 @@ export function AutocompleteRoot(props: AutocompleteRootProps) {
  * @typeParam TOption - The option type.
  */
 export type AutocompleteProps<TOption> = Omit<AutocompleteProviderProps<TOption>, "children"> &
-  Omit<AutocompleteRootProps, "children" | "defaultValue" | "onChange">;
+  Omit<AutocompleteRootProps, "children" | "defaultValue" | "onChange"> & {
+    /**
+     * Renders only the options in view, for lists of thousands: pass the
+     * virtualizer hook (`useVirtualizer` from `@tanstack/react-virtual`) as
+     * `use`, and the sizes.
+     */
+    virtual?: AutocompleteVirtualOptions;
+  };
 
 /**
  * Provider keys
@@ -391,13 +399,14 @@ export function splitRootProps(rest: Record<string, unknown>) {
  */
 function AutocompleteComponent<TOption>(props: AutocompleteProps<TOption>) {
   const { providerProps, rest } = splitAutocompleteProps<TOption, AutocompleteProps<TOption>>(props);
-  const { triggerProps, rootProps } = splitRootProps(rest as Record<string, unknown>);
+  const { virtual, ...domProps } = rest;
+  const { triggerProps, rootProps } = splitRootProps(domProps as Record<string, unknown>);
 
   return (
     <AutocompleteProvider<TOption> {...providerProps}>
       <AutocompleteRoot {...(rootProps as AutocompleteRootProps)}>
         <AutocompleteTrigger {...triggerProps} />
-        <AutocompletePopup />
+        {virtual ? <AutocompleteVirtualPopup {...virtual} /> : <AutocompletePopup />}
         <AutocompleteLiveRegion />
       </AutocompleteRoot>
     </AutocompleteProvider>
@@ -461,4 +470,6 @@ export const Autocomplete = /* @__PURE__ */ Object.assign(AutocompleteComponent,
   Separator: AutocompleteSeparatorView,
   StatusRows: AutocompleteStatusRows,
   LiveRegion: AutocompleteLiveRegion,
+  VirtualPopup: AutocompleteVirtualPopup,
+  VirtualList: AutocompleteVirtualList,
 });

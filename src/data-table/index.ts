@@ -31,9 +31,13 @@ export {
   useColumnSpan,
 } from "./parts";
 
+export { DataTableVirtualBody } from "./virtualBody";
+export type { DataTableVirtualBodyProps, DataTableVirtualOptions } from "./virtualBody";
+export type { UseVirtualizer, Virtualizer, VirtualizerOptions, VirtualRange, VirtualRow } from "../shared/virtualizer";
+
 export { useDataTable, defaultGetRowId, DEFAULT_PAGE_SIZE_OPTIONS } from "./core/useDataTable";
 export type { UseDataTableOptions, DataTableModel, DataTableStatus } from "./core/useDataTable";
-export type { RowReorderAttributes, RowReorderModel } from "./core/useRowReorder";
+export type { ReorderGeometry, RowReorderAttributes, RowReorderModel } from "./core/useRowReorder";
 export { moveItem } from "./core/reorder";
 export type { DropPosition, ReorderWhileSorted, RowOrderChange } from "./core/reorder";
 

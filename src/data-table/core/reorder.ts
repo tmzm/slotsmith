@@ -256,13 +256,12 @@ export function blockRowOffsets(
  */
 export function canReorder(state: {
   enabled: boolean;
-  virtual: boolean;
   rowCount: number;
   sorted?: boolean;
   whileSorted?: ReorderWhileSorted;
 }): boolean {
   if (state.sorted && state.whileSorted === "block") return false;
-  return state.enabled && !state.virtual && state.rowCount > 1;
+  return state.enabled && state.rowCount > 1;
 }
 
 /**

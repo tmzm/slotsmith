@@ -755,7 +755,7 @@ describe("useRowReorder, in useDataTable", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it("is off in a virtual table, with one development warning", () => {
+  it("is on in a virtual table, with no warning", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.stubGlobal(
       "ResizeObserver",
@@ -766,9 +766,9 @@ describe("useRowReorder, in useDataTable", () => {
       },
     );
     const { container } = render(<VirtualDataTable<Item> data={items("abc")} columns={columns} enableRowReorder />);
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]![0]).toContain("VirtualDataTable");
-    expect(container.querySelector("[data-dragging]")).toBeNull();
+    expect(warn).not.toHaveBeenCalled();
+    // jsdom has no layout, so no row is in the window; the handle column is there.
+    expect(container.querySelector("th[data-slot=drag]")).not.toBeNull();
     vi.unstubAllGlobals();
   });
 

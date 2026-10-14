@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { SlotsmithProvider } from "../../provider";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { Autocomplete } from "../Autocomplete";
 import { VirtualAutocomplete } from "../virtual";
 
 /** jsdom has no layout: give every element a 320px-tall box so rows can be measured. */
@@ -329,5 +331,23 @@ describe("VirtualAutocomplete under a SlotsmithProvider", () => {
     );
     expect(screen.getByTestId("own-indicator")).toBeInTheDocument();
     expect(screen.queryByTestId("provider-indicator")).not.toBeInTheDocument();
+  });
+});
+
+describe("Autocomplete with virtual", () => {
+  it("windows the options with the hook it is given, from the main entry", async () => {
+    const user = userEvent.setup();
+    render(
+      <Autocomplete<City>
+        options={CITIES}
+        getOptionLabel={(city) => city.name}
+        aria-label="City"
+        virtual={{ use: useVirtualizer, estimateSize: 36, overscan: 2 }}
+      />,
+    );
+    await user.click(screen.getByRole("combobox", { name: "City" }));
+    const options = screen.getAllByRole("option");
+    expect(options.length).toBeGreaterThan(0);
+    expect(options.length).toBeLessThan(40);
   });
 });

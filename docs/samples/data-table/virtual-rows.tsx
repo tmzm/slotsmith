@@ -1,5 +1,5 @@
-import type { DataTableColumnDef } from "slotsmith/data-table";
-import { VirtualDataTable } from "slotsmith/virtual";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { DataTable, type DataTableColumnDef } from "slotsmith/data-table";
 
 type LogLine = { id: number; time: string; level: string; service: string; message: string };
 
@@ -32,13 +32,13 @@ const columns: DataTableColumnDef<LogLine>[] = [
 
 export default function VirtualRows() {
   return (
-    <VirtualDataTable
+    <DataTable
       data={lines}
       columns={columns}
       getRowId={(line) => String(line.id)}
       // Only the rows in view are rendered, inside a scroll area this tall.
       // Rows are not measured: estimateSize is their height, so keep them on one line.
-      virtual={{ estimateSize: 40, maxHeight: 360 }}
+      virtual={{ use: useVirtualizer, estimateSize: 40, maxHeight: 360 }}
       slotProps={{ cell: () => ({ style: { whiteSpace: "nowrap" } }) }}
     />
   );

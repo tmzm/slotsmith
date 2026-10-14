@@ -1,7 +1,8 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SlotsmithProvider } from "../../provider";
-import { resetReorderWarnings } from "../core/useDataTable";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { DataTable } from "../DataTable";
 import { VirtualDataTable } from "../virtual";
 import { bodyRows, columns, users, type User } from "./builders";
 
@@ -76,18 +77,49 @@ describe("VirtualDataTable", () => {
     expect(getByText("No data found")).toBeInTheDocument();
   });
 
-  it("ignores enableRowReorder: no handle, no extra column, one development warning", () => {
-    resetReorderWarnings();
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { container, rerender } = render(<VirtualDataTable<User> data={users(20)} columns={columns} enableRowReorder />);
-    rerender(<VirtualDataTable<User> data={users(21)} columns={columns} enableRowReorder />);
+  it("reorders rows, keeping the lifted row rendered while it is scrolled out of the window", () => {
+    const onRowOrderChange = vi.fn();
+    const { container } = render(
+      <VirtualDataTable<User>
+        data={users(1000)}
+        columns={columns}
+        enableRowReorder
+        onRowOrderChange={onRowOrderChange}
+        virtual={{ estimateSize: 40, overscan: 2, maxHeight: 400 }}
+      />,
+    );
+    const row = (id: string) => container.querySelector<HTMLElement>(`[data-row-id="${id}"]`);
+    const handle = () => row("u1")!.querySelector<HTMLElement>("[data-slot=drag] button")!;
 
-    expect(container.querySelector("[data-slot=drag], .sdt__drag")).toBeNull();
-    expect(container.querySelector("[role=status]")).toBeNull();
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]![0]).toContain("VirtualDataTable");
-    warn.mockRestore();
-    resetReorderWarnings();
+    act(() => handle().focus());
+    fireEvent.keyDown(handle(), { key: " " });
+    expect(row("u1")).toHaveAttribute("data-dragging");
+
+    const area = container.querySelector<HTMLElement>(".sdt__scroll")!;
+    act(() => {
+      area.scrollTop = 20_000;
+      fireEvent.scroll(area);
+    });
+    expect(row("u500")).not.toBeNull();
+    expect(row("u1")).toHaveAttribute("data-dragging");
+    expect(handle()).toHaveFocus();
+
+    fireEvent.keyDown(handle(), { key: "ArrowDown" });
+    fireEvent.keyDown(handle(), { key: " " });
+    expect(onRowOrderChange).toHaveBeenCalledTimes(1);
+    const { data } = onRowOrderChange.mock.calls[0]![0] as { data: User[] };
+    expect(data.slice(0, 3).map((user) => user.id)).toEqual(["u2", "u1", "u3"]);
+  });
+});
+
+describe("DataTable with virtual", () => {
+  it("windows the rows with the hook it is given, from the main entry", () => {
+    const { container } = render(
+      <DataTable<User> data={users(1000)} columns={columns} virtual={{ use: useVirtualizer, estimateSize: 40, overscan: 0 }} />,
+    );
+    expect(container.firstElementChild).toHaveAttribute("data-virtual");
+    expect(dataRows().length).toBeLessThan(30);
+    expect(screen.queryByRole("navigation")).toBeNull();
   });
 });
 

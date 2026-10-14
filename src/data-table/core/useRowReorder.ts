@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -81,6 +82,24 @@ export interface RowReorderModel {
   getHandleProps: (rowId: string) => DragHandleSlotProps;
   /** Attributes for a row: its id and its drag state. */
   getRowProps: (rowId: string) => RowReorderAttributes;
+  /**
+   * Gives the engine the places of rows that are not rendered, for a body
+   * that windows its rows; `null` goes back to measuring the rendered rows.
+   * The same function on every render.
+   */
+  setGeometry: (geometry: ReorderGeometry | null) => void;
+}
+
+/**
+ * Reorder geometry
+ *
+ * Where every row is, for a windowed body that renders only some of them.
+ */
+export interface ReorderGeometry {
+  /** Every row's extent, rendered or not, top to bottom, in the scroll area's content coordinates. */
+  measure: (parent: HTMLElement, area: HTMLElement | null) => { id: string; top: number; bottom: number }[];
+  /** Scrolls a row into view, rendered or not. */
+  reveal: (id: string) => void;
 }
 
 /**
@@ -404,6 +423,10 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
   const pendingFocus = useRef<string | null>(null);
   const stopSettle = useRef<(() => void) | null>(null);
   const handlerCache = useRef(new Map<string, RowHandlers>());
+  const geometry = useRef<ReorderGeometry | null>(null);
+  const setGeometry = useCallback((next: ReorderGeometry | null) => {
+    geometry.current = next;
+  }, []);
 
   const engine = useMemo(() => {
     const labelsNow = () => latest.current.options.labels;
@@ -495,7 +518,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       stopSettle.current = null;
 
       const area = scrollAreaOf(parent);
-      const rects = measure(parent, area);
+      const rects = geometry.current?.measure(parent, area) ?? measure(parent, area);
       const { tree } = latest.current.options;
       const levels = rects.map(({ id }) => tree?.levelOf(id) ?? { id, parentId: null, depth: 0 });
       const blocks = siblingBlocks(levels, rects, rowId);
@@ -613,9 +636,10 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       setTarget(s, target, true);
       if (!s.reduced) applyOffsets(s.parent, targetOffsets(s, target), s.moving, true);
       const shown = target?.id ?? s.id;
-      rowsIn(s.parent)
-        .find((row) => row.getAttribute("data-row-id") === shown)
-        ?.scrollIntoView?.({ block: "nearest" });
+      const element = rowsIn(s.parent).find((row) => row.getAttribute("data-row-id") === shown);
+      // A windowed body may not have the row rendered: its geometry scrolls to it.
+      if (element) element.scrollIntoView?.({ block: "nearest" });
+      else geometry.current?.reveal(shown);
     }
 
     function onKeyDown(rowId: string, event: KeyboardEvent<HTMLElement>): void {
@@ -771,6 +795,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     target,
     announcement: state.announcement,
     instructionsId,
+    setGeometry,
     getHandleProps: (rowId) => ({
       "aria-label": labels.reorderRow,
       "aria-describedby": instructionsId,

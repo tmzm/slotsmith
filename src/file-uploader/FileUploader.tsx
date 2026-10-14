@@ -19,7 +19,8 @@ import {
   FileUploaderItemView,
   FileUploaderList,
   FileUploaderRejections,
-} from "./parts";
+} from "./parts";
+import { FileUploaderVirtualList, type FileUploaderVirtualOptions } from "./virtualList";
 import {
   FileUploaderContext,
   useFileUploaderContext,
@@ -236,6 +237,12 @@ export interface FileUploaderProps<TData = unknown>
     Omit<FileUploaderRootProps, "children" | "onChange" | "onError" | "defaultValue"> {
   /** Hide the item list, e.g. when you render the files yourself. */
   hideList?: boolean;
+  /**
+   * Renders only the items in view, for batches of hundreds: pass the
+   * virtualizer hook (`useVirtualizer` from `@tanstack/react-virtual`) as
+   * `use`, and the sizes.
+   */
+  virtual?: FileUploaderVirtualOptions;
   /** Rendered inside the drop zone, under the title. */
   children?: ReactNode;
 }
@@ -320,14 +327,14 @@ export function splitFileUploaderProps<TData, P extends FileUploaderProps<TData>
  */
 function FileUploaderComponent<TData = unknown>(props: FileUploaderProps<TData>) {
   const { providerProps, rest } = splitFileUploaderProps<TData, FileUploaderProps<TData>>(props);
-  const { hideList = false, children, ...htmlProps } = rest;
+  const { hideList = false, virtual, children, ...htmlProps } = rest;
 
   return (
     <FileUploaderProvider<TData> {...providerProps}>
       <FileUploaderRoot {...htmlProps}>
         <FileUploaderDropzone>{children}</FileUploaderDropzone>
         <FileUploaderCompact />
-        {!hideList && <FileUploaderList />}
+        {!hideList && (virtual ? <FileUploaderVirtualList {...virtual} /> : <FileUploaderList />)}
         <FileUploaderRejections />
       </FileUploaderRoot>
     </FileUploaderProvider>
@@ -383,6 +390,7 @@ export const FileUploader = /* @__PURE__ */ Object.assign(FileUploaderComponent,
   Dropzone: FileUploaderDropzone,
   Compact: FileUploaderCompact,
   List: FileUploaderList,
+  VirtualList: FileUploaderVirtualList,
   Item: FileUploaderItemView,
   Actions: FileUploaderActions,
   Rejections: FileUploaderRejections,

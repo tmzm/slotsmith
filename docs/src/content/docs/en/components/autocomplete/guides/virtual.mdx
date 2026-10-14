@@ -1,9 +1,9 @@
 ---
 title: "Virtual lists"
-description: "Show thousands of options in the slotsmith Autocomplete with VirtualAutocomplete, which renders only the options in view."
+description: "Show thousands of options in the slotsmith Autocomplete with the virtual prop, which renders only the options in view."
 ---
 
-`VirtualAutocomplete` is the Autocomplete for long option lists: it renders only the options in view, inside a scroll area. It takes the same props as `Autocomplete`, plus `virtual`, and comes from `slotsmith/virtual`, which needs `@tanstack/react-virtual` installed.
+For long option lists, pass `virtual` to `Autocomplete` with the virtualizer hook as `use` (`useVirtualizer` from `@tanstack/react-virtual`): it renders only the options in view, inside a scroll area. `VirtualAutocomplete` from `slotsmith/virtual` is the same with the hook passed in.
 
 {/* Reserved height measured in Chrome: the picker and the output line. */}
 <Demo name="autocomplete/virtual" height="9.125rem" fallback />
@@ -12,7 +12,7 @@ The picker holds 5,000 cities. Open it and scroll, or type a number: only the op
 
 ## Install
 
-`@tanstack/react-virtual` is an optional peer: only `slotsmith/virtual` imports it, so a project that never imports `VirtualAutocomplete` does not need it.
+`@tanstack/react-virtual` is an optional peer: you pass its hook in, so slotsmith itself never imports it, and a project that never windows a list does not need it.
 
 ```sh
 pnpm add @tanstack/react-virtual
@@ -20,7 +20,7 @@ pnpm add @tanstack/react-virtual
 
 ## The virtual option
 
-`virtual` takes three numbers:
+`virtual` takes the hook as `use` (`VirtualAutocomplete` passes it for you), and three numbers:
 
 - `estimateSize`: the height of one option, in pixels. Defaults to 36. Set it to the height your option rows have.
 - `maxHeight`: the height of the scroll area, in pixels. Defaults to 320.

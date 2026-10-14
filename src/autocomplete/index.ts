@@ -43,6 +43,10 @@ export {
   mergeRefs,
 } from "./parts";
 
+export { AutocompleteVirtualList, AutocompleteVirtualPopup } from "./virtualList";
+export type { AutocompleteVirtualOptions } from "./virtualList";
+export type { UseVirtualizer, Virtualizer, VirtualizerOptions, VirtualRange, VirtualRow } from "../shared/virtualizer";
+
 export { useAutocomplete } from "./core/useAutocomplete";
 export type { AutocompleteModel, UseAutocompleteOptions } from "./core/useAutocomplete";
 

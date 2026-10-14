@@ -1,5 +1,5 @@
 import type { RowData } from "@tanstack/react-table";
-import { useCallback, useContext, useEffect, useMemo, useRef, type HTMLAttributes, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
 import { createDevWarnings } from "../shared/dev";
 import { useShallowStable } from "../shared/useShallowStable";
 import { useLocaleSection } from "../locale/useLocaleSection";
@@ -22,10 +22,10 @@ import {
 import {
   DataTableContext,
   useDataTableContext,
-  VirtualTableContext,
   type DataTableContextValue,
 } from "./slots/context";
 import { defaultLabels, fallbackComponents } from "./slots/fallbacks";
+import { DataTableVirtualBody, DEFAULT_VIRTUAL_MAX_HEIGHT, type DataTableVirtualOptions } from "./virtualBody";
 import type { DataTableSlotProps } from "./slots/slotProps";
 import type { DataTableComponents, DataTableLabels } from "./slots/types";
 
@@ -121,8 +121,7 @@ export function DataTableProvider<T extends RowData>({
     () => ({ ...defaultLabels, ...withoutUndefined(localeLabels), ...withoutUndefined(ownLabels) }),
     [localeLabels, ownLabels],
   );
-  const virtual = useContext(VirtualTableContext);
-  const model = useDataTable(options, { labels: resolvedLabels, virtual });
+  const model = useDataTable(options, { labels: resolvedLabels });
   /** The fallbacks, then the provider's slots, then the caller's own. */
   const parts = useSlots("dataTable", fallbackComponents, useShallowStable(components));
   useStableRowWarning(parts.Row);
@@ -237,6 +236,14 @@ export interface DataTableProps<T extends RowData>
     Omit<DataTableRootProps, "children" | "onError"> {
   /** Hide the pagination UI while still paginating. */
   hidePagination?: boolean;
+  /**
+   * Renders only the rows in view, for long lists: pass the virtualizer hook
+   * (`useVirtualizer` from `@tanstack/react-virtual`) as `use`, and the
+   * sizes. The header stays sticky, and pagination is off unless
+   * `enablePagination` turns it back on. Every other feature keeps working,
+   * row reordering and spreadsheet mode included.
+   */
+  virtual?: DataTableVirtualOptions;
 }
 
 /**
@@ -315,12 +322,21 @@ export function splitDataTableProps<T extends RowData, P extends DataTableProps<
  */
 function DataTableComponent<T extends RowData>(props: DataTableProps<T>) {
   const { providerProps, rest } = splitDataTableProps<T, DataTableProps<T>>(props);
-  const { size = "sm", hidePagination, ...htmlProps } = rest;
+  const { size = "sm", hidePagination, virtual, ...htmlProps } = rest;
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
 
   return (
-    <DataTableProvider {...providerProps}>
-      <DataTableRoot size={size} {...htmlProps}>
-        <DataTableTable />
+    <DataTableProvider {...(virtual ? { enablePagination: false } : null)} {...providerProps}>
+      <DataTableRoot size={size} data-virtual={virtual ? "" : undefined} {...htmlProps}>
+        {virtual ? (
+          <DataTableTable
+            scrollRef={setScrollElement}
+            maxHeight={virtual.maxHeight ?? DEFAULT_VIRTUAL_MAX_HEIGHT}
+            body={<DataTableVirtualBody {...virtual} scrollElement={scrollElement} />}
+          />
+        ) : (
+          <DataTableTable />
+        )}
         {!hidePagination && <DataTablePagination />}
       </DataTableRoot>
     </DataTableProvider>
@@ -364,4 +380,5 @@ export const DataTable = /* @__PURE__ */ Object.assign(DataTableComponent, {
   StatusRows: DataTableStatusRows,
   Pagination: DataTablePagination,
   DragHandle: DataTableDragHandle,
+  VirtualBody: DataTableVirtualBody,
 });
