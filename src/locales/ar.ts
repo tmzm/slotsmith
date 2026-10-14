@@ -45,6 +45,19 @@ export const ar: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `الموضع ${number(position)} من ${number(total)}.`,
       reorderDropped: (position, total) => `تم إفلات الصف في الموضع ${number(position)} من ${number(total)}.`,
       reorderCancelled: "تم إلغاء إعادة الترتيب.",
+      editCell: (column) => `تعديل ${column}`,
+      invalidNumber: "أدخل رقمًا.",
+      invalidOption: "اختر أحد الخيارات.",
+      invalidDate: "أدخل تاريخًا صالحًا.",
+      invalidBoolean: "أدخل TRUE أو FALSE.",
+      cellsCopied: (count) => `الخلايا المنسوخة: ${number(count)}.`,
+      cellsCut: (count) => `الخلايا المقصوصة: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `الخلايا الملصقة: ${number(count)}، والمتخطاة: ${number(skipped)}.` : `الخلايا الملصقة: ${number(count)}.`,
+      cellsCleared: (count) => `الخلايا الممسوحة: ${number(count)}.`,
+      cellsFilled: (count) => `الخلايا المعبأة: ${number(count)}.`,
+      undone: "تم التراجع.",
+      redone: "تمت الإعادة.",
     };
   },
 

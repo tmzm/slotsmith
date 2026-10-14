@@ -282,3 +282,72 @@ export async function keyboardReorder(user: UserEvent, onMove: MockInstance) {
   expect(bodyRows().some((row) => row.hasAttribute("data-dragging"))).toBe(false);
   expect(document.activeElement).toBe(dragHandles()[1]);
 }
+
+/**
+ * Spreadsheet employees
+ *
+ * The employees in spreadsheet mode, storing every edit at once: a required
+ * name, a positive salary, and the `active` flag as a checkbox column.
+ */
+export function SpreadsheetEmployees({ components }: { components: Partial<DataTableComponents> }) {
+  const [rows, setRows] = useState(() => employees(3));
+  return (
+    <DataTable<Employee>
+      value={rows}
+      onValueChange={setRows}
+      columns={spreadsheetColumns}
+      components={components}
+      spreadsheet
+      enablePagination={false}
+    />
+  );
+}
+
+const spreadsheetColumns: DataTableColumnDef<Employee>[] = [
+  { accessorKey: "name", header: "Name", edit: { validate: (name) => (name.trim() ? null : "Required") } },
+  { accessorKey: "salary", header: "Salary", edit: { validate: (salary) => (salary > 0 ? null : "Must be positive") } },
+  { accessorKey: "active", header: "Active", edit: { editor: "checkbox" } },
+];
+
+/**
+ * Grid cell
+ *
+ * @returns The spreadsheet's data cell at a row and a column, from zero.
+ */
+const gridCell = (row: number, column: number) =>
+  within(within(screen.getByRole("grid")).getAllByRole("row")[row + 1]!).getAllByRole("gridcell")[column]!;
+
+/**
+ * Spreadsheet through a skin
+ *
+ * Drives {@link SpreadsheetEmployees} with a library's slots: one click opens
+ * the skin's editor over the cell, Enter writes and moves down, an invalid
+ * number shows its message, the checkbox column toggles with Space while the
+ * box stays out of the Tab order, and the fill handle sits on the selection.
+ *
+ * @param user - The test's user-event instance.
+ */
+export async function spreadsheetThroughSkin(user: UserEvent) {
+  await user.click(gridCell(0, 0));
+  const name = within(gridCell(0, 0)).getByRole("textbox", { name: "Edit Name" });
+  expect(name).toHaveFocus();
+  await user.keyboard("Zed{Enter}");
+  expect(gridCell(0, 0)).toHaveTextContent("Zed");
+  expect(gridCell(1, 0)).toHaveFocus();
+  expect(gridCell(1, 0)).toHaveAttribute("data-active");
+  expect(gridCell(1, 0).querySelector("[data-fill-handle]")).not.toBeNull();
+
+  await user.keyboard("{ArrowRight}");
+  await user.keyboard("abc{Enter}");
+  expect(within(gridCell(1, 1)).getByRole("alert")).toHaveTextContent("Enter a number.");
+  await user.keyboard("{Escape}");
+  expect(gridCell(1, 1)).toHaveFocus();
+
+  const box = () => within(gridCell(1, 2)).getByRole("checkbox", { name: "Active" });
+  expect(box()).toBeChecked();
+  expect(box()).toHaveAttribute("tabindex", "-1");
+  await user.keyboard("{ArrowRight} ");
+  expect(box()).not.toBeChecked();
+  expect(gridCell(1, 2)).toHaveFocus();
+  expect(await axeViolations()).toEqual([]);
+}

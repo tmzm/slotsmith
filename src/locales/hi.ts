@@ -43,6 +43,19 @@ export const hi: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `${number(total)} में से स्थान ${number(position)}।`,
       reorderDropped: (position, total) => `पंक्ति ${number(total)} में से स्थान ${number(position)} पर छोड़ी गई।`,
       reorderCancelled: "क्रम बदलना रद्द किया गया।",
+      editCell: (column) => `${column} संपादित करें`,
+      invalidNumber: "कोई संख्या दर्ज करें।",
+      invalidOption: "विकल्पों में से एक चुनें।",
+      invalidDate: "मान्य तारीख दर्ज करें।",
+      invalidBoolean: "TRUE या FALSE दर्ज करें।",
+      cellsCopied: (count) => `कॉपी की गई सेल: ${number(count)}।`,
+      cellsCut: (count) => `काटी गई सेल: ${number(count)}।`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `चिपकाई गई सेल: ${number(count)}, छोड़ी गई: ${number(skipped)}।` : `चिपकाई गई सेल: ${number(count)}।`,
+      cellsCleared: (count) => `साफ़ की गई सेल: ${number(count)}।`,
+      cellsFilled: (count) => `भरी गई सेल: ${number(count)}।`,
+      undone: "पूर्ववत किया गया।",
+      redone: "फिर से किया गया।",
     };
   },
 

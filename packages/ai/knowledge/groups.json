@@ -1,11 +1,12 @@
 {
   "data-table": {
-    "Data": ["data", "columns", "getRowId"],
+    "Data": ["data", "value", "columns", "getRowId"],
     "Sorting": ["sorting", "onSortingChange", "defaultSorting", "manualSorting", "enableMultiSort"],
     "Pagination": ["pagination", "onPaginationChange", "defaultPagination", "manualPagination", "rowCount", "pageSizeOptions", "enablePagination", "hidePagination"],
     "Selection": ["enableRowSelection", "selection", "onSelectionChange", "defaultSelection", "resetSelectionOnPageChange"],
     "Tree rows": ["getSubRows", "getRowCanExpand", "expanded", "onExpandedChange", "defaultExpanded", "paginateExpandedRows"],
     "Row reordering": ["enableRowReorder", "onRowOrderChange", "reorderHandleColumn"],
+    "Spreadsheet": ["spreadsheet", "onValueChange"],
     "Status": ["loading", "error", "onRetry"],
     "Rendering": ["components", "labels", "locale", "slotProps", "onRowClick", "size", "striped", "tableOptions"]
   },

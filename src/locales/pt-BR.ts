@@ -43,6 +43,19 @@ export const ptBR: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `Posição ${number(position)} de ${number(total)}.`,
       reorderDropped: (position, total) => `Linha solta na posição ${number(position)} de ${number(total)}.`,
       reorderCancelled: "Reordenação cancelada.",
+      editCell: (column) => `Editar ${column}`,
+      invalidNumber: "Digite um número.",
+      invalidOption: "Escolha uma das opções.",
+      invalidDate: "Digite uma data válida.",
+      invalidBoolean: "Digite TRUE ou FALSE.",
+      cellsCopied: (count) => `Células copiadas: ${number(count)}.`,
+      cellsCut: (count) => `Células recortadas: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `Células coladas: ${number(count)}, ignoradas: ${number(skipped)}.` : `Células coladas: ${number(count)}.`,
+      cellsCleared: (count) => `Células limpas: ${number(count)}.`,
+      cellsFilled: (count) => `Células preenchidas: ${number(count)}.`,
+      undone: "Desfeito.",
+      redone: "Refeito.",
     };
   },
 

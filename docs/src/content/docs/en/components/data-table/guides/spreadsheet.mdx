@@ -1,0 +1,135 @@
+---
+title: "Spreadsheet mode"
+description: "Edit the slotsmith data table like a spreadsheet: select cells, type over them, paste from Excel, drag the fill handle and undo."
+---
+
+With `spreadsheet` the data table works like a spreadsheet: cells are selected by keyboard and pointer, a click opens a cell's editor, ranges copy and paste to and from Excel and Google Sheets, the fill handle continues a series, and changes undo. Columns opt in with `edit`.
+
+{/* Reserved height: six rows and the line under the table. */}
+<Demo name="data-table/spreadsheet" height="26rem" fallback />
+
+Click a cell and type, press Enter to write and move down, or select a range with Shift and the arrow keys and press Delete. Copy a few cells from a spreadsheet and paste them here. The line under the table shows the last change; Reset puts the rows back.
+
+## Storing the rows
+
+The rows are yours. Pass them as `value`, and store what [`onValueChange`](../../api/#props) gives you: the table shows a change only once `value` holds it. `value` is the same as `data`, named like any other controlled value; pass one of them.
+
+```tsx
+const [rows, setRows] = useState(products);
+
+return <DataTable value={rows} onValueChange={(next) => setRows(next)} columns={columns} spreadsheet />;
+```
+
+`onValueChange(value, change)` receives the new rows and a `DataTableValueChange`:
+
+- `source`: what made the change: `"edit"`, `"paste"`, `"cut"`, `"clear"`, `"fill"`, `"undo"` or `"redo"`.
+- `rows`: every row that changed, each with its `rowId`, the row `previous` and `next`, and the `columnIds` whose cells changed. Send these to a server to save only what changed.
+
+Only the rows that changed are new objects, so only they re-render. Moving the selection, and typing in an editor, re-render only the cells involved.
+
+## Editable columns
+
+A column opts in with `edit`: `true` for the defaults, an object to configure them. A column without it is read-only, and its cells carry `aria-readonly="true"`.
+
+```tsx
+const columns: DataTableColumnDef<Product>[] = [
+  { accessorKey: "sku", header: "SKU" },
+  { accessorKey: "name", header: "Name", edit: true },
+  {
+    accessorKey: "price",
+    header: "Price",
+    edit: {
+      parse: (text) => Number(text.replace(/[^\d.-]/g, "")),
+      format: (price) => price.toFixed(2),
+      validate: (price) => (price < 0 ? "Must be positive" : null),
+    },
+  },
+];
+```
+
+Every function in `edit` is typed by the column's value. In a plain array of columns the value comes from the field the `accessorKey` names, so `price` above is a `number`. A column built from an accessor function, or whose key is only a `string`, takes its types from `createDataTableColumnHelper`, whose `accessor` also takes `edit`:
+
+```tsx
+const column = createDataTableColumnHelper<Product>();
+export const valueColumns = [
+  column.accessor((row) => row.stock * row.price, {
+    id: "value",
+    header: "Stock value",
+    edit: { setValue: (row, value) => ({ ...row, stock: Math.round(value / row.price) }) },
+  }),
+];
+```
+
+The options of `edit`:
+
+- `editable(row)`: whether a row's cell can be edited. Defaults to every row.
+- `editor`: the built-in editor, `"text"`, `"number"`, `"select"`, `"date"` or `"checkbox"`. Defaults to `"select"` when `options` is set, otherwise to the kind that fits the cell's value.
+- `component`: your own editor, a component that edits the column's value directly. It receives the draft `value`, `onValueChange`, `commit`, `cancel`, the `row`, the `columnId` and the `error`.
+- `options`: the choices of a select, each a `value` and a `label`.
+- `parse(text, row)` and `format(value, row)`: text to value, for typing and pasting, and value to text, for the editor and for copying. The defaults read numbers, option labels, ISO dates and `TRUE`/`FALSE` words.
+- `validate(value, row)`: a message when the value is not allowed, `null` when it is.
+- `setValue(row, value)`: writes a value into a copy of the row. An `accessorKey` column does this itself, also for a dotted key such as `"address.city"`; an accessor-function column needs it.
+- `empty`: the value Delete writes. Defaults to the parse of an empty string.
+
+## Editors
+
+A click on an editable cell opens its editor over the cell, the same size, with its text selected: typing replaces it, and the arrow keys still move between cells. Typing on a selected cell opens the editor with what you typed. A click inside the editor's text places the caret, and from then on the arrow keys move the caret; F2 switches between the two.
+
+- `"text"` and `"number"` edit the cell as text, in an input.
+- `"select"` opens the slotsmith [Autocomplete](../../../autocomplete/) on the column's options and writes as soon as one is picked. Typing over the cell searches the options.
+- `"date"` opens the slotsmith [DatePicker](../../../date-picker/) and writes the picked day as an ISO date (`YYYY-MM-DD`), or `null` when cleared.
+- `"checkbox"` shows the table's own `Checkbox` in the cell. A click or Space flips it, with no editor.
+
+The editors are the [`CellEditor`](../../api/#slot-CellEditor) slot, so a design system's adapter replaces them. Selects and dates use the slotsmith components, so they wear the adapters given to [`SlotsmithProvider`](../../../../guides/#once-for-the-whole-app) like the rest of the app.
+
+A value that fails `parse` or `validate` keeps its editor open with the message beside it, and the input carries `aria-invalid`. Moving on from a cell you have not changed never stops on its value, valid or not.
+
+## Keyboard
+
+The table is an ARIA grid with one tab stop: the active cell. With focus on a cell:
+
+<KeyboardTable rows={[
+  { keys: ["←", "→", "↑", "↓"], action: "Move to the next cell. With Shift, extend the selection; with Ctrl or ⌘, jump to the edge of the data." },
+  { keys: ["Home", "End"], action: "Move to the row's first or last cell; with Ctrl or ⌘, to the grid's first or last cell." },
+  { keys: ["PageUp", "PageDown"], action: "Move a screen of rows up or down." },
+  { keys: ["Tab"], action: "Move to the next cell; at the row's end, leave the grid." },
+  { keys: ["Enter", "F2"], action: "Open the cell's editor." },
+  { keys: ["Delete"], action: "Clear the selected cells." },
+  { keys: ["Ctrl+C", "Ctrl+X", "Ctrl+V"], action: "Copy, cut or paste the selection as tab-separated text." },
+  { keys: ["Ctrl+Z", "Ctrl+Y"], action: "Undo or redo the last change." },
+  { keys: ["Ctrl+D", "Ctrl+R"], action: "Fill down or right from the selection's first row or column." },
+  { keys: ["Ctrl+A"], action: "Select every cell." },
+  { keys: ["Shift+Space", "Ctrl+Space"], action: "Select the row or the column." },
+  { keys: ["Space"], action: "Flip a checkbox cell." },
+  { keys: ["Esc"], action: "Collapse the selection to the active cell." },
+]} />
+
+In an open editor, Enter writes the value and moves down (Shift+Enter up), Tab writes and moves to the next cell, and Esc closes the editor without writing. [`spreadsheet.enterMoves`](../../api/#props) sets where Enter goes: `"down"`, `"right"` or `"none"`.
+
+## Copy, paste and fill
+
+Copying puts the selection on the clipboard as tab-separated text and as an HTML table, so it pastes as a grid into spreadsheets and documents. Pasting reads tab-separated text from any spreadsheet. A block pastes from the selection's top corner at its own size, or repeats to fill a selection that is a whole multiple of it, such as one value into a whole column. Each pasted value goes through its column's `parse` and `validate`; cells that do not fit are skipped, and the count is announced.
+
+Drag the small square on the selection's corner, the fill handle, to fill the cells you drag over. Numbers with a constant step continue the series (1, 2 becomes 3, 4), text ending in a number counts on (Item 9 becomes Item 10), and anything else repeats. Ctrl+D and Ctrl+R copy the first row or column as it is. `spreadsheet.fillHandle: false` hides the handle.
+
+## Undo
+
+Every change, whatever made it, is one step of the history: Ctrl+Z undoes it and Ctrl+Y or Ctrl+Shift+Z redoes it. Undo reports through `onValueChange` with the `source` `"undo"` or `"redo"`, like any other change. `spreadsheet.history` sets how many steps are kept (100 by default; `0` turns undo off). From code, `useDataTableContext().spreadsheet` has `undo()` and `redo()`, for toolbar buttons.
+
+## Tree rows
+
+Sub-rows of a [tree](../tree-rows/) are edited too when you pass `spreadsheet.setSubRows(row, subRows)`, which writes new children into a copy of a row: the table needs it to write an edited sub-row back into its parent, up to the top level. Without it only top-level rows are editable.
+
+## Styling
+
+Every grid cell carries `data-column-id`, and its part in the selection: `data-active` on the active cell, `data-selected` and `data-range-edge` (`top`, `bottom`, `start`, `end`) across a selected range, `data-editing` while it is edited, `data-fill-preview` under a fill drag, `data-copied` after a copy, and `data-editable` when it can be edited. The table carries `data-spreadsheet`. The built-in stylesheet draws them in the accent colour; a design system's adapter styles them itself. The fill handle is the [`FillHandle`](../../api/#slot-FillHandle) slot.
+
+## Announcements and labels
+
+A visually hidden live region reads each copy, cut, paste, clear, fill, undo and redo. The strings are labels, so a [locale pack](../../api/#labels) translates them: [`editCell`](../../api/#label-editCell) names the editor, [`cellsCopied`](../../api/#label-cellsCopied), [`cellsCut`](../../api/#label-cellsCut), [`cellsPasted`](../../api/#label-cellsPasted), [`cellsCleared`](../../api/#label-cellsCleared), [`cellsFilled`](../../api/#label-cellsFilled), [`undone`](../../api/#label-undone) and [`redone`](../../api/#label-redone) are the announcements, and [`invalidNumber`](../../api/#label-invalidNumber), [`invalidOption`](../../api/#label-invalidOption), [`invalidDate`](../../api/#label-invalidDate) and [`invalidBoolean`](../../api/#label-invalidBoolean) are the built-in validation messages.
+
+<Note kind="limitation">
+- One rectangle is selected at a time; Ctrl+click does not add another.
+- A paste that runs past the last row is cut off; it does not add rows.
+- With pagination, the keys move within the page.
+</Note>

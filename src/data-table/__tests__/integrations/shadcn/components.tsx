@@ -10,17 +10,22 @@
  * shadcn/ui files.
  */
 import { useId, type ComponentProps } from "react";
-import type {
-  CheckboxSlotProps,
-  DataTableComponents,
-  DragHandleSlotProps,
-  EmptySlotProps,
-  ErrorSlotProps,
-  PaginationSlotProps,
-  RowSlotProps,
+import {
+  fallbackComponents,
+  type CellEditorSlotProps,
+  type CellSlotProps,
+  type CheckboxSlotProps,
+  type DataTableComponents,
+  type DragHandleSlotProps,
+  type EmptySlotProps,
+  type ErrorSlotProps,
+  type FillHandleSlotProps,
+  type PaginationSlotProps,
+  type RowSlotProps,
 } from "../../../index";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
+import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
@@ -38,6 +43,84 @@ const ShadcnCheckbox = ({ checked, indeterminate, onCheckedChange, ...props }: C
     checked={indeterminate ? "indeterminate" : checked}
     onCheckedChange={(value) => onCheckedChange(value === true)}
     onClick={(event) => event.stopPropagation()}
+    {...props}
+  />
+);
+
+/**
+ * Shadcn cell
+ *
+ * `TableCell` with the spreadsheet styles: in spreadsheet mode a body cell
+ * carries its part in the selection as `data-*` attributes. The active cell
+ * and the one being edited get a ring in the primary colour, the selected
+ * range a primary tint, the cells a fill drag would write and the copied
+ * ones the muted colour with a thin ring. Read-only cells are muted, and
+ * cells cannot be selected as text, except in the editor.
+ */
+const ShadcnCell = ({ className, ...props }: CellSlotProps) => (
+  <TableCell
+    className={cn(
+      "data-column-id:cursor-cell data-column-id:select-none data-column-id:outline-none data-column-id:scroll-mt-12 [&_input]:select-text",
+      "data-selected:bg-primary/10 data-fill-preview:bg-muted data-copied:bg-muted",
+      "data-fill-preview:shadow-[inset_0_0_0_1px_var(--ring)] data-copied:shadow-[inset_0_0_0_1px_var(--ring)]",
+      "data-active:shadow-[inset_0_0_0_2px_var(--primary)] data-editing:shadow-[inset_0_0_0_2px_var(--primary)] data-editing:bg-background",
+      "aria-readonly:text-muted-foreground",
+      className,
+    )}
+    {...props}
+  />
+);
+
+/**
+ * Shadcn cell editor
+ *
+ * Text and numbers are edited in an `Input` with its border and ring taken
+ * off, so the cell itself is the field, with the validation message on a
+ * destructive chip below the cell. Selects and dates keep the built-in
+ * editor, the slotsmith `Autocomplete` and `DatePicker`, which wear the
+ * shadcn adapters given to `SlotsmithProvider`.
+ */
+function ShadcnCellEditor(props: CellEditorSlotProps) {
+  const errorId = useId();
+  if (props.kind !== "text" && props.kind !== "number") return <fallbackComponents.CellEditor {...props} />;
+  const { onValueChange, error } = props;
+  return (
+    <div className="flex min-w-0 flex-1 items-center px-2">
+      <Input
+        className="h-auto rounded-none border-0 bg-transparent p-0 text-[length:inherit] shadow-none focus-visible:ring-0 dark:bg-transparent"
+        value={props.value}
+        onChange={(event) => onValueChange(event.target.value)}
+        inputMode={props.kind === "number" ? "decimal" : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={props["aria-label"]}
+        aria-invalid={error !== null || undefined}
+        aria-describedby={error !== null ? errorId : undefined}
+      />
+      {error !== null && (
+        <span
+          id={errorId}
+          role="alert"
+          className="absolute start-0 top-full z-30 mt-0.5 rounded-sm bg-destructive px-2 text-xs whitespace-nowrap text-white"
+        >
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Shadcn fill handle
+ *
+ * A small square in the primary colour on the selection's corner.
+ */
+const ShadcnFillHandle = ({ className, ...props }: FillHandleSlotProps) => (
+  <span
+    className={cn(
+      "absolute -end-1 -bottom-1 z-20 size-[7px] cursor-crosshair touch-none border border-background bg-primary",
+      className,
+    )}
     {...props}
   />
 );
@@ -275,11 +358,13 @@ export const shadcnDataTable: Partial<DataTableComponents> = {
   HeaderRow: TableRow,
   Row: ShadcnRow,
   HeaderCell: TableHead,
-  Cell: TableCell,
+  Cell: ShadcnCell,
   Checkbox: ShadcnCheckbox,
   Skeleton: () => <Skeleton className="h-4 w-full" />,
   Empty: ShadcnEmpty,
   Error: ShadcnError,
   Pagination: ShadcnPagination,
   DragHandle: ShadcnDragHandle,
+  CellEditor: ShadcnCellEditor,
+  FillHandle: ShadcnFillHandle,
 };

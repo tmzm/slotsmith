@@ -1,10 +1,12 @@
 {
   "data-table": {
     "Root": ["data-virtual"],
+    "Table": ["data-spreadsheet"],
     "Row": ["data-row-id", "data-state", "data-dragging", "data-dragging-child", "data-drop-position", "data-drop-edge"],
     "HeaderCell": ["data-slot"],
-    "Cell": ["data-slot"],
-    "ExpandToggle": ["data-expanded"]
+    "Cell": ["data-slot", "data-column-id", "data-active", "data-selected", "data-range-edge", "data-editing", "data-fill-preview", "data-copied", "data-editable"],
+    "ExpandToggle": ["data-expanded"],
+    "FillHandle": ["data-fill-handle"]
   },
   "autocomplete": {
     "Trigger": ["data-open", "data-disabled", "data-empty", "data-search-in"],

@@ -20,6 +20,8 @@ import {
   ReorderableEmployees,
   pageSizeThroughAutocompleteAdapter,
   renderUnderProvider,
+  SpreadsheetEmployees,
+  spreadsheetThroughSkin,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -177,5 +179,11 @@ describe("Chakra UI v3 (dense admin table)", () => {
       expect(listbox).toHaveClass("chakra-list__root");
       expect(options[0]).toHaveClass("chakra-list__item");
     });
+  });
+
+  it("edits as a spreadsheet with the skin's editor, checkbox and fill handle", async () => {
+    const user = userEvent.setup();
+    render(<SpreadsheetEmployees components={chakraDataTable} />, { wrapper: Wrapper });
+    await spreadsheetThroughSkin(user);
   });
 });

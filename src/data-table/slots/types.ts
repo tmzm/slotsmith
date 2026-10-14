@@ -100,8 +100,13 @@ export interface CheckboxSlotProps {
   disabled: boolean;
   /** Call with the new checked value. */
   onCheckedChange: (checked: boolean) => void;
-  /** Accessible name, from `labels.selectRow` / `labels.selectAll`. */
+  /** Accessible name, from `labels.selectRow` / `labels.selectAll`, or a checkbox column's header in spreadsheet mode. */
   "aria-label": string;
+  /**
+   * `-1` in a spreadsheet cell, where the cell holds the focus and Space
+   * toggles the box: put it on the control so Tab skips it.
+   */
+  tabIndex?: number;
 }
 
 /**
@@ -283,6 +288,82 @@ export type DragHandleSlotProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
 };
 
 /**
+ * Cell editor common props
+ *
+ * What every built-in cell editor gets, whatever its kind.
+ */
+interface CellEditorCommonProps {
+  /** From the `editCell` label, with the column's header. */
+  "aria-label": string;
+  /** The validation message of the last commit, or `null`. Show it, and mark the control invalid. */
+  error: string | null;
+  /**
+   * Ends the edit and writes the draft. A picker passes the picked text so
+   * the write does not wait for a re-render.
+   */
+  onCommit: (text?: string) => void;
+  /** Ends the edit without writing. */
+  onCancel: () => void;
+}
+
+/**
+ * Cell editor slot props
+ *
+ * Widget slot for editing a cell in spreadsheet mode, one kind at a time.
+ * Every value is text: the column's `parse` turns it into the row's value.
+ * The table moves focus into the editor when it opens, and handles Enter,
+ * Tab, Escape and the arrow keys from it, unless the editor prevents the
+ * key's default (an open popup's own keys). Render it with no outer margin:
+ * it sits inside the cell.
+ *
+ * @example
+ * ```tsx
+ * const CellEditor = (props: CellEditorSlotProps) =>
+ *   props.kind === "text" || props.kind === "number" ? (
+ *     <Input value={props.value} onChange={(event) => props.onValueChange(event.target.value)}
+ *       aria-label={props["aria-label"]} aria-invalid={props.error !== null} />
+ *   ) : (
+ *     fallbackComponents.CellEditor(props)
+ *   );
+ * ```
+ */
+export type CellEditorSlotProps = CellEditorCommonProps &
+  (
+    | {
+        kind: "text" | "number";
+        /** The draft text. */
+        value: string;
+        onValueChange: (text: string) => void;
+      }
+    | {
+        kind: "select";
+        /** The chosen option's label; `""` when none is. */
+        value: string;
+        /** Every option's label, in order. */
+        options: readonly string[];
+        /** The text typed to start the edit, for the search; `""` otherwise. */
+        search: string;
+      }
+    | {
+        kind: "date";
+        /** The ISO date (`YYYY-MM-DD`); `""` when empty. */
+        value: string;
+      }
+  );
+
+/**
+ * Fill handle slot props
+ *
+ * Element slot: plain `<span>` props for the small square on the selection's
+ * corner in spreadsheet mode. Dragging it fills the cells it is dragged
+ * over. It carries `data-fill-handle`, which the table finds it by.
+ */
+export type FillHandleSlotProps = HTMLAttributes<HTMLSpanElement> & {
+  "data-fill-handle": "";
+  "aria-hidden": true;
+};
+
+/**
  * Data table components
  *
  * Every replaceable piece of the table. Element slots (`Root` … `Cell`) get
@@ -348,6 +429,13 @@ export interface DataTableComponents {
   PageSizeSelect: ComponentType<PageSizeSelectSlotProps>;
   /** Fallback: `<button class="sdt__drag">` with a six-dot grip. Used when `enableRowReorder` is on. */
   DragHandle: ComponentType<DragHandleSlotProps>;
+  /**
+   * Fallback: an `<input>` for text and numbers, the slotsmith `Autocomplete`
+   * for selects and the slotsmith `DatePicker` for dates. Used in spreadsheet mode.
+   */
+  CellEditor: ComponentType<CellEditorSlotProps>;
+  /** Fallback: `<span class="sdt__fill-handle">`. Used in spreadsheet mode. */
+  FillHandle: ComponentType<FillHandleSlotProps>;
 }
 
 /**
@@ -404,4 +492,28 @@ export interface DataTableLabels {
   reorderDropped: (position: number, total: number) => string;
   /** Announced when a move is cancelled. Default: "Reordering cancelled." */
   reorderCancelled: string;
+  /** Spreadsheet mode: the cell editor's accessible name. Default: `Edit ${column}`. */
+  editCell: (column: string) => string;
+  /** Spreadsheet mode: a number cell got text that is not a number. Default: "Enter a number." */
+  invalidNumber: string;
+  /** Spreadsheet mode: a select cell got text that matches no option. Default: "Choose one of the options." */
+  invalidOption: string;
+  /** Spreadsheet mode: a date cell got text that is not a date. Default: "Enter a valid date." */
+  invalidDate: string;
+  /** Spreadsheet mode: a checkbox cell got text that is neither true nor false. Default: "Enter TRUE or FALSE." */
+  invalidBoolean: string;
+  /** Spreadsheet mode: announced after a copy. Default: `${count} cells copied.` */
+  cellsCopied: (count: number) => string;
+  /** Spreadsheet mode: announced after a cut. Default: `${count} cells cut.` */
+  cellsCut: (count: number) => string;
+  /** Spreadsheet mode: announced after a paste; `skipped` cells did not fit their column. */
+  cellsPasted: (count: number, skipped: number) => string;
+  /** Spreadsheet mode: announced after Delete. Default: `${count} cells cleared.` */
+  cellsCleared: (count: number) => string;
+  /** Spreadsheet mode: announced after a fill. Default: `${count} cells filled.` */
+  cellsFilled: (count: number) => string;
+  /** Spreadsheet mode: announced after an undo. Default: "Undone." */
+  undone: string;
+  /** Spreadsheet mode: announced after a redo. Default: "Redone." */
+  redone: string;
 }

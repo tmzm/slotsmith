@@ -18,6 +18,8 @@ import {
   ReorderableEmployees,
   pageSizeThroughAutocompleteAdapter,
   renderUnderProvider,
+  SpreadsheetEmployees,
+  spreadsheetThroughSkin,
   stubBrowserApis,
   type Employee,
 } from "./shared";
@@ -229,5 +231,11 @@ describe("shadcn/ui (editorial layout)", () => {
       expect(listbox).toHaveAttribute("data-slot", "command-list");
       expect(options[0]).toHaveAttribute("data-slot", "command-item");
     });
+  });
+
+  it("edits as a spreadsheet with the skin's editor, checkbox and fill handle", async () => {
+    const user = userEvent.setup();
+    render(<SpreadsheetEmployees components={shadcnDataTable} />);
+    await spreadsheetThroughSkin(user);
   });
 });

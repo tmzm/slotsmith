@@ -24,6 +24,7 @@ export const COMPONENTS: ComponentMeta[] = [
       { slug: "tree-rows", title: "guide.dataTable.treeRows" },
       { slug: "virtual-rows", title: "guide.dataTable.virtualRows" },
       { slug: "row-reorder", title: "guide.dataTable.rowReorder" },
+      { slug: "spreadsheet", title: "guide.dataTable.spreadsheet" },
       { slug: "footers", title: "guide.dataTable.footers" },
       { slug: "headless-hook", title: "guide.dataTable.headlessHook" },
     ],

@@ -24,6 +24,6 @@ describe("adapterNeeds", () => {
   it("reads the shipped data-table adapters", () => {
     expect(adapterNeeds(sampleSource("adapters/data-table/radix").code).packages).toEqual(["@radix-ui/react-icons", "@radix-ui/themes"]);
     expect(adapterNeeds(sampleSource("adapters/data-table/chakra").code).packages).toEqual(["@chakra-ui/react"]);
-    expect(adapterNeeds(sampleSource("adapters/data-table/shadcn").code).shadcn).toEqual(["button", "checkbox", "select", "skeleton", "table"]);
+    expect(adapterNeeds(sampleSource("adapters/data-table/shadcn").code).shadcn).toEqual(["button", "checkbox", "input", "select", "skeleton", "table"]);
   });
 });

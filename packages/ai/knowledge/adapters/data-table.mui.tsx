@@ -11,6 +11,7 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
+import InputBase from "@mui/material/InputBase";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
@@ -21,18 +22,24 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
 import { createSvgIcon } from "@mui/material/utils";
-import type {
-  CheckboxSlotProps,
-  DataTableComponents,
-  DragHandleSlotProps,
-  EmptySlotProps,
-  ErrorSlotProps,
-  PaginationSlotProps,
-  RootSlotProps,
-  RowSlotProps,
-  SkeletonSlotProps,
-  SortIconSlotProps,
+import { useId } from "react";
+import {
+  fallbackComponents,
+  type CellEditorSlotProps,
+  type CellSlotProps,
+  type CheckboxSlotProps,
+  type DataTableComponents,
+  type DragHandleSlotProps,
+  type FillHandleSlotProps,
+  type EmptySlotProps,
+  type ErrorSlotProps,
+  type PaginationSlotProps,
+  type RootSlotProps,
+  type RowSlotProps,
+  type SkeletonSlotProps,
+  type SortIconSlotProps,
 } from "slotsmith/data-table";
 
 /**
@@ -125,7 +132,7 @@ const MuiDragHandle = ({ style, ...props }: DragHandleSlotProps) => (
  * MUI's `Checkbox` has its own `indeterminate` prop and calls
  * `onChange(event, checked)`.
  */
-const MuiCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...aria }: CheckboxSlotProps) => (
+const MuiCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, tabIndex, ...aria }: CheckboxSlotProps) => (
   <Checkbox
     size="small"
     checked={checked}
@@ -133,7 +140,118 @@ const MuiCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...ari
     disabled={disabled}
     onChange={(_, value) => onCheckedChange(value)}
     onClick={(event) => event.stopPropagation()}
-    slotProps={{ input: { "aria-label": aria["aria-label"] } }}
+    slotProps={{ input: { "aria-label": aria["aria-label"], tabIndex } }}
+  />
+);
+
+/**
+ * Spreadsheet cell styles
+ *
+ * In spreadsheet mode a body cell carries its part in the selection as
+ * `data-*` attributes: the active cell and the one being edited get a ring
+ * in the primary colour, the selected range a primary tint, the cells a
+ * fill drag would write and the copied ones a lighter tint with a thin ring.
+ * Read-only cells are muted. Cells cannot be selected as text, except in the
+ * editor.
+ */
+const cellSx: SxProps<Theme> = (theme) => ({
+  "&[data-column-id]": { cursor: "cell", outline: "none", userSelect: "none", scrollMarginTop: "3em" },
+  "&[data-selected]": { backgroundColor: alpha(theme.palette.primary.main, 0.08) },
+  "&:is([data-fill-preview], [data-copied])": {
+    backgroundColor: alpha(theme.palette.primary.main, 0.04),
+    boxShadow: `inset 0 0 0 1px ${alpha(theme.palette.primary.main, 0.5)}`,
+  },
+  "&:is([data-active], [data-editing])": { boxShadow: `inset 0 0 0 2px ${theme.palette.primary.main}` },
+  "&[data-editing]": { backgroundColor: theme.palette.background.paper },
+  "&[aria-readonly=true]": { color: theme.palette.text.secondary },
+  "& input": { userSelect: "text" },
+});
+
+/**
+ * MUI cell
+ *
+ * `TableCell` with the spreadsheet styles.
+ */
+const MuiCell = (props: CellSlotProps) => <TableCell sx={cellSx} {...props} />;
+
+/**
+ * MUI cell editor
+ *
+ * Text and numbers are edited in an `InputBase`, borderless so the cell
+ * itself is the field, with the validation message in an error chip below
+ * the cell. Selects and dates keep the built-in editor, the slotsmith
+ * `Autocomplete` and `DatePicker`, which wear the MUI adapters given to
+ * `SlotsmithProvider`.
+ */
+function MuiCellEditor(props: CellEditorSlotProps) {
+  const errorId = useId();
+  if (props.kind !== "text" && props.kind !== "number") return <fallbackComponents.CellEditor {...props} />;
+  const { onValueChange, error } = props;
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0, px: 2 }}>
+      <InputBase
+        fullWidth
+        value={props.value}
+        onChange={(event) => onValueChange(event.target.value)}
+        error={error !== null}
+        sx={{ font: "inherit" }}
+        inputProps={{
+          "aria-label": props["aria-label"],
+          "aria-invalid": error !== null || undefined,
+          "aria-describedby": error !== null ? errorId : undefined,
+          inputMode: props.kind === "number" ? "decimal" : undefined,
+          autoComplete: "off",
+          spellCheck: false,
+        }}
+      />
+      {error !== null && (
+        <Typography
+          id={errorId}
+          role="alert"
+          variant="caption"
+          sx={{
+            position: "absolute",
+            top: "100%",
+            insetInlineStart: 0,
+            zIndex: 3,
+            mt: 0.25,
+            px: 1,
+            borderRadius: 1,
+            whiteSpace: "nowrap",
+            color: "error.contrastText",
+            bgcolor: "error.main",
+          }}
+        >
+          {error}
+        </Typography>
+      )}
+    </Box>
+  );
+}
+
+/**
+ * MUI fill handle
+ *
+ * A small primary square on the selection's corner, ringed in the paper colour.
+ */
+const MuiFillHandle = (props: FillHandleSlotProps) => (
+  <Box
+    component="span"
+    sx={{
+      position: "absolute",
+      zIndex: 2,
+      insetBlockEnd: -4,
+      insetInlineEnd: -4,
+      width: 7,
+      height: 7,
+      boxSizing: "border-box",
+      bgcolor: "primary.main",
+      border: 1,
+      borderColor: "background.paper",
+      cursor: "crosshair",
+      touchAction: "none",
+    }}
+    {...props}
   />
 );
 
@@ -223,7 +341,7 @@ export const muiDataTable: Partial<DataTableComponents> = {
   HeaderRow: TableRow,
   Row: MuiRow,
   HeaderCell: TableCell,
-  Cell: TableCell,
+  Cell: MuiCell,
   Checkbox: MuiCheckbox,
   SortIcon: MuiSortIcon,
   Skeleton: MuiLoading,
@@ -231,4 +349,6 @@ export const muiDataTable: Partial<DataTableComponents> = {
   Error: MuiError,
   Pagination: MuiPagination,
   DragHandle: MuiDragHandle,
+  CellEditor: MuiCellEditor,
+  FillHandle: MuiFillHandle,
 };

@@ -43,6 +43,19 @@ export const ru: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `Позиция ${number(position)} из ${number(total)}.`,
       reorderDropped: (position, total) => `Строка перемещена на позицию ${number(position)} из ${number(total)}.`,
       reorderCancelled: "Перемещение отменено.",
+      editCell: (column) => `Изменить: ${column}`,
+      invalidNumber: "Введите число.",
+      invalidOption: "Выберите один из вариантов.",
+      invalidDate: "Введите корректную дату.",
+      invalidBoolean: "Введите TRUE или FALSE.",
+      cellsCopied: (count) => `Скопировано ячеек: ${number(count)}.`,
+      cellsCut: (count) => `Вырезано ячеек: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `Вставлено ячеек: ${number(count)}, пропущено: ${number(skipped)}.` : `Вставлено ячеек: ${number(count)}.`,
+      cellsCleared: (count) => `Очищено ячеек: ${number(count)}.`,
+      cellsFilled: (count) => `Заполнено ячеек: ${number(count)}.`,
+      undone: "Отменено.",
+      redone: "Повторено.",
     };
   },
 

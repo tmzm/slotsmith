@@ -29,6 +29,21 @@ export const nl = defineLocale({
       reorderMoved: (position, total) => `Positie ${number(position)} van ${number(total)}.`,
       reorderDropped: (position, total) => `Rij neergezet op positie ${number(position)} van ${number(total)}.`,
       reorderCancelled: "Verplaatsen geannuleerd.",
+      editCell: (column) => `${column} bewerken`,
+      invalidNumber: "Voer een getal in.",
+      invalidOption: "Kies een van de opties.",
+      invalidDate: "Voer een geldige datum in.",
+      invalidBoolean: "Voer TRUE of FALSE in.",
+      cellsCopied: (count) => `Cellen gekopieerd: ${number(count)}.`,
+      cellsCut: (count) => `Cellen geknipt: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0
+          ? `Cellen geplakt: ${number(count)}, overgeslagen: ${number(skipped)}.`
+          : `Cellen geplakt: ${number(count)}.`,
+      cellsCleared: (count) => `Cellen gewist: ${number(count)}.`,
+      cellsFilled: (count) => `Cellen gevuld: ${number(count)}.`,
+      undone: "Ongedaan gemaakt.",
+      redone: "Opnieuw gedaan.",
     };
   },
   // autocomplete, datePicker, fileUploader and fileValidation are left out:

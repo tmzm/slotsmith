@@ -7,6 +7,7 @@
  * out keeps its fallback.
  */
 import {
+  Box,
   Button,
   ButtonGroup,
   Center,
@@ -14,6 +15,7 @@ import {
   EmptyState,
   HStack,
   IconButton,
+  Input,
   NativeSelect,
   Pagination,
   Skeleton,
@@ -23,18 +25,21 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useId } from "react";
-import type {
-  CellSlotProps,
-  CheckboxSlotProps,
-  DataTableComponents,
-  DragHandleSlotProps,
-  EmptySlotProps,
-  ErrorSlotProps,
-  HeaderCellSlotProps,
-  PaginationSlotProps,
-  RowSlotProps,
-  SectionSlotProps,
-  TableSlotProps,
+import {
+  fallbackComponents,
+  type CellEditorSlotProps,
+  type CellSlotProps,
+  type CheckboxSlotProps,
+  type DataTableComponents,
+  type DragHandleSlotProps,
+  type EmptySlotProps,
+  type ErrorSlotProps,
+  type FillHandleSlotProps,
+  type HeaderCellSlotProps,
+  type PaginationSlotProps,
+  type RowSlotProps,
+  type SectionSlotProps,
+  type TableSlotProps,
 } from "slotsmith/data-table";
 
 /**
@@ -120,7 +125,107 @@ const ChakraDragHandle = (props: DragHandleSlotProps) => (
  * `Table.ColumnHeader` and `Table.Cell`.
  */
 const ChakraHeaderCell = (props: HeaderCellSlotProps) => <Table.ColumnHeader {...props} />;
-const ChakraCell = (props: CellSlotProps) => <Table.Cell {...props} />;
+const ChakraCell = (props: CellSlotProps) => <Table.Cell css={cellCss} {...props} />;
+
+/**
+ * Spreadsheet cell styles
+ *
+ * In spreadsheet mode a body cell carries its part in the selection as
+ * `data-*` attributes: the active cell and the one being edited get a ring
+ * in the palette's solid colour, the selected range its subtle tint, the
+ * cells a fill drag would write and the copied ones a muted tint with a thin
+ * ring. Read-only cells are muted. Cells cannot be selected as text, except
+ * in the editor.
+ */
+const cellCss = {
+  "&[data-column-id]": { cursor: "cell", outline: "none", userSelect: "none", scrollMarginTop: "3em" },
+  "&[data-selected]": { bg: "colorPalette.subtle" },
+  "&:is([data-fill-preview], [data-copied])": { bg: "bg.muted", boxShadow: "inset 0 0 0 1px {colors.colorPalette.muted}" },
+  "&:is([data-active], [data-editing])": { boxShadow: "inset 0 0 0 2px {colors.colorPalette.solid}" },
+  "&[data-editing]": { bg: "bg" },
+  "&[aria-readonly=true]": { color: "fg.muted" },
+  "& input": { userSelect: "text" },
+} as const;
+
+/**
+ * Chakra cell editor
+ *
+ * Text and numbers are edited in an `Input` with no border of its own, so
+ * the cell itself is the field, with the validation message on an error chip
+ * below the cell. Selects and dates keep the built-in editor, the slotsmith
+ * `Autocomplete` and `DatePicker`, which wear the Chakra adapters given to
+ * `SlotsmithProvider`.
+ */
+function ChakraCellEditor(props: CellEditorSlotProps) {
+  const errorId = useId();
+  if (props.kind !== "text" && props.kind !== "number") return <fallbackComponents.CellEditor {...props} />;
+  const { onValueChange, error } = props;
+  return (
+    <Box display="flex" alignItems="center" flex="1" minW="0" px="3">
+      <Input
+        size="sm"
+        variant="flushed"
+        borderBottomWidth="0"
+        h="auto"
+        minH="0"
+        px="0"
+        fontSize="inherit"
+        _focusVisible={{ boxShadow: "none" }}
+        value={props.value}
+        onChange={(event) => onValueChange(event.target.value)}
+        inputMode={props.kind === "number" ? "decimal" : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={props["aria-label"]}
+        aria-invalid={error !== null || undefined}
+        aria-describedby={error !== null ? errorId : undefined}
+      />
+      {error !== null && (
+        <Text
+          id={errorId}
+          role="alert"
+          textStyle="xs"
+          position="absolute"
+          top="100%"
+          insetInlineStart="0"
+          zIndex="3"
+          mt="0.5"
+          px="2"
+          borderRadius="sm"
+          whiteSpace="nowrap"
+          color="fg.inverted"
+          bg="red.solid"
+        >
+          {error}
+        </Text>
+      )}
+    </Box>
+  );
+}
+
+/**
+ * Chakra fill handle
+ *
+ * A small square in the palette's solid colour on the selection's corner.
+ */
+const ChakraFillHandle = (props: FillHandleSlotProps) => (
+  <Box
+    as="span"
+    position="absolute"
+    zIndex="2"
+    insetBlockEnd="-4px"
+    insetInlineEnd="-4px"
+    w="7px"
+    h="7px"
+    boxSizing="border-box"
+    bg="colorPalette.solid"
+    borderWidth="1px"
+    borderColor="bg"
+    cursor="crosshair"
+    touchAction="none"
+    {...props}
+  />
+);
 
 /**
  * Chakra checkbox adapter
@@ -128,7 +233,7 @@ const ChakraCell = (props: CellSlotProps) => <Table.Cell {...props} />;
  * Chakra v3's compound checkbox: `checked` takes `"indeterminate"` and
  * `onCheckedChange` receives `{ checked }`.
  */
-const ChakraCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...aria }: CheckboxSlotProps) => (
+const ChakraCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, tabIndex, ...aria }: CheckboxSlotProps) => (
   <Checkbox.Root
     size="sm"
     checked={indeterminate ? "indeterminate" : checked}
@@ -136,7 +241,7 @@ const ChakraCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...
     onCheckedChange={(details) => onCheckedChange(details.checked === true)}
     onClick={(event) => event.stopPropagation()}
   >
-    <Checkbox.HiddenInput aria-label={aria["aria-label"]} />
+    <Checkbox.HiddenInput aria-label={aria["aria-label"]} tabIndex={tabIndex} />
     <Checkbox.Control />
   </Checkbox.Root>
 );
@@ -250,6 +355,8 @@ export const chakraComponents: Partial<DataTableComponents> = {
   Error: ChakraError,
   Pagination: ChakraPagination,
   DragHandle: ChakraDragHandle,
+  CellEditor: ChakraCellEditor,
+  FillHandle: ChakraFillHandle,
 };
 
 /**

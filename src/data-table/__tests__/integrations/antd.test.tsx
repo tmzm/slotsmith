@@ -20,6 +20,8 @@ import {
   names,
   ReorderableEmployees,
   reorderStatus,
+  SpreadsheetEmployees,
+  spreadsheetThroughSkin,
   pageSizeThroughAutocompleteAdapter,
   renderUnderProvider,
   stubBrowserApis,
@@ -308,5 +310,11 @@ describe("Ant Design v6 (admin panel)", () => {
       expect(listbox).toBeVisible();
       expect(options).toHaveLength(4);
     });
+  });
+
+  it("edits as a spreadsheet with the skin's editor, checkbox and fill handle", async () => {
+    const user = userEvent.setup();
+    render(<SpreadsheetEmployees components={antdDataTable} />, { wrapper: Wrapper });
+    await spreadsheetThroughSkin(user);
   });
 });

@@ -114,11 +114,31 @@ const [rows, setRows] = useState(initialRows);
 
 Store the new order in the same event, and save it to a server afterwards; a table that waits for the reply shows the row slide back, then jump. In a tree table a row moves among its siblings, with its sub-rows; for a sub-row, store `change.siblings` as the children of `change.parent`. The [row reorder guide](https://slotsmith.dev/components/data-table/guides/row-reorder/) has live examples.
 
+### Spreadsheet mode
+
+With `spreadsheet`, cells are selected with the keyboard and the pointer, a click opens a cell's editor (an input, the slotsmith autocomplete for a select, the slotsmith date picker for a date, a checkbox), ranges copy and paste to and from Excel and Google Sheets, the fill handle continues a series, and every change can be undone. Columns opt in with `edit`, typed by the field they read.
+
+```tsx
+const [rows, setRows] = useState(products);
+
+<DataTable
+  value={rows}
+  onValueChange={(next) => setRows(next)}
+  columns={[
+    { accessorKey: "name", header: "Name", edit: true },
+    { accessorKey: "price", header: "Price", edit: { validate: (price) => (price < 0 ? "Must be positive" : null) } },
+  ]}
+  spreadsheet
+/>;
+```
+
+The rows are yours: `onValueChange` reports the new rows and which rows changed, and only those rows re-render. The [spreadsheet guide](https://slotsmith.dev/components/data-table/guides/spreadsheet/) has a live example.
+
 ## Components
 
 | Component | Status | Docs |
 | --- | --- | --- |
-| **Data table** | ✅ shipping | [Docs](https://slotsmith.dev/components/data-table/) · sorting, pagination, selection that survives server pages, tree rows, drag-to-reorder rows, virtual rows, loading / error / empty states, i18n and RTL |
+| **Data table** | ✅ shipping | [Docs](https://slotsmith.dev/components/data-table/) · sorting, pagination, selection that survives server pages, tree rows, drag-to-reorder rows, spreadsheet mode with cell editors, virtual rows, loading / error / empty states, i18n and RTL |
 | **Autocomplete** | ✅ shipping | [Docs](https://slotsmith.dev/components/autocomplete/) · a combobox that is also a select; single or multiple, remote options with debounce and paging, create-as-you-type, option groups, auto highlight, an invalid state, a search box in the popup or in the trigger itself, full keyboard and typeahead |
 | **File uploader** | ✅ shipping | [Docs](https://slotsmith.dev/components/file-uploader/) · drop zone, image tile or picker-only; queued uploads with progress, retry and real cancellation; validation by type, size and count |
 | **Date picker** | ✅ shipping | [Docs](https://slotsmith.dev/components/date-picker/) · one date, several or a range as plain `YYYY-MM-DD` strings that never shift across time zones; full keyboard grid, min / max and blocked dates, presets, an invalid state, locale week start and RTL |
@@ -298,6 +318,10 @@ pnpm test:ai     # the MCP server in packages/ai
 ```
 
 ## Changelog
+
+- **Unreleased** — Spreadsheet mode for the data table; see [Spreadsheet mode](#spreadsheet-mode). Pass `spreadsheet`, the rows as `value` (or `data`) and `onValueChange(value, change)`; columns opt in with `edit` (`true`, or `editable`, `editor`, `component`, `options`, `parse`, `format`, `validate`, `setValue` and `empty`), typed by the value of the field their `accessorKey` reads. Cells are an ARIA grid with one tab stop: the arrow keys, Home, End, PageUp and PageDown move, Shift extends, Ctrl jumps to the edge of the data, a click or Enter opens the editor over the cell, typing replaces the value, Delete clears, Ctrl+C, Ctrl+X and Ctrl+V copy and paste tab-separated text, the fill handle and Ctrl+D or Ctrl+R fill, and Ctrl+Z and Ctrl+Y undo and redo. The editors are an input for text and numbers, the slotsmith `Autocomplete` for a select and the slotsmith `DatePicker` for a date (ISO `YYYY-MM-DD`), and a checkbox column shows the table's `Checkbox`. `change` names its `source` and every changed row (`rowId`, `previous`, `next`, `columnIds`). New slots `CellEditor` and `FillHandle`, twelve new labels in every locale pack (`editCell`, `invalidNumber`, `invalidOption`, `invalidDate`, `invalidBoolean`, `cellsCopied`, `cellsCut`, `cellsPasted`, `cellsCleared`, `cellsFilled`, `undone`, `redone`), an optional `tabIndex` on the `Checkbox` slot (pass it on), and `useDataTableContext().spreadsheet` with `undo()` and `redo()`. Every ready-made data-table adapter gains a cell editor, a fill handle and selection styles in its library's look; copy them again from `slotsmith-ai`, and add shadcn/ui's `input`.
+- Faster rendering: a body row re-renders only when its own data, its own state (selected, expanded, dragged), the columns, the slots, the labels or `slotProps` change, so an edit re-renders one row and a change elsewhere on the page re-renders none. An inline `labels` or `components` object no longer counts as a change, and an inline `onRowClick` no longer re-renders the rows. A cell renderer that reads state from outside its row (`table.getState()` or a value it closes over) should get it through `columns`, which re-render every row when they change.
+- `data` is now optional when `value` is given. `createDataTableColumnHelper` returns a helper whose `accessor` also takes `edit`, typed by the value it infers. `DataTableColumnDef` types `edit` per `accessorKey`; an `accessorFn` column written inside a `DataTableColumnDef[]` array with TanStack's own `createColumnHelper` (not slotsmith's) no longer infers its accessor's parameter, so annotate it or use `createDataTableColumnHelper`.
 
 - **1.8.1** — Fixes in the ready-made autocomplete adapters; copy them again from `slotsmith-ai` ([Ready-made adapters](#ready-made-adapters)). The library itself is unchanged from 1.8.0.
 - Fixes: every autocomplete adapter draws its toggle and clear buttons with its library's own icons and sizes, and raises its popup above the page the way its library does (MUI's on the theme's modal layer); the Ant Design adapter keeps its inner input borderless, with options sized like its Select; the Chakra UI adapter's tags show their remove icon.

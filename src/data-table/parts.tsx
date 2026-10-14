@@ -1,10 +1,18 @@
 import { flexRender, type RowData } from "@tanstack/react-table";
-import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from "react";
+import { memo, type CSSProperties, type HTMLAttributes, type ReactNode, type Ref } from "react";
+import { shallowEqual } from "../shared/useShallowStable";
 import type { DataTableColumnMeta, DataTableRow } from "./core/features";
-import { DataTableRowContext, useDataTableContext, useDataTableRow } from "./slots/context";
+import type { RowReorderAttributes } from "./core/useRowReorder";
+import {
+  DataTableRowContext,
+  useDataTableContext,
+  useDataTableRow,
+  type DataTableRowRender,
+} from "./slots/context";
 import { classes } from "./classes";
 import { cx } from "./slots/fallbacks";
-import type { DragHandleSlotProps } from "./slots/types";
+import { GridCell, SpreadsheetAnnouncer } from "./spreadsheet";
+import type { DragHandleSlotProps, TableSlotProps } from "./slots/types";
 
 type AnyProps = HTMLAttributes<HTMLElement> & Record<string, unknown>;
 
@@ -117,13 +125,15 @@ export function useColumnSpan() {
  * ```
  */
 export function DataTableHead() {
-  const { table, components: C, labels, slotProps, selectable, reorderHandleColumn } = useDataTableContext();
+  const { table, components: C, labels, slotProps, selectable, reorderHandleColumn, spreadsheet } =
+    useDataTableContext();
   const pageRows = table.getRowModel().rows;
+  const grid = spreadsheet.enabled;
 
   return (
     <C.Head {...slotProps.head}>
       {table.getHeaderGroups().map((headerGroup, groupIndex) => (
-        <C.HeaderRow key={headerGroup.id} {...slotProps.headerRow}>
+        <C.HeaderRow key={headerGroup.id} role={grid ? "row" : undefined} {...slotProps.headerRow}>
           {reorderHandleColumn && groupIndex === 0 && (
             <C.HeaderCell
               className={classes.cellDrag}
@@ -169,6 +179,7 @@ export function DataTableHead() {
                 {...mergeProps(
                   {
                     colSpan: header.colSpan > 1 ? header.colSpan : undefined,
+                    role: grid ? "columnheader" : undefined,
                     className: meta?.headerClassName,
                     style: alignStyle(meta),
                     "aria-sort": canSort
@@ -319,20 +330,90 @@ export interface DataTableRowViewProps<T extends RowData> {
  * ```
  */
 export function DataTableRowView<T extends RowData>({ row, style }: DataTableRowViewProps<T>) {
-  const { components: C, labels, slotProps, selectable, expandable, onRowClick, reorder, reorderHandleColumn } =
-    useDataTableContext<T>();
+  const { rowRender, reorder } = useDataTableContext<T>();
+  return (
+    <MemoRowBody<T>
+      row={row}
+      original={row.original}
+      style={style}
+      state={rowStateKey(row, rowRender.expandable)}
+      shared={rowRender}
+      reorderRow={reorder.getRowProps(row.id)}
+      handle={rowRender.reorderHandleColumn ? reorder.getHandleProps(row.id) : undefined}
+    />
+  );
+}
+
+/**
+ * Row state key
+ *
+ * Everything about a row's own state that its markup shows, as one string a
+ * memoized row compares.
+ */
+function rowStateKey<T extends RowData>(row: DataTableRow<T>, expandable: boolean): string {
+  const expand = expandable ? `${row.getCanExpand()}${row.getIsExpanded()}` : "";
+  return `${row.getIsSelected()}${row.getIsSomeSelected()}${row.getCanSelect()}${expand}${row.depth}`;
+}
+
+/**
+ * Row body props
+ *
+ * @typeParam T - The row data type.
+ */
+interface RowBodyProps<T extends RowData> {
+  row: DataTableRow<T>;
+  /** The row's data, compared by identity: an edit that replaces it re-renders the row. */
+  original: T;
+  style?: CSSProperties;
+  state: string;
+  shared: DataTableRowRender<T>;
+  reorderRow: RowReorderAttributes;
+  handle?: DragHandleSlotProps;
+}
+
+/**
+ * Same row body
+ *
+ * A row re-renders only when its own data or state, its drag attributes or
+ * handle, its style, or the table-wide inputs (`shared`) change. Editing one
+ * cell replaces one row's data, so one row re-renders.
+ */
+const sameRowBody = <T extends RowData>(a: RowBodyProps<T>, b: RowBodyProps<T>) =>
+  a.row.id === b.row.id &&
+  a.original === b.original &&
+  a.state === b.state &&
+  a.shared === b.shared &&
+  shallowEqual(a.style, b.style) &&
+  shallowEqual(a.reorderRow, b.reorderRow) &&
+  shallowEqual(a.handle, b.handle);
+
+/**
+ * Row body
+ *
+ * One body row's markup, read from its props alone (no table context), so
+ * that a memoized row can skip rendering.
+ */
+function RowBody<T extends RowData>({ row, style, shared, reorderRow, handle }: RowBodyProps<T>) {
+  const { components: C, labels, slotProps, selectable, expandable, onRowClick, spreadsheet } = shared;
   const selected = row.getIsSelected();
   const expanded = row.getIsExpanded();
 
   const rowProps = mergeProps(
     {
       style,
-      onClick: onRowClick ? (event) => onRowClick(row, event) : undefined,
+      role: spreadsheet ? "row" : undefined,
+      onClick: onRowClick
+        ? (event) => {
+            // In spreadsheet mode a press on a data cell selects the cell; it is not a row click.
+            if (spreadsheet && (event.target as Element).closest("[data-column-id]")) return;
+            onRowClick(row, event);
+          }
+        : undefined,
       "data-state": selected ? "selected" : undefined,
       "data-depth": row.depth,
       "data-expanded": expandable && row.getCanExpand() ? String(expanded) : undefined,
       "data-clickable": onRowClick ? "" : undefined,
-      ...reorder.getRowProps(row.id),
+      ...reorderRow,
     } as HTMLAttributes<HTMLTableRowElement>,
     slotProps.row?.(row),
   );
@@ -340,9 +421,9 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
   return (
     <DataTableRowContext.Provider value={row as unknown as DataTableRow<any>}>
       <C.Row {...rowProps}>
-        {reorderHandleColumn && (
+        {handle && (
           <C.Cell className={classes.cellDrag} data-slot="drag">
-            <C.DragHandle {...mergeProps(reorder.getHandleProps(row.id), slotProps.dragHandle?.(row))} />
+            <C.DragHandle {...mergeProps(handle, slotProps.dragHandle?.(row))} />
           </C.Cell>
         )}
 
@@ -383,18 +464,35 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
             );
           }
 
+          const cellProps = mergeProps(
+            {
+              className: meta?.cellClassName,
+              style: alignStyle(meta),
+              "data-align": meta?.align,
+            } as HTMLAttributes<HTMLTableCellElement>,
+            slotProps.cell?.(cell),
+          );
+
+          if (spreadsheet) {
+            const header = cell.column.columnDef.header;
+            return (
+              <GridCell<T>
+                key={cell.id}
+                Cell={C.Cell}
+                cellProps={cellProps}
+                row={row}
+                columnId={cell.column.id}
+                columnName={typeof header === "string" ? header : cell.column.id}
+                content={content}
+                spreadsheet={spreadsheet}
+                components={C}
+                editLabel={labels.editCell}
+              />
+            );
+          }
+
           return (
-            <C.Cell
-              key={cell.id}
-              {...mergeProps(
-                {
-                  className: meta?.cellClassName,
-                  style: alignStyle(meta),
-                  "data-align": meta?.align,
-                } as HTMLAttributes<HTMLTableCellElement>,
-                slotProps.cell?.(cell),
-              )}
-            >
+            <C.Cell key={cell.id} {...cellProps}>
               {content}
             </C.Cell>
           );
@@ -403,6 +501,8 @@ export function DataTableRowView<T extends RowData>({ row, style }: DataTableRow
     </DataTableRowContext.Provider>
   );
 }
+
+const MemoRowBody = memo(RowBody, sameRowBody) as <T extends RowData>(props: RowBodyProps<T>) => ReactNode;
 
 /**
  * DataTable.DragHandle
@@ -454,6 +554,19 @@ export function DataTableReorderAnnouncer() {
       </div>
     </>
   );
+}
+
+/**
+ * Spreadsheet announcer
+ *
+ * The live region of spreadsheet mode, rendered by `DataTable.Root`.
+ * Renders nothing unless spreadsheet mode is on.
+ *
+ * @internal
+ */
+export function DataTableSpreadsheetAnnouncer() {
+  const { spreadsheet } = useDataTableContext();
+  return spreadsheet.enabled ? <SpreadsheetAnnouncer store={spreadsheet.store} /> : null;
 }
 
 /**
@@ -568,14 +681,17 @@ export interface DataTableTableProps {
  * ```
  */
 export function DataTableTable({ children, body, maxHeight, scrollRef }: DataTableTableProps) {
-  const { components: C, slotProps } = useDataTableContext();
+  const { components: C, slotProps, spreadsheet } = useDataTableContext();
+  const tableProps = spreadsheet.enabled
+    ? mergeProps<TableSlotProps>(spreadsheet.gridProps, slotProps.table)
+    : slotProps.table;
   return (
     <div
       ref={scrollRef}
       className={classes.scroll}
       style={maxHeight !== undefined ? { maxHeight } : undefined}
     >
-      <C.Table {...slotProps.table}>
+      <C.Table {...tableProps}>
         <DataTableHead />
         {body ?? <DataTableBody />}
         <DataTableFoot />

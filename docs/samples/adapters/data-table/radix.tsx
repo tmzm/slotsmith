@@ -17,10 +17,12 @@ import {
   ChevronRightIcon,
   DragHandleDots2Icon,
 } from "@radix-ui/react-icons";
-import { Button, Checkbox, Flex, IconButton, SegmentedControl, Skeleton, Table, Text } from "@radix-ui/themes";
+import { Button, Checkbox, Flex, IconButton, SegmentedControl, Skeleton, Table, Text, TextField } from "@radix-ui/themes";
 import { useId } from "react";
 import {
+  fallbackComponents,
   useDataTableContext,
+  type CellEditorSlotProps,
   type CellSlotProps,
   type CheckboxSlotProps,
   type DataTableComponents,
@@ -28,6 +30,7 @@ import {
   type EmptySlotProps,
   type ErrorSlotProps,
   type ExpandToggleSlotProps,
+  type FillHandleSlotProps,
   type HeaderCellSlotProps,
   type PageSizeSelectSlotProps,
   type PaginationButtonSlotProps,
@@ -76,6 +79,12 @@ import {
  *
  * Arrows marked `data-flip` turn round on a right-to-left page.
  *
+ * In spreadsheet mode the body cells carry their part in the selection: the
+ * active cell and the one being edited get a ring in the accent colour, the
+ * selected range the accent tint, the cells a fill drag would write and the
+ * copied ones a grey tint with a thin accent ring. Read-only cells are muted.
+ * The editor's `TextField` loses its own box, so the cell is the field.
+ *
  * @param scope - The class on this table's root.
  * @returns The sheet's text.
  */
@@ -98,6 +107,14 @@ ${lifted} { box-shadow: var(--shadow-4); }
 ${lifted}:has(+ tr[data-dragging-child]) { box-shadow: none; }
 ${child}:not(:has(+ tr[data-dragging-child])) { box-shadow: var(--shadow-4); }
 [dir=rtl] ${s} [data-flip], ${s}[dir=rtl] [data-flip] { transform: scaleX(-1); }
+${s} tbody > tr > td[data-column-id] { position: relative; cursor: cell; outline: none; user-select: none; scroll-margin-top: 3em; }
+${s} tbody > tr > td[data-column-id] input { user-select: text; }
+${s} tbody > tr > td[data-column-id][data-selected] { background-color: var(--accent-a3); }
+${s} tbody > tr > td[data-column-id]:is([data-fill-preview], [data-copied]) { background-color: var(--gray-a3); box-shadow: inset 0 0 0 1px var(--accent-a7); }
+${s} tbody > tr > td[data-column-id]:is([data-active], [data-editing]) { box-shadow: inset 0 0 0 2px var(--accent-9); }
+${s} tbody > tr > td[data-column-id][data-editing] { background-color: var(--color-panel-solid); }
+${s} tbody > tr > td[data-column-id][aria-readonly=true] { color: var(--gray-11); }
+${s} td[data-editing] .rt-TextFieldRoot, ${s} td[data-editing] .rt-TextFieldRoot:focus-within { background: none; box-shadow: none; outline: none; padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   ${lifted}, ${child} { box-shadow: none !important; }
   ${lifted} > td, ${child} > td { opacity: 0.5; }
@@ -175,13 +192,93 @@ const RadixDragHandle = ({ style, ...props }: DragHandleSlotProps) => (
  * Radix moves to `true`, which selects everything. The click is stopped so
  * it does not also count as a click on the row.
  */
-const RadixCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...aria }: CheckboxSlotProps) => (
+const RadixCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, tabIndex, ...aria }: CheckboxSlotProps) => (
   <Checkbox
+    tabIndex={tabIndex}
     checked={indeterminate ? "indeterminate" : checked}
     disabled={disabled}
     onCheckedChange={(state) => onCheckedChange(state === true)}
     onClick={(event) => event.stopPropagation()}
     aria-label={aria["aria-label"]}
+  />
+);
+
+/**
+ * Radix cell editor
+ *
+ * Text and numbers are edited in a `TextField` that the root's sheet strips
+ * of its box, so the cell itself is the field, with the validation message on
+ * an error chip below the cell. Selects and dates keep the built-in editor,
+ * the slotsmith `Autocomplete` and `DatePicker`, which wear the Radix
+ * adapters given to `SlotsmithProvider`.
+ */
+function RadixCellEditor(props: CellEditorSlotProps) {
+  const errorId = useId();
+  if (props.kind !== "text" && props.kind !== "number") return <fallbackComponents.CellEditor {...props} />;
+  const { onValueChange, error } = props;
+  return (
+    <Flex align="center" flexGrow="1" minWidth="0" px="3">
+      <TextField.Root
+        size="2"
+        variant="soft"
+        color={error !== null ? "red" : undefined}
+        style={{ flex: 1 }}
+        value={props.value}
+        onChange={(event) => onValueChange(event.target.value)}
+        inputMode={props.kind === "number" ? "decimal" : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={props["aria-label"]}
+        aria-invalid={error !== null || undefined}
+        aria-describedby={error !== null ? errorId : undefined}
+      />
+      {error !== null && (
+        <Text
+          id={errorId}
+          role="alert"
+          size="1"
+          style={{
+            position: "absolute",
+            top: "100%",
+            insetInlineStart: 0,
+            zIndex: 3,
+            marginTop: 2,
+            paddingInline: "var(--space-2)",
+            borderRadius: "var(--radius-2)",
+            whiteSpace: "nowrap",
+            color: "var(--red-contrast)",
+            background: "var(--red-9)",
+          }}
+        >
+          {error}
+        </Text>
+      )}
+    </Flex>
+  );
+}
+
+/**
+ * Radix fill handle
+ *
+ * A small square in the accent colour on the selection's corner.
+ */
+const RadixFillHandle = ({ style, ...props }: FillHandleSlotProps) => (
+  <span
+    style={{
+      position: "absolute",
+      zIndex: 2,
+      insetBlockEnd: -4,
+      insetInlineEnd: -4,
+      width: 7,
+      height: 7,
+      boxSizing: "border-box",
+      background: "var(--accent-9)",
+      border: "1px solid var(--color-panel-solid)",
+      cursor: "crosshair",
+      touchAction: "none",
+      ...style,
+    }}
+    {...props}
   />
 );
 
@@ -389,4 +486,6 @@ export const radixComponents: Partial<DataTableComponents> = {
   PaginationButton: RadixPaginationButton,
   PageSizeSelect: RadixPageSizeSelect,
   DragHandle: RadixDragHandle,
+  CellEditor: RadixCellEditor,
+  FillHandle: RadixFillHandle,
 };

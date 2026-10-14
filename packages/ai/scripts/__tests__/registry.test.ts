@@ -148,6 +148,7 @@ describe("shadcn registry", () => {
     expect(items.find((item) => item.name === "slotsmith-data-table")!.registryDependencies).toEqual([
       "button",
       "checkbox",
+      "input",
       "select",
       "skeleton",
       "table",

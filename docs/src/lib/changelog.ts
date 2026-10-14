@@ -110,6 +110,7 @@ export function hasNotes(release: Release): boolean {
  */
 export const README_ANCHOR_PATHS: Record<string, string> = {
   "reordering-rows": "/components/data-table/guides/row-reorder/",
+  "spreadsheet-mode": "/components/data-table/guides/spreadsheet/",
   "ready-made-adapters": "/ai-tools/",
   "once-for-the-whole-app": "/guides/#once-for-the-whole-app",
   theming: "/theming/",

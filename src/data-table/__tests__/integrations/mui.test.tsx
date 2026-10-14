@@ -20,6 +20,8 @@ import {
   names,
   ReorderableEmployees,
   reorderStatus,
+  SpreadsheetEmployees,
+  spreadsheetThroughSkin,
   pageSizeThroughAutocompleteAdapter,
   renderUnderProvider,
   stubBrowserApis,
@@ -282,5 +284,11 @@ describe("MUI v7 (CMS admin panel)", () => {
       expect(listbox).toHaveClass("MuiList-root");
       expect(options[0]).toHaveClass("MuiMenuItem-root");
     });
+  });
+
+  it("edits as a spreadsheet with the skin's editor, checkbox and fill handle", async () => {
+    const user = userEvent.setup();
+    render(<SpreadsheetEmployees components={muiDataTable} />, { wrapper: Wrapper });
+    await spreadsheetThroughSkin(user);
   });
 });

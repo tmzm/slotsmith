@@ -37,10 +37,27 @@ export type { RowReorderAttributes, RowReorderModel } from "./core/useRowReorder
 export { moveItem } from "./core/reorder";
 export type { DropPosition, RowOrderChange } from "./core/reorder";
 
+export type {
+  DataTableColumnEdit,
+  DataTableColumnEditInput,
+  DataTableColumnEditorProps,
+  DataTableEditOption,
+  DataTableEditorKind,
+  DataTableRowChange,
+  DataTableSpreadsheetOptions,
+  DataTableValueChange,
+  DataTableValueChangeSource,
+} from "./core/spreadsheet/types";
+export type { SpreadsheetGridProps, SpreadsheetModel } from "./core/spreadsheet/useSpreadsheet";
+export type { SpreadsheetState, SpreadsheetEditing } from "./core/spreadsheet/store";
+export type { CellPosition } from "./core/spreadsheet/grid";
+
 export { dataTableFeatures, createDataTableColumnHelper } from "./core/features";
 export type {
   DataTableCell,
   DataTableColumnDef,
+  DataTableColumnEditField,
+  DataTableColumnHelper,
   DataTableColumnMeta,
   DataTableFeatures,
   DataTableHeader,

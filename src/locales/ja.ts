@@ -44,6 +44,19 @@ export const ja: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `${number(total)}行中${number(position)}番目です。`,
       reorderDropped: (position, total) => `行を${number(total)}行中${number(position)}番目に配置しました。`,
       reorderCancelled: "並べ替えをキャンセルしました。",
+      editCell: (column) => `${column}を編集`,
+      invalidNumber: "数値を入力してください。",
+      invalidOption: "選択肢から選んでください。",
+      invalidDate: "有効な日付を入力してください。",
+      invalidBoolean: "TRUE または FALSE を入力してください。",
+      cellsCopied: (count) => `${number(count)}個のセルをコピーしました。`,
+      cellsCut: (count) => `${number(count)}個のセルを切り取りました。`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `${number(count)}個のセルを貼り付けました（${number(skipped)}個はスキップ）。` : `${number(count)}個のセルを貼り付けました。`,
+      cellsCleared: (count) => `${number(count)}個のセルをクリアしました。`,
+      cellsFilled: (count) => `${number(count)}個のセルに入力しました。`,
+      undone: "元に戻しました。",
+      redone: "やり直しました。",
     };
   },
 

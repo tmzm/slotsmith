@@ -26,18 +26,6 @@ export interface RoadmapItem {
  */
 export const ROADMAP: RoadmapItem[] = [
   {
-    title: "roadmap.spreadsheetMode",
-    detail: "roadmap.spreadsheetModeDetail",
-    status: "planned",
-    id: "spreadsheet-mode",
-  },
-  {
-    title: "roadmap.renderPerformance",
-    detail: "roadmap.renderPerformanceDetail",
-    status: "planned",
-    id: "render-performance",
-  },
-  {
     title: "roadmap.calendars",
     detail: "roadmap.calendarsDetail",
     status: "planned",
@@ -64,6 +52,8 @@ export const ROADMAP: RoadmapItem[] = [
   { title: "nav.autocomplete", detail: "summary.autocomplete", status: "shipped", link: "/components/autocomplete/" },
   { title: "nav.datePicker", detail: "summary.datePicker", status: "shipped", link: "/components/date-picker/" },
   { title: "nav.fileUploader", detail: "summary.fileUploader", status: "shipped", link: "/components/file-uploader/" },
+  { title: "roadmap.spreadsheetMode", detail: "roadmap.spreadsheetModeDetail", status: "shipped", link: "/components/data-table/guides/spreadsheet/" },
+  { title: "roadmap.renderPerformance", detail: "roadmap.renderPerformanceDetail", status: "shipped", link: "/components/data-table/guides/spreadsheet/#storing-the-rows" },
   { title: "roadmap.theming", detail: "roadmap.themingDetail", status: "shipped", link: "/theming/" },
   { title: "roadmap.languages", detail: "roadmap.languagesDetail", status: "shipped", link: "/languages/" },
   { title: "roadmap.aiTools", detail: "roadmap.aiToolsDetail", status: "shipped", link: "/ai-tools/" },

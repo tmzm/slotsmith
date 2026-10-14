@@ -1,8 +1,9 @@
 import { createContext, useContext, type MouseEvent } from "react";
 import type { RowData } from "@tanstack/react-table";
 import type { LocaleInput } from "../../locale/types";
-import type { DataTableRow } from "../core/features";
+import type { DataTableColumnDef, DataTableRow } from "../core/features";
 import type { DataTableModel } from "../core/useDataTable";
+import type { SpreadsheetRenderContext } from "../spreadsheet";
 import type { DataTableSlotProps } from "./slotProps";
 import type { DataTableComponents, DataTableLabels } from "./types";
 
@@ -28,6 +29,37 @@ export interface DataTableContextValue<T extends RowData> extends DataTableModel
   locale?: LocaleInput;
   /** The `onRowClick` option. */
   onRowClick?: (row: DataTableRow<T>, event: MouseEvent<HTMLTableRowElement>) => void;
+  /**
+   * What every body row renders with, as one object that stays the same
+   * while none of it changes. Rows compare it to skip re-rendering.
+   *
+   * @internal
+   */
+  rowRender: DataTableRowRender<T>;
+}
+
+/**
+ * Row render context
+ *
+ * The table-wide inputs of a body row. A row re-renders when this object,
+ * its own data or its own state changes, and not otherwise.
+ *
+ * @typeParam T - The row data type.
+ * @internal
+ */
+export interface DataTableRowRender<T extends RowData> {
+  components: DataTableComponents;
+  labels: DataTableLabels;
+  slotProps: DataTableSlotProps<T>;
+  selectable: boolean;
+  expandable: boolean;
+  reorderHandleColumn: boolean;
+  /** Calls the latest `onRowClick`; `null` when there is none. */
+  onRowClick: ((row: DataTableRow<T>, event: MouseEvent<HTMLTableRowElement>) => void) | null;
+  /** The columns, by identity: new columns re-render every row. */
+  columns: readonly DataTableColumnDef<T>[];
+  /** Spreadsheet mode, when on. */
+  spreadsheet: SpreadsheetRenderContext<T> | null;
 }
 
 /**

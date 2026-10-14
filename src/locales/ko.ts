@@ -43,6 +43,19 @@ export const ko: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `${number(total)}개 중 ${number(position)}번째 위치입니다.`,
       reorderDropped: (position, total) => `행을 ${number(total)}개 중 ${number(position)}번째 위치에 놓았습니다.`,
       reorderCancelled: "순서 변경을 취소했습니다.",
+      editCell: (column) => `${column} 편집`,
+      invalidNumber: "숫자를 입력하세요.",
+      invalidOption: "옵션 중 하나를 선택하세요.",
+      invalidDate: "올바른 날짜를 입력하세요.",
+      invalidBoolean: "TRUE 또는 FALSE를 입력하세요.",
+      cellsCopied: (count) => `셀 ${number(count)}개를 복사했습니다.`,
+      cellsCut: (count) => `셀 ${number(count)}개를 잘라냈습니다.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `셀 ${number(count)}개를 붙여넣었습니다(${number(skipped)}개 건너뜀).` : `셀 ${number(count)}개를 붙여넣었습니다.`,
+      cellsCleared: (count) => `셀 ${number(count)}개를 지웠습니다.`,
+      cellsFilled: (count) => `셀 ${number(count)}개를 채웠습니다.`,
+      undone: "실행을 취소했습니다.",
+      redone: "다시 실행했습니다.",
     };
   },
 

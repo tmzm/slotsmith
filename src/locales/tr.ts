@@ -44,6 +44,19 @@ export const tr: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `Konum ${number(position)} / ${number(total)}.`,
       reorderDropped: (position, total) => `Satır bırakıldı. Konum ${number(position)} / ${number(total)}.`,
       reorderCancelled: "Sıralama iptal edildi.",
+      editCell: (column) => `${column} düzenle`,
+      invalidNumber: "Bir sayı girin.",
+      invalidOption: "Seçeneklerden birini seçin.",
+      invalidDate: "Geçerli bir tarih girin.",
+      invalidBoolean: "TRUE veya FALSE girin.",
+      cellsCopied: (count) => `Kopyalanan hücre: ${number(count)}.`,
+      cellsCut: (count) => `Kesilen hücre: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `Yapıştırılan hücre: ${number(count)}, atlanan: ${number(skipped)}.` : `Yapıştırılan hücre: ${number(count)}.`,
+      cellsCleared: (count) => `Temizlenen hücre: ${number(count)}.`,
+      cellsFilled: (count) => `Doldurulan hücre: ${number(count)}.`,
+      undone: "Geri alındı.",
+      redone: "Yinelendi.",
     };
   },
 

@@ -45,6 +45,19 @@ export const fa: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `موقعیت ${number(position)} از ${number(total)}.`,
       reorderDropped: (position, total) => `ردیف در موقعیت ${number(position)} از ${number(total)} رها شد.`,
       reorderCancelled: "جابه‌جایی لغو شد.",
+      editCell: (column) => `ویرایش ${column}`,
+      invalidNumber: "یک عدد وارد کنید.",
+      invalidOption: "یکی از گزینه‌ها را انتخاب کنید.",
+      invalidDate: "یک تاریخ معتبر وارد کنید.",
+      invalidBoolean: "TRUE یا FALSE وارد کنید.",
+      cellsCopied: (count) => `خانه‌های کپی‌شده: ${number(count)}.`,
+      cellsCut: (count) => `خانه‌های بریده‌شده: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `خانه‌های جای‌گذاری‌شده: ${number(count)}، ردشده: ${number(skipped)}.` : `خانه‌های جای‌گذاری‌شده: ${number(count)}.`,
+      cellsCleared: (count) => `خانه‌های پاک‌شده: ${number(count)}.`,
+      cellsFilled: (count) => `خانه‌های پرشده: ${number(count)}.`,
+      undone: "واگرد شد.",
+      redone: "دوباره انجام شد.",
     };
   },
 

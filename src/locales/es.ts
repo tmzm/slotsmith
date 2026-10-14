@@ -43,6 +43,19 @@ export const es: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `Posición ${number(position)} de ${number(total)}.`,
       reorderDropped: (position, total) => `Fila soltada en la posición ${number(position)} de ${number(total)}.`,
       reorderCancelled: "Reordenación cancelada.",
+      editCell: (column) => `Editar ${column}`,
+      invalidNumber: "Introduce un número.",
+      invalidOption: "Elige una de las opciones.",
+      invalidDate: "Introduce una fecha válida.",
+      invalidBoolean: "Introduce TRUE o FALSE.",
+      cellsCopied: (count) => `Celdas copiadas: ${number(count)}.`,
+      cellsCut: (count) => `Celdas cortadas: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `Celdas pegadas: ${number(count)}, omitidas: ${number(skipped)}.` : `Celdas pegadas: ${number(count)}.`,
+      cellsCleared: (count) => `Celdas borradas: ${number(count)}.`,
+      cellsFilled: (count) => `Celdas rellenadas: ${number(count)}.`,
+      undone: "Deshecho.",
+      redone: "Rehecho.",
     };
   },
 

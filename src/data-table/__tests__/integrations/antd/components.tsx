@@ -7,11 +7,13 @@
  * keeps its fallback.
  */
 import { CaretDownOutlined, CaretUpOutlined, HolderOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Checkbox, ConfigProvider, Empty, Flex, Segmented, Skeleton, Typography, theme } from "antd";
+import { Button, Checkbox, ConfigProvider, Empty, Flex, Input, Segmented, Skeleton, Typography, theme } from "antd";
 import type { GlobalToken } from "antd";
 import { useContext, useId } from "react";
 import {
+  fallbackComponents,
   useDataTableContext,
+  type CellEditorSlotProps,
   type CellSlotProps,
   type CheckboxSlotProps,
   type DataTableComponents,
@@ -19,6 +21,7 @@ import {
   type EmptySlotProps,
   type ErrorSlotProps,
   type ExpandToggleSlotProps,
+  type FillHandleSlotProps,
   type HeaderCellSlotProps,
   type PageSizeSelectSlotProps,
   type PaginationButtonSlotProps,
@@ -62,6 +65,11 @@ import {
  * With reduced motion nothing slides: the block is dimmed and a line on
  * `data-drop-edge` shows where it will land.
  *
+ * In spreadsheet mode the body cells carry their part in the selection: the
+ * active cell and the one being edited get a ring in the primary colour, the
+ * selected range the active-item tint, the cells a fill drag would write and
+ * the copied ones the hover tint with a thin ring. Read-only cells are muted.
+ *
  * @param scope - The class on this table's root.
  * @param token - The theme's tokens.
  * @returns The sheet's text.
@@ -92,6 +100,13 @@ ${lifted} > td, ${child} > td { background-color: ${token.colorBgContainer}; bac
 ${lifted} { box-shadow: ${token.boxShadowSecondary}; }
 ${lifted}:has(+ tr[data-dragging-child]) { box-shadow: none; }
 ${child}:not(:has(+ tr[data-dragging-child])) { box-shadow: ${token.boxShadowSecondary}; }
+${s} tbody > tr > td[data-column-id] { position: relative; cursor: cell; outline: none; user-select: none; scroll-margin-top: 3em; }
+${s} tbody > tr > td[data-column-id] input { user-select: text; }
+${s} tbody > tr > td[data-column-id][data-selected] { background-color: ${token.controlItemBgActive}; }
+${s} tbody > tr > td[data-column-id]:is([data-fill-preview], [data-copied]) { background-color: ${token.controlItemBgHover}; box-shadow: inset 0 0 0 1px ${token.colorPrimaryBorder}; }
+${s} tbody > tr > td[data-column-id]:is([data-active], [data-editing]) { box-shadow: inset 0 0 0 2px ${token.colorPrimary}; }
+${s} tbody > tr > td[data-column-id][data-editing] { background-color: ${token.colorBgContainer}; }
+${s} tbody > tr > td[data-column-id][aria-readonly=true] { color: ${token.colorTextSecondary}; }
 @media (prefers-reduced-motion: reduce) {
   ${lifted}, ${child} { box-shadow: none !important; }
   ${lifted} > td, ${child} > td { opacity: 0.5; }
@@ -164,14 +179,96 @@ const AntDragHandle = ({ type, style, ...props }: DragHandleSlotProps) => (
 );
 
 /**
+ * Ant cell editor
+ *
+ * Text and numbers are edited in a borderless `Input`, so the cell itself is
+ * the field, with the validation message on an error chip below the cell.
+ * Selects and dates keep the built-in editor, the slotsmith `Autocomplete`
+ * and `DatePicker`, which wear the Ant adapters given to `SlotsmithProvider`.
+ */
+function AntCellEditor(props: CellEditorSlotProps) {
+  const { token } = theme.useToken();
+  const errorId = useId();
+  if (props.kind !== "text" && props.kind !== "number") return <fallbackComponents.CellEditor {...props} />;
+  const { onValueChange, error } = props;
+  return (
+    <div style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0, paddingInline: token.paddingXS }}>
+      <Input
+        variant="borderless"
+        value={props.value}
+        onChange={(event) => onValueChange(event.target.value)}
+        status={error !== null ? "error" : undefined}
+        inputMode={props.kind === "number" ? "decimal" : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={props["aria-label"]}
+        aria-invalid={error !== null || undefined}
+        aria-describedby={error !== null ? errorId : undefined}
+        style={{ padding: 0, font: "inherit" }}
+      />
+      {error !== null && (
+        <span
+          id={errorId}
+          role="alert"
+          style={{
+            position: "absolute",
+            top: "100%",
+            insetInlineStart: 0,
+            zIndex: 3,
+            marginTop: 2,
+            paddingInline: token.paddingXS,
+            borderRadius: token.borderRadiusSM,
+            whiteSpace: "nowrap",
+            fontSize: token.fontSizeSM,
+            color: token.colorWhite,
+            background: token.colorError,
+          }}
+        >
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Ant fill handle
+ *
+ * A small square in the primary colour on the selection's corner.
+ */
+function AntFillHandle({ style, ...props }: FillHandleSlotProps) {
+  const { token } = theme.useToken();
+  return (
+    <span
+      style={{
+        position: "absolute",
+        zIndex: 2,
+        insetBlockEnd: -4,
+        insetInlineEnd: -4,
+        width: 7,
+        height: 7,
+        boxSizing: "border-box",
+        background: token.colorPrimary,
+        border: `1px solid ${token.colorBgContainer}`,
+        cursor: "crosshair",
+        touchAction: "none",
+        ...style,
+      }}
+      {...props}
+    />
+  );
+}
+
+/**
  * Ant checkbox adapter
  *
  * Ant's `Checkbox` has its own `indeterminate` prop and reports the change
  * on `event.target.checked`. The click is stopped so it does not also count
  * as a click on the row.
  */
-const AntCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, ...aria }: CheckboxSlotProps) => (
+const AntCheckbox = ({ checked, indeterminate, disabled, onCheckedChange, tabIndex, ...aria }: CheckboxSlotProps) => (
   <Checkbox
+    tabIndex={tabIndex}
     checked={checked}
     indeterminate={indeterminate}
     disabled={disabled}
@@ -384,4 +481,6 @@ export const antdDataTable: Partial<DataTableComponents> = {
   PaginationButton: AntPaginationButton,
   PageSizeSelect: AntPageSizeSelect,
   DragHandle: AntDragHandle,
+  CellEditor: AntCellEditor,
+  FillHandle: AntFillHandle,
 };

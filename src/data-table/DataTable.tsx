@@ -1,5 +1,6 @@
 import type { RowData } from "@tanstack/react-table";
-import { useContext, type HTMLAttributes, type ReactNode } from "react";
+import { useCallback, useContext, useMemo, useRef, type HTMLAttributes, type ReactNode } from "react";
+import { useShallowStable } from "../shared/useShallowStable";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
@@ -12,6 +13,7 @@ import {
   DataTableHead,
   DataTablePagination,
   DataTableReorderAnnouncer,
+  DataTableSpreadsheetAnnouncer,
   DataTableRowView,
   DataTableStatusRows,
   DataTableTable,
@@ -81,24 +83,65 @@ export function DataTableProvider<T extends RowData>({
   ...options
 }: DataTableProviderProps<T>) {
   const { labels: localeLabels } = useLocaleSection("table", locale);
-  /** English, then the locale, then the caller's own overrides. */
-  const resolvedLabels: DataTableLabels = {
-    ...defaultLabels,
-    ...withoutUndefined(localeLabels),
-    ...withoutUndefined(labels),
-  };
+  const ownLabels = useShallowStable(labels);
+  /** English, then the locale, then the caller's own overrides. Kept while none of them change, so rows can skip. */
+  const resolvedLabels: DataTableLabels = useMemo(
+    () => ({ ...defaultLabels, ...withoutUndefined(localeLabels), ...withoutUndefined(ownLabels) }),
+    [localeLabels, ownLabels],
+  );
   const virtual = useContext(VirtualTableContext);
   const model = useDataTable(options, { labels: resolvedLabels, virtual });
   /** The fallbacks, then the provider's slots, then the caller's own. */
-  const parts = useSlots("dataTable", fallbackComponents, components);
+  const parts = useSlots("dataTable", fallbackComponents, useShallowStable(components));
+  const stableSlotProps = useShallowStable(slotProps);
+  const resolvedSlotProps = useMemo((): DataTableSlotProps<T> => stableSlotProps ?? {}, [stableSlotProps]);
+
+  /** Rows call the latest `onRowClick` through this, so an inline handler does not re-render them. */
+  const onRowClickRef = useRef(onRowClick);
+  onRowClickRef.current = onRowClick;
+  const clickable = onRowClick !== undefined;
+  const callRowClick = useCallback<NonNullable<DataTableContextValue<T>["onRowClick"]>>(
+    (row, event) => onRowClickRef.current?.(row, event),
+    [],
+  );
+
+  const { selectable, expandable, reorderHandleColumn, spreadsheet } = model;
+  const rowRender = useMemo(
+    () => ({
+      components: parts,
+      labels: resolvedLabels,
+      slotProps: resolvedSlotProps,
+      selectable,
+      expandable,
+      reorderHandleColumn,
+      onRowClick: clickable ? callRowClick : null,
+      columns: options.columns,
+      spreadsheet: spreadsheet.enabled ? { store: spreadsheet.store, editingOf: spreadsheet.editingOf } : null,
+    }),
+    [
+      parts,
+      resolvedLabels,
+      resolvedSlotProps,
+      selectable,
+      expandable,
+      reorderHandleColumn,
+      clickable,
+      callRowClick,
+      options.columns,
+      spreadsheet.enabled,
+      spreadsheet.store,
+      spreadsheet.editingOf,
+    ],
+  );
 
   const value: DataTableContextValue<T> = {
     ...model,
     components: parts,
     labels: resolvedLabels,
-    slotProps: slotProps ?? {},
+    slotProps: resolvedSlotProps,
     locale,
     onRowClick,
+    rowRender,
   };
 
   return <DataTableContext.Provider value={value}>{children}</DataTableContext.Provider>;
@@ -144,6 +187,7 @@ export function DataTableRoot({ size, striped, children, ...props }: DataTableRo
     >
       {children}
       <DataTableReorderAnnouncer />
+      <DataTableSpreadsheetAnnouncer />
     </C.Root>
   );
 }
@@ -168,7 +212,7 @@ export interface DataTableProps<T extends RowData>
  * The `<DataTable>` props that go to the provider; the rest go to the root.
  */
 const PROVIDER_KEYS = [
-  "data", "columns", "getRowId",
+  "data", "value", "onValueChange", "spreadsheet", "columns", "getRowId",
   "sorting", "onSortingChange", "defaultSorting", "manualSorting", "enableMultiSort",
   "pagination", "onPaginationChange", "defaultPagination", "manualPagination", "rowCount",
   "pageSizeOptions", "enablePagination",

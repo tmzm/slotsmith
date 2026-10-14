@@ -12,14 +12,23 @@ import {
   sortFn_datetime,
   sortFn_text,
   tableFeatures,
+  type AccessorFn,
+  type AccessorFnColumnDef,
+  type AccessorKeyColumnDef,
   type Cell,
   type CellData,
   type ColumnDef,
+  type ColumnHelper,
+  type DeepKeys,
+  type DeepValue,
+  type DisplayColumnDef,
   type Header,
+  type IdentifiedColumnDef,
   type ReactTable,
   type Row,
   type RowData,
 } from "@tanstack/react-table";
+import type { DataTableColumnEditInput } from "./spreadsheet/types";
 
 /**
  * Column meta
@@ -102,7 +111,33 @@ export type DataTableColumnDef<T extends RowData, TValue extends CellData = any>
   DataTableFeatures,
   T,
   TValue
->;
+> &
+  DataTableColumnEditField<T, TValue>;
+
+/** Whether a type is `any`. */
+type IsAnyType<V> = 0 extends 1 & V ? true : false;
+
+/**
+ * Column edit field
+ *
+ * The `edit` field of a column, typed by the column's value. With the value
+ * type left open (`DataTableColumnDef<T>`), an `accessorKey` column reads it
+ * from the field the key names, so a plain array of columns is typed per
+ * column. A column whose key is only known as a `string` cannot be edited
+ * that way, and an `accessorFn` column's `edit` is untyped: build either with
+ * {@link createDataTableColumnHelper}, or give `DataTableColumnDef<T, TValue>`
+ * its value type.
+ *
+ * @typeParam T - The row data type.
+ * @typeParam TValue - The column's value type.
+ */
+export type DataTableColumnEditField<T extends RowData, TValue> =
+  IsAnyType<TValue> extends true
+    ?
+        | { [K in DeepKeys<T>]: { accessorKey: K; edit?: DataTableColumnEditInput<T, DeepValue<T, K>> } }[DeepKeys<T>]
+        | { accessorKey: (string & {}) | keyof T; edit?: never }
+        | { accessorKey?: undefined; edit?: DataTableColumnEditInput<T, any> }
+    : { edit?: DataTableColumnEditInput<T, TValue> };
 
 /**
  * Row
@@ -141,9 +176,44 @@ export type DataTableHeader<T extends RowData> = Header<DataTableFeatures, T, Ce
 export type DataTableInstance<T extends RowData> = ReactTable<DataTableFeatures, T>;
 
 /**
+ * Column helper
+ *
+ * TanStack's column helper bound to the data table's features, whose
+ * `accessor` also takes the column's `edit`, typed by the value it reads.
+ *
+ * @typeParam T - The row data type.
+ */
+export interface DataTableColumnHelper<T extends RowData>
+  extends Omit<ColumnHelper<DataTableFeatures, T>, "accessor"> {
+  accessor: <
+    TAccessor extends AccessorFn<T> | DeepKeys<T>,
+    TValue extends TAccessor extends AccessorFn<T, infer TReturn>
+      ? TReturn
+      : TAccessor extends DeepKeys<T>
+        ? DeepValue<T, TAccessor>
+        : never,
+  >(
+    accessor: TAccessor,
+    column: (TAccessor extends AccessorFn<T>
+      ? DisplayColumnDef<DataTableFeatures, T, TValue>
+      : IdentifiedColumnDef<DataTableFeatures, T, TValue>) & { edit?: DataTableColumnEditInput<T, TValue> },
+  ) => TAccessor extends AccessorFn<T>
+    ? AccessorFnColumnDef<DataTableFeatures, T, TValue> & {
+        accessorKey?: undefined;
+        edit?: DataTableColumnEditInput<T, TValue>;
+      }
+    : AccessorKeyColumnDef<DataTableFeatures, T, TValue> & {
+        accessorKey: TAccessor;
+        edit?: DataTableColumnEditInput<T, TValue>;
+      };
+}
+
+/**
  * Create column helper
  *
- * A typed TanStack column helper bound to the data table's features.
+ * A typed TanStack column helper bound to the data table's features. Its
+ * `accessor` infers each column's value type, which types the column's
+ * `cell` and its `edit`.
  *
  * @typeParam T - The row data type.
  * @returns A column helper for `T`.
@@ -152,10 +222,10 @@ export type DataTableInstance<T extends RowData> = ReactTable<DataTableFeatures,
  * ```tsx
  * const column = createDataTableColumnHelper<User>();
  * const columns = [
- *   column.accessor("name", { header: "Name" }),
- *   column.accessor("age", { header: "Age", meta: { align: "end" } }),
+ *   column.accessor("name", { header: "Name", edit: true }),
+ *   column.accessor("age", { header: "Age", edit: { validate: (age) => (age < 0 ? "Too low" : null) } }),
  * ];
  * ```
  */
-export const createDataTableColumnHelper = <T extends RowData>() =>
-  createColumnHelper<DataTableFeatures, T>();
+export const createDataTableColumnHelper = <T extends RowData>(): DataTableColumnHelper<T> =>
+  createColumnHelper<DataTableFeatures, T>() as unknown as DataTableColumnHelper<T>;

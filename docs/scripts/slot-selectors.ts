@@ -38,6 +38,8 @@ export const SLOT_SELECTORS: Record<ComponentSlug, Record<string, string>> = {
     PaginationButton: c(dt.buttonIcon),
     PageSizeSelect: c(dt.pageSize),
     DragHandle: c(dt.drag),
+    CellEditor: c(dt.editor),
+    FillHandle: c(dt.fillHandle),
   },
   autocomplete: {
     Root: c(ac.root),

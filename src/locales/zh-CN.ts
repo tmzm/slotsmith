@@ -43,6 +43,19 @@ export const zhCN: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `第${number(position)}行，共${number(total)}行。`,
       reorderDropped: (position, total) => `已将该行放到第${number(position)}行，共${number(total)}行。`,
       reorderCancelled: "已取消调整顺序。",
+      editCell: (column) => `编辑${column}`,
+      invalidNumber: "请输入数字。",
+      invalidOption: "请选择其中一个选项。",
+      invalidDate: "请输入有效日期。",
+      invalidBoolean: "请输入 TRUE 或 FALSE。",
+      cellsCopied: (count) => `已复制 ${number(count)} 个单元格。`,
+      cellsCut: (count) => `已剪切 ${number(count)} 个单元格。`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `已粘贴 ${number(count)} 个单元格，跳过 ${number(skipped)} 个。` : `已粘贴 ${number(count)} 个单元格。`,
+      cellsCleared: (count) => `已清除 ${number(count)} 个单元格。`,
+      cellsFilled: (count) => `已填充 ${number(count)} 个单元格。`,
+      undone: "已撤销。",
+      redone: "已重做。",
     };
   },
 

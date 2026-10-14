@@ -36,6 +36,17 @@ export const classes = {
   pageSize: "sdt__page-size",
   pageSizeSelect: "sdt__page-size-select",
   drag: "sdt__drag",
+  /** Spreadsheet mode: the editor inside a cell, its input or picker, and its message. */
+  editorHost: "sdt__editor-host",
+  /** Spreadsheet mode: the cell's content kept, unseen, under its editor; a checkbox column's box. */
+  cellGhost: "sdt__cell-ghost",
+  checkboxCell: "sdt__checkbox-cell",
+  editor: "sdt__editor",
+  editorInput: "sdt__editor-input",
+  editorControl: "sdt__editor-control",
+  editorError: "sdt__editor-error",
+  /** Spreadsheet mode: the square on the selection's corner. */
+  fillHandle: "sdt__fill-handle",
   /** Visually hidden text, named like the autocomplete's `sac__sr-only`. */
   srOnly: "sdt__sr-only",
 } as const;

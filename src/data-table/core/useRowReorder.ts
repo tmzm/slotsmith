@@ -212,6 +212,15 @@ interface PendingSettle {
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
+/** One row handle's event handlers. */
+type RowHandlers = Pick<DragHandleSlotProps, "onPointerDown" | "onKeyDown" | "onBlur">;
+
+/** Touch would scroll the page instead of dragging the row. */
+const HANDLE_STYLE = { touchAction: "none" } as const;
+
+/** A press on the handle is a drag, never a click on its row (`onRowClick`). */
+const stopClick = (event: { stopPropagation: () => void }) => event.stopPropagation();
+
 const sameIds = (a: readonly string[], b: readonly string[]) =>
   a === b || (a.length === b.length && a.every((id, index) => id === b[index]));
 
@@ -381,6 +390,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
   const pendingSettle = useRef<PendingSettle | null>(null);
   const pendingFocus = useRef<string | null>(null);
   const stopSettle = useRef<(() => void) | null>(null);
+  const handlerCache = useRef(new Map<string, RowHandlers>());
 
   const engine = useMemo(() => {
     const labelsNow = () => latest.current.options.labels;
@@ -698,6 +708,20 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
   const alone = (rowId: string) =>
     tree !== undefined && (siblingCounts.get(tree.levelOf(rowId)?.parentId ?? null) ?? 0) < 2;
 
+  /** Each row's handlers, made once, so a row's handle props stay equal between renders and memoized rows can skip. */
+  const handlersOf = (rowId: string): RowHandlers => {
+    let handlers = handlerCache.current.get(rowId);
+    if (!handlers) {
+      handlers = {
+        onPointerDown: (event) => engine.onPointerDown(rowId, event),
+        onKeyDown: (event) => engine.onKeyDown(rowId, event),
+        onBlur: () => engine.onBlur(rowId),
+      };
+      handlerCache.current.set(rowId, handlers);
+    }
+    return handlers;
+  };
+
   return {
     enabled,
     draggingId,
@@ -710,13 +734,9 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       "aria-pressed": mode === "keyboard" && draggingId === rowId ? true : undefined,
       "data-dragging": draggingId === rowId ? "" : undefined,
       disabled: !enabled || alone(rowId),
-      // Touch would scroll the page instead of dragging the row.
-      style: { touchAction: "none" },
-      // A press on the handle is a drag, never a click on its row (`onRowClick`).
-      onClick: (event) => event.stopPropagation(),
-      onPointerDown: (event) => engine.onPointerDown(rowId, event),
-      onKeyDown: (event) => engine.onKeyDown(rowId, event),
-      onBlur: () => engine.onBlur(rowId),
+      style: HANDLE_STYLE,
+      onClick: stopClick,
+      ...handlersOf(rowId),
     }),
     getRowProps: (rowId) => {
       const attributes: RowReorderAttributes = { "data-row-id": rowId };

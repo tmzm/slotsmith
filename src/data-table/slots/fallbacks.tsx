@@ -5,10 +5,13 @@ import { useLocaleSection } from "../../locale/useLocaleSection";
 import { createNumber } from "../../locale/plural";
 import { cx } from "../../shared/cx";
 import { classes } from "../classes";
+import { DatePicker } from "../../date-picker/DatePicker";
 import { defaultReorderLabels } from "../core/reorderLabels";
+import { defaultSpreadsheetLabels } from "../core/spreadsheet/labels";
 import { useDataTableContext } from "./context";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronIcon, GripIcon } from "./icons";
 import type {
+  CellEditorSlotProps,
   CellSlotProps,
   CheckboxSlotProps,
   DataTableComponents,
@@ -17,6 +20,7 @@ import type {
   EmptySlotProps,
   ErrorSlotProps,
   ExpandToggleSlotProps,
+  FillHandleSlotProps,
   HeaderCellSlotProps,
   PageSizeSelectSlotProps,
   PaginationButtonSlotProps,
@@ -336,6 +340,113 @@ const DragHandle = ({ className, ...props }: DragHandleSlotProps) => (
 );
 
 /**
+ * Editor layout
+ *
+ * Inline as well as in the stylesheet, because a design-system skin hands
+ * selects and dates to this editor in an app that may not load `styles.css`:
+ * the control fills the cell, and the message hangs below it.
+ */
+const EDITOR_LAYOUT = { display: "flex", alignItems: "center", flex: 1, minWidth: 0 } as const;
+const ERROR_LAYOUT = { position: "absolute", top: "100%", insetInlineStart: 0, zIndex: 3, whiteSpace: "nowrap" } as const;
+
+/**
+ * Cell editor fallback
+ *
+ * An `<input>` for text and numbers, the slotsmith `Autocomplete` for
+ * selects and the slotsmith `DatePicker` for dates, so the editors follow the
+ * same `SlotsmithProvider` skins as the rest of the app. A picker opens at
+ * once and writes as soon as something is picked.
+ */
+const CellEditor = (props: CellEditorSlotProps) => {
+  const { locale } = useDataTableContext();
+  const errorId = useId();
+  const invalid = props.error !== null;
+  const message = invalid ? (
+    <span id={errorId} role="alert" className={classes.editorError} style={ERROR_LAYOUT}>
+      {props.error}
+    </span>
+  ) : null;
+  const described = invalid ? errorId : undefined;
+
+  if (props.kind === "select") {
+    const { options, onCommit } = props;
+    const items = options.map((label, index) => ({ value: index, label }));
+    const index = options.indexOf(props.value);
+    return (
+      <div className={classes.editor} style={EDITOR_LAYOUT}>
+        <Autocomplete
+          className={classes.editorControl}
+          options={items}
+          value={index >= 0 ? index : null}
+          onChange={(next: OptionValue | null) => {
+            if (next !== null) onCommit(options[Number(next)]);
+          }}
+          defaultOpen
+          // Opened by typing over the cell, the typed text searches; otherwise it is a plain list.
+          searchable={props.search !== ""}
+          searchIn={props.search !== "" ? "trigger" : undefined}
+          defaultSearchQuery={props.search || undefined}
+          clearable={false}
+          matchTriggerWidth={false}
+          invalid={invalid}
+          aria-label={props["aria-label"]}
+          aria-describedby={described}
+          locale={locale}
+        />
+        {message}
+      </div>
+    );
+  }
+
+  if (props.kind === "date") {
+    const { onCommit } = props;
+    return (
+      <div className={classes.editor} style={EDITOR_LAYOUT}>
+        <DatePicker
+          className={classes.editorControl}
+          mode="single"
+          value={props.value === "" ? null : props.value}
+          onChange={(date) => onCommit(date ?? "")}
+          defaultOpen
+          invalid={invalid}
+          aria-label={props["aria-label"]}
+          aria-describedby={described}
+          locale={locale}
+        />
+        {message}
+      </div>
+    );
+  }
+
+  const { onValueChange } = props;
+  return (
+    <div className={classes.editor} style={EDITOR_LAYOUT}>
+      <input
+        className={classes.editorInput}
+        value={props.value}
+        onChange={(event) => onValueChange(event.target.value)}
+        inputMode={props.kind === "number" ? "decimal" : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={props["aria-label"]}
+        aria-invalid={invalid || undefined}
+        aria-describedby={described}
+      />
+      {message}
+    </div>
+  );
+};
+
+/**
+ * Fill handle fallback
+ *
+ * `<span class="sdt__fill-handle">`: the square on the selection's corner.
+ */
+const FillHandle = ({ className, ...props }: FillHandleSlotProps) => (
+  <span className={cx(classes.fillHandle, className)} {...props} />
+);
+
+/**
  * Fallback components
  *
  * The built-in plain-HTML slots, used for every slot you don't replace.
@@ -371,6 +482,8 @@ export const fallbackComponents: DataTableComponents = {
   PaginationButton,
   PageSizeSelect,
   DragHandle,
+  CellEditor,
+  FillHandle,
 };
 
 /**
@@ -397,4 +510,5 @@ export const defaultLabels: DataTableLabels = {
   expandRow: "Expand row",
   collapseRow: "Collapse row",
   ...defaultReorderLabels,
+  ...defaultSpreadsheetLabels,
 };

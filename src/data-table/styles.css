@@ -492,6 +492,167 @@
   border: 0;
 }
 
+/** Spreadsheet mode */
+
+[data-spreadsheet] {
+  user-select: none;
+}
+
+[data-spreadsheet] [data-column-id] {
+  position: relative;
+  cursor: cell;
+  outline: none;
+  /* Keeps a cell scrolled into view clear of the sticky header. */
+  scroll-margin-top: 3em;
+  --_sdt-edge-top: 0px;
+  --_sdt-edge-bottom: 0px;
+  --_sdt-edge-start: 0px;
+  --_sdt-edge-end: 0px;
+}
+
+[data-spreadsheet] [data-column-id][data-selected] {
+  background: color-mix(in srgb, var(--_sdt-accent) 10%, transparent);
+  box-shadow:
+    inset 0 var(--_sdt-edge-top) 0 0 var(--_sdt-accent),
+    inset 0 calc(-1 * var(--_sdt-edge-bottom)) 0 0 var(--_sdt-accent),
+    inset var(--_sdt-edge-start) 0 0 0 var(--_sdt-accent),
+    inset calc(-1 * var(--_sdt-edge-end)) 0 0 0 var(--_sdt-accent);
+}
+
+[data-spreadsheet] [data-column-id][data-range-edge~="top"] { --_sdt-edge-top: 1px; }
+[data-spreadsheet] [data-column-id][data-range-edge~="bottom"] { --_sdt-edge-bottom: 1px; }
+[data-spreadsheet] [data-column-id][data-range-edge~="start"] { --_sdt-edge-start: 1px; }
+[data-spreadsheet] [data-column-id][data-range-edge~="end"] { --_sdt-edge-end: 1px; }
+
+/* Start and end are logical: in right-to-left the inset shadows swap sides. */
+[data-spreadsheet]:dir(rtl) [data-column-id][data-selected] {
+  box-shadow:
+    inset 0 var(--_sdt-edge-top) 0 0 var(--_sdt-accent),
+    inset 0 calc(-1 * var(--_sdt-edge-bottom)) 0 0 var(--_sdt-accent),
+    inset calc(-1 * var(--_sdt-edge-start)) 0 0 0 var(--_sdt-accent),
+    inset var(--_sdt-edge-end) 0 0 0 var(--_sdt-accent);
+}
+
+/* The active cell: a ring drawn inside it, as in a spreadsheet. */
+[data-spreadsheet] [data-column-id][data-active],
+[data-spreadsheet] [data-column-id][data-editing] {
+  box-shadow: inset 0 0 0 2px var(--_sdt-accent);
+}
+
+[data-spreadsheet] [data-column-id][data-copied] {
+  background: color-mix(in srgb, var(--_sdt-accent) 6%, transparent);
+}
+
+[data-spreadsheet] [data-column-id][data-fill-preview] {
+  background: color-mix(in srgb, var(--_sdt-accent) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--_sdt-accent) 60%, transparent);
+}
+
+[data-spreadsheet] [data-column-id][aria-readonly="true"] {
+  color: var(--_sdt-muted);
+}
+
+.sdt__fill-handle {
+  position: absolute;
+  z-index: 2;
+  inset-block-end: -4px;
+  inset-inline-end: -4px;
+  width: 7px;
+  height: 7px;
+  box-sizing: border-box;
+  background: var(--_sdt-accent);
+  border: 1px solid var(--_sdt-bg);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* While editing, the cell keeps its content, unseen, so the column keeps its width. */
+.sdt__cell-ghost {
+  visibility: hidden;
+}
+
+/* The editor lies over the cell, exactly its size. The cell draws the one ring. */
+[data-spreadsheet] [data-column-id][data-editing] {
+  background: var(--_sdt-bg);
+}
+
+.sdt__editor-host {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+}
+
+.sdt__editor {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  padding-inline: var(--sdt-padding-x, var(--sdt-size-padding-x));
+}
+
+/* Doubled classes: an app's own input and picker styles must not draw a box inside the cell. */
+.sdt__editor-host.sdt__editor-host .sdt__editor-input {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--_sdt-text);
+  text-align: inherit;
+  user-select: text;
+  cursor: text;
+}
+
+.sdt__editor-host.sdt__editor-host .sdt__editor-input:focus,
+.sdt__editor-host.sdt__editor-host .sdt__editor-input:focus-visible {
+  outline: none;
+}
+
+/* A picker's trigger becomes the cell itself: no border, ring or padding of its own, open, focused or not. */
+.sdt__editor-control {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  font: inherit;
+}
+
+.sdt__editor-host.sdt__editor-host .sdt__editor-control :is(.sac__trigger, .sdp__trigger),
+.sdt__editor-host.sdt__editor-host .sdt__editor-control :is(.sac__trigger, .sdp__trigger):is(:focus-visible, :focus-within, [data-open], [data-invalid]) {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  gap: 0.25rem;
+  font: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+
+.sdt__checkbox-cell {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.sdt__editor-error {
+  position: absolute;
+  z-index: 3;
+  inset-inline-start: 0;
+  top: 100%;
+  margin-top: 2px;
+  padding: 2px 8px;
+  font-size: 0.85em;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--_sdt-danger);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /**
    * Without motion nothing slides: the lifted rows are dimmed in place, and a

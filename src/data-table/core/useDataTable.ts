@@ -23,6 +23,9 @@ import type { DataTableLabels } from "../slots/types";
 import { defaultReorderLabels, type ReorderLabels } from "./reorderLabels";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
 import { useRowReorder, type ReorderTree, type RowReorderModel } from "./useRowReorder";
+import { defaultSpreadsheetLabels } from "./spreadsheet/labels";
+import type { DataTableSpreadsheetOptions, DataTableValueChange } from "./spreadsheet/types";
+import { useSpreadsheet, type SpreadsheetLabels, type SpreadsheetModel } from "./spreadsheet/useSpreadsheet";
 
 /**
  * Default page size options
@@ -55,8 +58,27 @@ export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
  * ```
  */
 export interface UseDataTableOptions<T extends RowData> {
-  /** The rows to display. For manual pagination, just the current page. */
-  data: T[];
+  /** The rows to display. For manual pagination, just the current page. Pass this or `value`. */
+  data?: T[];
+  /**
+   * The rows, for a table people edit: the same as `data`, named like any
+   * other controlled value. Wins over `data`.
+   */
+  value?: T[];
+  /**
+   * Called with the new rows after every edit in spreadsheet mode: typing,
+   * paste, cut, Delete, fill, undo and redo. The table never changes the rows
+   * itself, so store `value` and pass it back. Only the rows that changed are
+   * new objects, so only they re-render.
+   */
+  onValueChange?: (value: T[], change: DataTableValueChange<T>) => void;
+  /**
+   * Spreadsheet mode: cells are selected, navigated and edited with the
+   * keyboard and the pointer, copied and pasted as tab-separated text, filled
+   * with the fill handle and undone. Columns opt in to editing with `edit`.
+   * Defaults to `false`.
+   */
+  spreadsheet?: boolean | DataTableSpreadsheetOptions<T>;
   /** The column definitions. */
   columns: DataTableColumnDef<T>[];
   /** Stable row identity. Defaults to `row.id`, falling back to the row's index path. */
@@ -193,6 +215,8 @@ export interface DataTableModel<T extends RowData> {
   reorderable: boolean;
   /** Whether the table adds its own leading column of drag handles. */
   reorderHandleColumn: boolean;
+  /** Spreadsheet mode: its store, the grid's props and each column's editing rules. */
+  spreadsheet: SpreadsheetModel<T>;
 }
 
 /**
@@ -205,7 +229,7 @@ export interface DataTableModel<T extends RowData> {
  * @internal
  */
 export interface DataTableInternals {
-  labels?: ReorderLabels;
+  labels?: ReorderLabels & SpreadsheetLabels;
   virtual?: boolean;
 }
 
@@ -220,14 +244,17 @@ const warnings = createDevWarnings();
  * @param labels - The `labels` option.
  * @returns A complete set of reorder labels.
  */
-function withReorderDefaults(labels: Partial<DataTableLabels> | undefined): ReorderLabels {
-  if (!labels) return defaultReorderLabels;
-  const resolved = { ...defaultReorderLabels };
-  for (const key of Object.keys(resolved) as (keyof ReorderLabels)[]) {
+function withEngineDefaults(labels: Partial<DataTableLabels> | undefined): ReorderLabels & SpreadsheetLabels {
+  const defaults = { ...defaultReorderLabels, ...defaultSpreadsheetLabels };
+  if (!labels) return defaults;
+  const resolved = { ...defaults };
+  for (const key of Object.keys(resolved) as (keyof typeof defaults)[]) {
     if (labels[key] !== undefined) Object.assign(resolved, { [key]: labels[key] });
   }
   return resolved;
 }
+
+const EMPTY_ROWS: never[] = [];
 
 /** Forgets which reorder warnings were logged. For tests. */
 export function resetReorderWarnings(): void {
@@ -324,7 +351,6 @@ export function useDataTable<T extends RowData>(
   internals: DataTableInternals = {},
 ): DataTableModel<T> {
   const {
-    data,
     columns,
     getRowId = defaultGetRowId,
     manualSorting = false,
@@ -343,6 +369,7 @@ export function useDataTable<T extends RowData>(
     onRetry,
     tableOptions,
   } = options;
+  const data: T[] = options.value ?? options.data ?? EMPTY_ROWS;
 
   const [sorting, setSorting] = useControllableState(
     options.sorting,
@@ -451,14 +478,42 @@ export function useDataTable<T extends RowData>(
     };
   }, [hasSubRows, coreRowModel]);
 
+  const headlessLabels = useMemo(
+    () => (internals.labels ? null : withEngineDefaults(options.labels)),
+    [internals.labels, options.labels],
+  );
+  const engineLabels = internals.labels ?? headlessLabels!;
+
   const reorder = useRowReorder<T>({
     enabled: canReorder({ enabled: enableRowReorder, virtual, rowCount: visibleRowCount }),
     visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
     rows: coreRowModel.rows,
     tree: reorderTree,
-    labels: internals.labels ?? withReorderDefaults(options.labels),
+    labels: engineLabels,
     onRowOrderChange: options.onRowOrderChange,
   });
+
+  const spreadsheetOption = options.spreadsheet ?? false;
+  const spreadsheet = useSpreadsheet<T>({
+    enabled: spreadsheetOption !== false,
+    options: useMemo(
+      (): DataTableSpreadsheetOptions<T> => (typeof spreadsheetOption === "object" ? spreadsheetOption : {}),
+      [spreadsheetOption],
+    ),
+    table,
+    labels: engineLabels,
+    onValueChange: options.onValueChange,
+  });
+
+  /** A spreadsheet nobody stores the edits of looks broken: say so while building. */
+  useEffect(() => {
+    if (spreadsheetOption !== false && !options.onValueChange) {
+      warnings.warn(
+        "spreadsheet",
+        "slotsmith: spreadsheet mode needs onValueChange (and value) to store edits; the table never changes its rows itself.",
+      );
+    }
+  }, [spreadsheetOption, options.onValueChange]);
 
   /** Reordering a virtual table is not supported yet: say so while building. */
   useEffect(() => {
@@ -528,5 +583,6 @@ export function useDataTable<T extends RowData>(
     reorder,
     reorderable,
     reorderHandleColumn: reorderable && options.reorderHandleColumn !== false,
+    spreadsheet,
   };
 }

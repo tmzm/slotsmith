@@ -45,6 +45,19 @@ export const he: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `מיקום ${number(position)} מתוך ${number(total)}.`,
       reorderDropped: (position, total) => `השורה שוחררה במיקום ${number(position)} מתוך ${number(total)}.`,
       reorderCancelled: "שינוי הסדר בוטל.",
+      editCell: (column) => `עריכת ${column}`,
+      invalidNumber: "יש להזין מספר.",
+      invalidOption: "יש לבחור אחת מהאפשרויות.",
+      invalidDate: "יש להזין תאריך תקין.",
+      invalidBoolean: "יש להזין TRUE או FALSE.",
+      cellsCopied: (count) => `תאים שהועתקו: ${number(count)}.`,
+      cellsCut: (count) => `תאים שנגזרו: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `תאים שהודבקו: ${number(count)}, שדולגו: ${number(skipped)}.` : `תאים שהודבקו: ${number(count)}.`,
+      cellsCleared: (count) => `תאים שנוקו: ${number(count)}.`,
+      cellsFilled: (count) => `תאים שמולאו: ${number(count)}.`,
+      undone: "הפעולה בוטלה.",
+      redone: "הפעולה בוצעה שוב.",
     };
   },
 

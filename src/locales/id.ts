@@ -43,6 +43,19 @@ export const id: SlotsmithLocale = defineLocale({
       reorderMoved: (position, total) => `Posisi ${number(position)} dari ${number(total)}.`,
       reorderDropped: (position, total) => `Baris dilepas di posisi ${number(position)} dari ${number(total)}.`,
       reorderCancelled: "Pengubahan urutan dibatalkan.",
+      editCell: (column) => `Edit ${column}`,
+      invalidNumber: "Masukkan angka.",
+      invalidOption: "Pilih salah satu opsi.",
+      invalidDate: "Masukkan tanggal yang valid.",
+      invalidBoolean: "Masukkan TRUE atau FALSE.",
+      cellsCopied: (count) => `Sel disalin: ${number(count)}.`,
+      cellsCut: (count) => `Sel dipotong: ${number(count)}.`,
+      cellsPasted: (count, skipped) =>
+        skipped > 0 ? `Sel ditempel: ${number(count)}, dilewati: ${number(skipped)}.` : `Sel ditempel: ${number(count)}.`,
+      cellsCleared: (count) => `Sel dikosongkan: ${number(count)}.`,
+      cellsFilled: (count) => `Sel diisi: ${number(count)}.`,
+      undone: "Dibatalkan.",
+      redone: "Diulangi.",
     };
   },
 

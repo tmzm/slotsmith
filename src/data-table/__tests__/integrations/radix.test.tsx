@@ -21,6 +21,8 @@ import {
   names,
   ReorderableEmployees,
   reorderStatus,
+  SpreadsheetEmployees,
+  spreadsheetThroughSkin,
   pageSizeThroughAutocompleteAdapter,
   renderUnderProvider,
   stubBrowserApis,
@@ -318,5 +320,11 @@ describe("Radix Themes v3", () => {
       expect(listbox.closest("[style*='--color-panel-solid']")).not.toBeNull();
       expect(options).toHaveLength(4);
     });
+  });
+
+  it("edits as a spreadsheet with the skin's editor, checkbox and fill handle", async () => {
+    const user = userEvent.setup();
+    render(<SpreadsheetEmployees components={radixDataTable} />, { wrapper: Wrapper });
+    await spreadsheetThroughSkin(user);
   });
 });
