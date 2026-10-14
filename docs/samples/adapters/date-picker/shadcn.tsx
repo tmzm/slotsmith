@@ -40,11 +40,17 @@ const Chevron = ({ flip }: { flip?: boolean }) => (
   </svg>
 );
 
-/** The caption's two dropdowns share everything but their options. */
+/**
+ * The caption's two dropdowns share everything but their options. The
+ * browser draws a select's open list itself: `color-scheme` makes it dark in
+ * dark mode, and the options take the popover's colours.
+ */
 const selectClass = cn(
   "cursor-pointer rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-sm font-medium",
   "text-foreground outline-none hover:border-input focus-visible:ring-2 focus-visible:ring-ring",
+  "[color-scheme:light] dark:[color-scheme:dark]",
 );
+const optionClass = "bg-popover text-popover-foreground";
 
 export const shadcnComponents: Partial<DatePickerComponents> = {
   Root: ({ className, ...props }) => (
@@ -128,7 +134,7 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
         onChange={(event) => onMonthChange(Number(event.target.value))}
       >
         {months.map((name, index) => (
-          <option key={name} value={index}>
+          <option key={name} value={index} className={optionClass}>
             {name}
           </option>
         ))}
@@ -140,7 +146,7 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
         onChange={(event) => onYearChange(Number(event.target.value))}
       >
         {years.map((value) => (
-          <option key={value} value={value}>
+          <option key={value} value={value} className={optionClass}>
             {value}
           </option>
         ))}
