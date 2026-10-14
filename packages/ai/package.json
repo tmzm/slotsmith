@@ -3,7 +3,10 @@
   "version": "1.8.1",
   "description": "An MCP server that teaches AI coding agents the slotsmith React components: props, slots, fallbacks and adapters, generated from the library source.",
   "license": "ISC",
-  "author": "Tareq Al-Mozayek",
+  "author": {
+    "name": "Tareq Al-Mozayek",
+    "url": "https://tareqmozayek.com"
+  },
   "type": "module",
   "bin": {
     "slotsmith-ai": "./dist/cli.js"
