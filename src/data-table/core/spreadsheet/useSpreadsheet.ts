@@ -33,6 +33,7 @@ import { SpreadsheetStore, type SpreadsheetDraft } from "./store";
 import type {
   DataTableRowChange,
   DataTableSpreadsheetOptions,
+  SpreadsheetDatePicker,
   DataTableValueChange,
   DataTableValueChangeSource,
 } from "./types";
@@ -94,6 +95,8 @@ export interface SpreadsheetModel<T extends RowData> {
   undo: () => void;
   /** Redoes the last undone change. */
   redo: () => void;
+  /** The `spreadsheet.datePicker` given, for the date cells' editor; `null` for the browser's own. */
+  datePicker: SpreadsheetDatePicker | null;
 }
 
 /**
@@ -963,6 +966,7 @@ export function useSpreadsheet<T extends RowData>(options: UseSpreadsheetOptions
     editingOf,
     undo: engine.undo,
     redo: engine.redo,
+    datePicker: options.options.datePicker ?? null,
   };
 }
 

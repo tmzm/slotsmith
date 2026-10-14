@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { DatePicker } from "../../date-picker/DatePicker";
 import { DataTable } from "../DataTable";
 import type { DataTableColumnDef } from "../core/features";
 import type { DataTableValueChange } from "../core/spreadsheet/types";
@@ -260,7 +261,7 @@ describe("spreadsheet mode", () => {
     expect(within(cellAt(0, 2)).queryByRole("combobox")).toBeNull();
   });
 
-  it("edits a date column with the DatePicker", async () => {
+  it("edits a date column with the DatePicker it is given", async () => {
     type Dated = { id: string; due: string | null };
     const onValueChange = vi.fn();
     const user = userEvent.setup();
@@ -269,7 +270,7 @@ describe("spreadsheet mode", () => {
         value={[{ id: "d1", due: "2026-03-10" }]}
         onValueChange={onValueChange}
         columns={[{ accessorKey: "due", header: "Due", edit: { editor: "date" } }]}
-        spreadsheet
+        spreadsheet={{ datePicker: DatePicker }}
       />,
     );
     await user.click(cellAt(0, 0));
@@ -288,6 +289,26 @@ describe("spreadsheet mode", () => {
     expect(cellAt(2, 0)).toHaveFocus();
     expect(within(cellAt(1, 0)).queryByRole("textbox")).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("edits a date column with the browser's date input when no DatePicker is given", async () => {
+    type Dated = { id: string; due: string | null };
+    const onValueChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataTable<Dated>
+        value={[{ id: "d1", due: "2026-03-10" }]}
+        onValueChange={onValueChange}
+        columns={[{ accessorKey: "due", header: "Due", edit: { editor: "date" } }]}
+        spreadsheet
+      />,
+    );
+    await user.click(cellAt(0, 0));
+    const input = within(cellAt(0, 0)).getByLabelText("Edit Due");
+    expect(input).toHaveAttribute("type", "date");
+    fireEvent.change(input, { target: { value: "2026-04-01" } });
+    await user.keyboard("{Enter}");
+    expect(onValueChange.mock.calls[0]![0]).toEqual([{ id: "d1", due: "2026-04-01" }]);
   });
 
   it("is off unless asked for", () => {

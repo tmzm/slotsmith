@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { DataTable, type DataTableColumnDef, type DataTableValueChange } from "slotsmith/data-table";
+import { DatePicker } from "slotsmith/date-picker";
 
 type Product = {
   id: string;
@@ -69,7 +70,8 @@ export default function Spreadsheet() {
         }}
         columns={columns}
         getRowId={(product) => product.id}
-        spreadsheet
+        // The date column opens the slotsmith DatePicker; without it, the browser's date input.
+        spreadsheet={{ datePicker: DatePicker }}
         enablePagination={false}
       />
       <p>

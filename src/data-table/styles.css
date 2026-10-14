@@ -618,8 +618,8 @@
   font: inherit;
 }
 
-.sdt__editor-host.sdt__editor-host .sdt__editor-control :is(.sac__trigger, .sdp__trigger),
-.sdt__editor-host.sdt__editor-host .sdt__editor-control :is(.sac__trigger, .sdp__trigger):is(:focus-visible, :focus-within, [data-open], [data-invalid]) {
+.sdt__editor-host.sdt__editor-host .sdt__editor-trigger.sdt__editor-trigger,
+.sdt__editor-host.sdt__editor-host .sdt__editor-trigger.sdt__editor-trigger:is(:focus-visible, :focus-within, [data-open], [data-invalid]) {
   width: 100%;
   min-height: 0;
   height: auto;

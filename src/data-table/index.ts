@@ -49,6 +49,7 @@ export type {
   DataTableEditorKind,
   DataTableRowChange,
   DataTableSpreadsheetOptions,
+  SpreadsheetDatePicker,
   DataTableValueChange,
   DataTableValueChangeSource,
 } from "./core/spreadsheet/types";

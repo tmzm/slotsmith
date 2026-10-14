@@ -77,7 +77,7 @@ A click on an editable cell opens its editor over the cell, the same size, with 
 
 - `"text"` and `"number"` edit the cell as text, in an input.
 - `"select"` opens the slotsmith [Autocomplete](../../../autocomplete/) on the column's options and writes as soon as one is picked. Typing over the cell searches the options.
-- `"date"` opens the slotsmith [DatePicker](../../../date-picker/) and writes the picked day as an ISO date (`YYYY-MM-DD`), or `null` when cleared.
+- `"date"` writes an ISO date (`YYYY-MM-DD`), or `null` when cleared. Pass the slotsmith [DatePicker](../../../date-picker/) as `spreadsheet.datePicker` and it opens that picker, writing as soon as a day is picked; without it the cell uses the browser's `<input type="date">`, so a table that edits no dates does not ship the picker.
 - `"checkbox"` shows the table's own `Checkbox` in the cell. A click or Space flips it, with no editor.
 
 The editors are the [`CellEditor`](../../api/#slot-CellEditor) slot, so a design system's adapter replaces them. Selects and dates use the slotsmith components, so they wear the adapters given to [`SlotsmithProvider`](../../../../guides/#once-for-the-whole-app) like the rest of the app.

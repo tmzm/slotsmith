@@ -5,7 +5,6 @@ import { useLocaleSection } from "../../locale/useLocaleSection";
 import { createNumber } from "../../locale/plural";
 import { cx } from "../../shared/cx";
 import { classes } from "../classes";
-import { DatePicker } from "../../date-picker/DatePicker";
 import { defaultReorderLabels } from "../core/reorderLabels";
 import { defaultSpreadsheetLabels } from "../core/spreadsheet/labels";
 import { useDataTableContext } from "./context";
@@ -353,12 +352,14 @@ const ERROR_LAYOUT = { position: "absolute", top: "100%", insetInlineStart: 0, z
  * Cell editor fallback
  *
  * An `<input>` for text and numbers, the slotsmith `Autocomplete` for
- * selects and the slotsmith `DatePicker` for dates, so the editors follow the
- * same `SlotsmithProvider` skins as the rest of the app. A picker opens at
- * once and writes as soon as something is picked.
+ * selects, and for dates the slotsmith `DatePicker` when the app passes it
+ * as `spreadsheet.datePicker` (the browser's `<input type="date">`
+ * otherwise), so the editors follow the same `SlotsmithProvider` skins as
+ * the rest of the app. A picker opens at once and writes as soon as
+ * something is picked.
  */
 const CellEditor = (props: CellEditorSlotProps) => {
-  const { locale } = useDataTableContext();
+  const { locale, spreadsheet } = useDataTableContext();
   const errorId = useId();
   const invalid = props.error !== null;
   const message = invalid ? (
@@ -376,6 +377,7 @@ const CellEditor = (props: CellEditorSlotProps) => {
       <div className={classes.editor} style={EDITOR_LAYOUT}>
         <Autocomplete
           className={classes.editorControl}
+          slotProps={{ trigger: { className: classes.editorTrigger } }}
           options={items}
           value={index >= 0 ? index : null}
           onChange={(next: OptionValue | null) => {
@@ -399,20 +401,35 @@ const CellEditor = (props: CellEditorSlotProps) => {
   }
 
   if (props.kind === "date") {
-    const { onCommit } = props;
+    const { onCommit, onValueChange } = props;
+    // The slotsmith DatePicker when the app passed it (`spreadsheet.datePicker`), else the browser's own.
+    const Picker = spreadsheet.datePicker;
     return (
       <div className={classes.editor} style={EDITOR_LAYOUT}>
-        <DatePicker
-          className={classes.editorControl}
-          mode="single"
-          value={props.value === "" ? null : props.value}
-          onChange={(date) => onCommit(date ?? "")}
-          defaultOpen
-          invalid={invalid}
-          aria-label={props["aria-label"]}
-          aria-describedby={described}
-          locale={locale}
-        />
+        {Picker ? (
+          <Picker
+            className={classes.editorControl}
+            slotProps={{ trigger: { className: classes.editorTrigger } }}
+            mode="single"
+            value={props.value === "" ? null : props.value}
+            onChange={(date) => onCommit(date ?? "")}
+            defaultOpen
+            invalid={invalid}
+            aria-label={props["aria-label"]}
+            aria-describedby={described}
+            locale={locale}
+          />
+        ) : (
+          <input
+            type="date"
+            className={classes.editorInput}
+            value={props.value}
+            onChange={(event) => onValueChange(event.target.value)}
+            aria-label={props["aria-label"]}
+            aria-invalid={invalid || undefined}
+            aria-describedby={described}
+          />
+        )}
         {message}
       </div>
     );

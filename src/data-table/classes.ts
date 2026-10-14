@@ -44,6 +44,8 @@ export const classes = {
   editor: "sdt__editor",
   editorInput: "sdt__editor-input",
   editorControl: "sdt__editor-control",
+  /** A picker's trigger in a cell editor, which the stylesheet strips of its own box. */
+  editorTrigger: "sdt__editor-trigger",
   editorError: "sdt__editor-error",
   /** Spreadsheet mode: the square on the selection's corner. */
   fillHandle: "sdt__fill-handle",

@@ -280,7 +280,7 @@ function EditorHost<T extends RowData>({ store, rules, row, columnId, CellEditor
       />
     );
   } else if (editor.kind === "date") {
-    control = <CellEditor {...common} kind="date" value={text} />;
+    control = <CellEditor {...common} kind="date" value={text} onValueChange={setText} />;
   } else {
     control = (
       <CellEditor {...common} kind={editor.kind === "number" ? "number" : "text"} value={text} onValueChange={setText} />

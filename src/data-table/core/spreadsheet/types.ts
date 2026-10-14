@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
+import type { LocaleInput } from "../../../locale/types";
 
 /**
  * Editor kind
@@ -156,7 +157,40 @@ export interface DataTableSpreadsheetOptions<T> {
    * edit sub-rows (`getSubRows`); without it only top-level rows are editable.
    */
   setSubRows?: (row: T, subRows: T[]) => T;
+  /**
+   * The date picker for `"date"` cells: the slotsmith `DatePicker`, imported
+   * by the app, so a table that edits no dates does not ship it. Without it
+   * a date cell is edited with the browser's own `<input type="date">`.
+   *
+   * @example
+   * ```tsx
+   * import { DatePicker } from "slotsmith/date-picker";
+   *
+   * <DataTable spreadsheet={{ datePicker: DatePicker }} />;
+   * ```
+   */
+  datePicker?: SpreadsheetDatePicker;
 }
+
+/**
+ * Spreadsheet date picker
+ *
+ * The props a date cell's picker is rendered with. The slotsmith
+ * `DatePicker` takes them as they are.
+ */
+export type SpreadsheetDatePicker = ComponentType<{
+  mode: "single";
+  /** The ISO date, or `null` when empty. */
+  value: string | null;
+  onChange: (value: string | null) => void;
+  defaultOpen: boolean;
+  invalid: boolean;
+  className?: string;
+  slotProps?: { trigger?: { className?: string } };
+  "aria-label": string;
+  "aria-describedby"?: string;
+  locale?: LocaleInput;
+}>;
 
 /**
  * Value change source

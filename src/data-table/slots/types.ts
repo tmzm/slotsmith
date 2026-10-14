@@ -348,6 +348,8 @@ export type CellEditorSlotProps = CellEditorCommonProps &
         kind: "date";
         /** The ISO date (`YYYY-MM-DD`); `""` when empty. */
         value: string;
+        /** Replaces the draft, for an editor that writes on Enter rather than on a pick. */
+        onValueChange: (date: string) => void;
       }
   );
 
@@ -431,7 +433,8 @@ export interface DataTableComponents {
   DragHandle: ComponentType<DragHandleSlotProps>;
   /**
    * Fallback: an `<input>` for text and numbers, the slotsmith `Autocomplete`
-   * for selects and the slotsmith `DatePicker` for dates. Used in spreadsheet mode.
+   * for selects, and for dates `spreadsheet.datePicker` (the slotsmith
+   * `DatePicker`) or `<input type="date">`. Used in spreadsheet mode.
    */
   CellEditor: ComponentType<CellEditorSlotProps>;
   /** Fallback: `<span class="sdt__fill-handle">`. Used in spreadsheet mode. */
