@@ -1,11 +1,12 @@
 /**
  * ExplodedView
  *
- * The swap demo's assembly drawing (docs/DESIGN.md section 6, item 2). It
- * wraps the live table and, after mount, gives each part's elements its
- * offset as `--dx` / `--dy` custom properties and floats a bracketed label
- * next to it. `styles/explode.css` turns `--explode` (0 to 1, driven by
- * `landing-motion.ts`) into the transforms and the labels' opacity.
+ * An assembly drawing of a live table (docs/DESIGN.md section 6, item 2): it
+ * wraps the table and, after mount, gives each part's elements its offset as
+ * `--dx` / `--dy` custom properties and floats a bracketed label next to it.
+ * `styles/explode.css` turns `--explode` (0 to 1, set by the page around it:
+ * the slot model guide's X-ray, the landing's swap demo) into the transforms
+ * and the labels' opacity.
  *
  * Each label is placed for the open view (`lib/label-placement`): beside its
  * part on a leader, in the room the explosion opens, never over a cell's
@@ -14,15 +15,8 @@
  * with no free place stays hidden. The place is written as custom properties
  * and applied as a transform, so moving a label never shifts the layout.
  *
- * The root starts with `data-static`: the table stays assembled and the same
- * labels sit in a separate static figure beside it. That is the whole view
- * without JavaScript, under reduced motion, and whenever the motion module has
- * not loaded; `landing-motion.ts` removes the attribute when it takes over.
- * Nothing here needs it to be visible or usable.
- *
- * With `live`, the view starts without `data-static` and without the static
- * figure: the page around it (the slot model guide's X-ray) sets `--explode`
- * itself and lists every part on its own.
+ * Parts are found by their `selector`, or by `locate` when the table's
+ * markup is not the fallbacks' (a design system's components).
  */
 import "@/styles/explode.css";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
@@ -31,10 +25,10 @@ import { placeLabels, type Box, type LabelRequest } from "@/lib/label-placement"
 
 export interface ExplodedViewProps {
   parts: ExplodePart[];
-  /** The static figure's caption. */
-  caption?: ReactNode;
-  /** Leaves out the static figure and `data-static`: the caller drives `--explode` and lists the parts. */
-  live?: boolean;
+  /** Finds a part's elements in the stage; by default, the elements its `selector` matches. */
+  locate?: (stage: HTMLElement, part: ExplodePart) => HTMLElement[];
+  /** Places the labels again whenever it changes (the caller knows when its parts have settled). */
+  measureKey?: string | number;
   children: ReactNode;
 }
 
@@ -86,8 +80,7 @@ function byPreference<T extends { box: Box }>(matches: T[], anchor: LabelHint["a
 
 const same = (a: Record<string, LabelPosition | undefined>, b: Record<string, LabelPosition | undefined>) => JSON.stringify(a) === JSON.stringify(b);
 
-export default function ExplodedView({ parts, caption, live = false, children }: ExplodedViewProps) {
-  const view = useRef<HTMLDivElement>(null);
+export default function ExplodedView({ parts, locate, measureKey, children }: ExplodedViewProps) {
   const stage = useRef<HTMLDivElement>(null);
   const [positions, setPositions] = useState<Record<string, LabelPosition | undefined>>({});
 
@@ -103,7 +96,7 @@ export default function ExplodedView({ parts, caption, live = false, children }:
         const sign = rtl ? -1 : 1;
         // Every part gets its offset before anything is measured: an element's place depends on the parts around it.
         const found = parts.map((part) => {
-          const matches = [...root.querySelectorAll<HTMLElement>(part.selector)].filter((element) => !element.closest(".explode__label"));
+          const matches = (locate ? locate(root, part) : [...root.querySelectorAll<HTMLElement>(part.selector)]).filter((element) => !element.closest(".explode__label"));
           for (const element of matches) {
             element.style.setProperty("--dx", String(part.dx * sign));
             element.style.setProperty("--dy", String(part.dy));
@@ -157,8 +150,10 @@ export default function ExplodedView({ parts, caption, live = false, children }:
                 const offset = offsetOf(element, root);
                 return { offset, box: opened(element.getBoundingClientRect(), offset) };
               })
-              // A part scrolled out of the box, or not laid out, cannot be pointed at.
-              .filter(({ box }) => box.right > box.left && box.top >= bounds.top && box.bottom <= bounds.bottom && box.left >= bounds.left && box.right <= bounds.right),
+              // A part wider than the box (a row on a phone) is pointed at where it shows.
+              .map(({ offset, box }) => ({ offset, full: box.right - box.left, box: { ...box, left: Math.max(box.left, bounds.left), right: Math.min(box.right, bounds.right) } }))
+              // A part scrolled out of the box, mostly out of it, or not laid out, cannot be pointed at.
+              .filter(({ box, full }) => full > 0 && box.right - box.left >= Math.min(full, 24) && box.top >= bounds.top && box.bottom <= bounds.bottom),
             part.label.anchor,
           ).slice(0, MAX_ANCHORS);
           offsets[part.slot] = anchors.map((anchor) => anchor.offset);
@@ -183,11 +178,12 @@ export default function ExplodedView({ parts, caption, live = false, children }:
     // The table re-renders on every swap, page change and sort; re-measure after each.
     const mutations = new MutationObserver(measure);
     mutations.observe(root, { childList: true, subtree: true });
-    // The motion module removes data-static, which gives the box room for the parts: the layout moves.
-    if (view.current) mutations.observe(view.current, { attributes: true, attributeFilter: ["data-static"] });
     const resize = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
     resize?.observe(root);
     root.addEventListener("scroll", measure, true);
+    // A clipping box around the stage that scrolls moves what is in view.
+    const scroller = root.closest("[data-explode-bounds]");
+    scroller?.addEventListener("scroll", measure, { passive: true });
     // Web fonts change every label's width and the table's columns.
     document.fonts?.ready.then(measure).catch(() => {});
     return () => {
@@ -195,11 +191,12 @@ export default function ExplodedView({ parts, caption, live = false, children }:
       mutations.disconnect();
       resize?.disconnect();
       root.removeEventListener("scroll", measure, true);
+      scroller?.removeEventListener("scroll", measure);
     };
-  }, [parts]);
+  }, [parts, locate, measureKey]);
 
   return (
-    <div className="explode" data-static={live ? undefined : ""} ref={view}>
+    <div className="explode">
       <div className="explode__stage" ref={stage}>
         {children}
         {parts.map((part) => {
@@ -222,20 +219,6 @@ export default function ExplodedView({ parts, caption, live = false, children }:
           );
         })}
       </div>
-      {!live && (
-        <figure className="explode__diagram">
-          <ol className="explode__parts">
-            {parts.map((part) => (
-              <li key={part.slot} className="explode__part" data-slot={part.slot}>
-                <span className="explode__glyph" aria-hidden="true" />
-                <span className="explode__leader" aria-hidden="true" />
-                <code className={`explode__name explode__name--${part.kind}`}>{bracketLabel(part)}</code>
-              </li>
-            ))}
-          </ol>
-          {caption && <figcaption className="explode__caption">{caption}</figcaption>}
-        </figure>
-      )}
     </div>
   );
 }

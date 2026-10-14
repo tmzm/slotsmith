@@ -150,14 +150,28 @@ Order is fixed by the spec. Composition per section:
    the first positioning sentence in Geist around them; the second sentence as
    the lede. Install tabs and two links below. Asymmetric: names on the start
    side, a live table peeking in from the end side on wide screens.
-2. **Swap: the exploded view.** A pinned scroll section (GSAP ScrollTrigger).
-   The live table separates into its parts (header row, body rows, the
-   checkbox column, sort triggers, pagination, page-size select), each
-   labelled `<Name>` or `{Name}` on a hairline leader, then reassembles. The
-   segmented control (Fallback / shadcn / MUI / Chakra / Ant Design) then appears; each
-   switch plays a short explode–swap–reassemble (≤ 700ms) and the code panel
-   highlights the changed lines. Reduced motion or no JS: no pin; the table
-   and a static labelled diagram sit side by side, the control swaps instantly.
+2. **Swap: the table and its code.** The page scrolls normally; nothing is
+   pinned or driven by the scroll. The segmented control (Fallback / shadcn /
+   MUI / Chakra / Ant Design) and a small **Show parts** switch sit above.
+   Below, the whole live table (five rows of twelve people, three pages, with
+   its pagination and page-size row) sits beside its sample on wide screens
+   (≥ 1100px: table 3fr, code 2fr, one shared height) and above it on narrow
+   ones. The code shows the whole sample with the changed lines in Gold. The
+   frame reserves the tallest variant's first page, so a switch, a sort or a
+   page never changes its height. On phones the table scrolls sideways inside
+   its frame (cells never wrap; the edge it scrolls toward fades) while the
+   pagination stays in view. A switch fades the table out (90ms) and the new
+   one in, its rows and pagination lifting into place one after another
+   (≤ 450ms in all, Web Animations API); instant under reduced motion.
+   **Show parts** drops the body rows and the pagination to open two bands
+   (the table never moves; the frame grows below it) and labels each part
+   `<Name>` or `{Name}` on a hairline leader, clear of every piece of text:
+   header row, header cell, sort trigger, row, cell, checkbox, pagination,
+   page-size select. They are found in every variant by the table's own
+   elements and the library's `aria-sort` and `data-slot` markers, not the
+   fallbacks' classes. A label with no room (a narrow phone) stays hidden; a
+   short legend says what the brackets mean. This replaced the first design's
+   pinned, scroll-scrubbed exploded view.
 3. **Two kinds of parts.** Two columns framed by giant `<` `>` and `{` `}`
    display glyphs; one example each; the README table below.
 4. **Four components.** An asymmetric panel mosaic (table spans two columns
@@ -182,8 +196,10 @@ land: the portfolio's Boot sequence, once per session, landing only.
 
 ## 7. Motion
 
-- **Landing:** choreographed with GSAP + ScrollTrigger, dynamically imported
-  after first paint (not in the 90 KB initial budget). Content is visible and
+- **Landing:** the first-load wave and the languages demo's direction sweep
+  use the Web Animations API (no motion library), dynamically imported after
+  `load` (not in the 90 KB initial budget); the swap demo's switch and Show
+  parts motion live in its island (CSS and WAAPI). Content is visible and
   usable before and without it.
 - **Docs pages:** CSS only, 120–320ms `--ease-out`, on hover, focus, tab
   switch, copy, sidebar open. Theme switch crossfades via the View

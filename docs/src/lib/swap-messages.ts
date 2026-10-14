@@ -17,6 +17,8 @@ export interface SwapMessages {
   changedLine: string;
   /** Holds `{name}`. */
   code: string;
+  /** The toggle that shows the table's parts. */
+  parts: string;
 }
 
 export function swapMessages(lang: Lang): SwapMessages {
@@ -30,5 +32,6 @@ export function swapMessages(lang: Lang): SwapMessages {
     reloadButton: t(lang, "swap.reloadButton"),
     changedLine: t(lang, "swap.changedLine"),
     code: t(lang, "swap.code"),
+    parts: t(lang, "swap.parts"),
   };
 }

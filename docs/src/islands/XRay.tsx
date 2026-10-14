@@ -129,7 +129,7 @@ export default function XRay({ slots, lang, contentLang = lang }: XRayProps) {
       </div>
 
       <div className="xray__box site-demo" data-explode-bounds="">
-        <ExplodedView parts={parts} live>
+        <ExplodedView parts={parts}>
           <SiteLocale lang={contentLang}>
             <DataTable
               data={people}

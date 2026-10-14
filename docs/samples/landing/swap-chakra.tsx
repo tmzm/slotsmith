@@ -3,5 +3,13 @@ import { chakraComponents } from "../adapters/data-table/chakra";
 import { columns, people } from "../shared/people";
 
 export default function Swap() {
-  return <DataTable data={people} columns={columns} enableRowSelection defaultPagination={{ pageIndex: 0, pageSize: 12 }} components={chakraComponents} />;
+  return (
+    <DataTable
+      data={people}
+      columns={columns}
+      enableRowSelection
+      defaultPagination={{ pageIndex: 0, pageSize: 5 }}
+      components={chakraComponents}
+    />
+  );
 }

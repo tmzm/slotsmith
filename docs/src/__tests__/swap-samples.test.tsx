@@ -23,15 +23,15 @@ const lines = (name: string) => readFileSync(resolve(process.cwd(), `samples/lan
 afterEach(cleanup);
 
 describe("swap samples", () => {
-  it("renders 12 body rows for the fallback with no console errors", () => {
+  it("renders the first page, 5 body rows, for the fallback with no console errors", () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const { container } = render(<Fallback />);
-    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
     expect(error).not.toHaveBeenCalled();
     error.mockRestore();
   });
 
-  it.each(VARIANTS)("renders 12 body rows for %s inside its provider with no console errors", (name, Sample) => {
+  it.each(VARIANTS)("renders the first page, 5 body rows, for %s inside its provider with no console errors", (name, Sample) => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const Provider = PROVIDERS[name];
     const { container } = render(
@@ -39,7 +39,7 @@ describe("swap samples", () => {
         <Sample />
       </Provider>,
     );
-    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
     if (name === "mui") expect(container.querySelector(".MuiTableRow-root")).not.toBeNull();
     if (name === "antd") expect(container.querySelector(".ant-checkbox")).not.toBeNull();
     expect(error).not.toHaveBeenCalled();

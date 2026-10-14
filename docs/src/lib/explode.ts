@@ -1,7 +1,7 @@
 /**
  * Exploded view
  *
- * The parts the landing's swap demo pulls apart, each with its kind from the
+ * The parts an exploded view pulls apart, each with its kind from the
  * generated reference (never typed by hand) and the selector of the element
  * its fallback renders.
  */
@@ -37,10 +37,11 @@ export interface ExplodePart {
 }
 
 /**
- * Where each landing part moves when the table explodes: the header and its
- * cells lift into layers above, body rows and cells settle into layers below,
- * the checkbox column slides toward the start side and pagination drops
- * underneath. Right-to-left pages negate `dx`.
+ * Where each part moves when the slot model guide's X-ray explodes the table:
+ * the header and its cells lift into layers above, body rows and cells settle
+ * into layers below, the checkbox column slides toward the start side and
+ * pagination drops underneath. Right-to-left pages negate `dx`. The landing's
+ * swap demo passes its own (`lib/swap-parts`).
  */
 const OFFSETS: Record<string, { dx: number; dy: number }> = {
   HeaderRow: { dx: 0, dy: -3 },
@@ -67,6 +68,7 @@ const LABELS: Record<string, LabelHint> = {
   HeaderRow: { anchor: "first", side: "above" },
   HeaderCell: { anchor: "middle", side: "below" },
   SortIcon: { anchor: "middle", side: "below" },
+  SortTrigger: { anchor: "middle", side: "below" },
   Row: { anchor: "first", side: "above" },
   Cell: { anchor: "row-end", side: "above" },
   Checkbox: { anchor: "first", side: "below" },
@@ -84,15 +86,21 @@ const DEFAULT_LABEL: LabelHint = { anchor: "middle", side: "above" };
  * @param reference - The component's generated reference; each part's kind comes from its slot there.
  * @param selectors - Slot name to the CSS selector of its fallback element (`SLOT_SELECTORS[slug]`).
  * @param pick - The slot names to show.
+ * @param offsets - Where each part moves, by slot name; the X-ray's when left out.
  * @throws When a picked slot is not in the reference or has no selector, naming the slot.
  */
-export function explodeParts(reference: SlotKindsSource, selectors: Record<string, string>, pick: string[]): ExplodePart[] {
+export function explodeParts(
+  reference: SlotKindsSource,
+  selectors: Record<string, string>,
+  pick: string[],
+  offsets: Record<string, { dx: number; dy: number }> = OFFSETS,
+): ExplodePart[] {
   return pick.map((name) => {
     const slot = reference.slots.find((candidate) => candidate.name === name);
     if (!slot) throw new Error(`Slot "${name}" is not in the ${reference.name} reference.`);
     const selector = selectors[name];
     if (!selector) throw new Error(`Slot "${name}" has no selector in SLOT_SELECTORS["${reference.name}"].`);
-    const { dx, dy } = OFFSETS[name] ?? DEFAULT_OFFSET;
+    const { dx, dy } = offsets[name] ?? DEFAULT_OFFSET;
     return { slot: name, kind: slot.kind, selector, dx, dy, label: LABELS[name] ?? DEFAULT_LABEL };
   });
 }

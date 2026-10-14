@@ -1,16 +1,14 @@
 /*
- * The swap demo and its exploded view (docs/DESIGN.md section 6, item 2).
+ * The exploded view (islands/ExplodedView.tsx) and the landing's swap demo
+ * (islands/SwapDemo.tsx, docs/DESIGN.md section 6, item 2).
  *
- * `--explode` runs from 0 (assembled) to 1 (exploded). On the landing
- * `landing-motion.ts` changes it; on the slot model guide the X-ray's "Show
- * parts" toggle does (`styles/xray.css`). CSS turns it into each part's
- * transform and each label's opacity, from the part's `--dx` / `--dy` (in rem,
- * set by ExplodedView). On the landing, until the motion module takes over,
- * `.explode` carries `data-static`: the table stays assembled and a static
- * labelled figure sits beside it. Only transform and opacity animate. Each
- * floating label's place comes from ExplodedView as custom properties in
- * physical px (it measures the view's own direction, not the page's, since
- * the X-ray can show English inside an Arabic page).
+ * `--explode` runs from 0 (assembled) to 1 (exploded). The slot model guide's
+ * X-ray (`styles/xray.css`) and the swap demo's "Show parts" toggle set it.
+ * CSS turns it into each part's transform and each label's opacity, from the
+ * part's `--dx` / `--dy` (in rem, set by ExplodedView). Only transform and
+ * opacity animate. Each floating label's place comes from ExplodedView as
+ * custom properties in physical px (it measures the view's own direction, not
+ * the page's, since the X-ray can show English inside an Arabic page).
  */
 
 @property --explode {
@@ -32,37 +30,7 @@
   min-inline-size: 0;
 }
 
-/* Room inside the demo box for the parts that move up (the header row, its
-   cells and sort icons lift 5.25rem in all, under the header row's label) and
-   toward the start side. The room is real layout, kept at rest too: tying it to
-   `--explode` would reflow the table on every frame, which counts as layout
-   shift, where the parts' own transforms do not. */
-.explode:not([data-static]) .swap__box {
-  padding-block-start: 5.75rem;
-  padding-inline-start: 3.75rem;
-}
-
-/* The live view sits on the page's scroll path (the landing pins it mid-
-   viewport), so the box passes the wheel on at its ends. While the pin holds
-   the view and it is open (`data-driven`) the box does not scroll at all: the
-   page's scroll drives the view, and it scrolls again as soon as the pin lets
-   go. The gutter is kept so the table does not reflow when the scrollbar goes. */
-.explode:not([data-static]) .swap__box {
-  overscroll-behavior: auto;
-  scrollbar-gutter: stable;
-}
-
-.explode[data-driven] .swap__box {
-  overflow: hidden;
-}
-
-/* The box is the one scroller; the table's own wrappers (the fallback's
-   scroll area, an adapter's root) would clip the parts that move out. */
-.explode:not([data-static]) .swap__box * {
-  overflow: visible;
-}
-
-.explode:not([data-static]) .explode__stage [style*="--dx"] {
+.explode__stage [style*="--dx"] {
   transform: translate(calc(var(--explode, 0) * var(--dx) * 1rem), calc(var(--explode, 0) * var(--dy) * 1rem));
 }
 
@@ -115,10 +83,6 @@
   inset-block-end: 100%;
 }
 
-.explode[data-static] .explode__label {
-  display: none;
-}
-
 /* Element parts in Vellum, widget parts in Gold (the gold used as text). */
 .explode__label--element,
 .explode__name--element {
@@ -130,119 +94,6 @@
   color: var(--gold-text);
 }
 
-/* The static figure: the same parts as a small assembly drawing, each a
-   schematic of its shape on a leader to its label. */
-/* Once the parts carry their own labels the figure leaves the screen but
-   stays in the accessibility tree: the floating labels are decoration. */
-.explode:not([data-static]) .explode__diagram {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.explode__diagram {
-  display: grid;
-  align-content: start;
-  gap: 1rem;
-  margin: 0;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-}
-
-.explode__parts {
-  display: grid;
-  gap: 0.625rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.explode__part {
-  display: grid;
-  grid-template-columns: 5.5rem minmax(1rem, 1fr) auto;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.explode__glyph {
-  display: block;
-  inline-size: 5.5rem;
-  block-size: 0.75rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 2px;
-  background: var(--panel-2);
-}
-
-.explode__part:has(.explode__name--widget) .explode__glyph {
-  border-color: var(--gold);
-}
-
-.explode__part[data-slot="HeaderRow"] .explode__glyph {
-  block-size: 0.875rem;
-}
-
-.explode__part[data-slot="HeaderCell"] .explode__glyph,
-.explode__part[data-slot="Cell"] .explode__glyph {
-  inline-size: 1.75rem;
-  margin-inline-start: 1rem;
-}
-
-.explode__part[data-slot="SortIcon"] .explode__glyph {
-  inline-size: 0.75rem;
-  margin-inline-start: 2.25rem;
-}
-
-.explode__part[data-slot="Checkbox"] .explode__glyph {
-  inline-size: 0.75rem;
-}
-
-.explode__part[data-slot="Pagination"] .explode__glyph {
-  block-size: 1rem;
-}
-
-.explode__part[data-slot="PageSizeSelect"] .explode__glyph {
-  inline-size: 2rem;
-  block-size: 1rem;
-  margin-inline-start: 3.5rem;
-}
-
-.explode__leader {
-  block-size: 0;
-  border-block-start: 1px solid var(--line-strong);
-}
-
-.explode__name {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  background: none;
-  padding: 0;
-}
-
-.explode__caption {
-  color: var(--muted);
-  font-size: 0.875rem;
-  line-height: 1.55;
-  text-wrap: pretty;
-}
-
-.explode__caption code {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-}
-
-@media (min-width: 1024px) {
-  .explode[data-static] {
-    grid-template-columns: minmax(0, 1fr) 19.5rem;
-  }
-}
-
 /* ---------- Swap demo ---------- */
 
 .swap {
@@ -250,11 +101,18 @@
   gap: 1rem;
 }
 
+/* The segmented control and the "Show parts" toggle on one row, wrapping. */
+.swap__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* The segmented control: mono labels, the chosen one a Gold panel. */
 .swap__control {
   display: inline-flex;
   flex-wrap: wrap;
-  justify-self: start;
   gap: 0.25rem;
   padding: 0.25rem;
   border: 1px solid var(--line);
@@ -295,33 +153,212 @@
   border-style: dashed;
 }
 
-/* The demo box: fixed height per breakpoint (no layout shift); the table
-   scrolls inside it. The Fallback state wears the library's stock tokens. */
+/* "Show parts": a small switch, as on the slot model guide's X-ray. */
+.swap__parts {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-block-size: 2.75rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 200ms var(--ease-out);
+}
+
+.swap__parts:hover {
+  border-color: var(--gold);
+}
+
+.swap__switch {
+  position: relative;
+  inline-size: 1.75rem;
+  block-size: 1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--panel-2);
+  transition: background-color 200ms var(--ease-out);
+}
+
+.swap__switch::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.125rem;
+  inset-inline-start: 0.125rem;
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: 50%;
+  background: var(--ink-2);
+  transition: transform 200ms var(--ease-out);
+}
+
+.swap__parts[aria-pressed="true"] .swap__switch {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+.swap__parts[aria-pressed="true"] .swap__switch::after {
+  background: var(--on-gold);
+  transform: translateX(0.75rem);
+}
+
+.swap[dir="rtl"] .swap__parts[aria-pressed="true"] .swap__switch::after {
+  transform: translateX(-0.75rem);
+}
+
+/* What the brackets mean, under the table while its parts are shown. */
+.swap__legend {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.swap__legend code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+/* The table and its code: side by side on wide screens, the code under the
+   table below that. */
+.swap__layout {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Side by side, the two panels share one height. */
+@media (min-width: 1100px) {
+  .swap__layout {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: stretch;
+  }
+}
+
+.swap__table {
+  display: grid;
+  grid-template-rows: 1fr;
+  gap: 0.75rem;
+  min-inline-size: 0;
+}
+
+/* The demo frame. The Fallback state wears the library's stock tokens. */
 .swap__frame {
   position: relative;
-  block-size: 26rem;
+  min-inline-size: 0;
   border: 1px solid var(--line);
   border-radius: 4px;
-  overflow: hidden;
-}
-
-.swap__box {
-  block-size: 100%;
-  padding: 1rem;
-  overflow: auto;
   background: var(--sdt-surface, var(--panel));
-  overscroll-behavior: contain;
 }
 
-.swap__box > * {
+/* The one scroller: a table wider than the frame (phones) scrolls sideways
+   inside it, its cells never wrap, and the pagination stays in view
+   (`.swap__pagination`, marked by the island; the Fallback's own class
+   before it hydrates). The table's own wrappers neither scroll nor clip,
+   so the parts can move out of them. */
+.swap__scroll {
+  padding: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  container-type: inline-size;
+}
+
+.swap__scroll .explode__stage {
+  inline-size: max-content;
+  min-inline-size: 100%;
+}
+
+.swap__scroll .explode__stage * {
+  overflow: visible;
+}
+
+.swap__scroll :is(th, td) {
+  white-space: nowrap;
+}
+
+.swap__scroll :is(.swap__pagination, .sdt__pagination) {
+  position: sticky;
+  /* Both edges: a design system may set its own direction on the widget. */
+  inset-inline: 0;
+  box-sizing: border-box;
+  max-inline-size: 100cqi;
+}
+
+/* The height of the tallest variant's first page (MUI's, 374px, and 406px
+   once its pagination wraps in a frame under 566px; measured in Chrome from
+   360px to 1440px, English and Arabic), so the frame keeps its height on a
+   switch, a sort or a page. */
+.swap .sample-stage {
+  min-block-size: 23.5rem;
+}
+
+@container (max-width: 565px) {
+  .swap .sample-stage {
+    min-block-size: 25.5rem;
+  }
+}
+
+/* The edge with more table past it fades: the table scrolls that way. */
+.swap__scroll[data-more="end"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+.swap__scroll[data-more="start"] {
+  mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+}
+
+.swap[dir="rtl"] .swap__scroll[data-more="end"] {
+  mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+}
+
+.swap[dir="rtl"] .swap__scroll[data-more="start"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+.swap__scroll[data-more="both"] {
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
+}
+
+/* Show parts: the room below the table grows by the pagination's travel,
+   the body rows and the pagination drop (320ms), and the labels fade in once
+   they have been placed. The table itself never moves. */
+.swap__frame[data-room] .swap__scroll {
+  padding-block-end: 8.5rem;
+}
+
+.swap .explode {
+  transition: --explode 320ms var(--ease-out);
+}
+
+.swap__frame[data-open] .explode {
+  --explode: 1;
+}
+
+.swap .explode__label {
+  opacity: 0;
+  transition: opacity 160ms var(--ease-out);
+}
+
+.swap__frame[data-labels] .explode__label {
+  opacity: 1;
+}
+
+.swap .sample-stage {
   transition: opacity 180ms var(--ease-out);
 }
 
-.swap[data-loading] .swap__box > * {
+.swap[data-loading] .sample-stage {
   opacity: 0.6;
 }
 
-/* Status inside the box: loading, or a failed load with its retry button. */
+/* Status inside the frame: loading, or a failed load with its retry button. */
 .swap__notice {
   position: absolute;
   inset-inline: 0.75rem;
@@ -359,8 +396,9 @@
   cursor: pointer;
 }
 
-/* The code panel: the current variant's sample, changed lines tinted Gold. */
+/* The code panel: the current variant's whole sample, changed lines tinted Gold. */
 .swap__code {
+  min-inline-size: 0;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: var(--panel);
@@ -416,11 +454,12 @@
 .swap[data-current="fallback"] .swap__pane:not([data-code="fallback"]),
 .swap[data-current="shadcn"] .swap__pane:not([data-code="shadcn"]),
 .swap[data-current="mui"] .swap__pane:not([data-code="mui"]),
-.swap[data-current="chakra"] .swap__pane:not([data-code="chakra"]) {
+.swap[data-current="chakra"] .swap__pane:not([data-code="chakra"]),
+.swap[data-current="antd"] .swap__pane:not([data-code="antd"]) {
   visibility: hidden;
 }
 
-/* Four segments on one row at 360px. */
+/* Smaller segments on phones. */
 @media (max-width: 479px) {
   .swap__segment {
     padding-inline: 0.7rem;
@@ -428,15 +467,14 @@
   }
 }
 
-@media (min-width: 768px) {
-  .swap__frame {
-    block-size: 30rem;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .swap__segment,
-  .swap__box > * {
+  .swap__parts,
+  .swap__switch,
+  .swap__switch::after,
+  .swap .explode,
+  .swap .explode__label,
+  .swap .sample-stage {
     transition: none;
   }
 }

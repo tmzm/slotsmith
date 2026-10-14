@@ -248,6 +248,7 @@ export const en = {
   "swap.reloadButton": "Reload",
   "swap.changedLine": "changed line",
   "swap.code": "Code for the {name} version",
+  "swap.parts": "Show parts",
   // {element} and {widget} are shown as the bracketed kind names.
   "swap.diagram": "The table's parts. {element} parts take DOM props; {widget} parts take semantic props.",
 

@@ -242,6 +242,7 @@ export const ar: Record<MessageKey, string> = {
   "swap.reloadButton": "أعد تحميل الصفحة",
   "swap.changedLine": "سطر متغيّر",
   "swap.code": "شيفرة نسخة {name}",
+  "swap.parts": "إظهار الأجزاء",
   "swap.diagram": "أجزاء الجدول. أجزاء {element} تأخذ خصائص DOM، وأجزاء {widget} تأخذ خصائص دلالية.",
 
   "parts.title": "نوعان من الأجزاء",

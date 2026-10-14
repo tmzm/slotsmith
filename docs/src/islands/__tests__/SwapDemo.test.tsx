@@ -43,7 +43,7 @@ afterEach(cleanup);
 describe("SwapDemo", () => {
   it("renders the fallback table first, with Fallback checked", () => {
     const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} />);
-    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
     expect(screen.getByRole("radiogroup")).toBeTruthy();
     expect(screen.getAllByRole("radio")).toHaveLength(5);
     expect(radio("Fallback").getAttribute("aria-checked")).toBe("true");
@@ -77,7 +77,7 @@ describe("SwapDemo", () => {
     await act(async () => mui.resolve());
     expect(shown()).toBe("fallback");
     expect(mui.renders).not.toHaveBeenCalled();
-    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
     await act(async () => chakra.resolve());
     expect(shown()).toBe("chakra");
     expect(screen.getByTestId("variant-chakra")).toBeTruthy();
@@ -89,7 +89,7 @@ describe("SwapDemo", () => {
     const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ shadcn: shadcn.load }} />);
     fireEvent.click(radio("shadcn"));
     await act(async () => shadcn.reject());
-    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
     expect(screen.getByText(t("en", "swap.failed"), { exact: false })).toBeTruthy();
     expect(screen.getByRole("button", { name: t("en", "swap.retry") })).toBeTruthy();
   });
@@ -118,7 +118,7 @@ describe("SwapDemo", () => {
     expect(load).toHaveBeenCalledTimes(2);
     expect(screen.getByText(t("en", "swap.reload"))).toBeTruthy();
     expect(screen.getByRole("button", { name: t("en", "swap.reloadButton") })).toBeTruthy();
-    expect(container.querySelectorAll("tbody tr")).toHaveLength(12);
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(5);
   });
 
   it("moves and selects with the arrow keys, as a radio group", async () => {
@@ -170,69 +170,30 @@ describe("SwapDemo", () => {
     expect(marked).toEqual([`import m ${t("en", "swap.changedLine")}`, `<DataTable components={m} /> ${t("en", "swap.changedLine")}`]);
   });
 
-  it("announces the swap to the page with swap:before and swap:after events", async () => {
-    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui") }} />);
-    const root = container.firstElementChild!;
-    const events: string[] = [];
-    root.addEventListener("swap:before", (event) => events.push(`before:${(event as CustomEvent).detail.to}`));
-    root.addEventListener("swap:after", (event) => events.push(`after:${(event as CustomEvent).detail.to}`));
-    await act(async () => fireEvent.click(radio("MUI")));
-    expect(events).toEqual(["before:mui", "after:mui"]);
+  it("shows the parts on demand: the toggle is pressed and the frame opens", async () => {
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} caption="The table's parts." />);
+    const toggle = screen.getByRole("button", { name: t("en", "swap.parts") });
+    const frame = container.querySelector(".swap__frame")!;
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    expect(frame.hasAttribute("data-open")).toBe(false);
+    expect(screen.queryByText("The table's parts.")).toBeNull();
+    await act(async () => fireEvent.click(toggle));
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    expect(frame.hasAttribute("data-open")).toBe(true);
+    expect(frame.hasAttribute("data-room")).toBe(true);
+    expect(screen.getByText("The table's parts.")).toBeTruthy();
+    await act(async () => fireEvent.click(toggle));
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    expect(frame.hasAttribute("data-open")).toBe(false);
   });
 
-  it("lets a swap:before listener hold the switch until its promise settles", async () => {
-    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui") }} />);
-    const root = container.firstElementChild!;
-    const events: string[] = [];
-    let release!: () => void;
-    root.addEventListener("swap:before", (event) => {
-      events.push("before");
-      (event as CustomEvent<{ waitUntil: (promise: Promise<unknown>) => void }>).detail.waitUntil(new Promise<void>((done) => (release = done)));
-    });
-    root.addEventListener("swap:after", () => events.push("after"));
-    await act(async () => fireEvent.click(radio("MUI")));
-    expect(events).toEqual(["before"]);
-    expect(root.getAttribute("data-current")).toBe("fallback");
-    expect(radio("MUI").getAttribute("aria-checked")).toBe("true");
-    await act(async () => release());
-    expect(root.getAttribute("data-current")).toBe("mui");
-    expect(events).toEqual(["before", "after"]);
-  });
-
-  it("switches after 700ms even when a swap:before promise never settles", async () => {
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    try {
-      const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui") }} />);
-      const root = container.firstElementChild!;
-      root.addEventListener("swap:before", (event) => (event as CustomEvent<{ waitUntil: (promise: Promise<unknown>) => void }>).detail.waitUntil(new Promise(() => {})));
-      await act(async () => fireEvent.click(radio("MUI")));
-      await act(async () => vi.advanceTimersByTimeAsync(699));
-      expect(root.getAttribute("data-current")).toBe("fallback");
-      await act(async () => vi.advanceTimersByTimeAsync(1));
-      expect(root.getAttribute("data-current")).toBe("mui");
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("drops a held switch when a later choice comes in while it waits", async () => {
-    const { container } = render(
-      <SwapDemo lang="en" messages={swapMessages("en")} sources={sources} loaders={{ mui: resolved("mui"), chakra: resolved("chakra") }} />,
-    );
-    const root = container.firstElementChild!;
-    const releases: (() => void)[] = [];
-    const after: string[] = [];
-    root.addEventListener("swap:before", (event) =>
-      (event as CustomEvent<{ waitUntil: (promise: Promise<unknown>) => void }>).detail.waitUntil(new Promise<void>((done) => releases.push(done))),
-    );
-    root.addEventListener("swap:after", (event) => after.push((event as CustomEvent).detail.to));
-    await act(async () => fireEvent.click(radio("MUI")));
-    await act(async () => fireEvent.click(radio("Chakra")));
-    await act(async () => releases[0]!());
-    expect(root.getAttribute("data-current")).toBe("fallback");
-    await act(async () => releases[1]!());
-    expect(root.getAttribute("data-current")).toBe("chakra");
-    expect(after).toEqual(["chakra"]);
+  it("keeps the table, its pagination and its code in the same layout", () => {
+    const { container } = render(<SwapDemo lang="en" messages={swapMessages("en")} sources={sources} />);
+    const layout = container.querySelector(".swap__layout")!;
+    expect(layout.querySelector(".swap__frame")).toBeTruthy();
+    expect(layout.querySelector(".swap__code")).toBeTruthy();
+    // The pagination is marked so it stays in view while a wide table scrolls.
+    expect(container.querySelector(".swap__pagination")?.textContent).toContain("1");
   });
 
   it("gives a variant's provider the page's direction and language", async () => {
