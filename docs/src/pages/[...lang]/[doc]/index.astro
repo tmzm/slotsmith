@@ -21,4 +21,4 @@ const { doc } = Astro.params;
 const prose = await getProse(lang, doc);
 const components = { Note, SampleCode, Tabs };
 ---
-<DocPage lang={lang} path={`/${doc}/`} prose={prose} components={components} />
+<DocPage lang={lang} path={`/${doc}/`} prose={prose} components={components} profile={doc === "about"} />

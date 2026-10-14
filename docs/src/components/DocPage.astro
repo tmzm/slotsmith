@@ -17,7 +17,7 @@ import { lastModified } from "@/lib/git-dates";
 import { canonicalUrl } from "@/lib/page";
 import { allPages } from "@/lib/pages";
 import type { Prose as ProseData } from "@/lib/prose";
-import { breadcrumbs, faqPage, techArticle } from "@/lib/structured-data";
+import { breadcrumbs, faqPage, profilePage, techArticle } from "@/lib/structured-data";
 
 interface Props {
   lang: Lang;
@@ -36,11 +36,13 @@ interface Props {
   stub?: boolean;
   /** Headings the page renders itself, listed in "On this page" after the prose's. */
   headings?: { id: string; text: string; depth: 2 | 3 }[];
+  /** True for the About page: its structured data is a `ProfilePage` of the author, not a `TechArticle`. */
+  profile?: boolean;
   /** Components the prose MDX may use (a component overview's blocks). */
   components?: Record<string, unknown>;
 }
 
-const { lang, path, prose, fallback, meta, title: titleOverride, description: descriptionOverride, stub: stubOverride, headings: own = [], components } = Astro.props;
+const { lang, path, prose, fallback, meta, title: titleOverride, description: descriptionOverride, stub: stubOverride, headings: own = [], components, profile = false } = Astro.props;
 const title = titleOverride ?? prose?.entry.data.title ?? fallback?.title ?? "";
 const description = descriptionOverride ?? prose?.entry.data.description ?? fallback?.description ?? "";
 const sourcePath = prose?.sourcePath;
@@ -70,7 +72,7 @@ const trail = [
 const faq = prose?.entry.data.faq;
 const jsonLd = [
   // `inLanguage` is the text's language: English on an Arabic page that shows English prose.
-  techArticle({ title, description, url: canonicalUrl(lang, path), image: ogUrl(lang, path), lang: contentLang ?? lang, dateModified }),
+  (profile ? profilePage : techArticle)({ title, description, url: canonicalUrl(lang, path), image: ogUrl(lang, path), lang: contentLang ?? lang, dateModified }),
   breadcrumbs(trail),
   ...(faq?.length ? [faqPage(faq)] : []),
 ];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { breadcrumbs, faqPage, softwareSourceCode, techArticle, webSite } from "@/lib/structured-data";
+import { breadcrumbs, faqPage, person, profilePage, softwareSourceCode, techArticle, webSite } from "@/lib/structured-data";
 import type { Facts } from "@/lib/facts";
 import { t } from "@/i18n";
 
@@ -28,7 +28,7 @@ describe("softwareSourceCode", () => {
     expect(data.version).toBe("1.7.0");
     expect(data.codeRepository).toBe("https://github.com/tmzm/slotsmith");
     expect(data.sameAs).toContain("https://www.npmjs.com/package/slotsmith");
-    expect(data.author).toMatchObject({ "@type": "Person", name: "Tareq Al-Mozayek" });
+    expect(data.author).toMatchObject({ "@type": "Person", "@id": "https://tareqmozayek.com/#person", name: "Tareq Al-Mozayek" });
   });
 
   it("survives a JSON round trip", () => {
@@ -89,5 +89,36 @@ describe("webSite", () => {
     expect(site.name).toBe("slotsmith");
     expect(site.url).toBe("https://slotsmith.dev/");
     expect(site.inLanguage).toBe("ar");
+  });
+});
+
+describe("person", () => {
+  it("names the author in both languages, with the portfolio's id and his verified profiles", () => {
+    expect(person()).toEqual({
+      "@type": "Person",
+      "@id": "https://tareqmozayek.com/#person",
+      name: "Tareq Al-Mozayek",
+      alternateName: "طارق المزيك",
+      jobTitle: "Full-Stack Engineer",
+      url: "https://tareqmozayek.com",
+      sameAs: ["https://github.com/tmzm", "https://www.linkedin.com/in/tareq-al-mozayek-3ab2603a9/"],
+    });
+  });
+});
+
+describe("profilePage", () => {
+  const page = { title: "About", description: "Who makes slotsmith.", url: "https://slotsmith.dev/about/", image: "https://slotsmith.dev/og/about.png", lang: "en" as const, dateModified: null };
+
+  it("has the author as its main entity", () => {
+    expect(profilePage(page)).toMatchObject({ "@type": "ProfilePage", url: "https://slotsmith.dev/about/", mainEntity: person() });
+  });
+
+  it("leaves dateModified out when there is no date", () => {
+    expect(profilePage(page)).not.toHaveProperty("dateModified");
+  });
+
+  it("names the same author entity as every article", () => {
+    const article = techArticle(page) as { author: { "@id": string } };
+    expect(article.author["@id"]).toBe((profilePage(page) as { mainEntity: { "@id": string } }).mainEntity["@id"]);
   });
 });
