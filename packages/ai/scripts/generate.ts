@@ -618,7 +618,8 @@ function readPeers(
       const path = join(dir, entry.name);
       if (entry.isDirectory()) walk(path);
       else if (/\.tsx?$/.test(entry.name)) {
-        for (const match of readFileSync(path, "utf8").matchAll(/from\s+"([^"]+)"/g)) {
+        // Statements only: an `import` line inside a JSDoc example is not a dependency.
+        for (const match of readFileSync(path, "utf8").matchAll(/^(?:import|export)\b[^;]*?\bfrom\s+"([^"]+)"/gm)) {
           const specifier = match[1]!;
           const name = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0]!;
           if (!(name in peers)) continue;
