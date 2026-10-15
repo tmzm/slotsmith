@@ -6,13 +6,13 @@ faq:
     a: "Yes. Set manualPagination, pass the current page as data and the total as rowCount, and fetch the next page in onPaginationChange. Server-side sorting works the same way with manualSorting."
     link: "/components/data-table/guides/server-data/"
   - q: "Can I use virtual rows and row reorder together?"
-    a: "No. VirtualDataTable ignores row reorder, so a long list is either windowed or reorderable. A reorderable table can use pagination instead."
+    a: "Yes. Pass virtual with useVirtualizer as use and set enableRowReorder: the dragged row stays rendered while it scrolls out of the window, the view scrolls under it near the edges, and the keyboard scrolls to the row it moves to."
     link: "/components/data-table/guides/virtual-rows/"
   - q: "Can I render custom cells?"
     a: "Yes. Columns are TanStack Table column definitions, so a column's cell function can return any React node. To change the cell element itself, replace the Cell slot."
     link: "/components/data-table/api/#slots"
   - q: "Which TanStack Table version does it need?"
-    a: "TanStack Table 9: install @tanstack/react-table ^9.2.0 next to slotsmith. VirtualDataTable also needs @tanstack/react-virtual ^3.10.0."
+    a: "TanStack Table 9: install @tanstack/react-table ^9.2.0 next to slotsmith. Virtual rows also need @tanstack/react-virtual ^3.10.0, whose useVirtualizer you pass in as virtual.use."
     link: "/components/data-table/#install"
 ---
 
@@ -77,10 +77,8 @@ Every label can be translated or replaced; see [Labels & locales](./api/#labels)
 ## Limitations
 
 <Note kind="limitation">
-- `VirtualDataTable` ignores row reorder. See [virtual rows](./guides/virtual-rows/).
-- A drop while the table is sorted reorders `data`, but the view stays sorted. See [row reorder](./guides/row-reorder/).
-- No dragging between tables, no multi-row drag, and no moving a row to another parent. See [row reorder](./guides/row-reorder/).
-- A custom `Row` slot must keep a stable identity. See [row reorder](./guides/row-reorder/).
+- Rows move between tables at the top level only: a tree's sub-rows move within their own table. See [row reorder](./guides/row-reorder/).
+- A `Row` slot defined inside a component is a new component on every render, so every row mounts again. A drag survives it, but define the slot outside the component; a development warning names it. See [row reorder](./guides/row-reorder/).
 </Note>
 
 ## FAQ
