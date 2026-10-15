@@ -104,7 +104,6 @@ Movement stops at `minDate` and `maxDate`. Picking a day in single mode closes t
 - Days only: there is no time of day to pick. A value is the instant the day starts, or the calendar day alone with `valueFormat`.
 - A typed date is read in the locale's numeric order with a four-digit year, not in free text such as "next Friday"; see [Typing a date](./guides/typing/). For another shape, such as an inline calendar, build on the [`useDatePicker`](./guides/compound-parts/) hook.
 - One month is shown at a time.
-- No `name` prop: the picker renders no hidden input. In a plain HTML form, render your own from `value`.
 - A range can span blocked days: `disabledDates` stops a blocked day from being picked as an end, not from sitting inside the range. See [bounds and blocked days](./guides/bounds-and-blocked-days/).
 - The popup is not in a portal. It uses `position: fixed`, so it escapes `overflow: hidden`, but an ancestor with a `transform` or `filter` becomes its containing block.
 </Note>

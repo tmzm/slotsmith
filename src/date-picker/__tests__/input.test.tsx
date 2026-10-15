@@ -199,3 +199,30 @@ describe("reading typed text", () => {
     expect(parseInput("multiple", "03/07/2026, 13/45/2026", codec)).toBeUndefined();
   });
 });
+
+describe("a form field", () => {
+  const submitted = (container: HTMLElement, name: string) => {
+    const form = container.ownerDocument.createElement("form");
+    form.append(container.firstElementChild!.cloneNode(true));
+    return new FormData(form).getAll(name);
+  };
+
+  it("submits the value, not the text the field shows", () => {
+    const { container } = render(<DatePicker name="due" aria-label="Due" defaultValue="2026-03-05" valueFormat="YYYY-MM-DD" />);
+    expect(submitted(container, "due")).toEqual(["2026-03-05"]);
+  });
+
+  it("submits each of several days, and a range's start then end, as valueFormat writes them", () => {
+    const several = render(<DatePicker mode="multiple" name="days" defaultValue={["2026-03-07", "2026-03-05"]} />);
+    expect(submitted(several.container, "days")).toEqual([at("2026-03-05"), at("2026-03-07")]);
+    const stay = render(<DatePicker mode="range" name="stay" defaultValue={{ from: "05/03/2026", to: "09/03/2026" }} valueFormat="DD/MM/YYYY" />);
+    expect(submitted(stay.container, "stay")).toEqual(["05/03/2026", "09/03/2026"]);
+  });
+
+  it("submits nothing while empty, and renders no hidden input without a name", () => {
+    const named = render(<DatePicker name="due" />);
+    expect(submitted(named.container, "due")).toEqual([]);
+    const unnamed = render(<DatePicker defaultValue="2026-03-05" />);
+    expect(unnamed.container.querySelector('input[type="hidden"]')).toBeNull();
+  });
+});

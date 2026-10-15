@@ -8,7 +8,7 @@ npm i slotsmith
 
 ## Trigger
 
-The trigger is a text field by default (`trigger="input"`): the date is typed in the locale's numeric order (`MM/DD/YYYY` in en-US, `DD.MM.YYYY` in German), read on Enter or blur, and the calendar opens from the button beside it (`labels.openCalendar`) or with Down Arrow. `openOnFocus` opens it when the field is focused or clicked. `trigger="button"` is one combobox button showing the date formatted with `format`. Pass `id` with a `<label htmlFor>`, or `aria-label`, to name the field.
+The trigger is a text field by default (`trigger="input"`): the date is typed in the locale's numeric order (`MM/DD/YYYY` in en-US, `DD.MM.YYYY` in German), read on Enter or blur, and the calendar opens from the button beside it (`labels.openCalendar`) or with Down Arrow. `openOnFocus` opens it when the field is focused or clicked. `trigger="button"` is one combobox button showing the date formatted with `format`. Pass `id` with a `<label htmlFor>`, or `aria-label`, to name the field. In a plain HTML form pass `name`: a hidden input per picked day carries the value as `valueFormat` writes it (a range's start, then its end).
 
 ## Modes
 

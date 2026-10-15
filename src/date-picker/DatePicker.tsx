@@ -42,6 +42,12 @@ export interface DatePickerSharedProps
    * order to type in, such as `MM/DD/YYYY`.
    */
   placeholder?: string;
+  /**
+   * The form field name. The root then holds a hidden input of that name per
+   * picked day, written as `valueFormat` says, so a plain HTML form submits
+   * the value: one day, each of several days, or a range's start then end.
+   */
+  name?: string;
   /** Shortcuts shown under the grid. A date preset in range mode picks that one day. */
   presets?: DatePickerPreset[];
   /** How the trigger formats a date. Defaults to `{ day: "numeric", month: "short", year: "numeric" }`. */
@@ -203,6 +209,7 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
     placeholder,
     presets,
     format = DEFAULT_FORMAT,
+    name,
     placement,
     popupOffset,
     children,
@@ -246,6 +253,7 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
     position,
     placeholder: placeholder ?? labels.placeholder,
     inputPlaceholder: placeholder ?? model.inputPattern,
+    name,
     presets: presets ?? [],
     text: describeValue(model.mode, model.value, model.locale, format, labels),
   };
@@ -268,10 +276,16 @@ export interface DatePickerRootProps extends Omit<HTMLAttributes<HTMLDivElement>
  *
  * @param props - See {@link DatePickerRootProps}.
  */
-export function DatePickerRoot(props: DatePickerRootProps) {
-  const { components: C, slotProps, getRootProps } = useDatePickerContext();
+export function DatePickerRoot({ children, ...props }: DatePickerRootProps) {
+  const { components: C, slotProps, getRootProps, name, formValues } = useDatePickerContext();
 
-  return <C.Root {...mergeProps(mergeProps(getRootProps(), slotProps.root), props)} />;
+  return (
+    <C.Root {...mergeProps(mergeProps(getRootProps(), slotProps.root), props)}>
+      {children}
+      {/* What a plain form submits: the value, not the text the field shows. */}
+      {name ? formValues.map((value, index) => <input key={index} type="hidden" name={name} value={value} />) : null}
+    </C.Root>
+  );
 }
 
 /**
@@ -294,7 +308,7 @@ const PROVIDER_KEYS = [
   "open", "defaultOpen", "onOpenChange",
   "locale", "weekStartsOn", "weekdayFormat", "minDate", "maxDate", "disabledDates",
   "clearable", "disabled", "invalid", "closeOnSelect", "onBlur", "valueFormat", "timeZone", "trigger", "openOnFocus",
-  "placeholder", "presets", "format", "components", "labels", "slotProps", "placement", "popupOffset",
+  "placeholder", "presets", "format", "name", "components", "labels", "slotProps", "placement", "popupOffset",
 ] as const;
 
 /**

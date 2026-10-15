@@ -202,6 +202,8 @@ export interface DatePickerModel<M extends DatePickerMode = DatePickerMode> {
   inputText: string;
   /** The order a date is typed in, such as `"MM/DD/YYYY"`. */
   inputPattern: string;
+  /** The picked days as `valueFormat` writes them, in order: one, several, or a range's start then end. */
+  formValues: string[];
   /** Moves focus to the text field or the trigger button, without opening the calendar. */
   focusTrigger: () => void;
 
@@ -768,6 +770,10 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   /* ---------------------------------------------------------- text field */
 
   const shownText = useMemo(() => formatInput(mode, value, inputCodec), [mode, value, inputCodec]);
+  const formValues = useMemo(
+    () => (mode === "range" ? [range.from, range.to].filter((day): day is ISODate => !!day) : selectedDates).map(write),
+    [mode, range, selectedDates, write],
+  );
 
   /**
    * Reads what was typed. Days that can be picked become the value; text
@@ -1089,6 +1095,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
 
     trigger,
     inputText: draft ?? shownText,
+    formValues,
     inputPattern: inputCodec.pattern,
     focusTrigger,
 

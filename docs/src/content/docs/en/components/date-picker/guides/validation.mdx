@@ -18,6 +18,8 @@ Press Continue with no date picked: the field turns red, the message appears and
 - `data-invalid` on the root and on the trigger, for your own styles.
 - In the default stylesheet, the trigger's border and focus ring in the danger colour, read from `--sdp-danger`, then the shared `--ss-danger` (`#dc2626` light, `#f87171` dark). See [Theming](../../../../theming/).
 
+In a plain HTML form, give the picker a [`name`](../../api/#props): its root holds a hidden input of that name per picked day, written as [`valueFormat`](../value-format-and-time-zone/) says, so the form submits the value rather than the text in the field. A range submits its start, then its end.
+
 The picker does not validate and does not render a message. A rule such as "the end must be after the start" belongs in your form code; the picker shows the result.
 
 ## Tying the message to the field
