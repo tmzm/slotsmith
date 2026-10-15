@@ -12,7 +12,7 @@ Pick in each of the three: the line under each picker shows the value `onChange`
 
 ## The value in each mode
 
-Every date is a `YYYY-MM-DD` string. A calendar date has no time and no time zone, so it means the same day everywhere, and the strings sort and compare correctly with `<` and `>`.
+Every date is an ISO string: by default the instant the day starts in the picker's time zone, such as `"2026-03-12T00:00:00+03:00"`, which `new Date()` reads as it is. A day without a zone, such as `"2026-03-12"`, is always read as that day. For the calendar day alone, which means the same day everywhere, set [`valueFormat`](../value-format-and-time-zone/) to `"YYYY-MM-DD"`.
 
 - **Single.** [`value`](../../api/#prop-value) is a date or `null`. `mode` can be left out.
 - **Multiple.** [`value`](../../api/#prop-value-multiple) is an array of dates, sorted, and empty when nothing is picked.

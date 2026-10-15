@@ -113,15 +113,16 @@ export interface UseDatePickerOptions<M extends DatePickerMode = DatePickerMode>
    * `defaultValue`, `onChange`, `minDate`, `maxDate`, the presets and the
    * day `disabledDates` is asked about. A pattern such as `"DD/MM/YYYY"`,
    * `"iso-datetime"` for the instant the day starts in `timeZone`, or a
-   * codec of your own. Defaults to `"YYYY-MM-DD"`.
+   * codec of your own. Defaults to `"iso-datetime"`; `"YYYY-MM-DD"` keeps
+   * the calendar day alone.
    */
   valueFormat?: DateValueFormat;
   /**
    * The time zone the calendar works in: an IANA name such as
    * `"Asia/Tokyo"`, `"UTC"`, or an offset such as `"+09:00"`. Today is
-   * today in that zone, and with `valueFormat: "iso-datetime"` a picked day
-   * is the instant it starts there and an instant is read as the day it falls
-   * on there. Defaults to the browser's own.
+   * today in that zone, and with `valueFormat: "iso-datetime"` (the
+   * default) a picked day is the instant it starts there and an instant is
+   * read as the day it falls on there. Defaults to the browser's own.
    */
   timeZone?: string;
 }
@@ -323,8 +324,9 @@ function daysBetween(range: DateRange): ISODate[] {
  * Use it directly to build a shape the component does not cover, such as an
  * inline calendar with no popup.
  *
- * Values are `YYYY-MM-DD` strings throughout, so nothing shifts across a time
- * zone and they go into a form, a URL or a database column unchanged.
+ * Values are ISO strings, written as `valueFormat` says: by default the
+ * instant a day starts in `timeZone`. Inside, every day is a `YYYY-MM-DD`
+ * calendar day, so the grid never shifts across a time zone.
  *
  * @typeParam M - The mode.
  * @param options - See {@link UseDatePickerOptions}.

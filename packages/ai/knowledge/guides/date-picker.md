@@ -1,6 +1,6 @@
 # Date picker guide
 
-One date, several dates, or a range, as plain `YYYY-MM-DD` strings that never shift across time zones. Full keyboard grid, min / max and blocked dates, presets, the locale's week start and right-to-left support.
+One date, several dates, or a range, as ISO strings (the instant the day starts, or the calendar day alone with `valueFormat`). Full keyboard grid, min / max and blocked dates, presets, the locale's week start and right-to-left support.
 
 ```bash
 npm i slotsmith
@@ -28,7 +28,7 @@ In range mode the first click sets the start and the second the end; a click bef
 
 ## Working with ISO strings
 
-Values are `YYYY-MM-DD` strings (`ISODate`), never `Date` objects, so a date picked in Tokyo is the same date in Los Angeles. Helpers are exported: `today()`, `addDays`, `addMonths`, `toISODate(date)`, `fromISODate(iso)` and `formatDate`.
+Values are ISO strings, never `Date` objects: by default the instant the day starts in `timeZone` (`"2026-03-12T00:00:00+03:00"`); `valueFormat="YYYY-MM-DD"` gives the calendar day alone (`ISODate`), the same date in Tokyo and Los Angeles. A plain `"2026-03-12"` is always accepted as input. Helpers are exported: `today()`, `addDays`, `addMonths`, `toISODate(date)`, `fromISODate(iso)` and `formatDate`.
 
 ```tsx
 import { addDays, today } from "slotsmith/date-picker";

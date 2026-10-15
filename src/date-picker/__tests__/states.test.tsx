@@ -12,8 +12,7 @@ import {
   renderDatePicker,
   renderWithUser,
   shownMonth,
-  trigger,
-} from "./builders";
+  trigger, at } from "./builders";
 
 freezeToday();
 
@@ -141,7 +140,7 @@ describe("bounds", () => {
 describe("blocked dates", () => {
   it("blocks what the predicate rejects", async () => {
     const onChange = vi.fn();
-    const weekend = (date: string) => [0, 6].includes(new Date(`${date}T12:00`).getDay());
+    const weekend = (date: string) => [0, 6].includes(new Date(date).getDay());
     const { user } = renderDatePicker({ disabledDates: weekend, onChange });
     await open(user);
 
@@ -161,7 +160,7 @@ describe("presets", () => {
 
     await user.click(screen.getByRole("button", { name: "Tomorrow" }));
 
-    expect(onChange).toHaveBeenCalledWith("2026-03-13");
+    expect(onChange).toHaveBeenCalledWith(at("2026-03-13"));
     expect(isOpen()).toBe(false);
   });
 
@@ -176,7 +175,7 @@ describe("presets", () => {
 
     await user.click(screen.getByRole("button", { name: "Next week" }));
 
-    expect(onChange).toHaveBeenCalledWith({ from: "2026-04-06", to: "2026-04-12" });
+    expect(onChange).toHaveBeenCalledWith({ from: at("2026-04-06"), to: at("2026-04-12") });
     expect(isOpen()).toBe(true);
     expect(shownMonth()).toBe("April 2026");
   });
@@ -192,7 +191,7 @@ describe("presets", () => {
 
     await user.click(screen.getByRole("button", { name: "Long weekend" }));
 
-    expect(onChange).toHaveBeenCalledWith(["2026-03-13", "2026-03-14", "2026-03-15"]);
+    expect(onChange).toHaveBeenCalledWith([at("2026-03-13"), at("2026-03-14"), at("2026-03-15")]);
   });
 
   /** The initial value that puts each mode's calendar on January 2025 without picking today. */

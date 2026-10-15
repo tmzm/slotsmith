@@ -3,7 +3,7 @@ title: "Value format and time zone"
 description: "Write the slotsmith DatePicker's value as DD/MM/YYYY, as an instant in a time zone, or your own way, and set the zone the calendar works in."
 ---
 
-The slotsmith date picker's value is a `YYYY-MM-DD` string by default. With `valueFormat` it can be any date pattern, the instant the day starts in a time zone, or a format of your own, and `timeZone` sets the zone the calendar works in, as react-day-picker's `timeZone` does.
+The slotsmith date picker's value is an ISO string by default: the instant the day starts in the picker's time zone. With `valueFormat` it can be the calendar day alone, any other date pattern, or a format of your own, and `timeZone` sets the zone the calendar works in, as react-day-picker's `timeZone` does.
 
 {/* Reserved height: two labelled pickers, each with its value line. */}
 <Demo name="date-picker/value-format" height="15rem" fallback />
@@ -14,8 +14,8 @@ The first picker reads and writes `DD/MM/YYYY`. The second works in Tokyo: pick 
 
 [`valueFormat`](../../api/#props) is how every day the picker exchanges with you is written: `value`, `defaultValue`, `onChange`, `minDate`, `maxDate`, the [presets](../presets/), and the day [`disabledDates`](../bounds-and-blocked-days/) is asked about. It takes:
 
-- A pattern of `YYYY`, `MM`, `M`, `DD` and `D`; anything else is kept as it is. `"YYYY-MM-DD"` is the default; `"DD/MM/YYYY"`, `"M/D/YYYY"` and `"YYYY.MM.DD"` work too. Text that is not a real day (February 31st, a typo) reads as no value.
-- `"iso-datetime"`: the instant the day starts in `timeZone`, such as `"2026-03-12T00:00:00+09:00"`. Any ISO instant is read as the day it falls on in that zone, so `"2026-03-12T20:00:00Z"` is March 13th in Tokyo.
+- `"iso-datetime"`, the default: the instant the day starts in `timeZone`, such as `"2026-03-12T00:00:00+09:00"`. Any ISO instant is read as the day it falls on in that zone, so `"2026-03-12T20:00:00Z"` is March 13th in Tokyo. Text without a zone, such as `"2026-03-12"`, is that day on the calendar.
+- A pattern of `YYYY`, `MM`, `M`, `DD` and `D`; anything else is kept as it is. `"YYYY-MM-DD"` is the calendar day alone, the same day in every zone; `"DD/MM/YYYY"`, `"M/D/YYYY"` and `"YYYY.MM.DD"` work too. Text that is not a real day (February 31st, a typo) reads as no value.
 - An object with `format(day)` and `parse(text)`, for any other format: `format` turns a `YYYY-MM-DD` day into your text, and `parse` reads it back, returning `null` for text that is not a day.
 
 In range mode both ends use the format, and in multiple mode every day does. The text in the trigger is unchanged: it follows [`format`](../../api/#props) and the locale, as before. `createValueCodec(format, timeZone)` returns the same reader and writer, for your own code.
@@ -25,6 +25,6 @@ In range mode both ends use the format, and in multiple mode every day does. The
 [`timeZone`](../../api/#props) is the zone the calendar works in: an IANA name such as `"Asia/Tokyo"` or `"America/New_York"`, `"UTC"`, or a fixed offset such as `"+09:00"`. Without it the browser's own zone is used.
 
 - Today is today in that zone: the day marked as today, the month the calendar opens on when nothing is picked, and the day "Go to today" goes to.
-- With `valueFormat: "iso-datetime"`, a picked day is the instant it starts in that zone, and an incoming instant is read as the day it falls on there. Days that start on a daylight-saving change get the offset in force at midnight.
+- A picked day is the instant it starts in that zone, and an incoming instant is read as the day it falls on there. Days that start on a daylight-saving change get the offset in force at midnight.
 
-A calendar day without a time, the default format, is the same day in every zone, so `timeZone` changes only what today is. The library also exports `todayIn(timeZone)` and `dayInZone(date, timeZone)`.
+With a pattern such as `"YYYY-MM-DD"` the value is a calendar day, the same in every zone, so `timeZone` changes only what today is. The library also exports `todayIn(timeZone)` and `dayInZone(date, timeZone)`.

@@ -2,8 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import { createValueCodec, dayInZone, offsetOf, startOfDayIn, todayIn } from "../valueFormat";
 
 describe("value patterns", () => {
-  it("keeps the calendar day by default", () => {
-    const codec = createValueCodec();
+  it("writes the instant the day starts by default, and reads a day without a zone as that day", () => {
+    const codec = createValueCodec(undefined, "America/New_York");
+    expect(codec.format("2026-03-02")).toBe("2026-03-02T00:00:00-05:00");
+    expect(codec.parse("2026-03-02")).toBe("2026-03-02");
+    expect(codec.parse("2026-03-02T23:30")).toBe("2026-03-02");
+    expect(codec.parse("2026-02-31")).toBeNull();
+    expect(codec.parse("2026-03-02T03:00:00Z")).toBe("2026-03-01");
+  });
+
+  it("keeps the calendar day alone with YYYY-MM-DD", () => {
+    const codec = createValueCodec("YYYY-MM-DD");
     expect(codec.format("2026-03-02")).toBe("2026-03-02");
     expect(codec.parse("2026-03-02")).toBe("2026-03-02");
   });

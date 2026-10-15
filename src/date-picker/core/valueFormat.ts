@@ -27,17 +27,22 @@ export interface DateValueCodec {
  * `defaultValue`, `onChange`, `minDate`, `maxDate`, the presets and the
  * date `disabledDates` is asked about.
  *
+ * - `"iso-datetime"`, the default: the instant the day starts in the
+ *   `timeZone`, such as `"2026-03-12T00:00:00+09:00"`. Any ISO instant is
+ *   read as the day it falls on in that zone; text without a zone, such as
+ *   `"2026-03-12"` or `"2026-03-12T10:00"`, is that day on the calendar.
  * - A pattern of `YYYY`, `MM`, `M`, `DD` and `D` (the others are kept as
- *   they are): `"YYYY-MM-DD"`, the default, `"DD/MM/YYYY"`, `"M/D/YYYY"`.
- * - `"iso-datetime"`: the instant the day starts in the `timeZone`, such as
- *   `"2026-03-12T00:00:00+09:00"`. Any ISO instant is read as the day it
- *   falls on in that zone.
+ *   they are), for the calendar day alone: `"YYYY-MM-DD"`, `"DD/MM/YYYY"`,
+ *   `"M/D/YYYY"`.
  * - Your own {@link DateValueCodec}.
  */
 export type DateValueFormat = string | DateValueCodec;
 
-/** The default value format: the calendar day itself. */
-export const ISO_FORMAT = "YYYY-MM-DD";
+/** The default value format: the instant the day starts in the picker's time zone. */
+export const DEFAULT_VALUE_FORMAT = "iso-datetime";
+
+/** ISO text without a zone: a calendar day, with a wall-clock time or not. */
+const WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?$/;
 
 const TOKENS = /YYYY|MM|M|DD|D/g;
 const OFFSET = /^([+-])(\d{2}):?(\d{2})$/;
@@ -157,6 +162,12 @@ function instantCodec(timeZone?: string): DateValueCodec {
   return {
     format: (day) => `${day}T00:00:00${offsetText(startOfDayIn(day, timeZone).offset)}`,
     parse: (text) => {
+      // A day or a time with no zone names the day on the calendar, not an instant in UTC.
+      const wall = WALL_CLOCK.exec(text.trim());
+      if (wall) {
+        const [year, month, day] = [Number(wall[1]), Number(wall[2]), Number(wall[3])];
+        return isRealDay(year, month, day) ? toDay(year, month, day) : null;
+      }
       const time = Date.parse(text);
       return Number.isNaN(time) ? null : dayInZone(new Date(time), timeZone);
     },
@@ -166,7 +177,7 @@ function instantCodec(timeZone?: string): DateValueCodec {
 /**
  * Create value codec
  *
- * @param format - See {@link DateValueFormat}. Defaults to `"YYYY-MM-DD"`.
+ * @param format - See {@link DateValueFormat}. Defaults to `"iso-datetime"`.
  * @param timeZone - The zone instants are read and written in.
  * @returns The codec.
  *
@@ -176,7 +187,7 @@ function instantCodec(timeZone?: string): DateValueCodec {
  * createValueCodec("iso-datetime", "Asia/Tokyo").format("2026-03-12"); // "2026-03-12T00:00:00+09:00"
  * ```
  */
-export function createValueCodec(format: DateValueFormat = ISO_FORMAT, timeZone?: string): DateValueCodec {
+export function createValueCodec(format: DateValueFormat = DEFAULT_VALUE_FORMAT, timeZone?: string): DateValueCodec {
   if (typeof format !== "string") return format;
   if (format === "iso-datetime") return instantCodec(timeZone);
   return patternCodec(format);

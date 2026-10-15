@@ -42,6 +42,8 @@ export default function DayContent() {
     <div style={{ display: "grid", gap: "0.5rem", maxWidth: 288 }}>
       <DatePicker
         mode="range"
+        // A stay is counted in calendar nights, so the value is the day alone.
+        valueFormat="YYYY-MM-DD"
         value={stay}
         onChange={setStay}
         minDate={today}

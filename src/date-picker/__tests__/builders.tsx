@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, vi } from "vitest";
 import { DatePicker, type DatePickerProps } from "../DatePicker";
+import { createValueCodec } from "../core/valueFormat";
 
 /**
  * Today
@@ -11,6 +12,9 @@ import { DatePicker, type DatePickerProps } from "../DatePicker";
  * on today" and the `data-today` marker are deterministic.
  */
 export const TODAY = "2026-03-12";
+
+/** A day as the picker writes it by default: the instant it starts, in the zone the suite runs in. */
+export const at = (date: string) => createValueCodec().format(date);
 
 /**
  * Freeze today

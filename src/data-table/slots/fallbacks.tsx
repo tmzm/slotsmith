@@ -411,6 +411,7 @@ const CellEditor = (props: CellEditorSlotProps) => {
             className={classes.editorControl}
             slotProps={{ trigger: { className: classes.editorTrigger } }}
             mode="single"
+            valueFormat="YYYY-MM-DD"
             value={props.value === "" ? null : props.value}
             onChange={(date) => onCommit(date ?? "")}
             defaultOpen

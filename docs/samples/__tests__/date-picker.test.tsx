@@ -6,6 +6,7 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { ar } from "slotsmith/locales/ar";
 import { SlotsmithProvider } from "slotsmith/provider";
+import { createValueCodec } from "slotsmith/date-picker";
 import BoundsAndBlockedDays from "@samples/date-picker/bounds-and-blocked-days";
 import CompoundParts from "@samples/date-picker/compound-parts";
 import DayContent from "@samples/date-picker/day-content";
@@ -53,6 +54,9 @@ const Arabic = ({ children }: { children: ReactNode }) => (
     </SlotsmithProvider>
   </div>
 );
+
+/** A day as the pickers write it by default: the instant it starts, in the zone the suite runs in. */
+const at = (date: string) => createValueCodec().format(date);
 
 describe("date picker: quick start", () => {
   it("opens with ArrowDown on today, moves with the arrows and picks with Enter", () => {
@@ -107,7 +111,7 @@ describe("date picker: overview", () => {
     expect(screen.getByRole("combobox", { name: "Due date" })).toBeTruthy();
     open("Stay");
     fireEvent.click(screen.getByRole("button", { name: "Tomorrow" }));
-    expect(screen.getByText("Stay: 2026-03-17 to 2026-03-17")).toBeTruthy();
+    expect(screen.getByText(`Stay: ${at("2026-03-17")} to ${at("2026-03-17")}`)).toBeTruthy();
     expect(screen.getByText("Due: none")).toBeTruthy();
   });
 });
@@ -120,7 +124,7 @@ describe("date picker guide: modes", () => {
     fireEvent.click(day("2026-03-20"));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(combobox.textContent).toContain("Mar 20, 2026");
-    expect(screen.getByText("Value: 2026-03-20")).toBeTruthy();
+    expect(screen.getByText(`Value: ${at("2026-03-20")}`)).toBeTruthy();
   });
 
   it("multiple: each pick toggles a day, the calendar stays open and the trigger counts past two", () => {
@@ -133,9 +137,9 @@ describe("date picker guide: modes", () => {
     expect(combobox.textContent).toContain("Mar 18, 2026, Mar 20, 2026");
     fireEvent.click(day("2026-03-25"));
     expect(combobox.textContent).toContain("3 dates selected");
-    expect(screen.getByText("Value: 2026-03-18, 2026-03-20, 2026-03-25")).toBeTruthy();
+    expect(screen.getByText(`Value: ${at("2026-03-18")}, ${at("2026-03-20")}, ${at("2026-03-25")}`)).toBeTruthy();
     fireEvent.click(day("2026-03-20"));
-    expect(screen.getByText("Value: 2026-03-18, 2026-03-25")).toBeTruthy();
+    expect(screen.getByText(`Value: ${at("2026-03-18")}, ${at("2026-03-25")}`)).toBeTruthy();
     expect(day("2026-03-18").parentElement!.getAttribute("aria-selected")).toBe("true");
   });
 
@@ -154,10 +158,10 @@ describe("date picker guide: modes", () => {
     expect(day("2026-03-25").hasAttribute("data-in-range")).toBe(false);
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(combobox.textContent).toContain("Mar 20, 2026 — Mar 24, 2026");
-    expect(screen.getByText("Value: 2026-03-20 to 2026-03-24")).toBeTruthy();
+    expect(screen.getByText(`Value: ${at("2026-03-20")} to ${at("2026-03-24")}`)).toBeTruthy();
     // A click before the start begins a new range.
     fireEvent.click(day("2026-03-10"));
-    expect(screen.getByText("Value: 2026-03-10 to …")).toBeTruthy();
+    expect(screen.getByText(`Value: ${at("2026-03-10")} to …`)).toBeTruthy();
   });
 
   it("the clear button empties the value without opening the calendar", () => {
@@ -200,14 +204,14 @@ describe("date picker in right-to-left", () => {
     expect(focusedDate()).toBe("2026-04-02");
     expect(grid().getAttribute("aria-label")).toMatch(/أبريل/);
     fireEvent.click(day("2026-04-02"));
-    expect(screen.getByText("Value: 2026-03-30 to 2026-04-02")).toBeTruthy();
+    expect(screen.getByText(`Value: ${at("2026-03-30")} to ${at("2026-04-02")}`)).toBeTruthy();
     expect(day("2026-03-30").hasAttribute("data-range-start")).toBe(true);
     expect(day("2026-04-02").hasAttribute("data-range-end")).toBe(true);
 
     key(day("2026-04-02"), "PageDown");
     expect(focusedDate()).toBe("2026-05-02");
     expect(grid().getAttribute("aria-label")).toMatch(/مايو/);
-    expect(screen.getByText("Value: 2026-03-30 to 2026-04-02")).toBeTruthy();
+    expect(screen.getByText(`Value: ${at("2026-03-30")} to ${at("2026-04-02")}`)).toBeTruthy();
     key(day("2026-05-02"), "PageUp");
     expect(day("2026-04-02").hasAttribute("data-range-end")).toBe(true);
     expect(day("2026-04-01").hasAttribute("data-in-range")).toBe(true);
@@ -241,7 +245,7 @@ describe("date picker guide: bounds and blocked days", () => {
     fireEvent.click(day("2026-03-21"));
     expect(screen.getByText("Appointment: none")).toBeTruthy();
     fireEvent.click(day("2026-03-20"));
-    expect(screen.getByText("Appointment: 2026-03-20")).toBeTruthy();
+    expect(screen.getByText(`Appointment: ${at("2026-03-20")}`)).toBeTruthy();
   });
 
   it("stops at the bounds: no earlier month, no month after maxDate, and the keyboard is clamped", () => {
@@ -272,12 +276,12 @@ describe("date picker guide: presets", () => {
     render(<Presets />);
     const combobox = open("Stay");
     fireEvent.click(screen.getByRole("button", { name: "Next 7 days" }));
-    expect(screen.getByText("Stay: 2026-03-16 to 2026-03-22")).toBeTruthy();
+    expect(screen.getByText(`Stay: ${at("2026-03-16")} to ${at("2026-03-22")}`)).toBeTruthy();
     expect(combobox.textContent).toContain("Mar 16, 2026 — Mar 22, 2026");
     expect(day("2026-03-16").hasAttribute("data-range-start")).toBe(true);
     expect(day("2026-03-22").hasAttribute("data-range-end")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Tomorrow" }));
-    expect(screen.getByText("Stay: 2026-03-17 to 2026-03-17")).toBeTruthy();
+    expect(screen.getByText(`Stay: ${at("2026-03-17")} to ${at("2026-03-17")}`)).toBeTruthy();
   });
 
   it("Go to today shows today's month without picking anything", () => {
@@ -339,7 +343,7 @@ describe("date picker guide: validation", () => {
     expect(combobox.getAttribute("aria-invalid")).toBeNull();
     expect(screen.queryByText("The start date is required.")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(screen.getByText("Sent: 2026-03-16")).toBeTruthy();
+    expect(screen.getByText(`Sent: ${at("2026-03-16")}`)).toBeTruthy();
   });
 });
 

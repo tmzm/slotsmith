@@ -3,7 +3,7 @@ title: "Date picker"
 description: "A React date picker for one date, several dates or a range, with bounds, blocked days, presets and a full keyboard grid. Every part is replaceable."
 faq:
   - q: "What format are the date picker's values?"
-    a: "Strings in YYYY-MM-DD form, never Date objects. A calendar date has no time and no time zone, so nothing shifts when it crosses one, and the string goes into a form, a URL or a database column unchanged. toISODate and fromISODate convert to and from a Date."
+    a: "ISO strings, never Date objects. By default a day is the instant it starts in the picker's time zone, such as 2026-03-12T00:00:00+03:00, which new Date() reads as it is. valueFormat changes that: YYYY-MM-DD for the calendar day alone, another pattern such as DD/MM/YYYY, or a format of your own."
     link: "/components/date-picker/guides/modes/"
   - q: "Can the date picker select a range or several dates?"
     a: "Yes. The mode prop is single (the default), multiple or range. It also sets the shape of value and onChange: one date or null, an array of dates, or an object with from and to."
@@ -19,7 +19,7 @@ faq:
     link: "/components/date-picker/#accessibility"
 ---
 
-The slotsmith DatePicker is a React date picker for one date, several dates or a range. Values are `YYYY-MM-DD` strings. It has bounds, blocked days, presets, a full keyboard grid and right-to-left support, and every part it renders is a slot you can replace.
+The slotsmith DatePicker is a React date picker for one date, several dates or a range. Values are ISO strings. It has bounds, blocked days, presets, a full keyboard grid and right-to-left support, and every part it renders is a slot you can replace.
 
 ## Overview
 
@@ -36,7 +36,7 @@ Each feature has a guide with its own live demo: [single, range and multiple](./
 
 ## Quick start
 
-Pass `value` and `onChange`, and name the combobox with `aria-label` or `aria-labelledby`. A date is a `YYYY-MM-DD` string, or `null` when nothing is picked.
+Pass `value` and `onChange`, and name the combobox with `aria-label` or `aria-labelledby`. A date is an ISO string, the instant the day starts (`"2026-03-12T00:00:00+03:00"`), or `null` when nothing is picked. [`valueFormat`](./guides/value-format-and-time-zone/) writes it another way.
 
 <QuickStart height="4.25rem" />
 
@@ -93,7 +93,7 @@ Movement stops at `minDate` and `maxDate`. Picking a day in single mode closes t
 
 <Note kind="limitation">
 - Gregorian calendar only. A locale changes the names, the digits and the first day of the week, not the calendar. Hijri and Persian calendars are planned; see the [roadmap](../../roadmap/#calendars).
-- Dates only: there is no time of day and no time zone. A value is a `YYYY-MM-DD` string.
+- Days only: there is no time of day to pick. A value is the instant the day starts, or the calendar day alone with `valueFormat`.
 - The trigger is not a text field, so a date cannot be typed. For another shape, such as an inline calendar, build on the [`useDatePicker`](./guides/compound-parts/) hook.
 - One month is shown at a time.
 - No `name` prop: the picker renders no hidden input. In a plain HTML form, render your own from `value`.

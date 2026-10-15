@@ -11,8 +11,7 @@ import {
   renderDatePicker,
   renderWithUser,
   shownMonth,
-  trigger,
-} from "./builders";
+  trigger, at } from "./builders";
 
 freezeToday();
 
@@ -127,7 +126,7 @@ describe("moving through the grid", () => {
   });
 
   it("walks onto blocked days without skipping them", async () => {
-    const weekend = (date: string) => ["2026-03-14", "2026-03-15"].includes(date);
+    const weekend = (date: string) => ["2026-03-14", "2026-03-15"].includes(date.slice(0, 10));
     const { user } = renderDatePicker({ defaultValue: "2026-03-13", disabledDates: weekend });
     await open(user);
 
@@ -162,14 +161,14 @@ describe("picking and leaving", () => {
     await user.keyboard(`{ArrowRight}${key}`);
 
     expect(onChange).toHaveBeenCalledOnce();
-    expect(onChange).toHaveBeenCalledWith("2026-03-13");
+    expect(onChange).toHaveBeenCalledWith(at("2026-03-13"));
     expect(isOpen()).toBe(false);
     expect(trigger()).toHaveFocus();
   });
 
   it("does not pick a blocked day", async () => {
     const onChange = vi.fn();
-    const { user } = renderDatePicker({ onChange, disabledDates: (date) => date === "2026-03-13" });
+    const { user } = renderDatePicker({ onChange, disabledDates: (date) => date.startsWith("2026-03-13") });
     await open(user);
 
     await user.keyboard("{ArrowRight}{Enter}");

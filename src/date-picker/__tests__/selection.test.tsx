@@ -12,8 +12,7 @@ import {
   open,
   renderDatePicker,
   renderWithUser,
-  trigger,
-} from "./builders";
+  trigger, at } from "./builders";
 
 freezeToday();
 
@@ -25,7 +24,7 @@ describe("single mode", () => {
     await open(user);
     await user.click(day("2026-03-20"));
 
-    expect(onChange).toHaveBeenCalledWith("2026-03-20");
+    expect(onChange).toHaveBeenCalledWith(at("2026-03-20"));
     expect(isOpen()).toBe(false);
     expect(trigger()).toHaveTextContent("Mar 20, 2026");
     expect(trigger()).toHaveFocus();
@@ -48,7 +47,7 @@ describe("single mode", () => {
     await open(user);
     await user.click(day("2026-03-06"));
 
-    expect(onChange).toHaveBeenCalledWith("2026-03-06");
+    expect(onChange).toHaveBeenCalledWith(at("2026-03-06"));
     expect(trigger()).toHaveTextContent("Mar 5, 2026");
   });
 
@@ -77,11 +76,11 @@ describe("multiple mode", () => {
     await user.click(day("2026-03-20"));
     await user.click(day("2026-03-04"));
 
-    expect(onChange).toHaveBeenLastCalledWith(["2026-03-04", "2026-03-20"]);
+    expect(onChange).toHaveBeenLastCalledWith([at("2026-03-04"), at("2026-03-20")]);
     expect(isOpen()).toBe(true);
 
     await user.click(day("2026-03-20"));
-    expect(onChange).toHaveBeenLastCalledWith(["2026-03-04"]);
+    expect(onChange).toHaveBeenLastCalledWith([at("2026-03-04")]);
   });
 
   it("names two dates on the trigger and counts more", async () => {
@@ -111,11 +110,11 @@ describe("range mode", () => {
 
     await open(user);
     await user.click(day("2026-03-10"));
-    expect(onChange).toHaveBeenLastCalledWith({ from: "2026-03-10" });
+    expect(onChange).toHaveBeenLastCalledWith({ from: at("2026-03-10") });
     expect(trigger()).toHaveTextContent("Mar 10, 2026 — …");
 
     await user.click(day("2026-03-14"));
-    expect(onChange).toHaveBeenLastCalledWith({ from: "2026-03-10", to: "2026-03-14" });
+    expect(onChange).toHaveBeenLastCalledWith({ from: at("2026-03-10"), to: at("2026-03-14") });
     expect(trigger()).toHaveTextContent("Mar 10, 2026 — Mar 14, 2026");
   });
 
@@ -152,7 +151,7 @@ describe("range mode", () => {
     await open(user);
     await user.click(day("2026-03-05"));
 
-    expect(onChange).toHaveBeenLastCalledWith({ from: "2026-03-05" });
+    expect(onChange).toHaveBeenLastCalledWith({ from: at("2026-03-05") });
   });
 
   it("starts a new range from a click after a complete one", async () => {
@@ -166,7 +165,7 @@ describe("range mode", () => {
     await open(user);
     await user.click(day("2026-03-20"));
 
-    expect(onChange).toHaveBeenLastCalledWith({ from: "2026-03-20" });
+    expect(onChange).toHaveBeenLastCalledWith({ from: at("2026-03-20") });
   });
 
   it("accepts a one-day range", async () => {
@@ -177,7 +176,7 @@ describe("range mode", () => {
     await user.click(day("2026-03-10"));
     await user.click(day("2026-03-10"));
 
-    expect(onChange).toHaveBeenLastCalledWith({ from: "2026-03-10", to: "2026-03-10" });
+    expect(onChange).toHaveBeenLastCalledWith({ from: at("2026-03-10"), to: at("2026-03-10") });
   });
 
   it("previews the band up to the hovered day while the end is unset", async () => {

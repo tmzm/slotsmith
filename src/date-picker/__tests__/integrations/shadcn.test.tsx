@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
-import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
+import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger, at } from "../builders";
 import { shadcnDatePicker } from "./shadcn/components";
 import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
@@ -42,7 +42,7 @@ describe("shadcn/ui", () => {
     await open(user);
     await user.click(day("2026-03-20"));
 
-    expect(onChange).toHaveBeenCalledWith("2026-03-20");
+    expect(onChange).toHaveBeenCalledWith(at("2026-03-20"));
     expect(trigger()).toHaveTextContent("Mar 20, 2026");
     expect(isOpen()).toBe(false);
   });
@@ -68,13 +68,13 @@ describe("shadcn/ui", () => {
 
     await user.keyboard("{Enter}");
 
-    expect(onChange).toHaveBeenLastCalledWith({ from: "2026-03-10", to: "2026-03-12" });
+    expect(onChange).toHaveBeenLastCalledWith({ from: at("2026-03-10"), to: at("2026-03-12") });
     expect(datesWith("in-range")).toEqual(["2026-03-10", "2026-03-11", "2026-03-12"]);
   });
 
   it("refuses a blocked day", async () => {
     const onChange = vi.fn();
-    const user = renderShadcnDatePicker({ onChange, disabledDates: (date) => date === "2026-03-13" });
+    const user = renderShadcnDatePicker({ onChange, disabledDates: (date) => date === at("2026-03-13") });
     await open(user);
 
     await user.click(day("2026-03-13"));
@@ -91,7 +91,7 @@ describe("shadcn/ui", () => {
     await user.click(day("2026-03-03"));
     await user.click(day("2026-03-01"));
 
-    expect(onChange).toHaveBeenLastCalledWith(["2026-03-01", "2026-03-03"]);
+    expect(onChange).toHaveBeenLastCalledWith([at("2026-03-01"), at("2026-03-03")]);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

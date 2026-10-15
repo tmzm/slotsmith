@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
-import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger } from "../builders";
+import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger, at } from "../builders";
 import { muiDatePicker } from "./mui/components";
 import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
@@ -51,7 +51,7 @@ describe("MUI v7", () => {
     await open(user);
     await user.click(day("2026-03-20"));
 
-    expect(onChange).toHaveBeenCalledWith("2026-03-20");
+    expect(onChange).toHaveBeenCalledWith(at("2026-03-20"));
     expect(trigger()).toHaveTextContent("Mar 20, 2026");
     expect(isOpen()).toBe(false);
   });
@@ -79,7 +79,7 @@ describe("MUI v7", () => {
     expect(chip).toHaveClass("MuiChip-root");
     await user.click(chip);
 
-    expect(onChange).toHaveBeenCalledWith({ from: "2026-03-16", to: "2026-03-22" });
+    expect(onChange).toHaveBeenCalledWith({ from: at("2026-03-16"), to: at("2026-03-22") });
     expect(datesWith("in-range")).toHaveLength(7);
   });
 
