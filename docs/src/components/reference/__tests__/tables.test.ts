@@ -33,7 +33,7 @@ describe("SlotTable", () => {
   it("renders one row per slot, each with an anchor id", async () => {
     const doc = await render(SlotTable, { slug: "data-table" });
     expectRegion(doc);
-    expect(doc.querySelectorAll("tbody tr")).toHaveLength(22);
+    expect(doc.querySelectorAll("tbody tr")).toHaveLength(24);
     expect(doc.querySelector("tr#slot-FooterRow")).not.toBeNull();
   });
 
@@ -94,7 +94,8 @@ describe("PropTable", () => {
 
   it("marks required props and shows defaults or a dash", async () => {
     const doc = await render(PropTable, { slug: "data-table" });
-    expect(normalise(doc.querySelector("tr#prop-data")?.textContent)).toContain("required");
+    expect(normalise(doc.querySelector("tr#prop-columns")?.textContent)).toContain("required");
+    expect(normalise(doc.querySelector("tr#prop-data")?.textContent)).not.toContain("required");
     expect(normalise(doc.querySelector("tr#prop-sorting")?.textContent)).not.toContain("required");
     expect(normalise(doc.querySelector("tr#prop-manualSorting td:nth-child(3)")?.textContent)).toBe("false");
     expect(normalise(doc.querySelector("tr#prop-sorting td:nth-child(3)")?.textContent)).toBe("—");

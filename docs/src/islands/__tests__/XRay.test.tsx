@@ -9,13 +9,13 @@ const slots = getReference("data-table").slots.map(({ name, kind }) => ({ name, 
 afterEach(cleanup);
 
 describe("XRay", () => {
-  it("lists every data-table slot, 12 element and 10 widget, each linking to its API row", () => {
+  it("lists every data-table slot, 13 element and 11 widget, each linking to its API row", () => {
     render(<XRay slots={slots} lang="en" />);
     const list = screen.getByRole("list", { name: /every part/i });
     const links = within(list).getAllByRole("link");
-    expect(links).toHaveLength(22);
-    expect(links.filter((link) => link.textContent?.startsWith("<"))).toHaveLength(12);
-    expect(links.filter((link) => link.textContent?.startsWith("{"))).toHaveLength(10);
+    expect(links).toHaveLength(24);
+    expect(links.filter((link) => link.textContent?.startsWith("<"))).toHaveLength(13);
+    expect(links.filter((link) => link.textContent?.startsWith("{"))).toHaveLength(11);
     for (const slot of slots) {
       const link = links.find((candidate) => candidate.getAttribute("href")?.endsWith(`#slot-${slot.name}`));
       expect(link, slot.name).toBeTruthy();
