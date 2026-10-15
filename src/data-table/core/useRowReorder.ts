@@ -35,6 +35,7 @@ import {
   type RowRect,
   type TreeNode,
 } from "./reorder";
+import { joinGroup, memberAt, membersOf, type GroupMember, type RowTransfer } from "./reorderGroups";
 import type { ReorderLabels } from "./reorderLabels";
 import {
   applyOffsets,
@@ -57,6 +58,8 @@ export interface RowReorderAttributes {
   "data-row-id": string;
   /** Set on the row being moved. */
   "data-dragging"?: "";
+  /** Set on the row that rows dragged from another table of the group would land next to. */
+  "data-drop-incoming"?: "";
   /** Set on the visible sub-rows of the row being moved, which move with it (tree tables). */
   "data-dragging-child"?: "";
   /** Set on the row it would be dropped next to, naming the side. */
@@ -98,6 +101,8 @@ export interface RowReorderModel {
    * The same function on every render.
    */
   setGeometry: (geometry: ReorderGeometry | null) => void;
+  /** Props for the element holding the rows: in a reorder group, the mark other tables find it by. */
+  getBodyProps: () => { "data-reorder-table"?: string };
 }
 
 /**
@@ -152,6 +157,12 @@ export interface UseRowReorderOptions<T> {
   canDrop?: (move: RowMove<T>) => boolean;
   /** The selected rows: dragging one of them drags every selected sibling with it. */
   selectedIds?: ReadonlySet<string>;
+  /**
+   * A reorder group: top-level rows may be dragged into the other tables of
+   * the group, and theirs into this one. `tableId` names this table in
+   * transfers; `onRowTransfer` reports a transfer into or out of it.
+   */
+  transfer?: { group: string; tableId: string; onRowTransfer?: (transfer: RowTransfer<T>) => void };
 }
 
 type Mode = "pointer" | "keyboard";
@@ -168,6 +179,8 @@ interface State {
   edgeId: string | null;
   announcement: string;
   mode: Mode | null;
+  /** Where rows dragged from another table of the group would land in this one. */
+  incoming: ShownTarget | null;
   /** Counts finished drags, so the settle and focus effects run once per drop. */
   ends: number;
 }
@@ -175,7 +188,8 @@ interface State {
 type Action =
   | { type: "start"; id: string; children: readonly string[]; mode: Mode; announcement: string }
   | { type: "target"; target: ShownTarget | null; edgeId: string | null; announcement: string }
-  | { type: "end"; announcement: string };
+  | { type: "end"; announcement: string }
+  | { type: "incoming"; target: ShownTarget | null; announcement: string };
 
 const initialState: State = {
   draggingId: null,
@@ -184,6 +198,7 @@ const initialState: State = {
   edgeId: null,
   announcement: "",
   mode: null,
+  incoming: null,
   ends: 0,
 };
 
@@ -203,6 +218,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, target: action.target, edgeId: action.edgeId, announcement: action.announcement };
     case "end":
       return { ...initialState, announcement: action.announcement, ends: state.ends + 1 };
+    case "incoming":
+      return { ...state, incoming: action.target, announcement: action.target ? action.announcement : state.announcement };
   }
 }
 
@@ -231,6 +248,12 @@ interface Session {
   parentId: string | null;
   /** A drag across parents: the place it would land, picked by height and depth. `null` among siblings. */
   across: AcrossDrag | null;
+  /** A drag over another table of the reorder group: that table and the gap the rows would land in. */
+  foreign: ForeignDrop | null;
+  /** The floating copy of the dragged rows shown while the pointer is over another table. */
+  ghost: HTMLElement | null;
+  /** How far below the dragged row's top the pointer took hold of it. */
+  grab: number;
   /**
    * A drag of several selected rows: the selected siblings move together as
    * one group, put back together at a gap among the other rows. `null` for
@@ -255,6 +278,77 @@ interface Session {
   dirty: boolean;
   frame: number | null;
   detach: () => void;
+}
+
+/**
+ * Foreign drop
+ *
+ * Where rows dragged out of their table would land in another table of the
+ * reorder group: a gap among that table's shown top-level rows.
+ */
+interface ForeignDrop {
+  member: GroupMember;
+  /** The other table's shown top-level rows, top to bottom. */
+  ids: string[];
+  gap: number;
+}
+
+/** The target a foreign drop marks in the other table: before the row below the gap, or after the last one. */
+function foreignTarget(foreign: ForeignDrop): DropTarget | null {
+  const { ids, gap } = foreign;
+  if (!ids.length) return null;
+  return gap < ids.length ? { id: ids[gap]!, position: "before" } : { id: ids[ids.length - 1]!, position: "after" };
+}
+
+/** A table's shown top-level rows, top to bottom. */
+function shownTopRows(member: GroupMember): HTMLElement[] {
+  const body = member.body();
+  if (!body) return [];
+  const top = new Set(member.rows().map((row) => row.id));
+  return rowsIn(body).filter((row) => top.has(row.getAttribute("data-row-id") ?? ""));
+}
+
+/**
+ * Make ghost
+ *
+ * A floating copy of the dragged rows that follows the pointer over another
+ * table, each cell as wide as the original, so it reads as the same rows.
+ */
+function makeGhost(s: Session): HTMLElement {
+  const table = document.createElement("table");
+  table.setAttribute("aria-hidden", "true");
+  table.setAttribute("data-reorder-ghost", "");
+  const source = s.parent.closest("table");
+  if (source) table.className = source.className;
+  const body = document.createElement(s.parent.tagName.toLowerCase());
+  body.className = s.parent.className;
+  table.appendChild(body);
+  let width = 0;
+  for (const row of rowsIn(s.parent)) {
+    if (!s.moving.has(row.getAttribute("data-row-id") ?? "")) continue;
+    const copy = row.cloneNode(true) as HTMLElement;
+    copy.style.transform = "";
+    copy.style.transition = "";
+    const cells = Array.from(row.children) as HTMLElement[];
+    Array.from(copy.children).forEach((cell, index) => {
+      (cell as HTMLElement).style.width = `${cells[index]!.getBoundingClientRect().width}px`;
+    });
+    width = Math.max(width, row.getBoundingClientRect().width);
+    body.appendChild(copy);
+  }
+  Object.assign(table.style, {
+    position: "fixed",
+    zIndex: "2147483647",
+    pointerEvents: "none",
+    width: `${width}px`,
+    left: `${s.parent.getBoundingClientRect().left}px`,
+    opacity: "0.9",
+    boxShadow: "0 8px 24px rgb(0 0 0 / 18%)",
+    borderCollapse: "separate",
+    borderSpacing: "0",
+  });
+  document.body.appendChild(table);
+  return table;
 }
 
 /**
@@ -372,6 +466,8 @@ interface PendingSettle {
 }
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+const NO_BODY_PROPS: { "data-reorder-table"?: string } = {};
 
 /** One depth's indent in the tree, in rem: the first cell's padding per level. */
 const INDENT_REM = 1.25;
@@ -501,6 +597,17 @@ const targetOffsets = (s: Session, target: DropTarget | null) =>
  * sibling; the blocks it passed make room.
  */
 function drawPointer(s: Session): void {
+  // Over another table, the rows rest here and a floating copy follows the pointer.
+  if (s.foreign) {
+    applyOffsets(s.parent, new Map(), s.moving, false);
+    s.ghost ??= makeGhost(s);
+    s.ghost.style.top = `${s.clientY - s.grab}px`;
+    return;
+  }
+  if (s.ghost) {
+    s.ghost.remove();
+    s.ghost = null;
+  }
   const offsets = targetOffsets(s, s.target);
   const own = s.blocks[s.ids.indexOf(s.id)]!;
   const first = s.blocks[0]!;
@@ -626,6 +733,9 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     function stop(s: Session, animate: boolean): void {
       session.current = null;
       s.detach();
+      s.ghost?.remove();
+      s.ghost = null;
+      s.foreign?.member.showIncoming(null, "");
       if (s.frame !== null) cancelAnimationFrame(s.frame);
       if (s.mode === "pointer") {
         try {
@@ -742,6 +852,182 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       return `${labelsNow().reorderDropped(placement.index + 1, ids.length)} ${labelsNow().reorderLevel(placement.depth + 1)}`;
     }
 
+    /** The rows a drag into another table carries: the selected group, or the dragged row, in the data's order. */
+    function carried(s: Session): { id: string; original: T }[] {
+      const ids = new Set(s.group ? s.group.ids : [s.id]);
+      return latest.current.options.rows.filter((row) => ids.has(row.id));
+    }
+
+    /** Where in another table's data rows dropped at a gap land. */
+    function foreignIndex(foreign: ForeignDrop): number {
+      const rows = foreign.member.rows();
+      const target = foreignTarget(foreign);
+      if (!target) return rows.length;
+      const at = rows.findIndex((row) => row.id === target.id);
+      return target.position === "before" ? at : at + 1;
+    }
+
+    /**
+     * Enter foreign
+     *
+     * Moves a drag over another table of the group, at a gap: that table marks
+     * where the rows would land. A place its `canDrop` refuses is no target.
+     */
+    function enterForeign(s: Session, member: GroupMember, gap: number): void {
+      const ids = shownTopRows(member).map((row) => row.getAttribute("data-row-id")!);
+      const foreign: ForeignDrop = { member, ids, gap: clamp(gap, 0, ids.length) };
+      const rows = carried(s);
+      const fromTableId = latest.current.options.transfer!.tableId;
+      const accepted = member.accepts(rows.map((row) => row.original), rows.map((row) => row.id), fromTableId, foreignIndex(foreign));
+      if (s.foreign && s.foreign.member !== member) s.foreign.member.showIncoming(null, "");
+      if (!accepted) {
+        leaveForeign(s);
+        return;
+      }
+      s.foreign = foreign;
+      const announcement = labelsNow().reorderMoved(foreign.gap + 1, ids.length + rows.length);
+      member.showIncoming(foreignTarget(foreign), announcement);
+      dispatch({ type: "target", target: null, edgeId: null, announcement });
+    }
+
+    /** Takes a drag back from another table: its mark is cleared. */
+    function leaveForeign(s: Session): void {
+      if (!s.foreign) return;
+      s.foreign.member.showIncoming(null, "");
+      s.foreign = null;
+    }
+
+    /** Reports a drop into another table to both tables. */
+    function commitForeign(s: Session, foreign: ForeignDrop): string {
+      const { rows: own, transfer } = latest.current.options;
+      const moving = carried(s);
+      const movingIds = new Set(moving.map((row) => row.id));
+      const theirs = foreign.member.rows();
+      const index = foreignIndex(foreign);
+      const target = foreignTarget(foreign);
+      const fromData = own.filter((row) => !movingIds.has(row.id)).map((row) => row.original);
+      const toData = [...theirs.slice(0, index).map((row) => row.original), ...moving.map((row) => row.original), ...theirs.slice(index).map((row) => row.original)];
+      const shared = {
+        rows: moving.map((row) => row.original),
+        rowIds: moving.map((row) => row.id),
+        from: { tableId: transfer!.tableId, data: fromData },
+        to: {
+          tableId: foreign.member.tableId,
+          data: toData as T[],
+          index,
+          target: target ? ((theirs.find((row) => row.id === target.id)?.original ?? null) as T | null) : null,
+          targetId: target?.id ?? null,
+          position: target?.position ?? ("before" as const),
+        },
+      };
+      transfer!.onRowTransfer?.({ ...shared, data: fromData });
+      foreign.member.receive({ ...shared, data: toData } as RowTransfer<unknown>);
+      return labelsNow().reorderDropped(index + 1, toData.length);
+    }
+
+    /** Whether a drag in its own table is at the last place it can take. */
+    function atEnd(s: Session): boolean {
+      if (s.group) return s.group.gap === s.group.rest.length;
+      return (s.target ? landingIndex(s.ids, s.id, s.target) : s.ids.indexOf(s.id)) === s.ids.length - 1;
+    }
+
+    /** Whether a drag in its own table is at the first place it can take. */
+    function atStart(s: Session): boolean {
+      if (s.group) return s.group.gap === 0;
+      return (s.target ? landingIndex(s.ids, s.id, s.target) : s.ids.indexOf(s.id)) === 0;
+    }
+
+    /** Draws a drag in its own table again, after it came back from another table. */
+    function redrawOwn(s: Session): void {
+      if (s.reduced) return;
+      const offsets = s.group ? groupOffsets(s, s.group, null) : targetOffsets(s, s.target);
+      applyOffsets(s.parent, offsets, s.moving, true);
+    }
+
+    /**
+     * Track foreign
+     *
+     * Follows a pointer out of its table into another table of the reorder
+     * group, and back. Only top-level rows move between tables.
+     *
+     * @returns Whether the drag is over another table now.
+     */
+    function trackForeign(s: Session): boolean {
+      const { transfer } = latest.current.options;
+      if (!transfer || s.parentId !== null || s.across) return false;
+      const box = s.parent.getBoundingClientRect();
+      const inside = s.clientX >= box.left && s.clientX <= box.right && s.clientY >= box.top && s.clientY <= box.bottom;
+      const member = inside ? null : memberAt(transfer.group, s.clientX, s.clientY, latest.current.instructionsId);
+      if (!member) {
+        leaveForeign(s);
+        return false;
+      }
+      const rows = shownTopRows(member);
+      const ids = rows.map((row) => row.getAttribute("data-row-id")!);
+      const hit = dropTargetAt(
+        rows.map((row, index) => {
+          const rect = row.getBoundingClientRect();
+          return { id: ids[index]!, top: rect.top, bottom: rect.bottom };
+        }),
+        s.clientY,
+      );
+      const index = hit ? ids.indexOf(hit.id) : -1;
+      const gap = !hit || index < 0 ? ids.length : hit.position === "before" ? index : index + 1;
+      if (s.foreign?.member !== member || s.foreign.gap !== gap) enterForeign(s, member, gap);
+      return s.foreign !== null;
+    }
+
+    /**
+     * Step foreign
+     *
+     * The keyboard across tables: past the last place of a table, the next
+     * table of the group; before its first, the previous one.
+     *
+     * @returns Whether the step was taken here.
+     */
+    function stepForeign(s: Session, direction: -1 | 1): boolean {
+      const { transfer } = latest.current.options;
+      if (!transfer || s.parentId !== null || s.across) return false;
+      const members = membersOf(transfer.group);
+      const home = latest.current.instructionsId;
+      if (s.foreign) {
+        const { member, gap, ids } = s.foreign;
+        const next = gap + direction;
+        if (next >= 0 && next <= ids.length) {
+          enterForeign(s, member, next);
+        } else {
+          const neighbour = members[members.indexOf(member) + direction];
+          if (!neighbour) return true;
+          if (neighbour.key === home) {
+            leaveForeign(s);
+            redrawOwn(s);
+            dispatch({
+              type: "target",
+              target: s.target,
+              edgeId: edgeOf(s, s.target),
+              announcement: labelsNow().reorderMoved(atEnd(s) ? s.ids.length : 1, s.ids.length),
+            });
+          } else {
+            enterForeign(s, neighbour, direction === 1 ? 0 : shownTopRows(neighbour).length);
+          }
+        }
+        const foreign = s.foreign as ForeignDrop | null;
+        const target = foreign && foreignTarget(foreign);
+        if (foreign && target) {
+          shownTopRows(foreign.member)
+            .find((row) => row.getAttribute("data-row-id") === target.id)
+            ?.scrollIntoView?.({ block: "nearest" });
+        }
+        return true;
+      }
+      if (!(direction === 1 ? atEnd(s) : atStart(s))) return false;
+      const neighbour = members[members.findIndex((member) => member.key === home) + direction];
+      if (!neighbour) return false;
+      if (!s.reduced) applyOffsets(s.parent, new Map(), s.moving, true);
+      enterForeign(s, neighbour, direction === 1 ? 0 : shownTopRows(neighbour).length);
+      return true;
+    }
+
     /** Reports a group drop: the group put together, in the data's order, at its gap. */
     function commitGroup(s: Session, group: GroupDrag): string {
       const { rows: top, tree, onRowOrderChange } = latest.current.options;
@@ -792,6 +1078,13 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     function commit(): void {
       const s = session.current;
       if (!s) return;
+      if (s.foreign) {
+        const foreign = s.foreign;
+        stop(s, true);
+        const announcement = commitForeign(s, foreign);
+        dispatch({ type: "end", announcement });
+        return;
+      }
       if (s.group) {
         const group = s.group;
         stop(s, true);
@@ -872,8 +1165,9 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       const levels = rects.map(({ id }) => tree?.levelOf(id) ?? { id, parentId: null, depth: 0 });
       const across = Boolean(acrossParents && tree && setSubRows);
       const blocks = across ? flatBlocks(levels, rects, rowId) : siblingBlocks(levels, rects, rowId);
-      // Not rendered, or an only child: nothing to move among.
-      if (blocks.length < 2) return null;
+      // Not rendered, or an only child: nothing to move among, unless another table of a group can take it.
+      const canLeave = Boolean(latest.current.options.transfer) && levels.find((level) => level.id === rowId)?.parentId === null;
+      if (blocks.length < (canLeave ? 1 : 2)) return null;
       const ids = blocks.map((block) => block.id);
       const own = blocks[ids.indexOf(rowId)]!;
       const ownLevel = levels.find((level) => level.id === rowId)!;
@@ -886,6 +1180,9 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
 
       const s: Session = {
         group: grouped ? { ids: groupIds, rest: groupRest, gap: groupGap, ownGap: groupGap } : null,
+        foreign: null,
+        ghost: null,
+        grab: 0,
         across: across
           ? {
               rest: levels.filter((level) => !own.ids.includes(level.id)),
@@ -942,6 +1239,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     /** Follows the pointer: the target now, the transform on the next frame. */
     function track(s: Session): void {
       s.dirty = true;
+      if (trackForeign(s)) return;
       const { across, group } = s;
       if (group) {
         // The height picks the gap among the other rows, at rest.
@@ -982,6 +1280,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       s.clientY = event.clientY;
       s.clientX = event.clientX;
       s.startX = event.clientX;
+      s.grab = event.clientY - (handle.closest("[data-row-id]")?.getBoundingClientRect().top ?? event.clientY);
       s.startY = event.clientY - contentOrigin(s.area);
       try {
         handle.setPointerCapture?.(event.pointerId);
@@ -999,13 +1298,13 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
         if (e.pointerId !== s.pointerId) return;
         s.clientY = e.clientY;
         s.clientX = e.clientX;
-        if (releasedOffRows(s, e.clientX, e.clientY)) {
+        if (!s.foreign && releasedOffRows(s, e.clientX, e.clientY)) {
           cancel();
           return;
         }
         track(s);
         // Across parents a sideways move alone is a move too.
-        if (s.group || (s.across ? s.across.placement : s.target)) commit();
+        if (s.foreign || s.group || (s.across ? s.across.placement : s.target)) commit();
         else cancel();
       };
       const onCancel = (e: Event) => {
@@ -1043,6 +1342,7 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     }
 
     function step(s: Session, direction: -1 | 1): void {
+      if (stepForeign(s, direction)) return;
       if (s.group) {
         const group = s.group;
         group.gap = clamp(group.gap + direction, 0, group.rest.length);
@@ -1169,6 +1469,31 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
     return { onPointerDown, onKeyDown, onBlur, abandon, relocate, stop };
   }, []);
 
+  /** A table of a reorder group takes part in the group: other tables' drags can find it and drop into it. */
+  const transferGroup = options.transfer?.group;
+  useEffect(() => {
+    if (!transferGroup) return;
+    return joinGroup(transferGroup, {
+      key: instructionsId,
+      get tableId() {
+        return latest.current.options.transfer?.tableId ?? instructionsId;
+      },
+      body: () => document.querySelector<HTMLElement>(`[data-reorder-table="${instructionsId}"]`),
+      rows: () => latest.current.options.rows,
+      accepts: (rows, rowIds, fromTableId, index) => {
+        const { canDrop } = latest.current.options;
+        return (
+          !canDrop ||
+          rows.every((row, n) =>
+            canDrop({ row: row as T, rowId: rowIds[n]!, parent: null, parentId: null, index: index + n, fromTableId }),
+          )
+        );
+      },
+      showIncoming: (target, announcement) => dispatch({ type: "incoming", target, announcement }),
+      receive: (transfer) => latest.current.options.transfer?.onRowTransfer?.(transfer as RowTransfer<T>),
+    });
+  }, [transferGroup, instructionsId]);
+
   /**
    * A drag is cancelled when the rows change under it (they were measured at
    * the start), when its row is no longer rendered, or when the table turned
@@ -1268,7 +1593,14 @@ export function useRowReorder<T>(options: UseRowReorderOptions<T>): RowReorderMo
       if (target?.id === rowId) attributes["data-drop-position"] = target.position;
       // "inside" draws its line under the new parent, as "after" does.
       if (target && edgeId === rowId) attributes["data-drop-edge"] = target.position === "before" ? "before" : "after";
+      const { incoming } = state;
+      if (!target && incoming?.id === rowId) {
+        attributes["data-drop-incoming"] = "";
+        attributes["data-drop-position"] = incoming.position;
+        attributes["data-drop-edge"] = incoming.position === "before" ? "before" : "after";
+      }
       return attributes;
     },
+    getBodyProps: () => (options.transfer ? { "data-reorder-table": instructionsId } : NO_BODY_PROPS),
   };
 }

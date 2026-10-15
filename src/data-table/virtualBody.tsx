@@ -1,7 +1,8 @@
 import type { RowData } from "@tanstack/react-table";
 import { useEffect, useMemo, type ReactNode } from "react";
 import { defaultRangeExtractor, type UseVirtualizer, type VirtualRange } from "../shared/virtualizer";
-import { DataTableRowView, DataTableStatusRows, useColumnSpan } from "./parts";
+import { DataTableRowView, DataTableStatusRows, mergeProps, useColumnSpan } from "./parts";
+import type { SectionSlotProps } from "./slots/types";
 import { useDataTableContext } from "./slots/context";
 
 /**
@@ -164,7 +165,7 @@ export function DataTableVirtualBody<T extends RowData>({
   }
 
   return (
-    <C.Body {...slotProps.body}>
+    <C.Body {...mergeProps(reorder.getBodyProps() as SectionSlotProps, slotProps.body)}>
       {status === "ready" ? (
         <>
           {body}

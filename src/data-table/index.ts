@@ -40,6 +40,7 @@ export type { UseDataTableOptions, DataTableModel, DataTableStatus } from "./cor
 export type { ReorderGeometry, RowReorderAttributes, RowReorderModel } from "./core/useRowReorder";
 export { moveItem } from "./core/reorder";
 export { moveInTree } from "./core/reorder";
+export type { RowTransfer } from "./core/reorderGroups";
 export type { DropPlace, DropPosition, Placement, ReorderWhileSorted, RowMove, RowOrderChange, TreeNode } from "./core/reorder";
 
 export type {

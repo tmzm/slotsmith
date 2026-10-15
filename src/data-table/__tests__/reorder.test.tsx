@@ -1,10 +1,11 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import axe from "axe-core";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DataTable, resetProviderWarnings, type DataTableProps } from "../DataTable";
 import type { DataTableColumnDef } from "../core/features";
 import type { RowOrderChange } from "../core/reorder";
+import type { RowTransfer } from "../core/reorderGroups";
 import { bodyRows, columns, renderTable, users, type User } from "./builders";
 
 beforeEach(() => {
@@ -438,5 +439,146 @@ describe("dragging several selected rows", () => {
     fireEvent.keyDown(handles()[0]!, { key: " " });
     expect(onMove.mock.calls[0]![0]).toMatchObject({ rowIds: ["u1"] });
     expect(names()).toEqual(["User 02", "User 01", "User 03", "User 04", "User 05"]);
+  });
+});
+
+describe("dragging rows between tables of a reorder group", () => {
+  /** Two tables in one group, each storing what a transfer gives it. */
+  function Board({
+    todo: firstTodo = users(3),
+    done: firstDone = users(2, 10),
+    onTransfer,
+    canDropDone,
+  }: {
+    todo?: User[];
+    done?: User[];
+    onTransfer?: (table: string, transfer: RowTransfer<User>) => void;
+    canDropDone?: DataTableProps<User>["canDrop"];
+  }) {
+    const [todo, setTodo] = useState(firstTodo);
+    const [done, setDone] = useState(firstDone);
+    return (
+      <>
+        <DataTable<User>
+          data={todo}
+          columns={columns}
+          enableRowReorder
+          enablePagination={false}
+          reorderGroup="board"
+          reorderTableId="todo"
+          onRowOrderChange={(change) => setTodo(change.data)}
+          onRowTransfer={(transfer) => {
+            onTransfer?.("todo", transfer);
+            setTodo(transfer.data);
+          }}
+          aria-label="Todo"
+        />
+        <DataTable<User>
+          data={done}
+          columns={columns}
+          enableRowReorder
+          enablePagination={false}
+          reorderGroup="board"
+          reorderTableId="done"
+          canDrop={canDropDone}
+          onRowOrderChange={(change) => setDone(change.data)}
+          onRowTransfer={(transfer) => {
+            onTransfer?.("done", transfer);
+            setDone(transfer.data);
+          }}
+          aria-label="Done"
+        />
+      </>
+    );
+  }
+
+  const tableNames = (index: number) => {
+    const body = screen.getAllByRole("rowgroup").filter((group) => group.hasAttribute("data-reorder-table"))[index]!;
+    return within(body).queryAllByRole("row").map((row) => within(row).queryByText(/^User \d+$/)?.textContent ?? "");
+  };
+
+  it("moves a row into the next table with the keyboard, past its last row", () => {
+    const onTransfer = vi.fn();
+    render(<Board onTransfer={onTransfer} />);
+    const handle = handles()[2]!;
+    act(() => handle.focus());
+    fireEvent.keyDown(handle, { key: " " });
+    // Already the last row: the next step goes into Done, above its first row.
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
+    expect(tableNames(1)[0]).toBe("User 10");
+    const doneRows = screen.getAllByRole("rowgroup").filter((group) => group.hasAttribute("data-reorder-table"))[1]!;
+    expect(within(doneRows).getAllByRole("row")[0]).toHaveAttribute("data-drop-incoming");
+    fireEvent.keyDown(handle, { key: " " });
+
+    expect(tableNames(0)).toEqual(["User 01", "User 02"]);
+    expect(tableNames(1)).toEqual(["User 03", "User 10", "User 11"]);
+    expect(onTransfer).toHaveBeenCalledTimes(2);
+    const [, transfer] = onTransfer.mock.calls[0]!;
+    expect(transfer).toMatchObject({ rowIds: ["u3"], from: { tableId: "todo" }, to: { tableId: "done", index: 0, targetId: "u10", position: "before" } });
+  });
+
+  it("comes back to its own table with the keyboard", () => {
+    const onTransfer = vi.fn();
+    render(<Board onTransfer={onTransfer} />);
+    const handle = handles()[2]!;
+    act(() => handle.focus());
+    fireEvent.keyDown(handle, { key: " " });
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
+    fireEvent.keyDown(handle, { key: "ArrowUp" });
+    fireEvent.keyDown(handle, { key: "ArrowUp" });
+    fireEvent.keyDown(handle, { key: " " });
+    expect(onTransfer).not.toHaveBeenCalled();
+    expect(tableNames(0)).toEqual(["User 01", "User 03", "User 02"]);
+  });
+
+  it("does not drop where the other table's canDrop refuses", () => {
+    const onTransfer = vi.fn();
+    render(<Board onTransfer={onTransfer} canDropDone={(move) => move.fromTableId !== "todo"} />);
+    const handle = handles()[2]!;
+    act(() => handle.focus());
+    fireEvent.keyDown(handle, { key: " " });
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
+    fireEvent.keyDown(handle, { key: " " });
+    expect(onTransfer).not.toHaveBeenCalled();
+    expect(tableNames(1)).toEqual(["User 10", "User 11"]);
+  });
+
+  it("drops into an empty table, and lets a table's only row leave", () => {
+    const onTransfer = vi.fn();
+    render(<Board todo={users(1)} done={[]} onTransfer={onTransfer} />);
+    const handle = handles()[0]!;
+    expect(handle).not.toBeDisabled();
+    act(() => handle.focus());
+    fireEvent.keyDown(handle, { key: " " });
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
+    fireEvent.keyDown(handle, { key: " " });
+    expect(onTransfer.mock.calls[0]![1]).toMatchObject({ to: { tableId: "done", index: 0, targetId: null }, from: { data: [] } });
+    expect(tableNames(1)).toEqual(["User 01"]);
+  });
+
+  it("drops a row into another table with the pointer, a floating copy following it", async () => {
+    const onTransfer = vi.fn();
+    render(<Board onTransfer={onTransfer} />);
+    const [todoBody, doneBody] = screen.getAllByRole("rowgroup").filter((group) => group.hasAttribute("data-reorder-table"));
+    // Todo's body spans 0-120, Done's 200-280, each row 40 tall.
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const box = (top: number, height: number) => ({ top, bottom: top + height, height, left: 0, right: 300, width: 300, x: 0, y: top, toJSON: () => ({}) });
+      if (this === todoBody) return box(0, 120);
+      if (this === doneBody) return box(200, 80);
+      const row = this.closest("[data-row-id]");
+      if (row && row.parentElement) {
+        const index = Array.from(row.parentElement.children).indexOf(row);
+        return box((row.parentElement === doneBody ? 200 : 0) + index * 40, 40);
+      }
+      return box(0, 0);
+    });
+    const handle = handles()[0]!;
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 1, clientX: 10, clientY: 20 });
+    fireEvent.pointerMove(window, { pointerId: 1, clientX: 10, clientY: 270 });
+    await waitFor(() => expect(document.querySelector("[data-reorder-ghost]")).not.toBeNull());
+    fireEvent.pointerUp(window, { pointerId: 1, clientX: 10, clientY: 270 });
+    expect(onTransfer.mock.calls[0]![1]).toMatchObject({ rowIds: ["u1"], to: { tableId: "done", index: 2, targetId: "u11", position: "after" } });
+    expect(tableNames(1)).toEqual(["User 10", "User 11", "User 01"]);
+    expect(document.querySelector("[data-reorder-ghost]")).toBeNull();
   });
 });

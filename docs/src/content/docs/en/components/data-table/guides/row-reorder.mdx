@@ -35,6 +35,15 @@ Drag Design below Build: its three open sub-rows travel with it. Drag a sub-row 
 
 With [row selection](../sorting-and-selection/) on, dragging a selected row drags every selected sibling with it. The selected rows close up under the dragged one as it is lifted, the other rows make room, and the group lands together, in its own order, at the gap it is dropped in; a scattered selection dropped where it started is put together there. `rows` and `rowIds` list the rows that moved, and `data` and `siblings` hold the new order as usual. Dragging a row that is not selected moves it alone. A group moves among the dragged row's siblings, and only the selected rows that are shown move with it.
 
+## Between tables
+
+Tables that share a [`reorderGroup`](../../api/#props) exchange rows: drag a row out of one table and drop it in another. While the pointer is over the other table, a copy of the row follows it and a line marks where it would land. From the keyboard, a lifted row moves into the next table past its own table's last row, and into the previous one before its first. A selected group moves together.
+
+{/* Reserved height: two short tables and the line under them. */}
+<Demo name="data-table/row-reorder-between" height="26rem" fallback />
+
+Each table needs `enableRowReorder`, and `reorderTableId` names it in transfers. A drop calls [`onRowTransfer`](../../api/#props) on both tables with the same `RowTransfer`: `rows` and `rowIds` moved, `from` is the table they left with its rows without them, `to` the table they joined with its rows with them, the `index` they landed at and the `target` they were dropped next to. `data` is always the receiving table's own new rows, so each table stores `transfer.data`. The receiving table's `canDrop` sees `fromTableId` and can refuse rows from other tables. A table's only row can be dragged out, and an empty table takes rows. Only top-level rows move between tables.
+
 ## Moving across parents
 
 With [`reorderAcrossParents`](../../api/#props), a row of a tree can move to another parent and another depth. Drag it up or down to pick the gap between two rows, and sideways to pick the depth: one indent to the right makes it a child of the row above, one to the left takes it out a level. From the keyboard, the left and right arrow keys do the same while a row is lifted. The rows make room as before, and the lifted row is drawn at its new depth.
@@ -97,10 +106,5 @@ The handle is the [`DragHandle`](../../api/#slot-DragHandle) slot. A replacement
 A drop while a column is sorted means what it shows: the order on screen, with the row moved, becomes the new `data`, and the sort is cleared through `onSortingChange`, so the rows stay where they were dropped. With [`reorderWhileSorted`](../../api/#props) set to `"block"`, the handles are disabled instead until the sort is cleared. A table that is only ordered by hand can turn sorting off, as both demos do with `enableSorting: false`. With pagination, a row moves within its page.
 
 A drag survives its rows being re-created: when a custom [`Row`](../../api/#slot-Row) slot is defined during render, React makes every row anew on each render, and the drag finds its row and handle again (a keyboard drag keeps focus on the handle). It is still slow, and it resets any state inside the rows, so define the slot once, outside the component that renders the table; a development warning says so.
-
-<Note kind="limitation">
-- `VirtualDataTable` ignores row reorder. See [virtual rows](../virtual-rows/).
-- No dragging between tables.
-</Note>
 
 To reorder rows in markup of your own, the [headless hook](../headless-hook/) returns the same engine as `reorder`.

@@ -143,6 +143,8 @@ const ShadcnRow = ({ className, ...props }: RowSlotProps) => (
       "[&[data-dragging]:has(+[data-dragging-child])]:shadow-none [&[data-dragging-child]:not(:has(+[data-dragging-child]))]:shadow-lg",
       "motion-reduce:shadow-none! motion-reduce:data-dragging:*:opacity-50 motion-reduce:data-dragging-child:*:opacity-50",
       "motion-reduce:data-[drop-edge=before]:*:shadow-[inset_0_2px_0_0_var(--primary)] motion-reduce:data-[drop-edge=after]:*:shadow-[inset_0_-2px_0_0_var(--primary)]",
+      // Rows dragged in from another table of a reorder group: a line where they would land.
+      "data-drop-incoming:data-[drop-edge=before]:*:shadow-[inset_0_2px_0_0_var(--primary)] data-drop-incoming:data-[drop-edge=after]:*:shadow-[inset_0_-2px_0_0_var(--primary)]",
       className,
     )}
     {...props}

@@ -660,6 +660,15 @@
   pointer-events: none;
 }
 
+/** Rows dragged in from another table of a reorder group: a line where they would land. */
+.sdt__body .sdt__row[data-drop-incoming][data-drop-edge="before"] > * {
+  box-shadow: inset 0 2px 0 0 var(--_sdt-accent);
+}
+
+.sdt__body .sdt__row[data-drop-incoming][data-drop-edge="after"] > * {
+  box-shadow: inset 0 -2px 0 0 var(--_sdt-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   /**
    * Without motion nothing slides: the lifted rows are dimmed in place, and a

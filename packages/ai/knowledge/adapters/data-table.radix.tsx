@@ -104,6 +104,8 @@ ${s} tbody > tr[data-clickable] { cursor: pointer; }
 ${lifted}, ${child} { position: relative; z-index: 1; }
 ${lifted} > td, ${child} > td { background-color: var(--color-panel-solid); background-image: linear-gradient(var(--gray-a3), var(--gray-a3)); }
 ${lifted} { box-shadow: var(--shadow-4); }
+${s} tbody > tr[data-drop-incoming][data-drop-edge=before] > td { box-shadow: inset 0 2px 0 0 var(--accent-9); }
+${s} tbody > tr[data-drop-incoming][data-drop-edge=after] > td { box-shadow: inset 0 -2px 0 0 var(--accent-9); }
 ${lifted}:has(+ tr[data-dragging-child]) { box-shadow: none; }
 ${child}:not(:has(+ tr[data-dragging-child])) { box-shadow: var(--shadow-4); }
 [dir=rtl] ${s} [data-flip], ${s}[dir=rtl] [data-flip] { transform: scaleX(-1); }

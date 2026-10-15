@@ -69,6 +69,9 @@ const ChakraBody = (props: SectionSlotProps) => <Table.Body {...props} />;
 const rowDragCss = {
   "&[data-dragging], &[data-dragging-child]": { position: "relative", zIndex: 1, "& > td": { bg: "bg.muted" } },
   "&[data-dragging]": { boxShadow: "md" },
+  // Rows dragged in from another table of a reorder group: a line where they would land.
+  "&[data-drop-incoming][data-drop-edge=before] > td": { boxShadow: "inset 0 2px 0 0 {colors.colorPalette.solid}" },
+  "&[data-drop-incoming][data-drop-edge=after] > td": { boxShadow: "inset 0 -2px 0 0 {colors.colorPalette.solid}" },
   "&[data-dragging]:has(+ [data-dragging-child])": { boxShadow: "none" },
   "&[data-dragging-child]:not(:has(+ [data-dragging-child]))": { boxShadow: "md" },
   _motionReduce: {

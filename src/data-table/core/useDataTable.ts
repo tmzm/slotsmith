@@ -9,7 +9,7 @@ import {
   type TableOptions,
   type Updater,
 } from "@tanstack/react-table";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createDevWarnings } from "../../shared/dev";
 import {
   dataTableFeatures,
@@ -19,6 +19,7 @@ import {
   type DataTableRow,
 } from "./features";
 import { canReorder, type ReorderWhileSorted, type RowMove, type RowOrderChange } from "./reorder";
+import type { RowTransfer } from "./reorderGroups";
 import type { DataTableLabels } from "../slots/types";
 import { defaultReorderLabels, type ReorderLabels } from "./reorderLabels";
 import { fromRowSelection, stepBackPageIndex, toRowSelection } from "./selection";
@@ -172,6 +173,21 @@ export interface UseDataTableOptions<T extends RowData> {
   setSubRows?: (row: T, subRows: T[]) => T;
   /** Whether a dragged row may land at a place; places it may not are skipped while dragging. */
   canDrop?: (move: RowMove<T>) => boolean;
+  /**
+   * Tables with the same `reorderGroup` exchange rows: a top-level row (or a
+   * selected group of them) dragged out of one table can be dropped into
+   * another, by pointer, or from the keyboard past the first or last row.
+   * Each table needs `enableRowReorder`.
+   */
+  reorderGroup?: string;
+  /** This table's name in transfers between the tables of a reorder group. Defaults to a generated id. */
+  reorderTableId?: string;
+  /**
+   * Called on both tables when rows move between them: `transfer.data` is
+   * this table's new rows (without the rows in the table they left, with them
+   * in the one they joined). Store it, as with `onRowOrderChange`.
+   */
+  onRowTransfer?: (transfer: RowTransfer<T>) => void;
   /**
    * Text for a table rendered with this hook alone. The hook reads the reorder
    * keys (the handle's name, its instructions and the announcements); any key
@@ -482,6 +498,7 @@ export function useDataTable<T extends RowData>(
   const reorderable = canReorder({ enabled: enableRowReorder, rowCount: Infinity });
   const coreRowModel = table.getCoreRowModel();
   const whileSorted = options.reorderWhileSorted ?? "clearSort";
+  const generatedTableId = useId();
   const sorted = sorting.length > 0;
   /**
    * The order a drop moves rows in: the data's own order, or, while a sort
@@ -513,7 +530,13 @@ export function useDataTable<T extends RowData>(
   const engineLabels = internals.labels ?? headlessLabels!;
 
   const reorder = useRowReorder<T>({
-    enabled: canReorder({ enabled: enableRowReorder, rowCount: visibleRowCount, sorted, whileSorted }),
+    // In a reorder group even a single row can be dragged, out to another table.
+    enabled: canReorder({
+      enabled: enableRowReorder,
+      rowCount: options.reorderGroup ? Math.max(visibleRowCount, 2) : visibleRowCount,
+      sorted,
+      whileSorted,
+    }),
     visibleIds: useMemo(() => visibleRows.map((row) => row.id), [visibleRows]),
     rows: orderModel.rows,
     tree: reorderTree,
@@ -528,6 +551,9 @@ export function useDataTable<T extends RowData>(
     selectedIds: useMemo(() => new Set(Object.keys(rowSelection).filter((id) => rowSelection[id])), [rowSelection]),
     setSubRows: options.setSubRows,
     canDrop: options.canDrop,
+    transfer: options.reorderGroup
+      ? { group: options.reorderGroup, tableId: options.reorderTableId ?? generatedTableId, onRowTransfer: options.onRowTransfer }
+      : undefined,
   });
 
   /** Moving across parents builds a new tree, which needs both halves of it: say so while building. */

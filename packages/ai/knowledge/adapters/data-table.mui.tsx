@@ -83,6 +83,9 @@ const rowDragSx: SxProps<Theme> = (theme) => ({
     },
   },
   "&[data-dragging]": { boxShadow: theme.shadows[4] },
+  // Rows dragged in from another table of a reorder group: a line where they would land.
+  "&[data-drop-incoming][data-drop-edge=before] > td": { boxShadow: `inset 0 2px 0 0 ${theme.palette.primary.main}` },
+  "&[data-drop-incoming][data-drop-edge=after] > td": { boxShadow: `inset 0 -2px 0 0 ${theme.palette.primary.main}` },
   "&[data-dragging]:has(+ [data-dragging-child])": { boxShadow: "none" },
   "&[data-dragging-child]:not(:has(+ [data-dragging-child]))": { boxShadow: theme.shadows[4] },
   "@media (prefers-reduced-motion: reduce)": {

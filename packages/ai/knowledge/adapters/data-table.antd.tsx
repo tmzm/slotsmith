@@ -63,7 +63,8 @@ import {
  * (`data-dragging-child`) are drawn above the rows they pass, with opaque
  * cells so those rows never show through, and one shadow under the block.
  * With reduced motion nothing slides: the block is dimmed and a line on
- * `data-drop-edge` shows where it will land.
+ * `data-drop-edge` shows where it will land. Rows dragged in from another
+ * table of a reorder group (`data-drop-incoming`) get that line too.
  *
  * In spreadsheet mode the body cells carry their part in the selection: the
  * active cell and the one being edited get a ring in the primary colour, the
@@ -98,6 +99,8 @@ ${s} tbody > tr[data-clickable] { cursor: pointer; }
 ${lifted}, ${child} { position: relative; z-index: 1; }
 ${lifted} > td, ${child} > td { background-color: ${token.colorBgContainer}; background-image: linear-gradient(${token.controlItemBgHover}, ${token.controlItemBgHover}); }
 ${lifted} { box-shadow: ${token.boxShadowSecondary}; }
+${s} tbody > tr[data-drop-incoming][data-drop-edge=before] > td { box-shadow: inset 0 2px 0 0 ${token.colorPrimary}; }
+${s} tbody > tr[data-drop-incoming][data-drop-edge=after] > td { box-shadow: inset 0 -2px 0 0 ${token.colorPrimary}; }
 ${lifted}:has(+ tr[data-dragging-child]) { box-shadow: none; }
 ${child}:not(:has(+ tr[data-dragging-child])) { box-shadow: ${token.boxShadowSecondary}; }
 ${s} tbody > tr > td[data-column-id] { position: relative; cursor: cell; outline: none; user-select: none; scroll-margin-top: 3em; }

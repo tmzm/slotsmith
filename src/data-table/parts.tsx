@@ -12,7 +12,7 @@ import {
 import { classes } from "./classes";
 import { cx } from "./slots/fallbacks";
 import { GridCell, SpreadsheetAnnouncer } from "./spreadsheet";
-import type { DragHandleSlotProps, TableSlotProps } from "./slots/types";
+import type { DragHandleSlotProps, SectionSlotProps, TableSlotProps } from "./slots/types";
 
 type AnyProps = HTMLAttributes<HTMLElement> & Record<string, unknown>;
 
@@ -636,9 +636,9 @@ export function DataTableStatusRows() {
  * ```
  */
 export function DataTableBody() {
-  const { table, status, components: C, slotProps } = useDataTableContext();
+  const { table, status, components: C, slotProps, reorder } = useDataTableContext();
   return (
-    <C.Body {...slotProps.body}>
+    <C.Body {...mergeProps(reorder.getBodyProps() as SectionSlotProps, slotProps.body)}>
       {status === "ready" ? (
         table.getRowModel().rows.map((row) => <DataTableRowView key={row.id} row={row} />)
       ) : (

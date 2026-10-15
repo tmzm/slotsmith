@@ -83,6 +83,8 @@ export interface RowMove<T> {
   parentId: string | null;
   /** Its index among the parent's children. */
   index: number;
+  /** For a row dragged in from another table of the reorder group: that table's `reorderTableId`. */
+  fromTableId?: string;
 }
 
 /**

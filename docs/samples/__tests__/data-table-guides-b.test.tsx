@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import HeadlessHook from "@samples/data-table/headless-hook";
 import RowReorder from "@samples/data-table/row-reorder";
 import RowReorderAcross from "@samples/data-table/row-reorder-across";
+import RowReorderBetween from "@samples/data-table/row-reorder-between";
 import RowReorderTree from "@samples/data-table/row-reorder-tree";
 import TreeRows from "@samples/data-table/tree-rows";
 import VirtualRows from "@samples/data-table/virtual-rows";
@@ -171,6 +172,27 @@ describe("data-table guide: row reorder across parents", () => {
     expect(ids()).toEqual(["t1", "t1.1", "t1.2", "t2", "t2.1", "t2.2", "t3"]);
     expect(bodyRows(container)[2]!.getAttribute("data-depth")).toBe("0");
     expect(screen.getByText(/rowId: "t1.2", fromParentId: "t1", parentId: null, index: 1/)).toBeTruthy();
+    expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe("data-table guide: row reorder between tables", () => {
+  it("moves a card into the other table from the keyboard", () => {
+    const error = vi.spyOn(console, "error");
+    const { container } = render(<RowReorderBetween />);
+    const [backlog, inProgress] = Array.from(container.querySelectorAll<HTMLElement>("[data-reorder-table]"));
+    const ids = (body: HTMLElement) => Array.from(body.querySelectorAll("[data-row-id]")).map((row) => row.getAttribute("data-row-id"));
+    expect(ids(backlog!)).toEqual(["c1", "c2", "c3"]);
+
+    const handle = within(backlog!.querySelector<HTMLElement>('[data-row-id="c3"]')!).getByRole("button", { name: "Reorder row" });
+    act(() => handle.focus());
+    key(handle, " ");
+    key(handle, "ArrowDown");
+    key(handle, " ");
+
+    expect(ids(backlog!)).toEqual(["c1", "c2"]);
+    expect(ids(inProgress!)).toEqual(["c3", "c4"]);
+    expect(screen.getByText(/c3 from "backlog" to "in-progress" at 0/)).toBeTruthy();
     expect(error).not.toHaveBeenCalled();
   });
 });
