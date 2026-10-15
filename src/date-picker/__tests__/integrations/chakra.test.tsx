@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger, at } from "../builders";
 import { chakraDatePicker } from "./chakra/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itTypesADate, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Chakra wrapper
@@ -19,7 +19,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => (
 /**
  * Render Chakra date picker
  *
- * `<DatePicker>` with Chakra UI v3 parts inside `ChakraProvider`.
+ * `<DatePicker trigger="button">` with Chakra UI v3 parts inside `ChakraProvider`.
  *
  * @param props - The component's props.
  * @returns A user-event instance.
@@ -51,6 +51,7 @@ describe("Chakra UI v3", () => {
     expect(invalidStyle(trigger)).toContain("border-color: var(--chakra-colors-border-error)"),
   );
   itKeepsFocusOnAPickedDay(renderChakraDatePicker);
+  itTypesADate(renderChakraDatePicker);
 
   it("renders the calendar with Chakra's parts", async () => {
     const user = renderChakraDatePicker();

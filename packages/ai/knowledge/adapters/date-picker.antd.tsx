@@ -7,9 +7,9 @@
  * keeps its fallback.
  */
 import { CalendarOutlined, CloseCircleFilled, LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Flex, Typography, theme } from "antd";
+import { Button, Flex, Input, Typography, theme } from "antd";
 import type { GlobalToken } from "antd";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import type { DatePickerComponents } from "slotsmith/date-picker";
 
 /**
@@ -78,9 +78,12 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
    * while open, and the error border and ring of `status="error"` when the
    * value is invalid.
    */
-  Trigger: function AntTrigger({ style, ...props }) {
+  Trigger: function AntTrigger({ style, onFocus, onBlur, ...props }) {
     const { token } = theme.useToken();
-    const open = has(props, "data-open");
+    /** Focus anywhere in the frame, so the text field gets the ring Ant Design's `Input` shows. */
+    const [focused, setFocused] = useState(false);
+    const typing = (props as Record<string, unknown>)["data-trigger"] === "input";
+    const open = has(props, "data-open") || (typing && focused);
     const disabled = has(props, "data-disabled");
     const invalid = has(props, "data-invalid");
     const edge = invalid ? token.colorError : open ? token.colorPrimary : token.colorBorder;
@@ -103,14 +106,39 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
           border: `${token.lineWidth}px ${token.lineType} ${edge}`,
           borderRadius: token.borderRadius,
           boxShadow: open ? `0 0 0 ${token.controlOutlineWidth}px ${ring}` : undefined,
-          cursor: disabled ? "not-allowed" : "pointer",
+          cursor: disabled ? "not-allowed" : typing ? "text" : "pointer",
           transition: `all ${token.motionDurationMid}`,
           ...style,
+        }}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
         }}
         {...props}
       />
     );
   },
+
+  /** A borderless `Input`: the trigger frame holds the border and the ring. */
+  Input: ({ ref, style, ...props }) => (
+    <Input
+      variant="borderless"
+      ref={(input) => {
+        const node = input?.input ?? null;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      }}
+      style={{ flex: 1, minWidth: 0, padding: 0, ...style }}
+      {...props}
+    />
+  ),
+
+  /** A text `Button` with the calendar glyph. Its `type` is the button's look, so the HTML type goes in `htmlType`. */
+  Toggle: ({ type: _type, children, ...props }) => <Button type="text" htmlType="button" size="small" icon={children} {...props} />,
 
   /** The trigger text on one ellipsised line, in the placeholder colour while empty. */
   Value: function AntValue({ text, placeholder, empty }) {

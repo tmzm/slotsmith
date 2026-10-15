@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger, at } from "../builders";
 import { radixDatePicker } from "./radix/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itTypesADate, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Radix Themes wrapper
@@ -30,7 +30,7 @@ const RtlWrapper = ({ children }: { children: ReactNode }) => (
 /**
  * Render Radix Themes date picker
  *
- * `<DatePicker>` with Radix Themes parts inside `Theme`.
+ * `<DatePicker trigger="button">` with Radix Themes parts inside `Theme`.
  *
  * @param props - The component's props.
  * @param wrapper - The provider around it.
@@ -46,6 +46,7 @@ describe("Radix Themes v3", () => {
   failOnReactWarnings();
   itShowsTheInvalidState((props) => renderRadixDatePicker(props), (trigger) => expect(trigger).toHaveAttribute("data-accent-color", "red"));
   itKeepsFocusOnAPickedDay(renderRadixDatePicker);
+  itTypesADate(renderRadixDatePicker);
 
   it("renders the calendar with Radix primitives", async () => {
     const user = renderRadixDatePicker();

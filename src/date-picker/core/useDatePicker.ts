@@ -8,11 +8,14 @@ import {
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
   type FocusEvent,
   type KeyboardEvent,
+  type MouseEvent,
   type RefObject,
 } from "react";
 import { useControllableState } from "../../shared/useControllableState";
+import { createInputCodec, formatInput, parseInput } from "./inputText";
 import { createValueCodec, todayIn, type DateValueFormat } from "./valueFormat";
 import {
   addDays,
@@ -46,6 +49,15 @@ import type {
  * server, where layout effects only produce a warning.
  */
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/**
+ * Date picker trigger
+ *
+ * What opens the calendar: `"input"`, a text field a date can be typed
+ * into with a calendar button beside it, or `"button"`, one control that
+ * shows the formatted value.
+ */
+export type DatePickerTriggerKind = "input" | "button";
 
 /** How many years either side of the shown one the year list offers when no bounds are given. */
 const YEAR_SPAN = 10;
@@ -125,6 +137,16 @@ export interface UseDatePickerOptions<M extends DatePickerMode = DatePickerMode>
    * read as the day it falls on there. Defaults to the browser's own.
    */
   timeZone?: string;
+
+  /**
+   * What opens the calendar. `"input"`, the default, is a text field the
+   * date can be typed into, in the locale's numeric order (`MM/DD/YYYY` in
+   * en-US), with a calendar button beside it. `"button"` is one control that
+   * shows the formatted value and opens the calendar when pressed.
+   */
+  trigger?: DatePickerTriggerKind;
+  /** With the `"input"` trigger, focusing or clicking the text field opens the calendar too. Defaults to `false`. */
+  openOnFocus?: boolean;
 }
 
 /**
@@ -173,6 +195,15 @@ export interface DatePickerModel<M extends DatePickerMode = DatePickerMode> {
   open: boolean;
   /** Opens or closes it. Opening does nothing while disabled. */
   setOpen: (open: boolean) => void;
+
+  /** What opens the calendar: a text field with a calendar button, or one button. */
+  trigger: DatePickerTriggerKind;
+  /** The text field's text: what is being typed, else the value in the locale's numeric order. */
+  inputText: string;
+  /** The order a date is typed in, such as `"MM/DD/YYYY"`. */
+  inputPattern: string;
+  /** Moves focus to the text field or the trigger button, without opening the calendar. */
+  focusTrigger: () => void;
 
   /** The month on screen, as the 1st of that month. It is not the selection. */
   month: ISODate;
@@ -247,13 +278,17 @@ export interface DatePickerModel<M extends DatePickerMode = DatePickerMode> {
   ids: { root: string; trigger: string; popup: string; grid: string };
   /** The whole control, for the outside-click and focus-leaving checks. */
   rootRef: RefObject<HTMLElement | null>;
-  /** The trigger, which focus returns to when the popup closes. */
+  /** The text field or the trigger button: the element carrying `role="combobox"`, which focus returns to when the popup closes. */
   triggerRef: RefObject<HTMLElement | null>;
 
   /** Props for the `Root` part. */
   getRootProps: () => Record<string, unknown>;
-  /** Props for the `Trigger` part. */
+  /** Props for the `Trigger` part: the combobox button, or the frame around the text field. */
   getTriggerProps: () => Record<string, unknown>;
+  /** Props for the `Input` part, the text field of the `"input"` trigger. */
+  getInputProps: () => Record<string, unknown>;
+  /** Props for the `Toggle` part, the calendar button beside the text field. */
+  getToggleProps: () => Record<string, unknown>;
   /** Props for the `Popup` part. */
   getPopupProps: () => Record<string, unknown>;
   /** Props for the `Calendar` part, the `role="grid"` element. */
@@ -363,6 +398,8 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     disabled = false,
     invalid = false,
     onBlur,
+    trigger = "input",
+    openOnFocus = false,
   } = options;
   const closeOnSelect = options.closeOnSelect ?? mode === "single";
   const weekStartsOn = useMemo(
@@ -388,6 +425,14 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   /** Days are calendar days inside; the codec turns them into the app's own format at the edges. */
   const codec = useMemo(() => createValueCodec(valueFormat, timeZone), [valueFormat, timeZone]);
   const now = useCallback(() => todayIn(timeZone), [timeZone]);
+  /** The text field writes and reads days in the locale's numeric order. */
+  const inputCodec = useMemo(() => createInputCodec(locale), [locale]);
+  /** What is being typed into the text field, until it is read; `null` while the field shows the value. */
+  const [draft, setDraft] = useState<string | null>(null);
+  /** Set while the popup opens from the text field, so focus stays where the typing is. */
+  const keepFocus = useRef(false);
+  /** Set while focus goes back to the text field, so `openOnFocus` does not open the popup again. */
+  const returningFocus = useRef(false);
   const read = useCallback((text: ISODate | null | undefined) => (text ? codec.parse(text) : null), [codec]);
   const write = useCallback((day: ISODate) => codec.format(day), [codec]);
   const toInner = useCallback(
@@ -473,11 +518,17 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     [disabled, setOpenState],
   );
 
+  const focusTrigger = useCallback(() => {
+    returningFocus.current = true;
+    triggerRef.current?.focus();
+    returningFocus.current = false;
+  }, []);
+
   /** Closing after a pick or Escape hands focus back to the trigger, as a dialog should. */
   const closeAndReturnFocus = useCallback(() => {
     setOpen(false);
-    triggerRef.current?.focus();
-  }, [setOpen]);
+    focusTrigger();
+  }, [setOpen, focusTrigger]);
 
   /* ---------------------------------------------------------------- grid */
 
@@ -570,8 +621,10 @@ export function useDatePicker<M extends DatePickerMode = "single">(
       setFocusedDate(start);
       setMonthState(startOfMonth(clampDate(start, minDate, maxDate)));
       setRtl(isRightToLeft(rootRef.current));
-      setFocusRequest((count) => count + 1);
+      // Opened from the text field, focus stays there so the typing goes on.
+      if (!keepFocus.current) setFocusRequest((count) => count + 1);
     }
+    keepFocus.current = false;
     if (!open && wasOpen.current) setHoveredDate(null);
     wasOpen.current = open;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -594,6 +647,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     (date: ISODate) => {
       if (disabled || isDateDisabled(date)) return;
       setFocusedDate(date);
+      setDraft(null);
 
       if (mode === "multiple") {
         setValue((previous) => {
@@ -623,6 +677,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     if (disabled) return;
     setValue(empty);
     setHoveredDate(null);
+    setDraft(null);
     // `empty` is rebuilt every render but only its shape matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled, setValue, mode]);
@@ -634,6 +689,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
       const outerRange: DateRange = typeof preset === "string" ? { from: preset, to: preset } : preset;
       const asRange: DateRange = { from: read(outerRange.from) ?? undefined, to: read(outerRange.to) ?? undefined };
 
+      setDraft(null);
       let next: unknown;
       if (mode === "single") next = asRange.from ?? null;
       else if (mode === "range") next = { ...asRange };
@@ -707,6 +763,83 @@ export function useDatePicker<M extends DatePickerMode = "single">(
       }
     },
     [disabled, open, setOpen],
+  );
+
+  /* ---------------------------------------------------------- text field */
+
+  const shownText = useMemo(() => formatInput(mode, value, inputCodec), [mode, value, inputCodec]);
+
+  /**
+   * Reads what was typed. Days that can be picked become the value; text
+   * that is not a date, or names a blocked day, puts the value's own text
+   * back.
+   */
+  const commitDraft = useCallback(() => {
+    if (draft === null) return;
+    setDraft(null);
+    const typed = parseInput(mode, draft, inputCodec);
+    if (typed === undefined || formatInput(mode, typed, inputCodec) === shownText) return;
+    const days = toList(mode, typed);
+    if (days.some(isDateDisabled)) return;
+    setValue(typed as DatePickerValue<M>);
+    if (days[0]) {
+      setFocusedDate(days[0]);
+      setMonth(days[0]);
+    }
+  }, [draft, mode, inputCodec, shownText, isDateDisabled, setValue, setMonth]);
+
+  const openFromField = useCallback(() => {
+    if (open || disabled) return;
+    keepFocus.current = true;
+    setOpen(true);
+  }, [open, disabled, setOpen]);
+
+  /**
+   * The text field's keys, as the WAI-ARIA combobox pattern has them for a
+   * dialog popup: Down Arrow opens the calendar and moves into it, Enter
+   * reads what was typed, Escape closes the calendar, then drops the typing.
+   */
+  const onInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>) => {
+      if (disabled) return;
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        commitDraft();
+        if (open) setFocusRequest((count) => count + 1);
+        else setOpen(true);
+      } else if (event.key === "Enter") {
+        commitDraft();
+        if (open) {
+          event.preventDefault();
+          setOpen(false);
+        }
+      } else if (event.key === "Escape") {
+        if (open) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        } else if (draft !== null) {
+          event.preventDefault();
+          setDraft(null);
+        }
+      }
+    },
+    [disabled, commitDraft, open, setOpen, draft],
+  );
+
+  const onInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const text = event.target.value;
+      setDraft(text);
+      // The calendar follows what is typed, without taking focus from the field.
+      const typed = parseInput(mode, text, inputCodec);
+      const first = typed === undefined ? undefined : toList(mode, typed)[0];
+      if (first) {
+        setFocusedDate(first);
+        setMonth(first);
+      }
+    },
+    [mode, inputCodec, setMonth],
   );
 
   const onPopupKeyDown = useCallback(
@@ -803,8 +936,22 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     [mode, open, disabled, invalid, hasValue, onRootBlur],
   );
 
-  const getTriggerProps = useCallback(
-    () => ({
+  const getTriggerProps = useCallback((): Record<string, unknown> => {
+    if (trigger === "input") {
+      return {
+        /** A frame around the text field: the field carries the combobox, the frame only the state. */
+        "data-trigger": "input",
+        "data-open": open || undefined,
+        "data-disabled": disabled || undefined,
+        "data-invalid": invalid || undefined,
+        "data-empty": !hasValue || undefined,
+        /** A click on the frame's padding lands in the field. */
+        onClick: (event: MouseEvent<HTMLElement>) => {
+          if (event.target === event.currentTarget) triggerRef.current?.focus();
+        },
+      };
+    }
+    return {
       ref: triggerRef,
       id: ids.trigger,
       role: "combobox" as const,
@@ -813,16 +960,62 @@ export function useDatePicker<M extends DatePickerMode = "single">(
       "aria-expanded": open,
       "aria-controls": open ? ids.popup : undefined,
       "aria-disabled": disabled || undefined,
-      /** On the combobox, which holds the value; the calendar's cells only choose one. */
+      /** On the combobox, which holds the value; the calendar"s cells only choose one. */
       "aria-invalid": invalid || undefined,
+      "data-trigger": "button",
       "data-open": open || undefined,
       "data-disabled": disabled || undefined,
       "data-invalid": invalid || undefined,
       "data-empty": !hasValue || undefined,
       onClick: () => setOpen(!open),
       onKeyDown: onTriggerKeyDown,
+    };
+  }, [trigger, ids, disabled, invalid, open, hasValue, setOpen, onTriggerKeyDown]);
+
+  const getInputProps = useCallback(
+    () => ({
+      ref: triggerRef,
+      id: ids.trigger,
+      type: "text" as const,
+      role: "combobox" as const,
+      autoComplete: "off",
+      value: draft ?? shownText,
+      placeholder: inputCodec.pattern,
+      disabled,
+      "aria-haspopup": "dialog" as const,
+      "aria-expanded": open,
+      "aria-controls": open ? ids.popup : undefined,
+      "aria-invalid": invalid || undefined,
+      "data-open": open || undefined,
+      "data-invalid": invalid || undefined,
+      "data-empty": !hasValue || undefined,
+      onChange: onInputChange,
+      onKeyDown: onInputKeyDown,
+      onBlur: commitDraft,
+      onFocus: () => {
+        if (openOnFocus && !returningFocus.current) openFromField();
+      },
+      onClick: () => {
+        if (openOnFocus) openFromField();
+      },
     }),
-    [ids, disabled, invalid, open, hasValue, setOpen, onTriggerKeyDown],
+    [ids, draft, shownText, inputCodec, disabled, open, invalid, hasValue, onInputChange, onInputKeyDown, commitDraft, openOnFocus, openFromField],
+  );
+
+  const getToggleProps = useCallback(
+    () => ({
+      type: "button" as const,
+      disabled,
+      "aria-haspopup": "dialog" as const,
+      "aria-expanded": open,
+      "aria-controls": open ? ids.popup : undefined,
+      "data-open": open || undefined,
+      onClick: () => {
+        commitDraft();
+        setOpen(!open);
+      },
+    }),
+    [disabled, open, ids.popup, commitDraft, setOpen],
   );
 
   const getPopupProps = useCallback(
@@ -894,6 +1087,11 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     open,
     setOpen,
 
+    trigger,
+    inputText: draft ?? shownText,
+    inputPattern: inputCodec.pattern,
+    focusTrigger,
+
     month,
     setMonth,
     showPreviousMonth,
@@ -937,6 +1135,8 @@ export function useDatePicker<M extends DatePickerMode = "single">(
 
     getRootProps,
     getTriggerProps,
+    getInputProps,
+    getToggleProps,
     getPopupProps,
     getGridProps,
     getCellProps,

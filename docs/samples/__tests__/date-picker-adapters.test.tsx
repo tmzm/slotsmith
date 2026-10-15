@@ -73,18 +73,19 @@ describe("date picker adapter demos", () => {
       </Provider>,
     );
     const combobox = screen.getByRole("combobox", { name: "Stay" });
-    expect(combobox.textContent).toContain("Mar 18, 2026 — Mar 21, 2026");
-    fireEvent.click(combobox);
+    // The library's own field, showing the range in the locale's order; its calendar button opens the popup.
+    expect((combobox as HTMLInputElement).value).toBe("03/18/2026 – 03/21/2026");
+    fireEvent.click(screen.getByRole("button", { name: "Open calendar" }));
     expect(container.querySelector(marker), `${name} parts`).not.toBeNull();
     expect(screen.getByRole("grid").getAttribute("aria-label")).toBe("March 2026");
     expect(day("2026-03-18").hasAttribute("data-range-start")).toBe(true);
     expect(day("2026-03-21").hasAttribute("data-range-end")).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: "Next 7 days" }));
-    expect(combobox.textContent).toContain("Mar 16, 2026 — Mar 22, 2026");
+    expect((combobox as HTMLInputElement).value).toBe("03/16/2026 – 03/22/2026");
     fireEvent.click(day("2026-03-24"));
     fireEvent.click(day("2026-03-26"));
-    expect(combobox.textContent).toContain("Mar 24, 2026 — Mar 26, 2026");
+    expect((combobox as HTMLInputElement).value).toBe("03/24/2026 – 03/26/2026");
     key(day("2026-03-26"), "ArrowRight");
     expect(focusedDate()).toBe("2026-03-27");
     key(day("2026-03-27"), "Escape");

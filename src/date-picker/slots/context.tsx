@@ -24,8 +24,10 @@ export interface DatePickerContextValue<M extends DatePickerMode = DatePickerMod
   slotProps: DatePickerSlotProps;
   /** Where the popup sits, and the refs that keep it there. */
   position: PopupPosition;
-  /** The placeholder the trigger shows when nothing is picked. */
+  /** The placeholder the trigger shows when nothing is picked, and the text field's accessible name when nothing else names it. */
   placeholder: string;
+  /** What the text field shows when it is empty: the `placeholder` prop when given, else the date order to type in. */
+  inputPlaceholder: string;
   /** The shortcuts offered under the grid. */
   presets: DatePickerPreset[];
   /** What the trigger reads, or `undefined` when nothing is picked. */

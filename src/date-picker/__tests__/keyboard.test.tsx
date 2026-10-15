@@ -214,7 +214,7 @@ describe("picking and leaving", () => {
     const onBlur = vi.fn();
     const { user } = renderWithUser(
       <>
-        <DatePicker onBlur={onBlur} />
+        <DatePicker trigger="button" onBlur={onBlur} />
         <button type="button">After</button>
       </>,
     );

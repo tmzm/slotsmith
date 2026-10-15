@@ -34,7 +34,7 @@ describe("the invalid state", () => {
   });
 
   it("is exposed by the headless hook", () => {
-    const { result } = renderHook(() => useDatePicker({ invalid: true }));
+    const { result } = renderHook(() => useDatePicker({ trigger: "button", invalid: true }));
 
     expect(result.current.invalid).toBe(true);
     expect(result.current.getTriggerProps()["aria-invalid"]).toBe(true);

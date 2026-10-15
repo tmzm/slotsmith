@@ -39,8 +39,8 @@ describe("slot model guide: provider components", () => {
       expect(table.querySelectorAll("tbody tr.sdt__row")).toHaveLength(3);
       expect(table.querySelectorAll("tbody td.sdt__cell").length).toBeGreaterThan(0);
     }
-    // The date picker's trigger and value are still the built-in parts.
-    expect(container.querySelector(".sdp__trigger .sdp__value")?.textContent).toBe("Pick a date");
+    // The date picker's trigger and text field are still the built-in parts.
+    expect(container.querySelector(".sdp__trigger .sdp__input")?.getAttribute("placeholder")).toBe("Pick a date");
   });
 
   it("selects a row through the provider's checkbox", () => {

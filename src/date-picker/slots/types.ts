@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ComponentType, HTMLAttributes, ReactNode, Ref } from "react";
+import type { ButtonHTMLAttributes, ComponentType, HTMLAttributes, InputHTMLAttributes, ReactNode, Ref } from "react";
 import type { CalendarDay, DatePickerPreset, DateRange, ISODate } from "../core/types";
 
 /**
@@ -41,6 +41,34 @@ export interface DpRootProps extends DomProps<HTMLDivElement> {
  */
 export interface DpTriggerProps extends DomProps<HTMLDivElement> {
   ref?: Ref<HTMLDivElement>;
+}
+
+/**
+ * Input slot props
+ *
+ * Element part: the text field of the `"input"` trigger, inside the
+ * `Trigger` frame. It carries `role="combobox"` with
+ * `aria-haspopup="dialog"`, its `value` and `placeholder` (the locale's
+ * date order, such as `MM/DD/YYYY`), and the typing and keyboard handlers,
+ * so render a real `<input>` and forward every prop and the `ref`.
+ *
+ * The frame holds the border, so a skin usually renders its library's bare
+ * input here (MUI's `InputBase`, a borderless Ant Design `Input`).
+ */
+export interface DpInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "color" | "size"> {
+  ref?: Ref<HTMLInputElement>;
+}
+
+/**
+ * Toggle slot props
+ *
+ * Element part: the calendar button beside the text field. It carries
+ * `aria-haspopup="dialog"`, `aria-expanded`, its accessible name
+ * (`labels.openCalendar`) and `data-open`; its child is the `Icon`.
+ */
+export interface DpToggleProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color" | "type"> {
+  ref?: Ref<HTMLButtonElement>;
+  type?: "button";
 }
 
 /**
@@ -243,6 +271,8 @@ export interface DpFooterProps {
 export interface DatePickerComponents {
   Root: ComponentType<DpRootProps>;
   Trigger: ComponentType<DpTriggerProps>;
+  Input: ComponentType<DpInputProps>;
+  Toggle: ComponentType<DpToggleProps>;
   Value: ComponentType<DpValueProps>;
   Icon: ComponentType<DpIconProps>;
   Clear: ComponentType<DpClearProps>;
@@ -265,6 +295,8 @@ export interface DatePickerComponents {
 export interface DatePickerSlotProps {
   root?: DpRootProps;
   trigger?: DpTriggerProps;
+  input?: DpInputProps;
+  toggle?: DpToggleProps;
   popup?: DpPopupProps;
   calendar?: DpCalendarProps;
   /** Per-day props, e.g. a class that depends on the date. */
@@ -283,6 +315,8 @@ export interface DatePickerLabels {
   placeholder: string;
   /** Accessible name for the clear control. */
   clear: string;
+  /** Accessible name for the calendar button beside the text field. */
+  openCalendar: string;
   /** Accessible name for the previous-month control. */
   previous: string;
   /** Accessible name for the next-month control. */

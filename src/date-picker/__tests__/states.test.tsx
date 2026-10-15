@@ -264,7 +264,7 @@ describe("the popup", () => {
   it("closes on a pointer down outside, and not inside", async () => {
     const { user } = renderWithUser(
       <>
-        <DatePicker />
+        <DatePicker trigger="button" />
         <p>Elsewhere</p>
       </>,
     );

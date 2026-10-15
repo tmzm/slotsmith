@@ -1,0 +1,49 @@
+---
+title: "Typing a date"
+description: "Type a date into the slotsmith DatePicker's text field in the locale's order, open the calendar on focus, or use a single button trigger instead."
+---
+
+The slotsmith date picker's trigger is a text field by default. A date can be typed in the locale's numeric order, such as `MM/DD/YYYY` in American English, or picked from the calendar, which opens from the button beside the field. `openOnFocus` opens the calendar as soon as the field is focused, and `trigger="button"` replaces the field with one button that shows the formatted date.
+
+{/* Reserved height: two labelled pickers and the value line. */}
+<Demo name="date-picker/typing" height="11rem" fallback />
+
+## The text field
+
+[`trigger`](../../api/#props) is `"input"` by default. The field:
+
+- Shows the value in the locale's numeric order, with Latin digits, and that order as its placeholder: `MM/DD/YYYY` in `en-US`, `DD/MM/YYYY` in `en-GB`, `DD.MM.YYYY` in `de`, `YYYY/MM/DD` in `ja`. A [`placeholder`](../../api/#props) you pass replaces it.
+- Reads what was typed on Enter and when focus leaves the field. Any separator works (`3/5/2026`, `3-5-2026`, `3 5 2026`), the year has four digits, and Arabic-Indic, Persian and full-width digits read as well.
+- Puts the value back when the text is not a date or names a day that cannot be picked: outside [`minDate` and `maxDate`](../bounds-and-blocked-days/), or blocked by `disabledDates`. Emptying the field clears the value.
+- Moves the calendar to the month being typed while it is open, without taking focus from the field.
+
+In [range mode](../modes/) the ends are written `03/05/2026 – 03/09/2026`; an en dash, an em dash or a hyphen with spaces around it separates them, and ends typed backwards are swapped. In multiple mode the days are separated by commas.
+
+The naming and validation props you pass to `DatePicker` (`id`, `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and `autoFocus`) go to the field, so a `<label htmlFor>` names it.
+
+## Keyboard
+
+| Key | In the field |
+| --- | --- |
+| Down Arrow | Opens the calendar and moves focus into it, or moves into it when it is already open. |
+| Enter | Reads what was typed, and closes the calendar if it is open. |
+| Escape | Closes the calendar; with the calendar closed, drops what was typed. |
+
+Inside the calendar the keys are the [grid's](../../#accessibility). A pick, or Escape, returns focus to the field.
+
+## Opening on focus
+
+With [`openOnFocus`](../../api/#props) the calendar opens when the field is focused or clicked, and focus stays in the field so typing goes on. Focus coming back to the field after a pick does not open it again. The button beside the field still opens and closes it.
+
+## The button trigger
+
+`trigger="button"` gives the earlier shape: one `role="combobox"` button showing the date formatted with [`format`](../../api/#props), such as "Mar 12, 2026", that opens the calendar when pressed. Use it where a date is only picked, never typed, such as a cell editor.
+
+{/* Reserved height: two labelled pickers. */}
+<Demo name="date-picker/button-trigger" height="9rem" fallback />
+
+The first picker shows one date; the second a range, with its own [`placeholder`](../../api/#props) and a [`format`](../../api/#props) without the year.
+
+## Slots
+
+The field adds two [slots](../../api/#slots): `Input`, the text field inside the `Trigger` frame, and `Toggle`, the calendar button around the `Icon`. The frame carries `data-trigger="input"` and the state attributes; the `Input` carries `role="combobox"`. Its name, "Open calendar", is the `openCalendar` label, translated in every bundled [language](../../../../languages/). The [ready-made adapters](../../adapters/) render each library's own bare input and icon button.

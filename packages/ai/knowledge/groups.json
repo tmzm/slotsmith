@@ -31,7 +31,7 @@
     "Calendar": ["locale", "weekStartsOn", "weekdayFormat", "presets"],
     "Bounds": ["minDate", "maxDate", "disabledDates"],
     "Open state": ["open", "defaultOpen", "onOpenChange", "disabled", "invalid", "onBlur"],
-    "Display": ["placeholder", "format", "placement", "popupOffset"],
+    "Display": ["trigger", "openOnFocus", "placeholder", "format", "placement", "popupOffset"],
     "Slots and labels": ["components", "labels", "slotProps"]
   }
 }

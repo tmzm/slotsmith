@@ -3,12 +3,12 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger, at } from "../builders";
 import { shadcnDatePicker } from "./shadcn/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itTypesADate, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Render shadcn date picker
  *
- * `<DatePicker>` with shadcn/ui parts. Tailwind needs no provider.
+ * `<DatePicker trigger="button">` with shadcn/ui parts. Tailwind needs no provider.
  *
  * @param props - The component's props.
  * @returns A user-event instance.
@@ -23,6 +23,7 @@ describe("shadcn/ui", () => {
   failOnReactWarnings();
   itShowsTheInvalidState(renderShadcnDatePicker, (trigger) => expect(trigger).toHaveClass("aria-invalid:border-destructive"));
   itKeepsFocusOnAPickedDay(renderShadcnDatePicker);
+  itTypesADate(renderShadcnDatePicker);
 
   it("renders the calendar with shadcn's classes on the same DOM nodes", async () => {
     const user = renderShadcnDatePicker();

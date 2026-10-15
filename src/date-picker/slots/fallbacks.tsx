@@ -87,6 +87,12 @@ export const datePickerFallbacks: DatePickerComponents = {
 
   Trigger: ({ className, ...props }) => <div className={cx(classes.trigger, className)} {...props} />,
 
+  Input: ({ className, ...props }) => <input className={cx(classes.input, className)} {...props} />,
+
+  Toggle: ({ className, type = "button", ...props }) => (
+    <button type={type} className={cx(classes.toggle, className)} {...props} />
+  ),
+
   Value: ({ text, placeholder, empty }) => (
     <span className={cx(classes.value, empty && classes.valueEmpty)}>{empty ? placeholder : text}</span>
   ),
@@ -187,6 +193,7 @@ export const datePickerFallbacks: DatePickerComponents = {
 export const defaultDatePickerLabels: DatePickerLabels = {
   placeholder: "Pick a date",
   clear: "Clear date",
+  openCalendar: "Open calendar",
   previous: "Previous month",
   next: "Next month",
   today: "Go to today",

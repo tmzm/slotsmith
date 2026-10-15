@@ -349,6 +349,7 @@ export const ar: Record<MessageKey, string> = {
   "guide.datePicker.dayContent": "محتوى اليوم",
   "guide.datePicker.validation": "التحقق من الصحة",
   "guide.datePicker.valueFormat": "صيغة القيمة والمنطقة الزمنية",
+  "guide.datePicker.typing": "كتابة التاريخ",
   "guide.datePicker.compoundParts": "الأجزاء المركّبة",
   "guide.fileUploader.picker": "المنتقي",
   "guide.fileUploader.uploads": "الرفع",

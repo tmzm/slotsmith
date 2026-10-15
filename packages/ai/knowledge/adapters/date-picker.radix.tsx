@@ -11,7 +11,7 @@
  */
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, CrossCircledIcon } from "@radix-ui/react-icons";
 import { Button, Flex, IconButton, Text } from "@radix-ui/themes";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import type { DatePickerComponents } from "slotsmith/date-picker";
 
 /**
@@ -75,8 +75,11 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
    * open. An invalid value switches it to the red scale with
    * `data-accent-color="red"`, which is what Radix's own `color="red"` sets.
    */
-  Trigger: function RadixTrigger({ style, ...props }) {
-    const open = has(props, "data-open");
+  Trigger: function RadixTrigger({ style, onFocus, onBlur, ...props }) {
+    /** Focus anywhere in the frame, so the text field gets the focus ring Radix's `TextField` shows. */
+    const [focused, setFocused] = useState(false);
+    const typing = (props as Record<string, unknown>)["data-trigger"] === "input";
+    const open = has(props, "data-open") || (typing && focused);
     const disabled = has(props, "data-disabled");
     const invalid = has(props, "data-invalid");
     return (
@@ -98,13 +101,46 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
           borderRadius: "var(--radius-2)",
           outline: open ? `2px solid ${invalid ? "var(--red-8)" : "var(--focus-8)"}` : 0,
           outlineOffset: -1,
-          cursor: disabled ? "not-allowed" : "pointer",
+          cursor: disabled ? "not-allowed" : typing ? "text" : "pointer",
           ...style,
+        }}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
         }}
         {...props}
       />
     );
   },
+
+  /** A bare input in the theme's font: the trigger frame holds the border and the ring. */
+  Input: ({ style, ...props }) => (
+    <input
+      style={{
+        flex: 1,
+        minWidth: 0,
+        padding: 0,
+        border: 0,
+        outline: 0,
+        background: "transparent",
+        color: "inherit",
+        font: "inherit",
+        ...style,
+      }}
+      {...props}
+    />
+  ),
+
+  /** A ghost `IconButton` around the calendar glyph. */
+  Toggle: ({ children, ...props }) => (
+    <IconButton size="1" variant="ghost" color="gray" {...props}>
+      {children}
+    </IconButton>
+  ),
 
   Value: ({ text, placeholder, empty }) => (
     <Text size="2" truncate style={{ flex: 1, minWidth: 0, color: empty ? "var(--gray-a10)" : undefined }}>

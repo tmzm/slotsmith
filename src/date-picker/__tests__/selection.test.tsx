@@ -217,7 +217,7 @@ describe("range mode", () => {
       const [stay, setStay] = useState<DateRange | null>(null);
       return (
         <>
-          <DatePicker mode="range" value={stay} onChange={setStay} />
+          <DatePicker trigger="button" mode="range" value={stay} onChange={setStay} />
           <output>{stay?.to ?? "open"}</output>
         </>
       );
@@ -237,11 +237,11 @@ describe("the value's type follows the mode", () => {
     const typeOnly = () => (
       <>
         {/* @ts-expect-error — a single picker takes a date, not a list. */}
-        <DatePicker value={["2026-03-10"]} />
+        <DatePicker trigger="button" value={["2026-03-10"]} />
         {/* @ts-expect-error — a range picker takes a range, not a date. */}
-        <DatePicker mode="range" value="2026-03-10" />
+        <DatePicker trigger="button" mode="range" value="2026-03-10" />
         {/* @ts-expect-error — a multiple picker reports a list. */}
-        <DatePicker mode="multiple" onChange={(value: string | null) => value} />
+        <DatePicker trigger="button" mode="multiple" onChange={(value: string | null) => value} />
       </>
     );
     expect(typeOnly).toBeTypeOf("function");

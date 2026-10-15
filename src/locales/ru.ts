@@ -98,6 +98,7 @@ export const ru: SlotsmithLocale = defineLocale({
     return {
       placeholder: "Выберите дату",
       clear: "Очистить дату",
+      openCalendar: "Открыть календарь",
       previous: "Предыдущий месяц",
       next: "Следующий месяц",
       today: "Перейти к сегодняшнему дню",

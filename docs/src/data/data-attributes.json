@@ -14,7 +14,9 @@
     "Popup": ["data-placement"]
   },
   "date-picker": {
-    "Trigger": ["data-open", "data-disabled", "data-empty"],
+    "Trigger": ["data-trigger", "data-open", "data-disabled", "data-empty"],
+    "Input": ["data-open", "data-invalid", "data-empty"],
+    "Toggle": ["data-open"],
     "Popup": ["data-placement"]
   },
   "file-uploader": {

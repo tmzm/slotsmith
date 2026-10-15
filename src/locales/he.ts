@@ -98,6 +98,7 @@ export const he: SlotsmithLocale = defineLocale({
     return {
       placeholder: "בחירת תאריך",
       clear: "ניקוי התאריך",
+      openCalendar: "פתיחת לוח השנה",
       previous: "החודש הקודם",
       next: "החודש הבא",
       today: "מעבר להיום",

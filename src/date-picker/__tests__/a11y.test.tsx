@@ -34,7 +34,7 @@ describe("the trigger", () => {
     renderWithUser(
       <>
         <span id="due">Due</span>
-        <DatePicker aria-labelledby="due" />
+        <DatePicker trigger="button" aria-labelledby="due" />
       </>,
     );
     expect(trigger()).toHaveAccessibleName("Due");

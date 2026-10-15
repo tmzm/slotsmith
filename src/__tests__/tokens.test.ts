@@ -177,7 +177,7 @@ const BORROWS_TABLE: string[] = ["sdp", "sfu"];
 const TABLE_TOKENS: string[] = ["surface", "text", "muted", "border", "accent", "danger", "hover", "selected", "radius", "font-size"];
 
 /** The only focus rings drawn inside their target: controls packed too tightly for an outside ring. */
-const INSET_RINGS = [".sdp__day:focus-visible", ".sfu__action:focus-visible", ".sac__tag-remove:focus-visible", ".sac__clear:focus-visible", ".sdp__clear:focus-visible"];
+const INSET_RINGS = [".sdp__day:focus-visible", ".sfu__action:focus-visible", ".sac__tag-remove:focus-visible", ".sac__clear:focus-visible", ".sdp__clear:focus-visible", ".sdp__toggle:focus-visible"];
 
 /**
  * The data table's density tokens. The library never declares them: the size

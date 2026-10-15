@@ -357,6 +357,7 @@ export const en = {
   "guide.datePicker.dayContent": "Day content",
   "guide.datePicker.validation": "Validation",
   "guide.datePicker.valueFormat": "Value format and time zone",
+  "guide.datePicker.typing": "Typing a date",
   "guide.datePicker.compoundParts": "Compound parts",
   "guide.fileUploader.picker": "The picker",
   "guide.fileUploader.uploads": "Uploads",

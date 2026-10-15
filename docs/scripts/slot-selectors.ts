@@ -68,6 +68,8 @@ export const SLOT_SELECTORS: Record<ComponentSlug, Record<string, string>> = {
   "date-picker": {
     Root: c(dp.root),
     Trigger: c(dp.trigger),
+    Input: c(dp.input),
+    Toggle: c(dp.toggle),
     Value: c(dp.value),
     Icon: c(dp.icon),
     Clear: c(dp.clear),

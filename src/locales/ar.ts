@@ -102,6 +102,7 @@ export const ar: SlotsmithLocale = defineLocale({
     return {
       placeholder: "اختر تاريخًا",
       clear: "مسح التاريخ",
+      openCalendar: "فتح التقويم",
       previous: "الشهر السابق",
       next: "الشهر التالي",
       today: "الانتقال إلى اليوم",

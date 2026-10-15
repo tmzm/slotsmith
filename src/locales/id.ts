@@ -86,6 +86,7 @@ export const id: SlotsmithLocale = defineLocale({
     return {
       placeholder: "Pilih tanggal",
       clear: "Hapus tanggal",
+      openCalendar: "Buka kalender",
       previous: "Bulan sebelumnya",
       next: "Bulan berikutnya",
       today: "Ke hari ini",

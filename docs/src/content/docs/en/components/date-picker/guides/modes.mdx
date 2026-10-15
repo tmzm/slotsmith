@@ -30,7 +30,9 @@ Every date is an ISO string: by default the instant the day starts in the picker
 
 ## What the trigger shows
 
-The trigger formats each date with `Intl` in the picker's locale: "Mar 20, 2026" by default, and [`format`](../../api/#prop-format) takes other `Intl.DateTimeFormat` options. In multiple mode it lists up to two dates and then says how many, from the [`count`](../../api/#label-count) label. In range mode it joins the two ends with the [`range`](../../api/#label-range) label, and shows the start alone with [`rangeStart`](../../api/#label-rangeStart) until the end is picked.
+The [text field](../typing/) shows each date in the locale's numeric order, such as `03/20/2026`: a range as `03/20/2026 – 03/24/2026`, several dates separated by commas.
+
+With `trigger="button"`, the trigger formats each date with `Intl` in the picker's locale: "Mar 20, 2026" by default, and [`format`](../../api/#prop-format) takes other `Intl.DateTimeFormat` options. In multiple mode it lists up to two dates and then says how many, from the [`count`](../../api/#label-count) label. In range mode it joins the two ends with the [`range`](../../api/#label-range) label, and shows the start alone with [`rangeStart`](../../api/#label-rangeStart) until the end is picked.
 
 ## Styling the days
 

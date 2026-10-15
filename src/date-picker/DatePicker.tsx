@@ -36,7 +36,11 @@ export interface DatePickerSharedProps
    * provider's, then `en-US`.
    */
   locale?: LocaleInput;
-  /** Trigger text when nothing is picked. Defaults to `labels.placeholder`. */
+  /**
+   * Shown when nothing is picked. With the `"button"` trigger it defaults to
+   * `labels.placeholder`; the `"input"` trigger's text field shows the date
+   * order to type in, such as `MM/DD/YYYY`.
+   */
   placeholder?: string;
   /** Shortcuts shown under the grid. A date preset in range mode picks that one day. */
   presets?: DatePickerPreset[];
@@ -241,6 +245,7 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
     slotProps: slotProps ?? {},
     position,
     placeholder: placeholder ?? labels.placeholder,
+    inputPlaceholder: placeholder ?? model.inputPattern,
     presets: presets ?? [],
     text: describeValue(model.mode, model.value, model.locale, format, labels),
   };
@@ -288,7 +293,7 @@ const PROVIDER_KEYS = [
   "mode", "value", "defaultValue", "onChange",
   "open", "defaultOpen", "onOpenChange",
   "locale", "weekStartsOn", "weekdayFormat", "minDate", "maxDate", "disabledDates",
-  "clearable", "disabled", "invalid", "closeOnSelect", "onBlur", "valueFormat", "timeZone",
+  "clearable", "disabled", "invalid", "closeOnSelect", "onBlur", "valueFormat", "timeZone", "trigger", "openOnFocus",
   "placeholder", "presets", "format", "components", "labels", "slotProps", "placement", "popupOffset",
 ] as const;
 
@@ -350,8 +355,8 @@ export function splitDatePickerProps<P extends DatePickerProps>(props: P) {
  * Trigger prop keys
  *
  * Attributes that name or validate the control. They belong on the element
- * carrying `role="combobox"`, not on the wrapper, because that element is
- * what assistive technology announces.
+ * carrying `role="combobox"` (the text field, or the trigger button), not on
+ * the wrapper, because that element is what assistive technology announces.
  */
 const TRIGGER_PROP_KEYS = new Set([
   "id",
@@ -363,6 +368,7 @@ const TRIGGER_PROP_KEYS = new Set([
   "aria-errormessage",
   "aria-invalid",
   "aria-required",
+  "autoFocus",
 ]);
 
 /**
@@ -393,9 +399,11 @@ function DatePickerComponent(props: DatePickerProps) {
 /**
  * DatePicker
  *
- * One component for a single date, several dates, or a range. Values are
- * `YYYY-MM-DD` strings throughout, so nothing shifts across a time zone, and
- * month and weekday names come from `Intl` in whatever `locale` you pass.
+ * One component for a single date, several dates, or a range. Values are ISO
+ * strings, by default the instant each day starts in `timeZone`, and month
+ * and weekday names come from `Intl` in whatever `locale` you pass. The
+ * date can be typed into the text field, in the locale's numeric order, or
+ * picked from the calendar.
  *
  * The grid follows the WAI-ARIA date picker pattern: arrows, Home / End and
  * Page Up / Page Down move a roving focus, blocked days stay reachable but

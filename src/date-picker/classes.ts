@@ -25,6 +25,8 @@ export const classes = {
   presetToday: "sdp__preset--today",
   today: "sdp__today",
   trigger: "sdp__trigger",
+  input: "sdp__input",
+  toggle: "sdp__toggle",
   value: "sdp__value",
   valueEmpty: "sdp__value--empty",
   popup: "sdp__popup",

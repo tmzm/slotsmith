@@ -86,6 +86,7 @@ export const zhCN: SlotsmithLocale = defineLocale({
     return {
       placeholder: "选择日期",
       clear: "清除日期",
+      openCalendar: "打开日历",
       previous: "上个月",
       next: "下个月",
       today: "跳转到今天",

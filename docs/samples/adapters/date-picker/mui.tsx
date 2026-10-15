@@ -9,6 +9,7 @@
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
+import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
 import Select from "@mui/material/Select";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -80,7 +81,7 @@ export const muiComponents: Partial<DatePickerComponents> = {
    */
   Trigger: ({ className, ...props }) => (
     <Box
-      className={[className, props["aria-invalid"] ? "Mui-error" : undefined].filter(Boolean).join(" ") || undefined}
+      className={[className, props["aria-invalid"] || (props as Record<string, unknown>)["data-invalid"] ? "Mui-error" : undefined].filter(Boolean).join(" ") || undefined}
       sx={{
         cursor: "pointer",
         outline: 0,
@@ -102,14 +103,44 @@ export const muiComponents: Partial<DatePickerComponents> = {
           borderColor: "primary.main",
           boxShadow: (theme) => `0 0 0 1px ${theme.palette.primary.main}`,
         },
-        "&[aria-disabled='true']": { opacity: 0.5, cursor: "not-allowed" },
+        "&[data-trigger='input']": { cursor: "text", pe: 0.5 },
+        "&[data-trigger='input']:focus-within": {
+          borderColor: "primary.main",
+          boxShadow: (theme) => `0 0 0 1px ${theme.palette.primary.main}`,
+        },
+        "&[aria-disabled='true'], &[data-trigger='input'][data-disabled]": { opacity: 0.5, cursor: "not-allowed" },
         "&.Mui-error": { borderColor: "error.main" },
-        "&.Mui-error[data-open], &.Mui-error:focus-visible": {
+        "&.Mui-error[data-open], &.Mui-error:focus-visible, &.Mui-error[data-trigger='input']:focus-within": {
           boxShadow: (theme) => `0 0 0 1px ${theme.palette.error.main}`,
         },
       }}
       {...props}
     />
+  ),
+
+  /** MUI's bare `InputBase`: the trigger frame holds the border, the field only the text. */
+  Input: ({ ref, value, onChange, onKeyDown, onBlur, onFocus, onClick, disabled, placeholder, className, ...inputProps }) => (
+    <InputBase
+      inputRef={ref}
+      className={className}
+      value={value}
+      onChange={onChange}
+      onKeyDown={onKeyDown}
+      onBlur={onBlur}
+      onFocus={onFocus}
+      onClick={onClick}
+      disabled={disabled}
+      placeholder={placeholder}
+      inputProps={inputProps}
+      sx={{ flex: 1, minWidth: 0, typography: "body2", "& input": { p: 0 } }}
+    />
+  ),
+
+  /** A small `IconButton` around the calendar glyph. */
+  Toggle: ({ children, ...props }) => (
+    <IconButton size="small" {...props}>
+      {children}
+    </IconButton>
   ),
 
   Value: ({ text, placeholder, empty }) => (

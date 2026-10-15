@@ -87,6 +87,7 @@ export const ja: SlotsmithLocale = defineLocale({
     return {
       placeholder: "日付を選択",
       clear: "日付をクリア",
+      openCalendar: "カレンダーを開く",
       previous: "前の月",
       next: "次の月",
       today: "今日へ移動",

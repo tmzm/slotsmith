@@ -180,6 +180,8 @@ export interface DataTableSpreadsheetOptions<T> {
  */
 export type SpreadsheetDatePicker = ComponentType<{
   mode: "single";
+  /** A cell opens straight onto the calendar, so the picker is a button rather than a text field. */
+  trigger: "button";
   /** A date cell holds the calendar day alone. */
   valueFormat: "YYYY-MM-DD";
   /** The ISO date, or `null` when empty. */

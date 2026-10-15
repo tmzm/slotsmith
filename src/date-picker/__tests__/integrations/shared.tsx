@@ -1,9 +1,9 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, expect, it, vi, type MockInstance } from "vitest";
 import { DatePicker, type DatePickerComponents, type DatePickerProps } from "../../index";
-import { day, focusedDate, open, trigger } from "../builders";
+import { at, day, focusedDate, open, trigger } from "../builders";
 
 /**
  * Stub browser APIs
@@ -59,7 +59,7 @@ export function failOnReactWarnings() {
 /**
  * Render an integration
  *
- * Renders `<DatePicker>` with one library's parts, inside that library's
+ * Renders `<DatePicker trigger="button">` with one library's parts, inside that library's
  * provider where it needs one.
  *
  * @param components - The library's slot map.
@@ -80,7 +80,7 @@ export function renderIntegration(
 ) {
   const user = userEvent.setup();
   render(
-    <DatePicker {...({ components, ...props } as DatePickerProps)} />,
+    <DatePicker trigger="button" {...({ components, ...props } as DatePickerProps)} />,
     wrapper ? { wrapper } : undefined,
   );
   return user;
@@ -151,5 +151,33 @@ export function itShowsTheInvalidState(
     await open(user);
     expect(trigger()).toHaveAttribute("aria-invalid", "true");
     expectErrorStyle(trigger());
+  });
+}
+
+/**
+ * Types a date
+ *
+ * The default trigger with the library's parts: the date is typed into the
+ * library's own field, and the calendar opens from its button and hands focus
+ * back to the field after a pick.
+ *
+ * @param renderPicker - Renders the integration with the given props.
+ */
+export function itTypesADate(renderPicker: (props?: Partial<DatePickerProps>) => ReturnType<typeof userEvent.setup>) {
+  it("types a date into the library's field, and opens the calendar from its button", async () => {
+    const onChange = vi.fn();
+    const user = renderPicker({ trigger: "input", onChange, "aria-label": "Due" } as Partial<DatePickerProps>);
+    const field = screen.getByRole("combobox", { name: "Due" });
+    expect(field.tagName).toBe("INPUT");
+
+    await user.type(field, "03/20/2026{Enter}");
+    expect(onChange).toHaveBeenLastCalledWith(at("2026-03-20"));
+    expect(field).toHaveValue("03/20/2026");
+
+    await user.click(screen.getByRole("button", { name: "Open calendar" }));
+    expect(day("2026-03-20")).toHaveFocus();
+    await user.click(day("2026-03-24"));
+    expect(onChange).toHaveBeenLastCalledWith(at("2026-03-24"));
+    expect(field).toHaveFocus();
   });
 }

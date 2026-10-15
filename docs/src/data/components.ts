@@ -54,6 +54,7 @@ export const COMPONENTS: ComponentMeta[] = [
     summary: "summary.datePicker",
     guides: [
       { slug: "modes", title: "guide.datePicker.modes" },
+      { slug: "typing", title: "guide.datePicker.typing" },
       { slug: "bounds-and-blocked-days", title: "guide.datePicker.boundsAndBlockedDays" },
       { slug: "presets", title: "guide.datePicker.presets" },
       { slug: "day-content", title: "guide.datePicker.dayContent" },

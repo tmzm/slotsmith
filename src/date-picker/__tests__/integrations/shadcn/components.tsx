@@ -65,6 +65,11 @@ export const shadcnDatePicker: Partial<DatePickerComponents> = {
         "data-[open]:border-ring data-[open]:ring-3 data-[open]:ring-ring/25",
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25",
         "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+        /** The text-field trigger: the ring follows focus in the field, as shadcn's `Input` shows it. */
+        "data-[trigger=input]:cursor-text data-[trigger=input]:pe-1.5",
+        "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/25",
+        "data-[trigger=input]:data-[disabled]:cursor-not-allowed data-[trigger=input]:data-[disabled]:opacity-50",
+        "data-[invalid]:border-destructive data-[invalid]:has-[input:focus-visible]:ring-destructive/20 dark:data-[invalid]:has-[input:focus-visible]:ring-destructive/40",
         /** shadcn's own invalid treatment: the destructive border, and the destructive ring while open or focused. */
         "aria-invalid:border-destructive aria-invalid:hover:border-destructive",
         "aria-invalid:data-[open]:border-destructive aria-invalid:data-[open]:ring-destructive/20 dark:aria-invalid:data-[open]:ring-destructive/40",
@@ -77,6 +82,30 @@ export const shadcnDatePicker: Partial<DatePickerComponents> = {
 
   Value: ({ text, placeholder, empty }) => (
     <span className={cn("flex-1 truncate", empty && "text-muted-foreground")}>{empty ? placeholder : text}</span>
+  ),
+
+  /** A bare input: the trigger frame holds shadcn's border and ring. */
+  Input: ({ className, ...props }) => (
+    <input
+      className={cn(
+        "min-w-0 flex-1 border-0 bg-transparent p-0 text-sm outline-none",
+        "placeholder:text-muted-foreground disabled:cursor-not-allowed",
+        className,
+      )}
+      {...props}
+    />
+  ),
+
+  /** A quiet icon button around the calendar glyph. */
+  Toggle: ({ className, ...props }) => (
+    <button
+      className={cn(
+        "inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 outline-none",
+        "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none",
+        className,
+      )}
+      {...props}
+    />
   ),
 
   Icon: ({ open }) => (

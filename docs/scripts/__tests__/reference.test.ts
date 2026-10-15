@@ -9,7 +9,7 @@ describe("buildReference", () => {
     expect(references.map((r) => r.name).sort()).toEqual(["autocomplete", "data-table", "date-picker", "file-uploader"]);
     expect(bySlug("data-table").slots).toHaveLength(24);
     expect(bySlug("autocomplete").slots).toHaveLength(22);
-    expect(bySlug("date-picker").slots).toHaveLength(13);
+    expect(bySlug("date-picker").slots).toHaveLength(15);
     expect(bySlug("file-uploader").slots).toHaveLength(13);
   });
 

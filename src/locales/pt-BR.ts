@@ -94,6 +94,7 @@ export const ptBR: SlotsmithLocale = defineLocale({
     return {
       placeholder: "Selecionar data",
       clear: "Limpar data",
+      openCalendar: "Abrir calendário",
       previous: "Mês anterior",
       next: "Próximo mês",
       today: "Ir para hoje",

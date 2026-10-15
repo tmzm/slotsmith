@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger, at } from "../builders";
 import { antdDatePicker } from "./antd/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itTypesADate, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * Ant Design wrapper
@@ -43,7 +43,7 @@ function cssColor(color: string) {
 /**
  * Render Ant Design date picker
  *
- * `<DatePicker>` with Ant Design v6 parts inside `ConfigProvider`.
+ * `<DatePicker trigger="button">` with Ant Design v6 parts inside `ConfigProvider`.
  *
  * @param props - The component's props.
  * @param wrapper - The provider around it.
@@ -59,6 +59,7 @@ describe("Ant Design v6", () => {
   failOnReactWarnings();
   itShowsTheInvalidState((props) => renderAntdDatePicker(props), (trigger) => expect(trigger).toHaveStyle({ borderColor: "#ff4d4f" }));
   itKeepsFocusOnAPickedDay(renderAntdDatePicker);
+  itTypesADate(renderAntdDatePicker);
 
   it("renders the calendar with Ant's primitives", async () => {
     const user = renderAntdDatePicker();

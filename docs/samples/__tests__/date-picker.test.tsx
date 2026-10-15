@@ -13,6 +13,8 @@ import DayContent from "@samples/date-picker/day-content";
 import Labels from "@samples/date-picker/labels";
 import Modes from "@samples/date-picker/modes";
 import ValueFormat from "@samples/date-picker/value-format";
+import Typing from "@samples/date-picker/typing";
+import ButtonTrigger from "@samples/date-picker/button-trigger";
 import Overview from "@samples/date-picker/overview";
 import Presets from "@samples/date-picker/presets";
 import QuickStart from "@samples/date-picker/quick-start";
@@ -40,11 +42,17 @@ const key = (element: Element, name: string, init: KeyboardEventInit = {}) => fi
 const day = (date: string) => document.querySelector<HTMLButtonElement>(`[data-date="${date}"]`)!;
 const focusedDate = () => document.activeElement?.getAttribute("data-date");
 const grid = () => screen.getByRole("grid");
+/** The calendar button beside a text-field trigger. */
+const toggleOf = (combobox: HTMLElement) =>
+  combobox.closest<HTMLElement>("[data-trigger]")!.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')!;
+/** Opens a picker: from the calendar button beside its text field, or by pressing its button trigger. */
 const open = (name: string | RegExp) => {
   const combobox = screen.getByRole("combobox", { name });
-  fireEvent.click(combobox);
+  fireEvent.click(combobox instanceof HTMLInputElement ? toggleOf(combobox) : combobox);
   return combobox;
 };
+/** What a trigger shows: the text field's text, or the button's. */
+const shown = (combobox: HTMLElement) => (combobox instanceof HTMLInputElement ? combobox.value : combobox.textContent);
 
 /** An Arabic page: the `ar` pack from the provider, inside a right-to-left ancestor. */
 const Arabic = ({ children }: { children: ReactNode }) => (
@@ -93,7 +101,7 @@ describe("date picker: quick start", () => {
     fireEvent.click(day("2025-04-28"));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).toBe(combobox);
-    expect(combobox.textContent).toContain("Apr 28, 2025");
+    expect(shown(combobox)).toBe("04/28/2025");
   });
 
   it("closes with Escape and returns focus to the trigger", () => {
@@ -123,20 +131,20 @@ describe("date picker guide: modes", () => {
     expect(grid().getAttribute("aria-multiselectable")).toBeNull();
     fireEvent.click(day("2026-03-20"));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(combobox.textContent).toContain("Mar 20, 2026");
+    expect(shown(combobox)).toBe("03/20/2026");
     expect(screen.getByText(`Value: ${at("2026-03-20")}`)).toBeTruthy();
   });
 
-  it("multiple: each pick toggles a day, the calendar stays open and the trigger counts past two", () => {
+  it("multiple: each pick toggles a day, the calendar stays open and the field lists the days", () => {
     render(<Modes />);
     const combobox = open(/Days off/);
     expect(grid().getAttribute("aria-multiselectable")).toBe("true");
     fireEvent.click(day("2026-03-20"));
     fireEvent.click(day("2026-03-18"));
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(combobox.textContent).toContain("Mar 18, 2026, Mar 20, 2026");
+    expect(shown(combobox)).toBe("03/18/2026, 03/20/2026");
     fireEvent.click(day("2026-03-25"));
-    expect(combobox.textContent).toContain("3 dates selected");
+    expect(shown(combobox)).toBe("03/18/2026, 03/20/2026, 03/25/2026");
     expect(screen.getByText(`Value: ${at("2026-03-18")}, ${at("2026-03-20")}, ${at("2026-03-25")}`)).toBeTruthy();
     fireEvent.click(day("2026-03-20"));
     expect(screen.getByText(`Value: ${at("2026-03-18")}, ${at("2026-03-25")}`)).toBeTruthy();
@@ -147,7 +155,7 @@ describe("date picker guide: modes", () => {
     render(<Modes />);
     const combobox = open(/Stay/);
     fireEvent.click(day("2026-03-20"));
-    expect(combobox.textContent).toContain("Mar 20, 2026 — …");
+    expect(shown(combobox)).toBe("03/20/2026 – ");
     // The preview follows the pointer until the end is picked.
     fireEvent.pointerEnter(day("2026-03-23"));
     expect(day("2026-03-22").hasAttribute("data-in-preview")).toBe(true);
@@ -157,7 +165,7 @@ describe("date picker guide: modes", () => {
     expect(day("2026-03-22").hasAttribute("data-in-range")).toBe(true);
     expect(day("2026-03-25").hasAttribute("data-in-range")).toBe(false);
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(combobox.textContent).toContain("Mar 20, 2026 — Mar 24, 2026");
+    expect(shown(combobox)).toBe("03/20/2026 – 03/24/2026");
     expect(screen.getByText(`Value: ${at("2026-03-20")} to ${at("2026-03-24")}`)).toBeTruthy();
     // A click before the start begins a new range.
     fireEvent.click(day("2026-03-10"));
@@ -168,7 +176,7 @@ describe("date picker guide: modes", () => {
     render(<Modes />);
     const combobox = open(/Due date/);
     fireEvent.click(day("2026-03-20"));
-    fireEvent.click(within(combobox).getByRole("button", { name: "Clear date" }));
+    fireEvent.click(within(combobox.closest<HTMLElement>("[data-trigger]")!).getByRole("button", { name: "Clear date" }));
     // The due date and the untouched stay are both empty again.
     expect(screen.getAllByText("Value: null")).toHaveLength(2);
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -263,11 +271,12 @@ describe("date picker guide: bounds and blocked days", () => {
   it("a disabled picker does not open", () => {
     render(<BoundsAndBlockedDays />);
     const locked = screen.getByRole("combobox", { name: "Confirmed on" });
-    expect(locked.getAttribute("aria-disabled")).toBe("true");
-    expect(locked.tabIndex).toBe(-1);
-    fireEvent.click(locked);
+    // A disabled field leaves the tab order, and so does its calendar button.
+    expect((locked as HTMLInputElement).disabled).toBe(true);
+    expect(toggleOf(locked).disabled).toBe(true);
+    fireEvent.click(toggleOf(locked));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(within(locked).queryByRole("button")).toBeNull();
+    expect(within(locked.closest<HTMLElement>("[data-trigger]")!).queryByRole("button", { name: "Clear date" })).toBeNull();
   });
 });
 
@@ -277,7 +286,7 @@ describe("date picker guide: presets", () => {
     const combobox = open("Stay");
     fireEvent.click(screen.getByRole("button", { name: "Next 7 days" }));
     expect(screen.getByText(`Stay: ${at("2026-03-16")} to ${at("2026-03-22")}`)).toBeTruthy();
-    expect(combobox.textContent).toContain("Mar 16, 2026 — Mar 22, 2026");
+    expect(shown(combobox)).toBe("03/16/2026 – 03/22/2026");
     expect(day("2026-03-16").hasAttribute("data-range-start")).toBe(true);
     expect(day("2026-03-22").hasAttribute("data-range-end")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Tomorrow" }));
@@ -351,8 +360,9 @@ describe("date picker: labels", () => {
   it("speaks German, with two labels replaced", () => {
     render(<Labels />);
     const combobox = screen.getByRole("combobox", { name: "Urlaubstage" });
-    expect(combobox.textContent).toContain("Urlaubstage wählen");
-    fireEvent.click(combobox);
+    // The field shows the German date order, and its calendar button the replaced label.
+    expect(combobox.getAttribute("placeholder")).toBe("DD.MM.YYYY");
+    fireEvent.click(screen.getByRole("button", { name: "Kalender zeigen" }));
     expect(screen.getByRole("dialog", { name: "Datum auswählen" })).toBeTruthy();
     expect(grid().getAttribute("aria-label")).toBe("März 2026");
     expect(screen.getByRole("button", { name: "Heute anzeigen" })).toBeTruthy();
@@ -391,8 +401,39 @@ describe("date-picker guide: value format and time zone", () => {
     render(<ValueFormat />);
     expect(screen.getByText('value: "15/04/2026"')).toBeTruthy();
     const [due] = screen.getAllByRole("combobox");
-    expect(due!.textContent).toContain("Apr 15, 2026");
+    expect(shown(due!)).toBe("04/15/2026");
     expect(error).not.toHaveBeenCalled();
     vi.useRealTimers();
+  });
+});
+
+describe("date picker guide: typing a date", () => {
+  it("reads a typed date from the field its label names", () => {
+    render(<Typing />);
+    const due = screen.getByRole("combobox", { name: "Due date" }) as HTMLInputElement;
+    expect(due.getAttribute("placeholder")).toBe("MM/DD/YYYY");
+    fireEvent.change(due, { target: { value: "3/20/2026" } });
+    key(due, "Enter");
+    expect(screen.getByText(`Due: ${at("2026-03-20")}`)).toBeTruthy();
+    expect(due.value).toBe("03/20/2026");
+  });
+
+  it("opens the check-in calendar on focus and keeps focus in the field", () => {
+    render(<Typing />);
+    const checkIn = screen.getByRole("combobox", { name: "Check-in" });
+    act(() => checkIn.focus());
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(document.activeElement).toBe(checkIn);
+  });
+
+  it("the button trigger shows the formatted date and opens when pressed", () => {
+    render(<ButtonTrigger />);
+    const reminder = screen.getByRole("combobox", { name: "Reminder" });
+    expect(reminder.tagName).toBe("DIV");
+    fireEvent.click(reminder);
+    fireEvent.click(day("2026-03-20"));
+    expect(reminder.textContent).toContain("Mar 20, 2026");
+    const trip = screen.getByRole("combobox", { name: "Trip" });
+    expect(trip.textContent).toContain("Pick your dates");
   });
 });

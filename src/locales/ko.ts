@@ -86,6 +86,7 @@ export const ko: SlotsmithLocale = defineLocale({
     return {
       placeholder: "날짜 선택",
       clear: "날짜 지우기",
+      openCalendar: "달력 열기",
       previous: "이전 달",
       next: "다음 달",
       today: "오늘로 이동",

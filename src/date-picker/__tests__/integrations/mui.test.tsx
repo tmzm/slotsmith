@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { DatePickerProps } from "../../index";
 import { datesWith, day, dialog, focusedDate, freezeToday, isOpen, open, shownMonth, trigger, at } from "../builders";
 import { muiDatePicker } from "./mui/components";
-import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
+import { failOnReactWarnings, itKeepsFocusOnAPickedDay, itTypesADate, itShowsTheInvalidState, renderIntegration, stubBrowserApis } from "./shared";
 
 /**
  * MUI wrapper
@@ -18,7 +18,7 @@ const Wrapper = ({ children }: { children: ReactNode }) => <ThemeProvider theme=
 /**
  * Render MUI date picker
  *
- * `<DatePicker>` with MUI v7 parts inside `ThemeProvider`.
+ * `<DatePicker trigger="button">` with MUI v7 parts inside `ThemeProvider`.
  *
  * @param props - The component's props.
  * @returns A user-event instance.
@@ -33,6 +33,7 @@ describe("MUI v7", () => {
   failOnReactWarnings();
   itShowsTheInvalidState(renderMuiDatePicker, (trigger) => expect(trigger).toHaveClass("Mui-error"));
   itKeepsFocusOnAPickedDay(renderMuiDatePicker);
+  itTypesADate(renderMuiDatePicker);
 
   it("renders the calendar with MUI's primitives", async () => {
     const user = renderMuiDatePicker();

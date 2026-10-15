@@ -58,7 +58,7 @@ The date picker works with any design system. Each slot takes a component, so a 
 
 The date picker follows the ARIA date picker dialog pattern: a combobox that opens a dialog holding a grid.
 
-- **The trigger** is the element with `role="combobox"`. It is in the tab order, and carries `aria-haspopup="dialog"`, `aria-expanded` and, while open, `aria-controls` pointing at the popup. The naming and validation attributes you pass to `DatePicker` (`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and the like, plus `id`) go to this element, not to the wrapper. With no name given, the [`placeholder`](./api/#label-placeholder) label names it.
+- **The trigger** is the element with `role="combobox"`: the text field by default, with the calendar button beside it named by the [`openCalendar`](./api/#label-openCalendar) label, or the single button with `trigger="button"`. It is in the tab order, and carries `aria-haspopup="dialog"`, `aria-expanded` and, while open, `aria-controls` pointing at the popup. The naming and validation attributes you pass to `DatePicker` (`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` and the like, plus `id`) go to this element, not to the wrapper. With no name given, the [`placeholder`](./api/#label-placeholder) label names it; a text field with an `id` is left to its `<label htmlFor>`.
 - **Invalid values.** `invalid` sets `aria-invalid="true"` on the trigger and `data-invalid` on the root and the trigger, and the default stylesheet draws the border in the danger colour. Point the trigger at your error message with `aria-describedby`. See [validation](./guides/validation/).
 - **The popup** has `role="dialog"` and is not modal (`aria-modal="false"`): focus is not trapped. It is named by the [`dialog`](./api/#label-dialog) label. Opening it moves focus to the picked day, or to today. When that day is outside `minDate` and `maxDate`, focus goes to the first day within them in the nearest allowed month.
 - **The month** is a `role="grid"` named by the month and year ("March 2026"), with `row`, `columnheader` and `gridcell` inside. Each column header is named with the full weekday, so a one-letter header is still read as "Monday". In [multiple and range mode](./guides/modes/) the grid has `aria-multiselectable="true"`.
@@ -67,7 +67,15 @@ The date picker follows the ARIA date picker dialog pattern: a combobox that ope
 - **The header** has a previous and a next button, named by the [`previous`](./api/#label-previous) and [`next`](./api/#label-next) labels and disabled at the bounds, and month and year selects named by [`month`](./api/#label-month) and [`year`](./api/#label-year). The clear button is named by [`clear`](./api/#label-clear).
 - **Right to left.** Inside a right-to-left ancestor the grid and the header mirror, and <kbd>←</kbd> and <kbd>→</kbd> swap: <kbd>←</kbd> moves to the next day, because that is the day on the left.
 
-With focus on the trigger:
+With focus in the text field (see [Typing a date](./guides/typing/#keyboard)):
+
+<KeyboardTable rows={[
+  { keys: ["↓"], action: "Open the calendar and move into it, on the picked day or on today." },
+  { keys: ["Enter"], action: "Read what was typed, and close the calendar if it is open." },
+  { keys: ["Esc"], action: "Close the calendar; with it closed, drop what was typed." },
+]} />
+
+With focus on the button trigger (`trigger="button"`):
 
 <KeyboardTable rows={[
   { keys: ["Enter", "Space", "↓", "↑"], action: "Open the calendar, with focus on the picked day or on today." },
@@ -94,7 +102,7 @@ Movement stops at `minDate` and `maxDate`. Picking a day in single mode closes t
 <Note kind="limitation">
 - Gregorian calendar only. A locale changes the names, the digits and the first day of the week, not the calendar. Hijri and Persian calendars are planned; see the [roadmap](../../roadmap/#calendars).
 - Days only: there is no time of day to pick. A value is the instant the day starts, or the calendar day alone with `valueFormat`.
-- The trigger is not a text field, so a date cannot be typed. For another shape, such as an inline calendar, build on the [`useDatePicker`](./guides/compound-parts/) hook.
+- A typed date is read in the locale's numeric order with a four-digit year, not in free text such as "next Friday"; see [Typing a date](./guides/typing/). For another shape, such as an inline calendar, build on the [`useDatePicker`](./guides/compound-parts/) hook.
 - One month is shown at a time.
 - No `name` prop: the picker renders no hidden input. In a plain HTML form, render your own from `value`.
 - A range can span blocked days: `disabledDates` stops a blocked day from being picked as an end, not from sitting inside the range. See [bounds and blocked days](./guides/bounds-and-blocked-days/).

@@ -112,12 +112,37 @@ export const chakraDatePicker: Partial<DatePickerComponents> = {
       css={{
         "&:hover": { borderColor: "border.emphasized" },
         "&[data-open], &:focus-visible": { borderColor: "colorPalette.solid" },
-        "&[aria-disabled='true']": { opacity: 0.5, cursor: "not-allowed" },
+        "&[aria-disabled='true'], &[data-trigger='input'][data-disabled]": { opacity: 0.5, cursor: "not-allowed" },
+        "&[data-trigger='input']": { cursor: "text", paddingInlineEnd: "1.5" },
+        "&[data-trigger='input']:focus-within": { borderColor: "colorPalette.solid" },
         /** Chakra's own invalid condition and token, as its `Input` uses them. */
         _invalid: { borderColor: "border.error" },
+        "&[data-invalid]": { borderColor: "border.error" },
       }}
       {...props}
     />
+  ),
+
+  /** A bare `chakra.input`: the trigger frame holds the border. */
+  Input: (props) => (
+    <chakra.input
+      flex="1"
+      minWidth="0"
+      bg="transparent"
+      border="0"
+      outline="none"
+      textStyle="sm"
+      color="fg"
+      css={{ "&::placeholder": { color: "fg.muted" }, "&:disabled": { cursor: "not-allowed" } }}
+      {...props}
+    />
+  ),
+
+  /** A ghost `IconButton` around the calendar glyph. */
+  Toggle: ({ children, ...props }) => (
+    <IconButton size="2xs" variant="ghost" {...props}>
+      {children}
+    </IconButton>
   ),
 
   Value: ({ text, placeholder, empty }) => (

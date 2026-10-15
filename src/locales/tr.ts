@@ -87,6 +87,7 @@ export const tr: SlotsmithLocale = defineLocale({
     return {
       placeholder: "Tarih seçin",
       clear: "Tarihi temizle",
+      openCalendar: "Takvimi aç",
       previous: "Önceki ay",
       next: "Sonraki ay",
       today: "Bugüne git",

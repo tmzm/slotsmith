@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "react";
 import { mergeProps, mergeRefs } from "../shared/mergeProps";
 import type { CalendarDay } from "./core/types";
 import { useDatePickerContext } from "./slots/context";
@@ -37,6 +38,92 @@ const NAMING_KEYS = ["aria-label", "aria-labelledby"] as const;
  * ```
  */
 export function DatePickerTrigger(props: Record<string, unknown> = {}) {
+  const { trigger } = useDatePickerContext();
+  return trigger === "input" ? <DatePickerField {...props} /> : <DatePickerButton {...props} />;
+}
+
+/** Attributes that name, describe or validate the text field: they go on the field, not on its frame. */
+const FIELD_KEYS = new Set([
+  "id",
+  "title",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "aria-details",
+  "aria-errormessage",
+  "aria-invalid",
+  "aria-required",
+  "autoFocus",
+]);
+
+/**
+ * Date picker field
+ *
+ * The `"input"` trigger: the `Trigger` frame around the `Input` text field,
+ * the clear control and the `Toggle` calendar button.
+ */
+function DatePickerField(props: Record<string, unknown>) {
+  const {
+    components: C,
+    labels,
+    slotProps,
+    position,
+    open,
+    showClear,
+    clear,
+    placeholder,
+    inputPlaceholder,
+    focusTrigger,
+    getTriggerProps,
+    getInputProps,
+    getToggleProps,
+  } = useDatePickerContext();
+
+  const fieldProps: Record<string, unknown> = {};
+  const frameProps: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) (FIELD_KEYS.has(key) ? fieldProps : frameProps)[key] = value;
+  // A text field with an `id` is named by its `<label htmlFor>`, which an `aria-label` would override.
+  const named = ([...NAMING_KEYS, "id"] as const).some((key) => fieldProps[key] !== undefined || slotProps.input?.[key] !== undefined);
+
+  return (
+    <C.Trigger
+      {...mergeProps(mergeProps(getTriggerProps(), slotProps.trigger), {
+        ...frameProps,
+        ref: mergeRefs(frameProps.ref as Ref<HTMLDivElement> | undefined, position.setTrigger),
+      })}
+    >
+      <C.Input
+        {...mergeProps(
+          mergeProps(
+            { ...getInputProps(), placeholder: inputPlaceholder, "aria-label": named ? undefined : placeholder },
+            slotProps.input,
+          ),
+          fieldProps,
+        )}
+      />
+      {showClear ? (
+        <C.Clear
+          aria-label={labels.clear}
+          onClick={() => {
+            clear();
+            // The clear control goes away with the value; focus stays in the field rather than falling to the page.
+            focusTrigger();
+          }}
+        />
+      ) : null}
+      <C.Toggle {...mergeProps({ ...getToggleProps(), "aria-label": labels.openCalendar }, slotProps.toggle)}>
+        <C.Icon open={open} />
+      </C.Toggle>
+    </C.Trigger>
+  );
+}
+
+/**
+ * Date picker button
+ *
+ * The `"button"` trigger: one combobox showing the formatted value.
+ */
+function DatePickerButton(props: Record<string, unknown>) {
   const {
     components: C,
     labels,

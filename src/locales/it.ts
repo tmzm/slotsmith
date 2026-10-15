@@ -95,6 +95,7 @@ export const it: SlotsmithLocale = defineLocale({
     return {
       placeholder: "Seleziona una data",
       clear: "Cancella data",
+      openCalendar: "Apri calendario",
       previous: "Mese precedente",
       next: "Mese successivo",
       today: "Vai a oggi",

@@ -33,14 +33,14 @@ export function freezeToday() {
 /**
  * Render date picker
  *
- * Renders `<DatePicker>` with a user-event instance.
+ * Renders `<DatePicker trigger="button">` with a user-event instance.
  *
  * @param props - The component's props.
  * @returns Testing Library's result plus `user`.
  */
 export function renderDatePicker(props: Partial<DatePickerProps> = {}) {
   const user = userEvent.setup();
-  return { ...render(<DatePicker {...(props as DatePickerProps)} />), user };
+  return { ...render(<DatePicker trigger="button" {...(props as DatePickerProps)} />), user };
 }
 
 /**

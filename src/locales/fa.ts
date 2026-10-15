@@ -96,6 +96,7 @@ export const fa: SlotsmithLocale = defineLocale({
     return {
       placeholder: "انتخاب تاریخ",
       clear: "پاک کردن تاریخ",
+      openCalendar: "باز کردن تقویم",
       previous: "ماه قبل",
       next: "ماه بعد",
       today: "رفتن به امروز",
