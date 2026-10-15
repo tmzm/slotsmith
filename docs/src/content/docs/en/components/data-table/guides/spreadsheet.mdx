@@ -31,34 +31,9 @@ Only the rows that changed are new objects, so only they re-render. Moving the s
 
 A column opts in with `edit`: `true` for the defaults, an object to configure them. A column without it is read-only, and its cells carry `aria-readonly="true"`.
 
-```tsx
-const columns: DataTableColumnDef<Product>[] = [
-  { accessorKey: "sku", header: "SKU" },
-  { accessorKey: "name", header: "Name", edit: true },
-  {
-    accessorKey: "price",
-    header: "Price",
-    edit: {
-      parse: (text) => Number(text.replace(/[^\d.-]/g, "")),
-      format: (price) => price.toFixed(2),
-      validate: (price) => (price < 0 ? "Must be positive" : null),
-    },
-  },
-];
-```
+Every function in `edit` is typed by the column's value. In a plain array of columns the value comes from the field the `accessorKey` names, so `price` in the sample below is a `number`. A column built from an accessor function, or whose key is only a `string`, takes its types from `createDataTableColumnHelper`, whose `accessor` also takes `edit`, as the `value` column below does:
 
-Every function in `edit` is typed by the column's value. In a plain array of columns the value comes from the field the `accessorKey` names, so `price` above is a `number`. A column built from an accessor function, or whose key is only a `string`, takes its types from `createDataTableColumnHelper`, whose `accessor` also takes `edit`:
-
-```tsx
-const column = createDataTableColumnHelper<Product>();
-export const valueColumns = [
-  column.accessor((row) => row.stock * row.price, {
-    id: "value",
-    header: "Stock value",
-    edit: { setValue: (row, value) => ({ ...row, stock: Math.round(value / row.price) }) },
-  }),
-];
-```
+<SampleCode name="data-table/spreadsheet-columns" />
 
 The options of `edit`:
 

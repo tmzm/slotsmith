@@ -647,6 +647,9 @@ function readPeers(
   return { requiredPeers, optionalPeers };
 }
 
+/** The files whose re-exports are a component's compound parts: the parts, and the windowed parts `virtual` renders. */
+const PART_MODULES = ["./parts", "./virtualList", "./virtualBody"];
+
 /**
  * Read exports from
  *
@@ -840,7 +843,7 @@ export function generateKnowledge(options: GenerateOptions): GeneratedKnowledge 
       rootElement,
       propsType: `${Name}Props`,
       hook: `use${Name}`,
-      parts: exportsFrom(entry, "./parts").filter((part) => part.startsWith(Name)),
+      parts: PART_MODULES.flatMap((from) => exportsFrom(entry, from)).filter((part) => part.startsWith(Name)),
       fallbacksExport,
       labelsExport,
       labelsType,

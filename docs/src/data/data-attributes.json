@@ -2,6 +2,7 @@
   "data-table": {
     "Root": ["data-virtual"],
     "Table": ["data-spreadsheet"],
+    "Body": ["data-reorder-table"],
     "Row": ["data-row-id", "data-state", "data-dragging", "data-dragging-child", "data-drop-position", "data-drop-edge"],
     "HeaderCell": ["data-slot"],
     "Cell": ["data-slot", "data-column-id", "data-active", "data-selected", "data-range-edge", "data-editing", "data-fill-preview", "data-copied", "data-editable"],
