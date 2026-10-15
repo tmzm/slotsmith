@@ -288,7 +288,7 @@ const PROVIDER_KEYS = [
   "mode", "value", "defaultValue", "onChange",
   "open", "defaultOpen", "onOpenChange",
   "locale", "weekStartsOn", "weekdayFormat", "minDate", "maxDate", "disabledDates",
-  "clearable", "disabled", "invalid", "closeOnSelect", "onBlur",
+  "clearable", "disabled", "invalid", "closeOnSelect", "onBlur", "valueFormat", "timeZone",
   "placeholder", "presets", "format", "components", "labels", "slotProps", "placement", "popupOffset",
 ] as const;
 

@@ -35,6 +35,8 @@ export {
 } from "./parts";
 
 export { useDatePicker } from "./core/useDatePicker";
+export { createValueCodec, dayInZone, todayIn } from "./core/valueFormat";
+export type { DateValueCodec, DateValueFormat } from "./core/valueFormat";
 export type { DatePickerDayState, DatePickerModel, UseDatePickerOptions } from "./core/useDatePicker";
 
 export { addDays, addMonths, formatDate, fromISODate, toISODate, today } from "./core/calendar";

@@ -27,7 +27,7 @@
     "Rendering": ["variant", "components", "labels", "locale", "validationLabels", "slotProps", "preview", "hideList", "children", "captureWindowDrops", "virtual"]
   },
   "date-picker": {
-    "Value and mode": ["mode", "value", "defaultValue", "onChange", "clearable", "closeOnSelect"],
+    "Value and mode": ["mode", "value", "defaultValue", "onChange", "clearable", "closeOnSelect", "valueFormat", "timeZone"],
     "Calendar": ["locale", "weekStartsOn", "weekdayFormat", "presets"],
     "Bounds": ["minDate", "maxDate", "disabledDates"],
     "Open state": ["open", "defaultOpen", "onOpenChange", "disabled", "invalid", "onBlur"],

@@ -58,6 +58,7 @@ export const COMPONENTS: ComponentMeta[] = [
       { slug: "presets", title: "guide.datePicker.presets" },
       { slug: "day-content", title: "guide.datePicker.dayContent" },
       { slug: "validation", title: "guide.datePicker.validation" },
+      { slug: "value-format-and-time-zone", title: "guide.datePicker.valueFormat" },
       { slug: "compound-parts", title: "guide.datePicker.compoundParts" },
     ],
   },

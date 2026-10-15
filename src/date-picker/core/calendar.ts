@@ -211,13 +211,13 @@ export function isWithin(value: ISODate, range: DateRange): boolean {
  *
  * @param month - Any date within the month to build.
  * @param weekStartsOn - The first day of the week.
+ * @param now - Today, which is marked; the browser's today when left out (pass it to use another time zone's).
  * @returns Six weeks of seven days.
  */
-export function buildMonth(month: ISODate, weekStartsOn: WeekStart = 0): CalendarDay[][] {
+export function buildMonth(month: ISODate, weekStartsOn: WeekStart = 0, now: ISODate = today()): CalendarDay[][] {
   const anchor = fromISODate(month)!;
   const shownMonth = anchor.getMonth();
   const first = startOfWeek(startOfMonth(month), weekStartsOn);
-  const now = today();
 
   const weeks: CalendarDay[][] = [];
   const cursor = fromISODate(first)!;

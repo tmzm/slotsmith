@@ -11,6 +11,7 @@ import CompoundParts from "@samples/date-picker/compound-parts";
 import DayContent from "@samples/date-picker/day-content";
 import Labels from "@samples/date-picker/labels";
 import Modes from "@samples/date-picker/modes";
+import ValueFormat from "@samples/date-picker/value-format";
 import Overview from "@samples/date-picker/overview";
 import Presets from "@samples/date-picker/presets";
 import QuickStart from "@samples/date-picker/quick-start";
@@ -376,5 +377,18 @@ describe("date picker samples: prerender", () => {
     expect(recoverable).not.toHaveBeenCalled();
     act(() => root.unmount());
     container.remove();
+  });
+});
+
+describe("date-picker guide: value format and time zone", () => {
+  it("shows the value in its own format", () => {
+    vi.useFakeTimers({ now: Date.UTC(2026, 2, 12, 20), toFake: ["Date"] });
+    const error = vi.spyOn(console, "error");
+    render(<ValueFormat />);
+    expect(screen.getByText('value: "15/04/2026"')).toBeTruthy();
+    const [due] = screen.getAllByRole("combobox");
+    expect(due!.textContent).toContain("Apr 15, 2026");
+    expect(error).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });

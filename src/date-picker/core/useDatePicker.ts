@@ -13,6 +13,7 @@ import {
   type RefObject,
 } from "react";
 import { useControllableState } from "../../shared/useControllableState";
+import { createValueCodec, todayIn, type DateValueFormat } from "./valueFormat";
 import {
   addDays,
   addMonths,
@@ -26,7 +27,6 @@ import {
   monthStart,
   startOfMonth,
   startOfWeek,
-  today,
   weekdayNames,
 } from "./calendar";
 import type {
@@ -107,6 +107,23 @@ export interface UseDatePickerOptions<M extends DatePickerMode = DatePickerMode>
   closeOnSelect?: boolean;
   /** Told when focus leaves the whole control, for form libraries. */
   onBlur?: (event: FocusEvent<HTMLElement>) => void;
+
+  /**
+   * How the days the picker exchanges with you are written: `value`,
+   * `defaultValue`, `onChange`, `minDate`, `maxDate`, the presets and the
+   * day `disabledDates` is asked about. A pattern such as `"DD/MM/YYYY"`,
+   * `"iso-datetime"` for the instant the day starts in `timeZone`, or a
+   * codec of your own. Defaults to `"YYYY-MM-DD"`.
+   */
+  valueFormat?: DateValueFormat;
+  /**
+   * The time zone the calendar works in: an IANA name such as
+   * `"Asia/Tokyo"`, `"UTC"`, or an offset such as `"+09:00"`. Today is
+   * today in that zone, and with `valueFormat: "iso-datetime"` a picked day
+   * is the instant it starts there and an instant is read as the day it falls
+   * on there. Defaults to the browser's own.
+   */
+  timeZone?: string;
 }
 
 /**
@@ -340,9 +357,6 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     mode = "single" as M,
     locale = "en-US",
     weekdayFormat = "narrow",
-    minDate,
-    maxDate,
-    disabledDates,
     clearable = true,
     disabled = false,
     invalid = false,
@@ -368,12 +382,51 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   const rootRef = useRef<HTMLElement | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
-  const empty = (mode === "multiple" ? [] : null) as DatePickerValue<M>;
-  const [value, setValue] = useControllableState<DatePickerValue<M>>(
-    options.value,
-    options.defaultValue ?? empty,
-    options.onChange,
+  const { valueFormat, timeZone } = options;
+  /** Days are calendar days inside; the codec turns them into the app's own format at the edges. */
+  const codec = useMemo(() => createValueCodec(valueFormat, timeZone), [valueFormat, timeZone]);
+  const now = useCallback(() => todayIn(timeZone), [timeZone]);
+  const read = useCallback((text: ISODate | null | undefined) => (text ? codec.parse(text) : null), [codec]);
+  const write = useCallback((day: ISODate) => codec.format(day), [codec]);
+  const toInner = useCallback(
+    (outer: DatePickerValue<M> | undefined): DatePickerValue<M> | undefined => {
+      if (outer === undefined) return undefined;
+      if (mode === "multiple") return (outer as ISODate[]).map(read).filter((day): day is ISODate => day !== null) as DatePickerValue<M>;
+      if (mode === "range") {
+        const outerRange = outer as DateRange | null;
+        return (outerRange ? { from: read(outerRange.from) ?? undefined, to: read(outerRange.to) ?? undefined } : null) as DatePickerValue<M>;
+      }
+      return read(outer as ISODate | null) as DatePickerValue<M>;
+    },
+    [mode, read],
   );
+  const toOuter = useCallback(
+    (inner: DatePickerValue<M>): DatePickerValue<M> => {
+      if (mode === "multiple") return (inner as ISODate[]).map(write) as DatePickerValue<M>;
+      if (mode === "range") {
+        const innerRange = inner as DateRange | null;
+        return (innerRange
+          ? { from: innerRange.from && write(innerRange.from), to: innerRange.to && write(innerRange.to) }
+          : null) as DatePickerValue<M>;
+      }
+      return ((inner as ISODate | null) && write(inner as ISODate)) as DatePickerValue<M>;
+    },
+    [mode, write],
+  );
+  const onChangeOuter = options.onChange;
+  const reportChange = useCallback((next: DatePickerValue<M>) => onChangeOuter?.(toOuter(next)), [onChangeOuter, toOuter]);
+  const innerValue = useMemo(() => toInner(options.value), [toInner, options.value]);
+  const innerDefault = useMemo(() => toInner(options.defaultValue), [toInner, options.defaultValue]);
+  const minDate = useMemo(() => read(options.minDate) ?? undefined, [read, options.minDate]);
+  const maxDate = useMemo(() => read(options.maxDate) ?? undefined, [read, options.maxDate]);
+  const askDisabled = options.disabledDates;
+  const disabledDates = useMemo(
+    () => (askDisabled ? (day: ISODate) => askDisabled(write(day)) : undefined),
+    [askDisabled, write],
+  );
+
+  const empty = (mode === "multiple" ? [] : null) as DatePickerValue<M>;
+  const [value, setValue] = useControllableState<DatePickerValue<M>>(innerValue, innerDefault ?? empty, reportChange);
   const [open, setOpenState] = useControllableState(options.open, options.defaultOpen ?? false, options.onOpenChange);
 
   const selectedDates = useMemo(() => toList(mode, value), [mode, value]);
@@ -387,9 +440,9 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   const maxMonth = maxDate ? startOfMonth(maxDate) : undefined;
 
   const [month, setMonthState] = useState<ISODate>(() =>
-    startOfMonth(clampDate(selectedDates[0] ?? today(), minDate, maxDate)),
+    startOfMonth(clampDate(selectedDates[0] ?? now(), minDate, maxDate)),
   );
-  const [focusedDate, setFocusedDate] = useState<ISODate>(() => selectedDates[0] ?? today());
+  const [focusedDate, setFocusedDate] = useState<ISODate>(() => selectedDates[0] ?? now());
   const [hoveredDate, setHoveredDate] = useState<ISODate | null>(null);
   const [rtl, setRtl] = useState(false);
   /** Bumped whenever DOM focus should follow the active day; the effect below reacts to it. */
@@ -426,7 +479,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
 
   /* ---------------------------------------------------------------- grid */
 
-  const weeks = useMemo(() => buildMonth(month, weekStartsOn), [month, weekStartsOn]);
+  const weeks = useMemo(() => buildMonth(month, weekStartsOn, now()), [month, weekStartsOn, now]);
   const weekdays = useMemo(
     () => weekdayNames(locale, weekStartsOn, weekdayFormat),
     [locale, weekStartsOn, weekdayFormat],
@@ -474,10 +527,10 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     if (isSameMonth(focusedDate, month) && inBounds(focusedDate)) return focusedDate;
     const picked = selectedDates.find((date) => isSameMonth(date, month) && inBounds(date));
     if (picked) return picked;
-    const now = today();
-    if (isSameMonth(now, month) && inBounds(now)) return now;
+    const todayThere = now();
+    if (isSameMonth(todayThere, month) && inBounds(todayThere)) return todayThere;
     return clampDate(month, minDate, maxDate);
-  }, [focusedDate, month, inBounds, selectedDates, minDate, maxDate]);
+  }, [focusedDate, month, inBounds, selectedDates, minDate, maxDate, now]);
 
   const focusDate = useCallback(
     (date: ISODate) => {
@@ -511,7 +564,7 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   const wasOpen = useRef(false);
   useIsomorphicLayoutEffect(() => {
     if (open && !wasOpen.current) {
-      const start = selectedDates[0] ?? today();
+      const start = selectedDates[0] ?? now();
       setFocusedDate(start);
       setMonthState(startOfMonth(clampDate(start, minDate, maxDate)));
       setRtl(isRightToLeft(rootRef.current));
@@ -575,7 +628,9 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   const applyPreset = useCallback(
     (preset: ISODate | DateRange) => {
       if (disabled) return;
-      const asRange: DateRange = typeof preset === "string" ? { from: preset, to: preset } : preset;
+      // Presets are written in the value format, like every day the app hands over.
+      const outerRange: DateRange = typeof preset === "string" ? { from: preset, to: preset } : preset;
+      const asRange: DateRange = { from: read(outerRange.from) ?? undefined, to: read(outerRange.to) ?? undefined };
 
       let next: unknown;
       if (mode === "single") next = asRange.from ?? null;
@@ -593,10 +648,10 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   );
 
   const goToToday = useCallback(() => {
-    const now = clampDate(today(), minDate, maxDate);
-    setFocusedDate(now);
-    setMonth(now);
-  }, [minDate, maxDate, setMonth]);
+    const day = clampDate(now(), minDate, maxDate);
+    setFocusedDate(day);
+    setMonth(day);
+  }, [minDate, maxDate, setMonth, now]);
 
   const showPreviousMonth = useCallback(() => setMonth(addMonths(month, -1)), [month, setMonth]);
   const showNextMonth = useCallback(() => setMonth(addMonths(month, 1)), [month, setMonth]);
