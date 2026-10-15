@@ -69,9 +69,10 @@ export interface FileUploaderProviderProps<TData = unknown> extends UseFileUploa
   /** Extra DOM props for the element parts. */
   slotProps?: FileUploaderSlotProps;
   /**
-   * The form field name. The root then keeps a hidden file input of that
-   * name holding every file the uploader has, so a plain HTML form submits
-   * them, as `<input type="file" name>` would.
+   * The form field name. A plain HTML form then submits every item under it:
+   * a file picked in the browser as the file, as `<input type="file" name>`
+   * would, and a file already on a server (restored from a URL, or
+   * uploaded) as its URL, so the server can tell what to keep.
    */
   name?: string;
   /** Your layout, built from the compound parts and your own components. */
@@ -237,13 +238,15 @@ export function FileUploaderRoot({ className, children, ...htmlProps }: FileUplo
 /**
  * Form files
  *
- * A hidden file input holding the uploader's files, for a plain HTML form.
- * A file input's files can only be set as a `FileList`, which a
- * `DataTransfer` builds; where there is none, the input stays empty.
+ * The uploader's items as form fields, for a plain HTML form: one hidden
+ * file input holding the files only the browser has, and a hidden text
+ * input per URL for the files already on a server. A file input's files can
+ * only be set as a `FileList`, which a `DataTransfer` builds.
  */
 function FormFiles({ name, items }: { name: string; items: UploadItem<unknown>[] }) {
   const ref = useRef<HTMLInputElement>(null);
-  const files = useMemo(() => items.flatMap((item) => (item.file ? [item.file] : [])), [items]);
+  const files = useMemo(() => items.flatMap((item) => (item.file && !item.url ? [item.file] : [])), [items]);
+  const urls = useMemo(() => items.flatMap((item) => (item.url ? [item.url] : [])), [items]);
 
   useEffect(() => {
     const input = ref.current;
@@ -253,7 +256,15 @@ function FormFiles({ name, items }: { name: string; items: UploadItem<unknown>[]
     input.files = transfer.files;
   }, [files]);
 
-  return <input ref={ref} type="file" name={name} multiple hidden tabIndex={-1} aria-hidden="true" data-form-files="" />;
+  return (
+    <>
+      {/* Disabled while empty: an empty file input still sends a blank file. */}
+      <input ref={ref} type="file" name={name} multiple hidden disabled={files.length === 0} tabIndex={-1} aria-hidden="true" data-form-files="" />
+      {urls.map((url) => (
+        <input key={url} type="hidden" name={name} value={url} />
+      ))}
+    </>
+  );
 }
 
 /**

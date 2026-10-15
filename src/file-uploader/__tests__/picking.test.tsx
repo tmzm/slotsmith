@@ -193,6 +193,17 @@ describe("a form field", () => {
     }
   });
 
+  it("submits a file already on a server as its URL, under the same name", () => {
+    const { container } = renderUploader({
+      multiple: true,
+      name: "photos",
+      defaultValue: ["https://cdn.example.com/a.png", "https://cdn.example.com/b.png"],
+    });
+    const form = container.ownerDocument.createElement("form");
+    form.append(container.firstElementChild!.cloneNode(true));
+    expect(new FormData(form).getAll("photos")).toEqual(["https://cdn.example.com/a.png", "https://cdn.example.com/b.png"]);
+  });
+
   it("renders no hidden input without a name", () => {
     const { container } = renderUploader();
     expect(container.querySelector("input[data-form-files]")).toBeNull();
