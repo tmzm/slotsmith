@@ -1,6 +1,6 @@
 {
   "name": "slotsmith",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "Finished data table, combobox, date picker and file uploader for React that drop into any design system: shadcn/ui, MUI, Chakra, Ant Design or your own. Every part is a slot; what you don't replace still looks finished.",
   "license": "ISC",
   "author": {

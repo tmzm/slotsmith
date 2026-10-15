@@ -157,6 +157,10 @@ Hand-written inputs live next to the generated output: `knowledge/guides/*.md` a
 
 ## Changelog
 
+- **1.9.0** — Describes `slotsmith` 1.9.0; copy any data-table adapter you use again with `add`:
+  - The data table's spreadsheet mode (`spreadsheet`, `value`, `onValueChange`, column `edit`, slots `CellEditor` and `FillHandle`), `virtual` on the data table, autocomplete and file uploader, and the row-reorder options `reorderWhileSorted`, `reorderAcrossParents`, `setSubRows`, `canDrop`, `reorderGroup`, `reorderTableId` and `onRowTransfer`; the date picker's `valueFormat` and `timeZone`.
+  - Every data-table adapter, in all five libraries, edits cells with its library's own input, draws the selection, the active cell and the fill handle in its own colours, shows a checkbox column with its own checkbox, and draws the drop line for rows dragged in from another table. The shadcn/ui data-table adapter now needs shadcn/ui's `input`. The shadcn/ui date-picker adapter's month and year lists open dark in dark mode.
+
 - **1.8.1** — Adapter fixes for `slotsmith` 1.8; copy any autocomplete adapter you use again with `add`:
   - Every autocomplete adapter's toggle and clear buttons use its library's own icons and sizes, and its popup sits above the page like its library's own (MUI on the modal layer).
   - The Ant Design adapter's inner input stays borderless, with options sized like its Select; the Chakra UI adapter's tags show their remove icon.
