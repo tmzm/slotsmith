@@ -17,6 +17,7 @@ import EditingARecord from "@samples/file-uploader/editing-a-record";
 import Labels from "@samples/file-uploader/labels";
 import Overview from "@samples/file-uploader/overview";
 import Picker from "@samples/file-uploader/picker";
+import Form from "@samples/file-uploader/form";
 import QuickStart from "@samples/file-uploader/quick-start";
 import Tile from "@samples/file-uploader/tile";
 import Uploads from "@samples/file-uploader/uploads";
@@ -423,5 +424,17 @@ describe("file uploader adapter demos", () => {
     expect(region, `${name} refusal region`).not.toBeNull();
     expect(region!.getAttribute("role")).toBe(refusalRole);
     if (refusalRole === "status") expect(region!.getAttribute("aria-live") ?? "polite").toBe("polite");
+  });
+});
+
+describe("file uploader guide: a plain form", () => {
+  it("names a hidden file input after the uploader, inside the form", () => {
+    const { container } = render(<Form />);
+    const hidden = container.querySelector<HTMLInputElement>('form input[name="attachments"]')!;
+    expect(hidden.type).toBe("file");
+    expect(hidden.hidden).toBe(true);
+    fireEvent.submit(container.querySelector("form")!);
+    // jsdom cannot set a file input's files, so the form sends none here; a browser sends every picked file.
+    expect(screen.getByText("Sent: no files")).toBeTruthy();
   });
 });

@@ -82,7 +82,7 @@ Every label can be translated or replaced; see [Labels & locales](./api/#labels)
 
 <Note kind="limitation">
 - One request per file. There are no chunked or resumable uploads, and a retry starts the file again from zero.
-- No `name` prop: the file input has no name, so a plain HTML form does not send the files. Build the request yourself from `onFilesChange`, as the [picker guide](./guides/picker/) does.
+- A form field sends only the files picked in the browser: with [`name`](./guides/picker/#sending-the-files), a file shown from a URL is not sent again. Setting a file input's files needs `DataTransfer`, which every current browser has.
 - Files only: a dropped folder is not read file by file, and there is no paste from the clipboard.
 - `accept` checks the file name and the MIME type the browser reports, not the file's contents. Check files on the server too.
 - Previews are object URLs for images only. There is no cropping, resizing or compression before upload.

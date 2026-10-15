@@ -39,6 +39,8 @@ Uploads start as soon as files are picked (`autoUpload`, default `true`), at mos
 
 ## Value
 
+In a plain HTML form, pass `name`: the root keeps a hidden file input of that name holding every picked file, so the form submits them.
+
 The canonical value is a list of `UploadItem`s (`value` / `onValueChange`). `defaultValue` also accepts `File[]` or URL strings, which is how an edit form shows files that were uploaded earlier: `defaultValue={user.photos}`.
 
 ## Validation

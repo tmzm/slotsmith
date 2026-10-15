@@ -22,7 +22,7 @@
   },
   "file-uploader": {
     "Selection": ["accept", "multiple", "maxFiles", "maxSize", "minSize", "validate", "disabled"],
-    "Value": ["value", "onValueChange", "defaultValue", "onFilesChange", "onUrlsChange"],
+    "Value": ["value", "onValueChange", "defaultValue", "onFilesChange", "onUrlsChange", "name"],
     "Uploading": ["upload", "autoUpload", "concurrency", "onUploaded", "onUploadError", "onReject"],
     "Rendering": ["variant", "components", "labels", "locale", "validationLabels", "slotProps", "preview", "hideList", "children", "captureWindowDrops", "virtual"]
   },

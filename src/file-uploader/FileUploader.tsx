@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type HTMLAttributes, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type HTMLAttributes, type ReactNode } from "react";
 import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
@@ -68,6 +68,12 @@ export interface FileUploaderProviderProps<TData = unknown> extends UseFileUploa
   locale?: LocaleInput;
   /** Extra DOM props for the element parts. */
   slotProps?: FileUploaderSlotProps;
+  /**
+   * The form field name. The root then keeps a hidden file input of that
+   * name holding every file the uploader has, so a plain HTML form submits
+   * them, as `<input type="file" name>` would.
+   */
+  name?: string;
   /** Your layout, built from the compound parts and your own components. */
   children?: ReactNode;
 }
@@ -126,6 +132,7 @@ export function FileUploaderProvider<TData = unknown>({
   labels: labelOverrides,
   locale,
   slotProps,
+  name,
   children,
   ...options
 }: FileUploaderProviderProps<TData>) {
@@ -180,6 +187,7 @@ export function FileUploaderProvider<TData = unknown>({
     tileItem: variant === "tile" ? model.items[model.items.length - 1] : undefined,
     statusLabel,
     locale: code,
+    name,
   };
 
   return <FileUploaderContext.Provider value={value}>{children}</FileUploaderContext.Provider>;
@@ -209,7 +217,7 @@ export interface FileUploaderRootProps extends HTMLAttributes<HTMLDivElement> {}
  * ```
  */
 export function FileUploaderRoot({ className, children, ...htmlProps }: FileUploaderRootProps) {
-  const { components: C, slotProps, variant, items, isDragging, disabled } = useFileUploaderContext();
+  const { components: C, slotProps, variant, items, isDragging, disabled, name } = useFileUploaderContext();
 
   return (
     <C.Root
@@ -221,8 +229,31 @@ export function FileUploaderRoot({ className, children, ...htmlProps }: FileUplo
       {...mergeSlot(slotProps.root, htmlProps)}
     >
       {children}
+      {name ? <FormFiles name={name} items={items} /> : null}
     </C.Root>
   );
+}
+
+/**
+ * Form files
+ *
+ * A hidden file input holding the uploader's files, for a plain HTML form.
+ * A file input's files can only be set as a `FileList`, which a
+ * `DataTransfer` builds; where there is none, the input stays empty.
+ */
+function FormFiles({ name, items }: { name: string; items: UploadItem<unknown>[] }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const files = useMemo(() => items.flatMap((item) => (item.file ? [item.file] : [])), [items]);
+
+  useEffect(() => {
+    const input = ref.current;
+    if (!input || typeof DataTransfer === "undefined") return;
+    const transfer = new DataTransfer();
+    for (const file of files) transfer.items.add(file);
+    input.files = transfer.files;
+  }, [files]);
+
+  return <input ref={ref} type="file" name={name} multiple hidden tabIndex={-1} aria-hidden="true" data-form-files="" />;
 }
 
 /**
@@ -258,7 +289,7 @@ const PROVIDER_KEYS = [
   "value", "onValueChange", "defaultValue", "onFilesChange", "onUrlsChange",
   "upload", "autoUpload", "concurrency", "onUploaded", "onUploadError", "onReject",
   "preview", "validationLabels", "captureWindowDrops",
-  "variant", "components", "labels", "locale", "slotProps",
+  "variant", "components", "labels", "locale", "slotProps", "name",
 ] as const;
 
 /**

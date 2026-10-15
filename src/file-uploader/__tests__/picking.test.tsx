@@ -149,3 +149,52 @@ describe("picking files", () => {
     expect(screen.getByRole("img")).toHaveAccessibleName("Preview of shot.png");
   });
 });
+
+describe("a form field", () => {
+  it("keeps every picked file in a hidden file input of the given name", async () => {
+    // jsdom has no DataTransfer and only takes a real FileList, so both are stood in for.
+    const assigned: File[][] = [];
+    vi.stubGlobal(
+      "DataTransfer",
+      class {
+        list: File[] = [];
+        items = { add: (file: File) => this.list.push(file) };
+        get files() {
+          return this.list;
+        }
+      },
+    );
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "files")!;
+    Object.defineProperty(HTMLInputElement.prototype, "files", {
+      configurable: true,
+      get: descriptor.get,
+      set(this: HTMLInputElement, files: File[]) {
+        if (this.hasAttribute("data-form-files")) assigned.push([...files]);
+      },
+    });
+
+    try {
+      const { container, user } = renderUploader({ multiple: true, name: "attachments" });
+      const hidden = container.querySelector<HTMLInputElement>('input[name="attachments"]')!;
+      expect(hidden.type).toBe("file");
+      expect(hidden.hidden).toBe(true);
+      expect(hidden.tabIndex).toBe(-1);
+
+      const report = makeFile("report.pdf", "application/pdf");
+      const photo = makeFile("photo.png", "image/png");
+      await user.upload(fileInput(), [report, photo]);
+      await waitFor(() => expect(assigned.at(-1)).toEqual([report, photo]));
+
+      fireEvent.click(within(itemNamed("report.pdf")).getByRole("button", { name: /remove/i }));
+      await waitFor(() => expect(assigned.at(-1)).toEqual([photo]));
+    } finally {
+      Object.defineProperty(HTMLInputElement.prototype, "files", descriptor);
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("renders no hidden input without a name", () => {
+    const { container } = renderUploader();
+    expect(container.querySelector("input[data-form-files]")).toBeNull();
+  });
+});

@@ -20,7 +20,14 @@ Without [`upload`](../../api/#prop-upload) every item stays `ready`, and the ite
 
 ## Sending the files
 
-The file input has no `name`, so a plain HTML form does not send the files on its own. Build the request from the files you were handed: append each one to a `FormData`, as the demo does in its submit handler, and send it with `fetch` or your form library.
+Build the request from the files you were handed: append each one to a `FormData`, as the demo does in its submit handler, and send it with `fetch` or your form library.
+
+In a plain HTML form, give the uploader a [`name`](../../api/#props). Its root then keeps a hidden file input of that name holding every file the uploader has, picked or dropped, so the form sends them as `<input type="file" name>` would: `new FormData(form).getAll(name)` returns them, and a form posted without script sends them as `multipart/form-data` (set `encType` on the form).
+
+{/* Reserved height: the drop zone, the button and the status line. */}
+<Demo name="file-uploader/form" height="14rem" fallback />
+
+Pick or drop files and press Send: the form's own `FormData` lists them. Only files picked in this browser are sent; a file shown from a URL, such as one uploaded earlier, has no file to send.
 
 ## Custom text
 

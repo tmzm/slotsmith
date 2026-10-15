@@ -33,6 +33,8 @@ export interface FileUploaderContextValue<TData = unknown> extends FileUploaderM
   statusLabel: (item: UploadItem<TData>) => ReactNode;
   /** The tag sizes are written in, or `undefined` when no locale is set. */
   locale: string | undefined;
+  /** The form field name the root's hidden file input submits the files under, if any. */
+  name?: string;
 }
 
 /**
