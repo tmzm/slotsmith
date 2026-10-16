@@ -226,3 +226,33 @@ describe("a form field", () => {
     expect(unnamed.container.querySelector('input[type="hidden"]')).toBeNull();
   });
 });
+
+describe("a popup in a portal", () => {
+  it("renders under body, and picking in it works as in place", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    const { container } = render(<DatePicker portal aria-label="Due" onChange={onChange} />);
+    await user.click(screen.getByRole("button", { name: "Open calendar" }));
+    expect(container.contains(dialog())).toBe(false);
+    expect(dialog().parentElement).toBe(document.body);
+    // Focus moved into the portal, and a press in it, both count as inside the control.
+    expect(day("2026-03-12")).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Next month" }));
+    expect(isOpen()).toBe(true);
+    await user.click(day("2026-04-08"));
+    expect(onChange).toHaveBeenCalledWith(at("2026-04-08"));
+  });
+
+  it("still closes on a press outside both", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <DatePicker portal aria-label="Due" />
+        <button type="button">Elsewhere</button>
+      </>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open calendar" }));
+    await user.click(screen.getByRole("button", { name: "Elsewhere" }));
+    expect(isOpen()).toBe(false);
+  });
+});

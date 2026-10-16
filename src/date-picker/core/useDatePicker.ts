@@ -15,6 +15,7 @@ import {
   type RefObject,
 } from "react";
 import { useControllableState } from "../../shared/useControllableState";
+import { whenFound } from "../../shared/whenFound";
 import { createInputCodec, formatInput, parseInput } from "./inputText";
 import { createValueCodec, todayIn, type DateValueFormat } from "./valueFormat";
 import {
@@ -520,6 +521,16 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     [disabled, setOpenState],
   );
 
+/**
+   * Whether a node is part of the control: inside the root, or inside the
+   * popup, which a replacement part may render in a portal away from it.
+   */
+  const isInside = useCallback(
+    (node: Node) => !!rootRef.current?.contains(node) || !!document.getElementById(ids.popup)?.contains(node),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ids.popup],
+  );
+
   const focusTrigger = useCallback(() => {
     returningFocus.current = true;
     triggerRef.current?.focus();
@@ -600,10 +611,11 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   /** DOM focus follows the active day whenever something asked it to. */
   useEffect(() => {
     if (!open || focusRequest === 0) return;
-    /** Looked up by id, so a replacement popup that portals out of the root still works. */
-    const grid = document.getElementById(ids.grid) ?? rootRef.current;
-    const cell = grid?.querySelector<HTMLElement>(`[data-date="${activeDate}"]`);
-    cell?.focus({ preventScroll: true });
+    /** Looked up by id, so a replacement popup that portals out of the root still works, even one mounted a frame late. */
+    return whenFound(
+      () => (document.getElementById(ids.grid) ?? rootRef.current)?.querySelector<HTMLElement>(`[data-date="${activeDate}"]`),
+      (cell) => cell.focus({ preventScroll: true }),
+    );
     // Only a new request moves focus; a re-render alone must not steal it back from the caption or footer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusRequest]);
@@ -637,11 +649,11 @@ export function useDatePicker<M extends DatePickerMode = "single">(
     if (!open) return;
     const onPointerDown = (event: Event) => {
       const target = event.target as Node | null;
-      if (target && !rootRef.current?.contains(target)) setOpen(false);
+      if (target && !isInside(target)) setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown, true);
     return () => document.removeEventListener("pointerdown", onPointerDown, true);
-  }, [open, setOpen]);
+  }, [open, setOpen, isInside]);
 
   /* ------------------------------------------------------------- actions */
 
@@ -920,11 +932,11 @@ export function useDatePicker<M extends DatePickerMode = "single">(
   const onRootBlur = useCallback(
     (event: FocusEvent<HTMLElement>) => {
       const next = event.relatedTarget as Node | null;
-      if (next && rootRef.current?.contains(next)) return;
+      if (next && isInside(next)) return;
       if (next) setOpen(false);
       onBlur?.(event);
     },
-    [onBlur, setOpen],
+    [onBlur, setOpen, isInside],
   );
 
   /* -------------------------------------------------------- prop getters */

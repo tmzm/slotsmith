@@ -18,7 +18,7 @@
     "Remote options": ["loading", "error", "onRetry", "hasMore", "onLoadMore", "loadingMore"],
     "Creating": ["creatable", "onCreate", "createLoading"],
     "Rendering": ["components", "labels", "locale", "slotProps", "placeholder", "maxTags", "virtual"],
-    "Positioning": ["placement", "popupOffset", "matchTriggerWidth", "popupMaxHeight"]
+    "Positioning": ["placement", "popupOffset", "matchTriggerWidth", "popupMaxHeight", "portal"]
   },
   "file-uploader": {
     "Selection": ["accept", "multiple", "maxFiles", "maxSize", "minSize", "validate", "disabled"],
@@ -31,7 +31,7 @@
     "Calendar": ["locale", "weekStartsOn", "weekdayFormat", "presets"],
     "Bounds": ["minDate", "maxDate", "disabledDates"],
     "Open state": ["open", "defaultOpen", "onOpenChange", "disabled", "invalid", "onBlur"],
-    "Display": ["trigger", "openOnFocus", "placeholder", "format", "placement", "popupOffset"],
+    "Display": ["trigger", "openOnFocus", "placeholder", "format", "placement", "popupOffset", "portal"],
     "Slots and labels": ["components", "labels", "slotProps"]
   }
 }

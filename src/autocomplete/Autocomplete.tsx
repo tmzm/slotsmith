@@ -5,6 +5,7 @@ import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
 import { withoutUndefined } from "../shared/withoutUndefined";
+import type { PortalTarget } from "../shared/portal";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import type { OptionValue } from "./core/types";
 import { useAutocomplete, type UseAutocompleteOptions } from "./core/useAutocomplete";
@@ -65,6 +66,14 @@ export interface AutocompleteSharedProps<TOption> extends EngineOptions<TOption>
   placement?: PopupPlacement;
   /** Gap between trigger and popup, in pixels. Defaults to 4. */
   popupOffset?: number;
+  /**
+   * Renders the popup in a portal: `true` for `document.body`, or an element
+   * of your own. It then escapes any ancestor's `overflow`, `transform` or
+   * stacking context, and still counts as part of the control. Set the
+   * `--ss-*` tokens and the dark class on `:root` or on that element, which
+   * the popup then inherits from. Defaults to `false`.
+   */
+  portal?: PortalTarget;
   /** Make the popup exactly as wide as the trigger. Defaults to `true`. */
   matchTriggerWidth?: boolean;
   /** Upper bound on the popup's height, in pixels. Defaults to 320. */
@@ -191,6 +200,7 @@ export function AutocompleteProvider<TOption>(props: AutocompleteProviderProps<T
     maxTags = 2,
     placement,
     popupOffset,
+    portal,
     matchTriggerWidth,
     popupMaxHeight,
     name,
@@ -243,6 +253,7 @@ export function AutocompleteProvider<TOption>(props: AutocompleteProviderProps<T
     labels,
     slotProps: slotProps ?? {},
     position,
+    portal: portal ?? false,
     placeholder: placeholder ?? labels.placeholder,
     maxTags,
   };
@@ -311,7 +322,7 @@ const PROVIDER_KEYS = [
   "creatable", "onCreate", "createLoading",
   "clearable", "closeOnSelect", "loop", "autoHighlight", "disabled", "invalid", "onBlur",
   "components", "labels", "locale", "slotProps", "placeholder", "maxTags",
-  "placement", "popupOffset", "matchTriggerWidth", "popupMaxHeight", "name",
+  "placement", "popupOffset", "portal", "matchTriggerWidth", "popupMaxHeight", "name",
 ] as const;
 
 /**

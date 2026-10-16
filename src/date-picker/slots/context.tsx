@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
+import type { PortalTarget } from "../../shared/portal";
 import type { PopupPosition } from "../../shared/position";
 import type { DatePickerPreset, DatePickerMode } from "../core/types";
 import type { DatePickerModel } from "../core/useDatePicker";
@@ -24,6 +25,8 @@ export interface DatePickerContextValue<M extends DatePickerMode = DatePickerMod
   slotProps: DatePickerSlotProps;
   /** Where the popup sits, and the refs that keep it there. */
   position: PopupPosition;
+  /** Where the popup renders: in place, or in a portal. */
+  portal: PortalTarget;
   /** The placeholder the trigger shows when nothing is picked, and the text field's accessible name when nothing else names it. */
   placeholder: string;
   /** The form field name the root's hidden inputs submit the value under, if any. */

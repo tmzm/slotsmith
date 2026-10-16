@@ -5,6 +5,7 @@ import { useLocaleSection } from "../locale/useLocaleSection";
 import type { LocaleInput } from "../locale/types";
 import { useSlots } from "../provider/useSlots";
 import { mergeProps } from "../shared/mergeProps";
+import type { PortalTarget } from "../shared/portal";
 import { usePopupPosition, type PopupPlacement } from "../shared/position";
 import { withoutUndefined } from "../shared/withoutUndefined";
 import { formatDate } from "./core/calendar";
@@ -62,6 +63,14 @@ export interface DatePickerSharedProps
   placement?: PopupPlacement;
   /** Gap between trigger and popup, in pixels. Defaults to 4. */
   popupOffset?: number;
+  /**
+   * Renders the popup in a portal: `true` for `document.body`, or an element
+   * of your own. It then escapes any ancestor's `overflow`, `transform` or
+   * stacking context, and still counts as part of the control. Set the
+   * `--ss-*` tokens and the dark class on `:root` or on that element, which
+   * the popup then inherits from. Defaults to `false`.
+   */
+  portal?: PortalTarget;
 }
 
 /**
@@ -212,6 +221,7 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
     name,
     placement,
     popupOffset,
+    portal,
     children,
     ...engineOptions
   } = props as LooseProps;
@@ -251,6 +261,7 @@ export function DatePickerProvider(props: DatePickerProviderProps) {
     labels,
     slotProps: slotProps ?? {},
     position,
+    portal: portal ?? false,
     placeholder: placeholder ?? labels.placeholder,
     inputPlaceholder: placeholder ?? model.inputPattern,
     name,
@@ -308,7 +319,7 @@ const PROVIDER_KEYS = [
   "open", "defaultOpen", "onOpenChange",
   "locale", "weekStartsOn", "weekdayFormat", "minDate", "maxDate", "disabledDates",
   "clearable", "disabled", "invalid", "closeOnSelect", "onBlur", "valueFormat", "timeZone", "trigger", "openOnFocus",
-  "placeholder", "presets", "format", "name", "components", "labels", "slotProps", "placement", "popupOffset",
+  "placeholder", "presets", "format", "name", "components", "labels", "slotProps", "placement", "popupOffset", "portal",
 ] as const;
 
 /**

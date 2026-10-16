@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { inPortal } from "../shared/portal";
 import type { UseVirtualizer } from "../shared/virtualizer";
 import {
   AutocompleteGroupLabelView,
@@ -330,10 +331,10 @@ export function AutocompleteVirtualList({
  * @param props - See {@link AutocompleteVirtualOptions}.
  */
 export function AutocompleteVirtualPopup(props: AutocompleteVirtualOptions) {
-  const { components: C, slotProps, open, position, getPopupProps } = useAutocompleteContext();
+  const { components: C, slotProps, open, position, portal, getPopupProps } = useAutocompleteContext();
   if (!open) return null;
 
-  return (
+  return inPortal(
     <C.Popup
       {...mergeProps(mergeProps({ ...getPopupProps(), style: position.style, "data-placement": position.placement }, slotProps.popup), {
         ref: position.setPopup,
@@ -341,6 +342,7 @@ export function AutocompleteVirtualPopup(props: AutocompleteVirtualOptions) {
     >
       <AutocompleteSearch />
       <AutocompleteVirtualList {...props} />
-    </C.Popup>
+    </C.Popup>,
+    portal,
   );
 }

@@ -2,6 +2,7 @@
 
 import type { Ref } from "react";
 import { mergeProps, mergeRefs } from "../shared/mergeProps";
+import { inPortal } from "../shared/portal";
 import type { CalendarDay } from "./core/types";
 import { useDatePickerContext } from "./slots/context";
 import { classes } from "./classes";
@@ -293,10 +294,10 @@ export function DatePickerFooter() {
  * @param props - Extra DOM props for the popup element.
  */
 export function DatePickerPopup(props: Record<string, unknown> = {}) {
-  const { components: C, labels, slotProps, open, position, getPopupProps } = useDatePickerContext();
+  const { components: C, labels, slotProps, open, position, portal, getPopupProps } = useDatePickerContext();
   if (!open) return null;
 
-  return (
+  return inPortal(
     <C.Popup
       {...mergeProps(
         mergeProps(
@@ -314,6 +315,7 @@ export function DatePickerPopup(props: Record<string, unknown> = {}) {
       <DatePickerHeader />
       <DatePickerCalendar />
       <DatePickerFooter />
-    </C.Popup>
+    </C.Popup>,
+    portal,
   );
 }

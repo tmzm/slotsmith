@@ -83,3 +83,7 @@ Replacing `Popup` with a library popover replaces the built-in positioning too.
 ## Long lists
 
 `VirtualAutocomplete` from `slotsmith/virtual` windows the options (needs `@tanstack/react-virtual`).
+
+## Portal
+
+`portal` renders the popup in `document.body` (`true`) or an element you pass, out of any ancestor's `overflow`, `transform` or stacking context. The popup still counts as part of the control. A replacement `Popup` slot can render a UI library's own popover instead: anchor it to `useAutocompleteContext().position.anchor`, keep the props it is given on the library's content element (its `id` is how the control finds it), and leave out `style`.

@@ -111,7 +111,7 @@ Picking an option in single mode closes the popup and returns focus to the trigg
 - Groups are one level deep and take their order from the options; there are no nested groups. See [groups and separators](./guides/groups/).
 - The "Load more" and "Retry" buttons in the list are reached with the pointer only: the keyboard stays in the search.
 - An option's label is a string, because the trigger, the filter and typeahead read it. A richer row goes in the `OptionLabel` slot. See [remote options](./guides/remote-options/).
-- The popup is not in a portal. It uses `position: fixed`, so it escapes `overflow: hidden`, but an ancestor with a `transform` or `filter` becomes its containing block.
+- The popup renders in place by default, with `position: fixed`, so it escapes `overflow: hidden` and makes up for an ancestor with a `transform`. Pass [`portal`](./api/#props) to render it in `document.body` or an element of your own; set the `--ss-*` tokens and the dark class on `:root` or that element, which the popup then inherits from.
 </Note>
 
 ## FAQ

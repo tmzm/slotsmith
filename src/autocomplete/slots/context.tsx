@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { AutocompleteModel } from "../core/useAutocomplete";
+import type { PortalTarget } from "../../shared/portal";
 import type { PopupPosition } from "../../shared/position";
 import type { AutocompleteComponents, AutocompleteLabels, AutocompleteSlotProps } from "./types";
 
@@ -23,6 +24,8 @@ export interface AutocompleteContextValue<TOption = any> extends AutocompleteMod
   slotProps: AutocompleteSlotProps;
   /** Where the popup sits, and the refs that keep it there. */
   position: PopupPosition;
+  /** Where the popup renders: in place, or in a portal. */
+  portal: PortalTarget;
   /** The placeholder the trigger shows when nothing is selected. */
   placeholder: string;
   /** How many tags render before the rest collapse into `+N`. */

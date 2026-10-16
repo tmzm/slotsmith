@@ -22,6 +22,7 @@ import type {
   ResolvedOption,
 } from "./types";
 import { useControllableState } from "../../shared/useControllableState";
+import { whenFound } from "../../shared/whenFound";
 
 /** How long a typeahead run stays open before the next key starts a new one. */
 const TYPEAHEAD_TIMEOUT = 700;
@@ -254,6 +255,8 @@ export interface AutocompleteModel<TOption> {
     root: string;
     trigger: string;
     list: string;
+    /** The popup, which counts as part of the control wherever it is rendered. */
+    popup: string;
     option: (index: number) => string;
     /** The id of a group's label element, from the group's name. */
     group: (group: string) => string;
@@ -490,6 +493,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       root: `${reactId}-root`,
       trigger: `${reactId}-trigger`,
       list: `${reactId}-list`,
+      popup: `${reactId}-popup`,
       option: (index: number) => {
         const option = visible[index];
         return `${reactId}-option-${option === undefined ? `i${index}` : idFragment(getOptionValue(option))}`;
@@ -751,20 +755,35 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
    */
   useEffect(() => {
     if (!open || !searchable) return;
-    const search = searchRef.current;
-    if (search && search !== search.ownerDocument.activeElement) search.focus();
+    // A popup a UI library portals can mount its search box a frame late.
+    return whenFound(
+      () => searchRef.current,
+      (search) => {
+        if (search !== search.ownerDocument.activeElement) search.focus();
+      },
+    );
   }, [open, searchable]);
+
+/**
+   * Whether a node is part of the control: inside the root, or inside the
+   * popup, which a replacement part may render in a portal away from it.
+   */
+  const isInside = useCallback(
+    (node: Node) => !!rootRef.current?.contains(node) || !!document.getElementById(ids.popup)?.contains(node),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ids.popup],
+  );
 
   /** A pointer going down outside the control closes the popup. */
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: Event) => {
       const target = event.target as Node | null;
-      if (target && !rootRef.current?.contains(target)) setOpen(false);
+      if (target && !isInside(target)) setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown, true);
     return () => document.removeEventListener("pointerdown", onPointerDown, true);
-  }, [open, setOpen]);
+  }, [open, setOpen, isInside]);
 
   /** Paging is driven by the list's own scroll box, never the viewport. */
   useEffect(() => {
@@ -981,10 +1000,10 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   const onBlurCapture = useCallback(
     (event: FocusEvent<HTMLElement>) => {
       const next = event.relatedTarget as Node | null;
-      if (next && rootRef.current?.contains(next)) return;
+      if (next && isInside(next)) return;
       onBlur?.(event);
     },
-    [onBlur],
+    [onBlur, isInside],
   );
 
   /* ------------------------------------------------------------ prop getters */
@@ -1099,7 +1118,7 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
       /** Leaving without a pick closes the list, which also restores the label. */
       onBlur: (event: { relatedTarget: EventTarget | null }) => {
         const next = event.relatedTarget as Node | null;
-        if (next && rootRef.current?.contains(next)) return;
+        if (next && isInside(next)) return;
         if (open) setOpen(false);
         else if (query) setQueryState("");
       },
@@ -1124,9 +1143,12 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
   );
 
   const getPopupProps = useCallback(
-    (): Record<string, unknown> =>
-      inTrigger ? { onMouseDown: (event: { preventDefault: () => void }) => event.preventDefault() } : {},
-    [inTrigger],
+    (): Record<string, unknown> => ({
+      /** Found by id, so a popup a replacement part renders in a portal still counts as part of the control. */
+      id: ids.popup,
+      ...(inTrigger ? { onMouseDown: (event: { preventDefault: () => void }) => event.preventDefault() } : {}),
+    }),
+    [inTrigger, ids.popup],
   );
 
   const getSearchProps = useCallback(

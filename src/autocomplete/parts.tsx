@@ -3,6 +3,7 @@
 import { Fragment, type ReactNode, type Ref } from "react";
 import type { AutocompleteSection } from "./core/groups";
 import { mergeProps, mergeRefs } from "../shared/mergeProps";
+import { inPortal } from "../shared/portal";
 import { useAutocompleteContext } from "./slots/context";
 import { classes } from "./classes";
 
@@ -428,10 +429,10 @@ export function AutocompleteList(props: Record<string, unknown> = {}) {
  * @param props - Extra DOM props for the popup element.
  */
 export function AutocompletePopup(props: Record<string, unknown> = {}) {
-  const { components: C, slotProps, open, position, getPopupProps } = useAutocompleteContext();
+  const { components: C, slotProps, open, position, portal, getPopupProps } = useAutocompleteContext();
   if (!open) return null;
 
-  return (
+  return inPortal(
     <C.Popup
       {...mergeProps(mergeProps({ ...getPopupProps(), style: position.style, "data-placement": position.placement }, slotProps.popup), {
         ...props,
@@ -440,7 +441,8 @@ export function AutocompletePopup(props: Record<string, unknown> = {}) {
     >
       <AutocompleteSearch />
       <AutocompleteList />
-    </C.Popup>
+    </C.Popup>,
+    portal,
   );
 }
 
