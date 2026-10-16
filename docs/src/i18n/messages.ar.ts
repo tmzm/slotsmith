@@ -110,7 +110,7 @@ export const ar: Record<MessageKey, string> = {
   "faq.designSystem.q": "هل تعمل مع نظام التصميم الذي أستخدمه؟",
   "faq.designSystem.a": "نعم. كل جزء منفذ (slot): مرّر زر نظامك أو مربع الاختيار أو القائمة المنسدلة فيحلّ محلّ البديل الافتراضي. تعرض صفحات المحوّلات shadcn/ui وMUI وChakra وAnt Design وRadix Themes أمثلةً على ذلك.",
   "faq.bundle.q": "كم يضيف مكوّن واحد إلى حجم الحزمة؟",
-  "faq.bundle.a": "لكل مكوّن نقطة دخول خاصة به. حجم نقطة دخول جدول البيانات {size} بعد ضغط gzip، دون احتساب React وTanStack Table وFloating UI التي يستوردها. تسرد صفحة الثقة كل نقاط الدخول.",
+  "faq.bundle.a": "لكل مكوّن نقطة دخول خاصة به. حجم نقطة دخول جدول البيانات {size} بعد ضغط gzip، دون احتساب React وTanStack Table اللتين يستوردهما، فلا تعتمد slotsmith على أي حزمة أخرى. تسرد صفحة الثقة كل نقاط الدخول.",
   "faq.react18.q": "هل تعمل مع React 18؟",
   "faq.react18.a": "نعم. نطاق الاعتمادية النظيرة هو react {react}، لذا يعمل الإصداران React 18 وReact 19.",
   "faq.license.q": "ما الترخيص؟",

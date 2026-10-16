@@ -110,11 +110,11 @@ export const SUBJECTS: Subject[] = [
         source: "/guides/",
       },
       builtOn: {
-        text: "React. The data table uses TanStack Table 9; `@floating-ui/react-dom` places the popups.",
+        text: "React. The data table uses TanStack Table 9; slotsmith has no dependencies of its own.",
         source: "/getting-started/#install",
       },
       dependencies: {
-        text: `Peers: ${ranges(peers.filter(([name]) => !isOptional(name)))}. Optional peers: ${ranges(peers.filter(([name]) => isOptional(name)))}. Dependencies: ${ranges(Object.entries(library.dependencies ?? {}))}.`,
+        text: `Peers: ${ranges(peers.filter(([name]) => !isOptional(name)))}. Optional peers: ${ranges(peers.filter(([name]) => isOptional(name)))}. ${Object.keys(library.dependencies ?? {}).length ? `Dependencies: ${ranges(Object.entries(library.dependencies ?? {}))}.` : "No dependencies."}`,
         source: "/getting-started/#install",
       },
       license: { text: library.license, source: "/trust/#license" },

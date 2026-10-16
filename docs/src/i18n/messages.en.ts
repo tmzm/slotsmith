@@ -110,7 +110,7 @@ export const en = {
   "faq.designSystem.q": "Does it work with my existing design system?",
   "faq.designSystem.a": "Yes. Every part is a slot: pass your design system's button, checkbox or select and it replaces the fallback. The Adapters pages show shadcn/ui, MUI, Chakra, Ant Design and Radix Themes as examples.",
   "faq.bundle.q": "How much does one component add to my bundle?",
-  "faq.bundle.a": "Each component has its own entry point. The data table entry is {size} gzipped, not counting React, TanStack Table and Floating UI, which it imports. The Trust page lists every entry.",
+  "faq.bundle.a": "Each component has its own entry point. The data table entry is {size} gzipped, not counting React and TanStack Table, which it imports; slotsmith has no dependencies of its own. The Trust page lists every entry.",
   "faq.react18.q": "Does it work with React 18?",
   "faq.react18.a": "Yes. The peer dependency range is react {react}, so React 18 and React 19 both work.",
   "faq.license.q": "What is the license?",

@@ -17,7 +17,7 @@ const outFile = resolve(docsRoot, "src/generated/facts.json");
 const ENTRIES = ["slotsmith", "slotsmith/data-table", "slotsmith/autocomplete", "slotsmith/date-picker", "slotsmith/file-uploader"];
 
 /** What an app brings itself, so it is left out of each entry's size. */
-const EXTERNAL = ["react", "react-dom", "react/*", "react-dom/*", "@tanstack/*", "@floating-ui/*"];
+const EXTERNAL = ["react", "react-dom", "react/*", "react-dom/*", "@tanstack/*"];
 
 /** The coverage metrics the site states, as the json-summary report names them. */
 const METRICS = ["lines", "branches", "functions", "statements"] as const;

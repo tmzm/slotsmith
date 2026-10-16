@@ -183,8 +183,5 @@
   ],
   "bugs": {
     "url": "https://github.com/tmzm/slotsmith/issues"
-  },
-  "dependencies": {
-    "@floating-ui/react-dom": "^2.1.9"
   }
 }

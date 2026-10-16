@@ -13,7 +13,7 @@ import { defineConfig } from "tsup";
  */
 rmSync("dist", { recursive: true, force: true });
 
-const external = ["react", "react-dom", "@tanstack/react-table", "@tanstack/react-virtual", "@floating-ui/react-dom"];
+const external = ["react", "react-dom", "@tanstack/react-table", "@tanstack/react-virtual"];
 
 /** One entry per file in `src/locales`, so a new pack is built the moment it is added. */
 const locales = Object.fromEntries(

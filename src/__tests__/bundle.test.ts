@@ -91,7 +91,6 @@ const EXTERNAL = [
   "react/jsx-runtime",
   "@tanstack/react-table",
   "@tanstack/react-virtual",
-  "@floating-ui/react-dom",
 ];
 
 /**
