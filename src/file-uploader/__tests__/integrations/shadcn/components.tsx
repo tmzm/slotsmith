@@ -101,8 +101,8 @@ const ShadcnDropzone = ({ className, ...props }: DropzoneSlotProps) => (
     className={cn(
       "flex flex-col items-center gap-2 rounded-lg border border-dashed p-8 text-center transition-colors",
       "hover:border-primary hover:bg-accent/50",
-      "data-[dragging]:border-primary data-[dragging]:bg-accent",
-      "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-55",
+      "data-dragging:border-primary data-dragging:bg-accent",
+      "data-disabled:cursor-not-allowed data-disabled:opacity-55",
       className,
     )}
     {...props}
