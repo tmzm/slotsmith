@@ -7,9 +7,9 @@
  * out keeps its fallback.
  */
 import { CheckOutlined, CloseCircleFilled, DownOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Divider, Empty, Input, Popover, Spin, Tag, Typography, theme } from "antd";
-import type { InputRef } from "antd";
-import { useCallback, useState, type FocusEvent, type ReactNode, type Ref } from "react";
+import { Button, ConfigProvider, Divider, Empty, Input, Popover, Spin, Tag, Typography, theme } from "antd";
+import type { GlobalToken, InputRef } from "antd";
+import { useCallback, useContext, useId, useState, type FocusEvent, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
 import type {
   AutocompleteCheckSlotProps,
@@ -59,13 +59,41 @@ import { useAutocompleteContext } from "../../../index";
 const has = (props: object, name: `data-${string}`) => (props as Record<string, unknown>)[name] !== undefined;
 
 /**
+ * Field sheet
+ *
+ * What no slot renders: the row of tags and the text field, and the
+ * announcement, which only assistive technology hears. Ant's parts take
+ * inline styles, which cannot reach those, so a sheet scoped to the root
+ * lays them out, and the field holds together without slotsmith's
+ * stylesheet.
+ *
+ * @param scope - The root's scope class.
+ * @param token - The theme's tokens.
+ * @returns The sheet.
+ */
+function fieldSheet(scope: string, token: GlobalToken): string {
+  const s = `.${scope}`;
+  return `${s} .sac__body { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: center; gap: ${token.paddingXXS}px; }
+${s} .sac__sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }`;
+}
+
+/**
  * Ant root
  *
- * The box the popup is measured against.
+ * The box the popup is measured against, carrying the field's sheet with the
+ * nonce from `ConfigProvider`'s `csp`, as Ant's own styles do.
  */
-const AntRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
-  <div style={{ position: "relative", ...style }} {...props} />
-);
+function AntRoot({ style, className, children, ...props }: AutocompleteRootSlotProps) {
+  const { token } = theme.useToken();
+  const { csp } = useContext(ConfigProvider.ConfigContext);
+  const scope = `ss-antd-field-${useId().replace(/[^\w-]/g, "")}`;
+  return (
+    <div className={className ? `${scope} ${className}` : scope} style={{ position: "relative", ...style }} {...props}>
+      <style nonce={csp?.nonce}>{fieldSheet(scope, token)}</style>
+      {children}
+    </div>
+  );
+}
 
 /**
  * Ant trigger

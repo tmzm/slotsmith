@@ -11,7 +11,7 @@
  */
 import { CheckIcon, ChevronDownIcon, Cross2Icon, CrossCircledIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Badge, Box, Button, Flex, IconButton, Popover, Separator, Spinner, Text, TextField } from "@radix-ui/themes";
-import { useMemo, useState, type FocusEvent, type ReactNode, type RefObject } from "react";
+import { useId, useMemo, useState, type FocusEvent, type ReactNode, type RefObject } from "react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -66,13 +66,38 @@ import { useAutocompleteContext } from "../../../index";
 const has = (props: object, name: `data-${string}`) => (props as Record<string, unknown>)[name] !== undefined;
 
 /**
+ * Field sheet
+ *
+ * What no slot renders: the row of tags and the text field, and the
+ * announcement, which only assistive technology hears. Radix's parts take
+ * inline styles, which cannot reach those, so a sheet scoped to the root
+ * lays them out, and the field holds together without slotsmith's
+ * stylesheet. Radix Themes offers no nonce setting: an app with a strict
+ * `style-src` policy adds its nonce to the `<style>` here.
+ *
+ * @param scope - The root's scope class.
+ * @returns The sheet.
+ */
+function fieldSheet(scope: string): string {
+  const s = `.${scope}`;
+  return `${s} .sac__body { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+${s} .sac__sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }`;
+}
+
+/**
  * Radix root
  *
- * The box the popup is measured against.
+ * The box the popup is measured against, carrying the field's sheet.
  */
-const RadixRoot = ({ style, ...props }: AutocompleteRootSlotProps) => (
-  <div style={{ position: "relative", ...style }} {...props} />
-);
+function RadixRoot({ style, className, children, ...props }: AutocompleteRootSlotProps) {
+  const scope = `ss-radix-field-${useId().replace(/[^\w-]/g, "")}`;
+  return (
+    <div className={className ? `${scope} ${className}` : scope} style={{ position: "relative", ...style }} {...props}>
+      <style>{fieldSheet(scope)}</style>
+      {children}
+    </div>
+  );
+}
 
 /**
  * Radix trigger

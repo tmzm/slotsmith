@@ -19,6 +19,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import Typography from "@mui/material/Typography";
+import type { SxProps, Theme } from "@mui/material/styles";
 import { createSvgIcon } from "@mui/material/utils";
 import type {
   AutocompleteCheckSlotProps,
@@ -59,11 +60,35 @@ import { useAutocompleteContext } from "slotsmith/autocomplete";
 const isTrue = (value: unknown) => value === true || value === "true";
 
 /**
+ * Root style
+ *
+ * The positioning context the popup is measured against, and what no slot
+ * renders, laid out so the field holds together without slotsmith's
+ * stylesheet: the row of tags and the text field, and the announcement,
+ * which only assistive technology hears.
+ */
+const rootSx: SxProps<Theme> = {
+  position: "relative",
+  "& .sac__body": { display: "flex", flex: 1, minWidth: 0, flexWrap: "wrap", alignItems: "center", gap: 0.5 },
+  "& .sac__sr-only": {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    m: "-1px",
+    p: 0,
+    overflow: "hidden",
+    clipPath: "inset(50%)",
+    whiteSpace: "nowrap",
+    border: 0,
+  },
+};
+
+/**
  * MUI root
  *
  * A `Box` the popup is measured against.
  */
-const MuiRoot = (props: AutocompleteRootSlotProps) => <Box sx={{ position: "relative" }} {...props} />;
+const MuiRoot = (props: AutocompleteRootSlotProps) => <Box sx={rootSx} {...props} />;
 
 /**
  * Arrow drop down icon

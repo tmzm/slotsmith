@@ -63,6 +63,22 @@ const captionSelect =
 /** The open list takes the popover's colours: on Windows the browser draws it from the options' own. */
 const captionOption = "bg-popover text-popover-foreground";
 
+/**
+ * Calendar layout
+ *
+ * The calendar's own structure, which no slot renders: the header row, the
+ * seven columns of the weekday and week rows, and the centred cells. Laid
+ * out here too, so the picker holds together without slotsmith's stylesheet.
+ * Tailwind reads `_` in a selector as a space, so the class names' own
+ * underscores are escaped, in `String.raw` so the backslash stays.
+ */
+const calendarLayout = cn(
+  String.raw`[&_.sdp\_\_header]:flex [&_.sdp\_\_header]:items-center [&_.sdp\_\_header]:justify-between [&_.sdp\_\_header]:gap-1 [&_.sdp\_\_header]:pb-2`,
+  String.raw`[&_.sdp\_\_weekdays]:grid [&_.sdp\_\_weekdays]:grid-cols-7 [&_.sdp\_\_week]:grid [&_.sdp\_\_week]:grid-cols-7`,
+  String.raw`[&_.sdp\_\_columnheader]:grid [&_.sdp\_\_columnheader]:min-w-0 [&_.sdp\_\_columnheader]:place-items-center`,
+  String.raw`[&_.sdp\_\_cell]:grid [&_.sdp\_\_cell]:min-w-0 [&_.sdp\_\_cell]:place-items-center`,
+);
+
 export const shadcnComponents: Partial<DatePickerComponents> = {
   Root: ({ className, ...props }) => (
     <div
@@ -195,7 +211,7 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
           onOpenAutoFocus={(event) => event.preventDefault()}
           onCloseAutoFocus={(event) => event.preventDefault()}
           // Its own stacking context, so the range band behind each day stays above the surface.
-          className={cn("isolate w-72 p-2", className)}
+          className={cn("isolate w-72 p-2", calendarLayout, className)}
           {...props}
         />
       </Popover>

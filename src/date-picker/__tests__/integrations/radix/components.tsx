@@ -11,7 +11,7 @@
  */
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, CrossCircledIcon } from "@radix-ui/react-icons";
 import { Button, Flex, IconButton, Popover, Select, Text, TextField } from "@radix-ui/themes";
-import { useEffect, useMemo, useState, type RefObject } from "react";
+import { useEffect, useId, useMemo, useState, type RefObject } from "react";
 import { useDatePickerContext, type DatePickerComponents } from "../../../index";
 
 /**
@@ -45,6 +45,26 @@ const DAY_SIZE = 32;
  * @returns Whether the engine set it.
  */
 const has = (props: object, name: `data-${string}`) => (props as Record<string, unknown>)[name] !== undefined;
+
+/**
+ * Calendar sheet
+ *
+ * The calendar's own structure, which no slot renders: the header row, the
+ * seven columns of the weekday and week rows, and the centred cells. Radix's
+ * parts take inline styles, which cannot reach those, so a sheet scoped to
+ * the popup lays them out, and the picker holds together without
+ * slotsmith's stylesheet. Radix Themes offers no nonce setting: an app with
+ * a strict `style-src` policy adds its nonce to the `<style>` here.
+ *
+ * @param scope - The popup's scope class.
+ * @returns The sheet.
+ */
+function calendarSheet(scope: string): string {
+  const s = `.${scope}`;
+  return `${s} .sdp__header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-1); }
+${s} :is(.sdp__weekdays, .sdp__week) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+${s} :is(.sdp__columnheader, .sdp__cell) { display: grid; place-items: center; min-width: 0; }`;
+}
 
 export const radixDatePicker: Partial<DatePickerComponents> = {
   Root: ({ style, ...props }) => <div style={{ position: "relative", width: "100%", maxWidth: 288, ...style }} {...props} />,
@@ -148,7 +168,6 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
     </IconButton>
   ),
 
-  /** Placement comes from the component's positioner as an inline style; this is only the surface. */
   /**
    * Radix Themes' `Popover`, anchored to the trigger: it portals the
    * calendar inside the theme, places it and draws Radix's panel. Focus stays
@@ -157,9 +176,10 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
    * knows the portaled calendar is still part of it; the built-in position
    * style is left out.
    */
-  Popup: function RadixPopup({ style: _style, ...props }) {
+  Popup: function RadixPopup({ style: _style, className, children, ...props }) {
     const { position } = useDatePickerContext();
     const anchor = useMemo(() => ({ current: position.anchor }), [position.anchor]);
+    const scope = `ss-radix-calendar-${useId().replace(/[^\w-]/g, "")}`;
     if (!position.anchor) return null;
     return (
       <Popover.Root open>
@@ -174,8 +194,12 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
           onCloseAutoFocus={(event) => event.preventDefault()}
           // Its own stacking context, so the range band behind each day stays above the surface.
           style={{ isolation: "isolate" }}
+          className={className ? `${scope} ${className}` : scope}
           {...props}
-        />
+        >
+          <style>{calendarSheet(scope)}</style>
+          {children}
+        </Popover.Content>
       </Popover.Root>
     );
   },

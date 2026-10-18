@@ -35,11 +35,23 @@ import type {
 import { useAutocompleteContext } from "../../../index";
 
 /**
+ * Root layout
+ *
+ * What no slot renders, laid out so the field holds together without
+ * slotsmith's stylesheet: the row of tags and the text field, and the
+ * announcement, which only assistive technology hears.
+ */
+const rootCss = {
+  "& .sac__body": { display: "flex", flex: "1", minWidth: "0", flexWrap: "wrap", alignItems: "center", gap: "1" },
+  "& .sac__sr-only": { srOnly: true },
+} as const;
+
+/**
  * Chakra root
  *
  * The `Box` the popup is measured against.
  */
-const ChakraRoot = (props: AutocompleteRootSlotProps) => <Box position="relative" {...props} />;
+const ChakraRoot = (props: AutocompleteRootSlotProps) => <Box position="relative" css={rootCss} {...props} />;
 
 /**
  * No touch zoom

@@ -86,6 +86,19 @@ const CaptionSelect = ({
   </NativeSelect.Root>
 );
 
+/**
+ * Calendar layout
+ *
+ * The calendar's own structure, which no slot renders: the header row, the
+ * seven columns of the weekday and week rows, and the centred cells. Laid
+ * out here too, so the picker holds together without slotsmith's stylesheet.
+ */
+const calendarCss = {
+  "& .sdp__header": { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1", pb: "2" },
+  "& :is(.sdp__weekdays, .sdp__week)": { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" },
+  "& :is(.sdp__columnheader, .sdp__cell)": { display: "grid", placeItems: "center", minWidth: "0" },
+} as const;
+
 export const chakraComponents: Partial<DatePickerComponents> = {
   /** `colorPalette` is set here for the trigger, and again on the popover, which renders in a portal outside it. */
   Root: ({ className, ...props }) => (
@@ -224,7 +237,7 @@ export const chakraComponents: Partial<DatePickerComponents> = {
         <Portal>
           <Popover.Positioner>
             {/* Its own stacking context, so the range band behind each day stays above the surface. */}
-            <Popover.Content className={className} colorPalette="blue" width="18rem" p="2" isolation="isolate" {...props} />
+            <Popover.Content className={className} colorPalette="blue" width="18rem" p="2" isolation="isolate" css={calendarCss} {...props} />
           </Popover.Positioner>
         </Portal>
       </Popover.Root>

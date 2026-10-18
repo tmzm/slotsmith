@@ -70,6 +70,24 @@ const captionSx: SxProps<Theme> = {
   "&::before, &::after": { display: "none" },
 };
 
+/**
+ * Calendar style
+ *
+ * The surface, in its own stacking context so the range band behind each
+ * day stays above it, and the calendar's own structure, which no slot
+ * renders: the header row, the seven columns of the weekday and week rows,
+ * and the centred cells. Laid out here, so the picker holds together
+ * without slotsmith's stylesheet.
+ */
+const calendarSx: SxProps<Theme> = {
+  width: 288,
+  p: 1,
+  isolation: "isolate",
+  "& .sdp__header": { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, pb: 1 },
+  "& :is(.sdp__weekdays, .sdp__week)": { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" },
+  "& :is(.sdp__columnheader, .sdp__cell)": { display: "grid", placeItems: "center", minWidth: 0 },
+};
+
 export const muiDatePicker: Partial<DatePickerComponents> = {
   Root: ({ className, ...props }) => (
     <Box className={className} sx={{ position: "relative", width: 1, maxWidth: 288 }} {...props} />
@@ -214,7 +232,7 @@ export const muiDatePicker: Partial<DatePickerComponents> = {
         sx={{ zIndex: "modal" }}
       >
         {/* Its own stacking context, so the range band behind each day stays above the surface. */}
-        <Paper className={className} elevation={8} sx={{ width: 288, p: 1, isolation: "isolate" }} {...props} />
+        <Paper className={className} elevation={8} sx={calendarSx} {...props} />
       </Popper>
     );
   },

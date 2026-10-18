@@ -7,9 +7,10 @@
  * keeps its fallback.
  */
 import { CalendarOutlined, CloseCircleFilled, LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Flex, Input, Popover, Select, Typography, theme } from "antd";
-import { useState } from "react";
+import { Button, ConfigProvider, Flex, Input, Popover, Select, Typography, theme } from "antd";
+import { useContext, useId, useState } from "react";
 import { createPortal } from "react-dom";
+import type { GlobalToken } from "antd";
 import { useDatePickerContext, type DatePickerComponents } from "../../../index";
 
 /**
@@ -45,6 +46,27 @@ const has = (props: object, name: `data-${string}`) => (props as Record<string, 
  * part reads the theme's tokens, so a `ConfigProvider` theme, dark included,
  * reaches the calendar without extra wiring.
  */
+/**
+ * Calendar sheet
+ *
+ * The calendar's own structure, which no slot renders: the header row, the
+ * seven columns of the weekday and week rows, and the centred cells. Ant's
+ * parts take inline styles, which cannot reach those, so a sheet scoped to
+ * the popup lays them out, and the picker holds together without
+ * slotsmith's stylesheet. It carries the nonce from `ConfigProvider`'s
+ * `csp`, as Ant's own styles do.
+ *
+ * @param scope - The popup's scope class.
+ * @param token - The theme's tokens.
+ * @returns The sheet.
+ */
+function calendarSheet(scope: string, token: GlobalToken): string {
+  const s = `.${scope}`;
+  return `${s} .sdp__header { display: flex; align-items: center; justify-content: space-between; gap: ${token.paddingXXS}px; }
+${s} :is(.sdp__weekdays, .sdp__week) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+${s} :is(.sdp__columnheader, .sdp__cell) { display: grid; place-items: center; min-width: 0; }`;
+}
+
 export const antdDatePicker: Partial<DatePickerComponents> = {
   /** The box the popup is placed against, at the width of Ant's pickers. */
   Root: ({ style, ...props }) => <div style={{ position: "relative", width: "100%", maxWidth: 288, ...style }} {...props} />,
@@ -169,8 +191,11 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
    * portaled calendar is still part of it; the built-in position style is
    * left out.
    */
-  Popup: function AntPopup({ style: _style, ...props }) {
+  Popup: function AntPopup({ style: _style, children, ...props }) {
     const { position } = useDatePickerContext();
+    const { token } = theme.useToken();
+    const { csp } = useContext(ConfigProvider.ConfigContext);
+    const scope = `ss-antd-calendar-${useId().replace(/[^\w-]/g, "")}`;
     if (!position.anchor) return null;
     return createPortal(
       <Popover
@@ -178,8 +203,13 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
         arrow={false}
         trigger={[]}
         placement={position.placement === "top-start" ? "topLeft" : "bottomLeft"}
-        // Its own stacking context, so the range band behind each day stays above the surface.
-        content={<div style={{ width: 288, isolation: "isolate" }} {...props} />}
+        content={
+          // Its own stacking context, so the range band behind each day stays above the surface.
+          <div className={scope} style={{ width: 288, isolation: "isolate" }} {...props}>
+            <style nonce={csp?.nonce}>{calendarSheet(scope, token)}</style>
+            {children}
+          </div>
+        }
       >
         <span aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
       </Popover>,
@@ -190,7 +220,6 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
   /** The grid of weeks, with a small gap between rows. */
   Calendar: ({ style, ...props }) => <div style={{ display: "grid", rowGap: 2, ...style }} {...props} />,
 
-  /** Native month and year selects side by side, borderless like the header of Ant's picker. */
   /**
    * The month and year as Ant's borderless `Select`, like the header of
    * Ant's own picker. Its menu renders beside it, inside the calendar's popup,

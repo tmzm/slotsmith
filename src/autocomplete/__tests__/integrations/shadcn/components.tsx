@@ -90,10 +90,23 @@ const Loader = () => (
 /**
  * Shadcn root
  *
- * The positioning context the popup is measured against.
+ * The positioning context the popup is measured against. It also lays out
+ * what no slot renders, so the field holds together without slotsmith's
+ * stylesheet: the row of tags and the text field, and the announcement,
+ * which only assistive technology hears. Tailwind reads `_` in a selector as
+ * a space, so the class names' own underscores are escaped, in `String.raw`
+ * so the backslash stays.
  */
 const ShadcnRoot = ({ className, ...props }: AutocompleteRootSlotProps) => (
-  <div className={cn("relative w-full", className)} {...props} />
+  <div
+    className={cn(
+      "relative w-full",
+      String.raw`[&_.sac\_\_body]:flex [&_.sac\_\_body]:min-w-0 [&_.sac\_\_body]:flex-1 [&_.sac\_\_body]:flex-wrap [&_.sac\_\_body]:items-center [&_.sac\_\_body]:gap-1`,
+      String.raw`[&_.sac\_\_sr-only]:sr-only`,
+      className,
+    )}
+    {...props}
+  />
 );
 
 /**
