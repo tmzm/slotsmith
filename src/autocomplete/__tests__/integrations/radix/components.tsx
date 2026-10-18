@@ -10,8 +10,8 @@
  * bare Radix primitives wants the shadcn/ui adapter, which is built on them.
  */
 import { CheckIcon, ChevronDownIcon, Cross2Icon, CrossCircledIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { Badge, Box, Button, Flex, IconButton, Separator, Spinner, Text, TextField } from "@radix-ui/themes";
-import { useState, type FocusEvent, type ReactNode } from "react";
+import { Badge, Box, Button, Flex, IconButton, Popover, Separator, Spinner, Text, TextField } from "@radix-ui/themes";
+import { useMemo, useState, type FocusEvent, type ReactNode, type RefObject } from "react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -37,6 +37,7 @@ import type {
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "../../../index";
+import { useAutocompleteContext } from "../../../index";
 
 /**
  * Radix Themes autocomplete parts
@@ -201,31 +202,45 @@ const RadixIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) => (
 /**
  * Radix popup
  *
- * The solid panel of Radix's menus. The component positions it, so the part
- * only adds the surface to the style it receives. It is a column the list
- * fills, so the list scrolls inside the height it is given and the search
- * box stays put.
+ * Radix Themes' `Popover`, anchored to the trigger: it portals the list
+ * inside the theme, places it and draws Radix's panel. Focus stays with the
+ * autocomplete, which moves it to the search box itself. Inside, a column
+ * the list fills, so the list scrolls inside the height it is given and the
+ * search box stays put. The surface keeps every prop the part is given, its `id` included, which
+ * is how the autocomplete knows the portaled list is still part of it, and
+ * from the computed style only the width (the trigger's) and the height cap;
+ * the library places it.
  */
-const RadixPopup = ({ style, ...props }: AutocompletePopupSlotProps) => (
-  <div
-    style={{
-      zIndex: 50,
-      display: "flex",
-      flexDirection: "column",
-      boxSizing: "border-box",
-      overflow: "hidden",
-      padding: "var(--space-1)",
-      color: "var(--gray-12)",
-      fontFamily: "var(--default-font-family)",
-      fontSize: "var(--font-size-2)",
-      backgroundColor: "var(--color-panel-solid)",
-      borderRadius: "var(--radius-4)",
-      boxShadow: "var(--shadow-5)",
-      ...style,
-    }}
-    {...props}
-  />
-);
+function RadixPopup({ style, ...props }: AutocompletePopupSlotProps) {
+  const { position } = useAutocompleteContext();
+  const anchor = useMemo(() => ({ current: position.anchor }), [position.anchor]);
+  if (!position.anchor) return null;
+  return (
+    <Popover.Root open>
+      <Popover.Anchor virtualRef={anchor as RefObject<HTMLElement>} />
+      <Popover.Content
+        // A container for the list, which carries the semantics; not a dialog.
+        role="presentation"
+        size="1"
+        align="start"
+        side={position.placement === "top-start" ? "top" : "bottom"}
+        sideOffset={4}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          padding: "var(--space-1)",
+          width: style?.width,
+          minWidth: style?.minWidth,
+          maxHeight: style?.maxHeight,
+        }}
+        {...props}
+      />
+    </Popover.Root>
+  );
+}
 
 /**
  * Radix search

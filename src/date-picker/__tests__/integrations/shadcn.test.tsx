@@ -32,6 +32,9 @@ describe("shadcn/ui", () => {
     await open(user);
 
     expect(dialog()).toHaveAttribute("data-slot", "popover-content");
+    // shadcn's own Popover, portaled out of the picker.
+    expect(dialog().closest("[data-radix-popper-content-wrapper]")).not.toBeNull();
+    expect(dialog().closest(".sdp")).toBeNull();
     expect(day("2026-03-12")).toHaveClass("size-8");
     expect(day("2026-03-12")).not.toHaveClass("sdp__day");
   });

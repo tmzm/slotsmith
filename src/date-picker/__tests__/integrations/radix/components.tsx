@@ -10,9 +10,9 @@
  * bare Radix primitives wants the shadcn/ui adapter, which is built on them.
  */
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, CrossCircledIcon } from "@radix-ui/react-icons";
-import { Button, Flex, IconButton, Text } from "@radix-ui/themes";
-import { useState, type CSSProperties } from "react";
-import type { DatePickerComponents } from "../../../index";
+import { Button, Flex, IconButton, Popover, Text } from "@radix-ui/themes";
+import { useMemo, useState, type CSSProperties, type RefObject } from "react";
+import { useDatePickerContext, type DatePickerComponents } from "../../../index";
 
 /**
  * Radix Themes date picker parts
@@ -171,23 +171,34 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
   ),
 
   /** Placement comes from the component's positioner as an inline style; this is only the surface. */
-  Popup: ({ style, ...props }) => (
-    <div
-      style={{
-        zIndex: 50,
-        width: 288,
-        padding: "var(--space-3)",
-        color: "var(--gray-12)",
-        fontFamily: "var(--default-font-family)",
-        fontSize: "var(--font-size-2)",
-        backgroundColor: "var(--color-panel-solid)",
-        borderRadius: "var(--radius-4)",
-        boxShadow: "var(--shadow-5)",
-        ...style,
-      }}
-      {...props}
-    />
-  ),
+  /**
+   * Radix Themes' `Popover`, anchored to the trigger: it portals the
+   * calendar inside the theme, places it and draws Radix's panel. Focus stays
+   * with the picker, which moves it into the grid itself. The content keeps
+   * every prop the part is given, its `id` included, which is how the picker
+   * knows the portaled calendar is still part of it; the built-in position
+   * style is left out.
+   */
+  Popup: function RadixPopup({ style: _style, ...props }) {
+    const { position } = useDatePickerContext();
+    const anchor = useMemo(() => ({ current: position.anchor }), [position.anchor]);
+    if (!position.anchor) return null;
+    return (
+      <Popover.Root open>
+        <Popover.Anchor virtualRef={anchor as RefObject<HTMLElement>} />
+        <Popover.Content
+          size="1"
+          width="288px"
+          align="start"
+          side={position.placement === "top-start" ? "top" : "bottom"}
+          sideOffset={4}
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => event.preventDefault()}
+          {...props}
+        />
+      </Popover.Root>
+    );
+  },
 
   Calendar: ({ style, ...props }) => <div style={{ display: "grid", rowGap: 2, ...style }} {...props} />,
 

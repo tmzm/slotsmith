@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { radixAutocomplete } from "./radix/components";
-import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itRendersTheLibraryPopover, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Radix Themes wrapper
@@ -44,6 +44,7 @@ describe("Radix Themes v3", () => {
     expect(label.querySelector(".rt-Text")).not.toBeNull();
     expect(separator.querySelector(".rt-Separator")).not.toBeNull();
   });
+  itRendersTheLibraryPopover(renderRadixAutocomplete, ".rt-PopoverContent");
   itShowsTheInvalidState(
     renderRadixAutocomplete,
     (trigger) => expect(trigger).toHaveAttribute("data-accent-color", "red"),
@@ -65,7 +66,7 @@ describe("Radix Themes v3", () => {
 
     expect(trigger().style.outline).toContain("var(--focus-8)");
     expect(searchBox()).toHaveClass("rt-TextFieldInput");
-    expect(listbox().parentElement!.style.backgroundColor).toBe("var(--color-panel-solid)");
+    expect(listbox().closest(".rt-PopoverContent")).not.toBeNull();
     expect(options()).toHaveLength(BRANDS.length);
   });
 

@@ -11,10 +11,11 @@ import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import InputBase from "@mui/material/InputBase";
 import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
 import Select from "@mui/material/Select";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import type { DatePickerComponents } from "../../../index";
+import { useDatePickerContext, type DatePickerComponents } from "../../../index";
 
 /**
  * MUI date picker parts
@@ -194,10 +195,28 @@ export const muiDatePicker: Partial<DatePickerComponents> = {
     </IconButton>
   ),
 
-  /** Placement comes from the component's positioner as an inline style; this is only the surface. */
-  Popup: ({ className, ...props }) => (
-    <Paper className={className} elevation={8} sx={{ zIndex: 50, width: 288, p: 1 }} {...props} />
-  ),
+  /**
+   * MUI's `Popper`: it portals the calendar, places it against the trigger
+   * (flipping when there is no room) and stacks it with the theme's z-index.
+   * The `Paper` keeps every prop the part is given, its `id` included, which
+   * is how the picker knows the portaled calendar is still part of it; the
+   * built-in position style is left out.
+   */
+  Popup: function MuiPopup({ className, style: _style, ...props }) {
+    const { position } = useDatePickerContext();
+    if (!position.anchor) return null;
+    return (
+      <Popper
+        open
+        anchorEl={position.anchor}
+        placement={position.placement === "top-start" ? "top-start" : "bottom-start"}
+        modifiers={[{ name: "offset", options: { offset: [0, 4] } }]}
+        sx={{ zIndex: "modal" }}
+      >
+        <Paper className={className} elevation={8} sx={{ width: 288, p: 1 }} {...props} />
+      </Popper>
+    );
+  },
 
   Calendar: ({ className, ...props }) => (
     <Box className={className} sx={{ display: "grid", rowGap: "2px" }} {...props} />

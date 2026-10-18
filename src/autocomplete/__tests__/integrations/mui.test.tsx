@@ -18,7 +18,7 @@ import {
   failOnReactWarnings,
   itRendersGroups,
   itSearchesInTheTrigger,
-  itShowsTheInvalidState,
+  itRendersTheLibraryPopover, itShowsTheInvalidState,
   removeControl,
   renderIntegration,
   stubBrowserApis,
@@ -48,6 +48,7 @@ beforeAll(stubBrowserApis);
 
 describe("MUI v7", () => {
   failOnReactWarnings();
+  itRendersTheLibraryPopover(renderMuiAutocomplete, ".MuiPopper-root");
   itShowsTheInvalidState(
     renderMuiAutocomplete,
     (trigger) => expect(trigger).toHaveClass("Mui-error"),

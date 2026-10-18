@@ -324,3 +324,31 @@ export function itRendersGroups(
     expect(onChange).toHaveBeenCalledWith("b2", BRANDS[1]);
   });
 }
+
+/**
+ * Renders the library's popover
+ *
+ * The list opens in the library's own popover, portaled out of the
+ * autocomplete, and a press inside that portal still counts as inside the
+ * control: picking an option there works and closes the list.
+ *
+ * @param renderAutocomplete - Renders the autocomplete with the library's parts.
+ * @param popover - A selector that matches the library's popover around the list.
+ */
+export function itRendersTheLibraryPopover(
+  renderAutocomplete: (props?: Partial<AutocompleteProps<Brand>>) => ReturnType<typeof userEvent.setup>,
+  popover: string,
+) {
+  it("opens the list in the library's own popover, portaled out of the control", async () => {
+    const onChange = vi.fn();
+    const user = renderAutocomplete({ onChange });
+    await user.click(trigger());
+    const list = screen.getByRole("listbox");
+    expect(list.closest(popover)).not.toBeNull();
+    expect(list.closest(".sac")).toBeNull();
+
+    await user.click(within(list).getByRole("option", { name: "Cassina" }));
+    expect(onChange).toHaveBeenCalledWith("b3", BRANDS[2]);
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+}

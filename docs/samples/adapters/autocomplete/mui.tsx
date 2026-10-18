@@ -17,6 +17,7 @@ import List from "@mui/material/List";
 import ListSubheader from "@mui/material/ListSubheader";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
 import Typography from "@mui/material/Typography";
 import { createSvgIcon } from "@mui/material/utils";
 import type {
@@ -44,6 +45,7 @@ import type {
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
+import { useAutocompleteContext } from "slotsmith/autocomplete";
 
 /**
  * Is true
@@ -222,15 +224,35 @@ const MuiIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
 /**
  * MUI popup
  *
- * A raised `Paper`. The component positions it, so the part only receives the
- * computed style and adds the surface. It is a column the list fills, so the
- * list scrolls inside the height it is given and the search box stays put.
- * It sits on the theme's `modal` layer, as the popper of MUI's own
- * autocomplete does, so it is drawn above the page around it.
+ * MUI's `Popper`, as MUI's own autocomplete uses it: it portals the list,
+ * places it against the trigger (flipping when there is no room) and stacks
+ * it on the theme's `modal` layer. Inside it, a raised `Paper` column the
+ * list fills, so the list scrolls inside the height it is given and the
+ * search box stays put. The surface keeps every prop the part is given, its `id` included, which
+ * is how the autocomplete knows the portaled list is still part of it, and
+ * from the computed style only the width (the trigger's) and the height cap;
+ * the library places it.
  */
-const MuiPopup = (props: AutocompletePopupSlotProps) => (
-  <Paper elevation={8} sx={{ zIndex: "modal", display: "flex", flexDirection: "column", overflow: "hidden" }} {...props} />
-);
+function MuiPopup({ style, ...props }: AutocompletePopupSlotProps) {
+  const { position } = useAutocompleteContext();
+  if (!position.anchor) return null;
+  return (
+    <Popper
+      open
+      anchorEl={position.anchor}
+      placement={position.placement === "top-start" ? "top-start" : "bottom-start"}
+      modifiers={[{ name: "offset", options: { offset: [0, 4] } }]}
+      sx={{ zIndex: "modal" }}
+    >
+      <Paper
+        elevation={8}
+        style={{ width: style?.width, minWidth: style?.minWidth, maxHeight: style?.maxHeight }}
+        sx={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
+        {...props}
+      />
+    </Popper>
+  );
+}
 
 /**
  * MUI search

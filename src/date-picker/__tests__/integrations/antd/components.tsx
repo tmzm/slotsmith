@@ -7,10 +7,11 @@
  * keeps its fallback.
  */
 import { CalendarOutlined, CloseCircleFilled, LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Flex, Input, Typography, theme } from "antd";
+import { Button, Flex, Input, Popover, Typography, theme } from "antd";
 import type { GlobalToken } from "antd";
 import { useState, type CSSProperties } from "react";
-import type { DatePickerComponents } from "../../../index";
+import { createPortal } from "react-dom";
+import { useDatePickerContext, type DatePickerComponents } from "../../../index";
 
 /**
  * Ant Design date picker parts
@@ -91,6 +92,7 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
     return (
       <div
         style={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
           gap: token.paddingXS,
@@ -183,22 +185,29 @@ export const antdDatePicker: Partial<DatePickerComponents> = {
     />
   ),
 
-  /** Placement comes from the component's positioner as an inline style; this is only the surface. */
-  Popup: function AntPopup({ style, ...props }) {
-    const { token } = theme.useToken();
-    return (
-      <div
-        style={{
-          zIndex: token.zIndexPopupBase,
-          width: 288,
-          padding: token.paddingXS,
-          background: token.colorBgElevated,
-          borderRadius: token.borderRadiusLG,
-          boxShadow: token.boxShadowSecondary,
-          ...style,
-        }}
-        {...props}
-      />
+  /**
+   * Ant Design's `Popover`: it portals the calendar, places it against the
+   * trigger (flipping when there is no room) and draws Ant's popover surface.
+   * An Ant popover is placed against its child, so the child is an empty box
+   * laid over the trigger, rendered into it. The calendar keeps every prop
+   * the part is given, its `id` included, which is how the picker knows the
+   * portaled calendar is still part of it; the built-in position style is
+   * left out.
+   */
+  Popup: function AntPopup({ style: _style, ...props }) {
+    const { position } = useDatePickerContext();
+    if (!position.anchor) return null;
+    return createPortal(
+      <Popover
+        open
+        arrow={false}
+        trigger={[]}
+        placement={position.placement === "top-start" ? "topLeft" : "bottomLeft"}
+        content={<div style={{ width: 288 }} {...props} />}
+      >
+        <span aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+      </Popover>,
+      position.anchor,
     );
   },
 

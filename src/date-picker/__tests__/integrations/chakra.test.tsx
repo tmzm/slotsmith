@@ -58,6 +58,9 @@ describe("Chakra UI v3", () => {
     await open(user);
 
     expect(dialog()).not.toHaveClass("sdp__popup");
+    // Chakra's own Popover, portaled out of the picker.
+    expect(dialog()).toHaveClass("chakra-popover__content");
+    expect(dialog().closest(".sdp")).toBeNull();
     expect(day("2026-03-12")).toHaveClass("chakra-button");
     expect(screen.getByRole("combobox", { name: "Year" })).toHaveClass("chakra-native-select__field");
   });

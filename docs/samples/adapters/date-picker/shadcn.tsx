@@ -9,7 +9,9 @@
  * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
  * shadcn/ui files.
  */
-import type { DatePickerComponents } from "slotsmith/date-picker";
+import { useMemo, type RefObject } from "react";
+import { useDatePickerContext, type DatePickerComponents } from "slotsmith/date-picker";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 /**
@@ -143,14 +145,32 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
     </button>
   ),
 
-  /** Placement comes from the component's positioner as an inline style; this is only the surface. */
-  Popup: ({ className, ...props }) => (
-    <div
-      data-slot="popover-content"
-      className={cn("z-50 w-72 rounded-md border border-border bg-background p-2 shadow-lg", className)}
-      {...props}
-    />
-  ),
+  /**
+   * shadcn's `Popover`, anchored to the trigger: it portals the calendar,
+   * places and animates it as every shadcn popover does. Focus stays with
+   * the picker, which moves it into the grid itself. The content keeps every
+   * prop the part is given, its `id` included, which is how the picker knows
+   * the portaled calendar is still part of it; the built-in position style is
+   * left out.
+   */
+  Popup: function ShadcnPopup({ className, style: _style, ...props }) {
+    const { position } = useDatePickerContext();
+    const anchor = useMemo(() => ({ current: position.anchor }), [position.anchor]);
+    if (!position.anchor) return null;
+    return (
+      <Popover open>
+        <PopoverAnchor virtualRef={anchor as RefObject<HTMLElement>} />
+        <PopoverContent
+          align="start"
+          side={position.placement === "top-start" ? "top" : "bottom"}
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => event.preventDefault()}
+          className={cn("w-72 p-2", className)}
+          {...props}
+        />
+      </Popover>
+    );
+  },
 
   Calendar: ({ className, ...props }) => <div className={cn("grid gap-0.5", className)} {...props} />,
 

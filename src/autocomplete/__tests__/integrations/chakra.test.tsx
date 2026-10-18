@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { chakraAutocomplete } from "./chakra/components";
-import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itRendersTheLibraryPopover, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Chakra wrapper
@@ -62,6 +62,7 @@ describe("Chakra UI v3", () => {
     expect(label).toHaveClass("chakra-list__item");
     expect(separator.querySelector(".chakra-separator")).not.toBeNull();
   });
+  itRendersTheLibraryPopover(renderChakraAutocomplete, ".chakra-popover__content");
   itShowsTheInvalidState(
     renderChakraAutocomplete,
     (trigger) => expect(invalidStyle(trigger)).toContain("border-color: var(--chakra-colors-border-error)"),

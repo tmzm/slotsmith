@@ -76,7 +76,8 @@ describe("date picker adapter demos", () => {
     // The library's own field, showing the range in the locale's order; its calendar button opens the popup.
     expect((combobox as HTMLInputElement).value).toBe("03/18/2026 – 03/21/2026");
     fireEvent.click(screen.getByRole("button", { name: "Open calendar" }));
-    expect(container.querySelector(marker), `${name} parts`).not.toBeNull();
+    // The calendar is in the library's own popover, portaled out of the demo.
+    expect(document.querySelector(marker), `${name} parts`).not.toBeNull();
     expect(screen.getByRole("grid").getAttribute("aria-label")).toBe("March 2026");
     expect(day("2026-03-18").hasAttribute("data-range-start")).toBe(true);
     expect(day("2026-03-21").hasAttribute("data-range-end")).toBe(true);

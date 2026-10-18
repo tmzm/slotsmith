@@ -7,9 +7,10 @@
  * out keeps its fallback.
  */
 import { CheckOutlined, CloseCircleFilled, DownOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Divider, Empty, Input, Spin, Tag, Typography, theme } from "antd";
+import { Button, Divider, Empty, Input, Popover, Spin, Tag, Typography, theme } from "antd";
 import type { InputRef } from "antd";
 import { useCallback, useState, type FocusEvent, type ReactNode, type Ref } from "react";
+import { createPortal } from "react-dom";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -35,6 +36,7 @@ import type {
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
+import { useAutocompleteContext } from "slotsmith/autocomplete";
 
 /**
  * Ant Design autocomplete parts
@@ -204,33 +206,46 @@ function AntIndicator({ open, loading }: AutocompleteIndicatorSlotProps) {
 /**
  * Ant popup
  *
- * The elevated surface of Ant's dropdowns. The component positions it, so
- * the part only adds the surface to the style it receives, with the text
- * size of Ant's select menu. It is a column
- * the list fills, so the list scrolls inside the height it is given and the
- * search box stays put.
+ * Ant Design's `Popover`: it portals the list, places it against the
+ * trigger (flipping when there is no room) and draws Ant's elevated
+ * surface, with the text size of Ant's select menu. An Ant popover is placed
+ * against its child, so the child is an empty box laid over the trigger,
+ * rendered into it. Inside, a column the list fills, so the list scrolls
+ * inside the height it is given and the search box stays put. The surface keeps every prop the part is given, its `id` included, which
+ * is how the autocomplete knows the portaled list is still part of it, and
+ * from the computed style only the width (the trigger's) and the height cap;
+ * the library places it.
  */
 function AntPopup({ style, ...props }: AutocompletePopupSlotProps) {
+  const { position } = useAutocompleteContext();
   const { token } = theme.useToken();
-  return (
-    <div
-      style={{
-        zIndex: token.zIndexPopupBase,
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-        overflow: "hidden",
-        padding: token.paddingXXS,
-        color: token.colorText,
-        fontSize: token.fontSize,
-        lineHeight: token.lineHeight,
-        background: token.colorBgElevated,
-        borderRadius: token.borderRadiusLG,
-        boxShadow: token.boxShadowSecondary,
-        ...style,
-      }}
-      {...props}
-    />
+  if (!position.anchor) return null;
+  return createPortal(
+    <Popover
+      open
+      arrow={false}
+      trigger={[]}
+      placement={position.placement === "top-start" ? "topLeft" : "bottomLeft"}
+      styles={{ container: { padding: token.paddingXXS } }}
+      content={
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            fontSize: token.fontSize,
+            lineHeight: token.lineHeight,
+            width: style?.width,
+            minWidth: style?.minWidth,
+            maxHeight: style?.maxHeight,
+          }}
+          {...props}
+        />
+      }
+    >
+      <span aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+    </Popover>,
+    position.anchor,
   );
 }
 

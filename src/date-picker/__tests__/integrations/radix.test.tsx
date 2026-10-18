@@ -53,7 +53,9 @@ describe("Radix Themes v3", () => {
     await open(user);
 
     expect(dialog()).not.toHaveClass("sdp__popup");
-    expect(dialog().style.backgroundColor).toBe("var(--color-panel-solid)");
+    // Radix Themes' own popover, portaled out of the picker.
+    expect(dialog()).toHaveClass("rt-PopoverContent");
+    expect(dialog().closest(".sdp")).toBeNull();
     expect(trigger().style.outline).toContain("var(--focus-8)");
     expect(day("2026-03-12")).toHaveClass("rt-Button");
     expect(day("2026-03-12").style.boxShadow).toContain("var(--accent-8)");

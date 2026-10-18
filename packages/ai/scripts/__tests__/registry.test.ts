@@ -153,7 +153,7 @@ describe("shadcn registry", () => {
       "skeleton",
       "table",
     ]);
-    expect(items.find((item) => item.name === "slotsmith-date-picker")!.registryDependencies).toEqual([]);
+    expect(items.find((item) => item.name === "slotsmith-date-picker")!.registryDependencies).toEqual(["popover"]);
   });
 
   it("builds a registry index that lists every item without repeating its file content", () => {

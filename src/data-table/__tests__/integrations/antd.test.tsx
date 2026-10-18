@@ -307,7 +307,7 @@ describe("Ant Design v6 (admin panel)", () => {
     await pageSizeThroughAutocompleteAdapter(antdAutocomplete, Wrapper, ({ trigger, listbox, options }) => {
       expect(trigger.querySelector(".ant-typography")).toHaveTextContent("10");
       expect(trigger.querySelector(".anticon-down")).not.toBeNull();
-      expect(listbox).toBeVisible();
+      expect(listbox.closest(".ant-popover")).not.toBeNull();
       expect(options).toHaveLength(4);
     });
   });

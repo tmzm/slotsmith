@@ -66,7 +66,9 @@ describe("Ant Design v6", () => {
     await open(user);
 
     expect(dialog()).not.toHaveClass("sdp__popup");
-    expect(dialog().style.backgroundColor).toBe(cssColor(token.colorBgElevated));
+    // In Ant's own Popover, portaled out of the picker.
+    expect(dialog().closest(".ant-popover")).not.toBeNull();
+    expect(dialog().closest(".sdp")).toBeNull();
     expect(trigger().style.borderColor).toBe(cssColor(token.colorPrimary));
     expect(day("2026-03-12")).toHaveClass("ant-btn");
     expect(day("2026-03-12").style.boxShadow).toContain(token.colorPrimary);

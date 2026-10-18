@@ -14,7 +14,7 @@ import {
   type Brand,
 } from "../builders";
 import { antdAutocomplete } from "./antd/components";
-import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itRendersTheLibraryPopover, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Ant Design wrapper
@@ -57,6 +57,7 @@ describe("Ant Design v6", () => {
     expect(label).toHaveStyle({ fontSize: "12px" });
     expect(separator.querySelector(".ant-divider")).not.toBeNull();
   });
+  itRendersTheLibraryPopover(renderAntdAutocomplete, ".ant-popover");
   itShowsTheInvalidState(
     renderAntdAutocomplete,
     (trigger) => expect(trigger).toHaveStyle({ borderColor: "#ff4d4f" }),
@@ -84,7 +85,7 @@ describe("Ant Design v6", () => {
 
     expect(trigger().style.borderColor).toBe(cssColor(token.colorPrimary));
     expect(searchBox()).toHaveClass("ant-input");
-    expect(listbox().parentElement!.style.backgroundColor).toBe(cssColor(token.colorBgElevated));
+    expect(listbox().closest(".ant-popover")).not.toBeNull();
     expect(options()).toHaveLength(BRANDS.length);
   });
 

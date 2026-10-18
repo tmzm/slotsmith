@@ -11,9 +11,10 @@
  * - Tailwind's output sits in cascade layers and every utility is nested
  *   under `.shadcn-scope` (and the portal wrapper below), so no utility
  *   reaches an element outside them.
- * - The rows-per-page list is portalled to <body>, outside the scope. The
- *   element radix wraps it in (`:has(> [data-slot="select-content"])`) gets
- *   the same tokens, utilities and resets, and nothing else on the site
+ * - The rows-per-page list, the calendar and the autocomplete list are
+ *   portalled to <body>, outside the scope. The element radix wraps each in
+ *   (`:has(> :is([data-slot="select-content"], [data-slot="popover-content"]))`)
+ *   gets the same tokens, utilities and resets, and nothing else on the site
  *   matches it.
  * - Dark mode follows the site's `data-theme` attribute, not the system
  *   setting.
@@ -23,7 +24,7 @@
 @import "tailwindcss/theme.css" layer(theme);
 
 @layer utilities {
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])) {
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) {
     @tailwind utilities source(none);
   }
 }
@@ -37,7 +38,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 .shadcn-scope,
-:has(> [data-slot="select-content"]) {
+:has(> :is([data-slot="select-content"], [data-slot="popover-content"])) {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -68,7 +69,7 @@
 }
 
 [data-theme="dark"] .shadcn-scope,
-[data-theme="dark"] :has(> [data-slot="select-content"]) {
+[data-theme="dark"] :has(> :is([data-slot="select-content"], [data-slot="popover-content"])) {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -119,19 +120,19 @@
 /* The parts of Tailwind's preflight and shadcn/ui's base layer the table
    needs, inside the scope only. */
 @layer base {
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])),
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(*, ::before, ::after) {
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))),
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) :where(*, ::before, ::after) {
     box-sizing: border-box;
     border-color: var(--border);
     outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
 
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(table) {
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) :where(table) {
     border-collapse: collapse;
     text-indent: 0;
   }
 
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(button) {
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) :where(button) {
     font: inherit;
     letter-spacing: inherit;
     color: inherit;
@@ -141,18 +142,18 @@
     background-color: transparent;
   }
 
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(svg) {
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) :where(svg) {
     display: block;
     vertical-align: middle;
   }
 
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(ul, ol) {
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) :where(ul, ol) {
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  :is(.shadcn-scope, :has(> [data-slot="select-content"])) :where(p) {
+  :is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) :where(p) {
     margin: 0;
   }
 }
@@ -163,12 +164,12 @@
  * those elements (the checked checkbox lost its check colour, the icon its
  * size); `revert-layer` hands those properties back to the layers above.
  */
-:is(.shadcn-scope, :has(> [data-slot="select-content"])) button {
+:is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) button {
   font: revert-layer;
   color: revert-layer;
 }
 
-:is(.shadcn-scope, :has(> [data-slot="select-content"])) svg {
+:is(.shadcn-scope, :has(> :is([data-slot="select-content"], [data-slot="popover-content"]))) svg {
   display: revert-layer;
   max-inline-size: revert-layer;
 }

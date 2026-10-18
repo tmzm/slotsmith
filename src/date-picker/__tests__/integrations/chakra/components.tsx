@@ -6,9 +6,9 @@
  * want, and pass the map as `components={chakraDatePicker}`; every slot left
  * out keeps its fallback.
  */
-import { Box, Button, chakra, IconButton, NativeSelect, Text } from "@chakra-ui/react";
+import { Box, Button, chakra, IconButton, NativeSelect, Popover, Portal, Text } from "@chakra-ui/react";
 import type { ReactNode } from "react";
-import type { DatePickerComponents } from "../../../index";
+import { useDatePickerContext, type DatePickerComponents } from "../../../index";
 
 /**
  * Chakra date picker parts
@@ -194,21 +194,41 @@ export const chakraDatePicker: Partial<DatePickerComponents> = {
     </IconButton>
   ),
 
-  /** Placement comes from the component's positioner as an inline style; this is only the surface. */
-  Popup: ({ className, ...props }) => (
-    <Box
-      className={className}
-      zIndex="50"
-      width="18rem"
-      p="2"
-      rounded="md"
-      borderWidth="1px"
-      bg="bg.panel"
-      color="fg"
-      shadow="lg"
-      {...props}
-    />
-  ),
+  /**
+   * Chakra's `Popover`: it portals the calendar, places it against the trigger
+   * and draws Chakra's popover surface. The picker owns the open state, the
+   * focus and closing, so the popover's own are turned off. The content keeps
+   * every prop the part is given, its `id` included, which is how the picker
+   * knows the portaled calendar is still part of it; the built-in position
+   * style is left out.
+   */
+  Popup: function ChakraPopup({ className, style: _style, ...props }) {
+    const { position } = useDatePickerContext();
+    const anchor = position.anchor;
+    if (!anchor) return null;
+    return (
+      <Popover.Root
+        open
+        // The popover finds its content by this id, and so does the picker.
+        ids={{ content: props.id }}
+        modal={false}
+        autoFocus={false}
+        closeOnEscape={false}
+        closeOnInteractOutside={false}
+        positioning={{
+          placement: position.placement === "top-start" ? "top-start" : "bottom-start",
+          gutter: 4,
+          getAnchorRect: () => anchor.getBoundingClientRect(),
+        }}
+      >
+        <Portal>
+          <Popover.Positioner>
+            <Popover.Content className={className} width="18rem" p="2" {...props} />
+          </Popover.Positioner>
+        </Portal>
+      </Popover.Root>
+    );
+  },
 
   Calendar: ({ className, ...props }) => <Box className={className} display="grid" rowGap="0.5" {...props} />,
 

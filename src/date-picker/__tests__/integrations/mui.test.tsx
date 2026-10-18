@@ -40,6 +40,9 @@ describe("MUI v7", () => {
     await open(user);
 
     expect(dialog()).toHaveClass("MuiPaper-root");
+    // In MUI's own Popper, portaled out of the picker.
+    expect(dialog().closest(".MuiPopper-root")).not.toBeNull();
+    expect(dialog().closest(".sdp")).toBeNull();
     expect(day("2026-03-12")).toHaveClass("MuiIconButton-root");
     expect(screen.getByRole("button", { name: "Next month" })).toHaveClass("MuiIconButton-root");
     expect(screen.getByRole("combobox", { name: "Month" }).closest(".MuiInputBase-root")).not.toBeNull();

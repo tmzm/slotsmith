@@ -13,7 +13,7 @@ import {
   type Brand,
 } from "../builders";
 import { shadcnAutocomplete } from "./shadcn/components";
-import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
+import { failOnReactWarnings, itRendersGroups, itSearchesInTheTrigger, itRendersTheLibraryPopover, itShowsTheInvalidState, removeControl, renderIntegration, stubBrowserApis, tagLabels } from "./shared";
 
 /**
  * Render shadcn autocomplete
@@ -34,6 +34,7 @@ describe("shadcn/ui", () => {
     expect(label).toHaveClass("text-muted-foreground", "text-xs");
     expect(separator.querySelector('[data-slot="separator"]')).not.toBeNull();
   });
+  itRendersTheLibraryPopover(renderShadcnAutocomplete, "[data-slot=popover-content]");
   itShowsTheInvalidState(
     renderShadcnAutocomplete,
     (trigger) => expect(trigger).toHaveClass("aria-invalid:border-destructive"),

@@ -6,7 +6,7 @@
  * want, and pass the map as `components={chakraComponents}`; every slot left
  * out keeps its fallback.
  */
-import { Box, Button, chakra, EmptyState, IconButton, Input, List, Separator, Span, Spinner, Tag, Text } from "@chakra-ui/react";
+import { Box, Button, chakra, EmptyState, IconButton, Input, List, Popover, Portal, Separator, Span, Spinner, Tag, Text } from "@chakra-ui/react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -32,6 +32,7 @@ import type {
   AutocompleteTriggerSlotProps,
   AutocompleteValueSlotProps,
 } from "slotsmith/autocomplete";
+import { useAutocompleteContext } from "slotsmith/autocomplete";
 
 /**
  * Chakra root
@@ -191,14 +192,54 @@ const ChakraIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) =>
 /**
  * Chakra popup
  *
- * A panel `Box`. The component positions it, so the part only receives the
- * computed style and adds the surface, at the `sm` text style of Chakra's
- * combobox rows. It is a column the list fills, so the list scrolls inside
- * the height it is given and the search box stays put.
+ * Chakra's `Popover`: it portals the list, places it against the trigger
+ * and draws Chakra's popover surface, at the `sm` text style of Chakra's
+ * combobox rows. The autocomplete owns the open state, the focus and
+ * closing, so the popover's own are turned off. Inside, a column the list
+ * fills, so the list scrolls inside the height it is given and the search
+ * box stays put. The surface keeps every prop the part is given, its `id` included, which
+ * is how the autocomplete knows the portaled list is still part of it, and
+ * from the computed style only the width (the trigger's) and the height cap;
+ * the library places it.
  */
-const ChakraPopup = (props: AutocompletePopupSlotProps) => (
-  <Box bg="bg.panel" textStyle="sm" borderWidth="1px" borderRadius="md" boxShadow="md" display="flex" flexDirection="column" overflow="hidden" zIndex="dropdown" {...props} />
-);
+function ChakraPopup({ style, ...props }: AutocompletePopupSlotProps) {
+  const { position } = useAutocompleteContext();
+  const anchor = position.anchor;
+  if (!anchor) return null;
+  return (
+    <Popover.Root
+      open
+      // The popover finds its content by this id, and so does the autocomplete.
+      ids={{ content: props.id }}
+      modal={false}
+      autoFocus={false}
+      closeOnEscape={false}
+      closeOnInteractOutside={false}
+      positioning={{
+        placement: position.placement === "top-start" ? "top-start" : "bottom-start",
+        gutter: 4,
+        getAnchorRect: () => anchor.getBoundingClientRect(),
+      }}
+    >
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content
+            // A container for the list, which carries the semantics; not a dialog.
+            role="presentation"
+            textStyle="sm"
+            display="flex"
+            flexDirection="column"
+            overflow="hidden"
+            p="0"
+            width="auto"
+            style={{ width: style?.width, minWidth: style?.minWidth, maxHeight: style?.maxHeight }}
+            {...props}
+          />
+        </Popover.Positioner>
+      </Portal>
+    </Popover.Root>
+  );
+}
 
 /**
  * Chakra search

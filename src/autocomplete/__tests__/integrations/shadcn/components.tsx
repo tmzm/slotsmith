@@ -9,6 +9,7 @@
  * The `@/components/ui/*` and `@/lib/utils` imports are the app's own
  * shadcn/ui files.
  */
+import { useMemo, type RefObject } from "react";
 import type {
   AutocompleteCheckSlotProps,
   AutocompleteClearSlotProps,
@@ -38,6 +39,7 @@ import { useAutocompleteContext } from "../../../index";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Popover, PopoverAnchor, PopoverContent } from "./ui/popover";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "./ui/input-group";
 import { Separator } from "./ui/separator";
 import { cn } from "./ui/utils";
@@ -256,21 +258,36 @@ const ShadcnIndicator = ({ open, loading }: AutocompleteIndicatorSlotProps) => (
 /**
  * Shadcn popup
  *
- * The `popover-content` surface. The component positions it, so the part only
- * receives the computed style and adds the look. It is a column the list
- * fills, so the list scrolls inside the height it is given and the search row
- * stays put.
+ * shadcn's `Popover`, anchored to the trigger, as shadcn's combobox recipe
+ * uses it: it portals the list, places and animates it. Focus stays with the
+ * autocomplete, which moves it to the search box itself. Inside, a column
+ * the list fills, so the list scrolls inside the height it is given and the
+ * search row stays put. The surface keeps every prop the part is given, its `id` included, which
+ * is how the autocomplete knows the portaled list is still part of it, and
+ * from the computed style only the width (the trigger's) and the height cap;
+ * the library places it.
  */
-const ShadcnPopup = ({ className, ...props }: AutocompletePopupSlotProps) => (
-  <div
-    data-slot="popover-content"
-    className={cn(
-      "z-50 flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
-      className,
-    )}
-    {...props}
-  />
-);
+function ShadcnPopup({ className, style, ...props }: AutocompletePopupSlotProps) {
+  const { position } = useAutocompleteContext();
+  const anchor = useMemo(() => ({ current: position.anchor }), [position.anchor]);
+  if (!position.anchor) return null;
+  return (
+    <Popover open>
+      <PopoverAnchor virtualRef={anchor as RefObject<HTMLElement>} />
+      <PopoverContent
+        // A container for the list, which carries the semantics; not a dialog.
+        role="presentation"
+        align="start"
+        side={position.placement === "top-start" ? "top" : "bottom"}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        className={cn("flex w-auto flex-col overflow-hidden p-0", className)}
+        style={{ width: style?.width, minWidth: style?.minWidth, maxHeight: style?.maxHeight }}
+        {...props}
+      />
+    </Popover>
+  );
+}
 
 /**
  * Shadcn search

@@ -317,7 +317,7 @@ describe("Radix Themes v3", () => {
   it("skins the table's built-in page-size select when only the autocomplete adapter is at the provider", async () => {
     await pageSizeThroughAutocompleteAdapter(radixAutocomplete, Wrapper, ({ trigger, listbox, options }) => {
       expect(trigger.closest("[style*='--radius-2']")).not.toBeNull();
-      expect(listbox.closest("[style*='--color-panel-solid']")).not.toBeNull();
+      expect(listbox.closest(".rt-PopoverContent")).not.toBeNull();
       expect(options).toHaveLength(4);
     });
   });
