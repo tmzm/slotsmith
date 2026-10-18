@@ -157,6 +157,10 @@ Hand-written inputs live next to the generated output: `knowledge/guides/*.md` a
 
 ## Changelog
 
+- **1.10.0** — Describes `slotsmith` 1.10.0; copy any date-picker or autocomplete adapter you use again with `add`, and the shadcn/ui data-table adapter:
+  - The date picker's text-field trigger (`trigger`, `openOnFocus`, slots `Input` and `Toggle`), its ISO-instant default value, `portal` on the date picker and the autocomplete, and `name` on the date picker and the file uploader.
+  - The date-picker and autocomplete adapters open in their library's own popover, and every adapter part that has a component in its library renders it: shadcn/ui's `InputGroup`, `Button`, `NativeSelect`, `Pagination` and `Empty`, and the Radix Themes and Ant Design `Select`. The shadcn/ui adapters now need `popover`, plus `button`, `input-group` and `native-select` for the date picker and `empty` and `pagination` for the data table.
+
 - **1.9.0** — Describes `slotsmith` 1.9.0; copy any data-table adapter you use again with `add`:
   - The data table's spreadsheet mode (`spreadsheet`, `value`, `onValueChange`, column `edit`, slots `CellEditor` and `FillHandle`), `virtual` on the data table, autocomplete and file uploader, and the row-reorder options `reorderWhileSorted`, `reorderAcrossParents`, `setSubRows`, `canDrop`, `reorderGroup`, `reorderTableId` and `onRowTransfer`; the date picker's `valueFormat` and `timeZone`.
   - Every data-table adapter, in all five libraries, edits cells with its library's own input, draws the selection, the active cell and the fill handle in its own colours, shows a checkbox column with its own checkbox, and draws the drop line for rows dragged in from another table. The shadcn/ui data-table adapter now needs shadcn/ui's `input`. The shadcn/ui date-picker adapter's month and year lists open dark in dark mode.
