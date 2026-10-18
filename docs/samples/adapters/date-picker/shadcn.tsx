@@ -10,9 +10,17 @@
  * shadcn/ui files.
  */
 import { useMemo, type RefObject } from "react";
-import { useDatePickerContext, type DatePickerComponents } from "slotsmith/date-picker";
+import {
+  useDatePickerContext,
+  type DatePickerComponents,
+} from "slotsmith/date-picker";
 import { Button } from "@/components/ui/button";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -50,13 +58,18 @@ const Chevron = ({ flip }: { flip?: boolean }) => (
  * calendar uses native selects for its month and year. The browser draws the
  * open list itself, and `color-scheme` makes it dark in dark mode.
  */
-const captionSelect = "h-7 border-transparent py-0 ps-2 pe-7 text-sm font-medium shadow-none scheme-light dark:scheme-dark";
+const captionSelect =
+  "h-7 border-transparent py-0 ps-2 pe-7 text-sm font-medium shadow-none scheme-light dark:scheme-dark";
 /** The open list takes the popover's colours: on Windows the browser draws it from the options' own. */
 const captionOption = "bg-popover text-popover-foreground";
 
 export const shadcnComponents: Partial<DatePickerComponents> = {
   Root: ({ className, ...props }) => (
-    <div data-slot="date-picker" className={cn("relative w-full max-w-72", className)} {...props} />
+    <div
+      data-slot="date-picker"
+      className={cn("relative w-full max-w-72", className)}
+      {...props}
+    />
   ),
 
   /**
@@ -85,22 +98,40 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
   ),
 
   Value: ({ text, placeholder, empty }) => (
-    <span className={cn("flex-1 truncate", empty && "text-muted-foreground")}>{empty ? placeholder : text}</span>
+    <span className={cn("flex-1 truncate", empty && "text-muted-foreground")}>
+      {empty ? placeholder : text}
+    </span>
   ),
 
   /** The group's `InputGroupInput`: the frame draws the field around it. */
-  Input: ({ className, ...props }) => <InputGroupInput className={cn("h-auto min-w-0 px-3", className)} {...props} />,
+  Input: ({ className, ...props }) => (
+    <InputGroupInput
+      className={cn("h-auto min-w-0 px-3", className)}
+      {...props}
+    />
+  ),
 
   /** An icon `InputGroupButton` around the calendar glyph, in the inline-end addon. */
   Toggle: ({ className, type = "button", ...props }) => (
-    <InputGroupAddon align="inline-end" className="p-0 pe-1.5 has-[>button]:me-0">
-      <InputGroupButton type={type} size="icon-xs" className={cn("size-7", className)} {...props} />
+    <InputGroupAddon
+      align="inline-end"
+      className="p-0 pe-1.5 has-[>button]:me-0"
+    >
+      <InputGroupButton
+        type={type}
+        size="icon-xs"
+        className={cn("size-7", className)}
+        {...props}
+      />
     </InputGroupAddon>
   ),
 
   Icon: ({ open }) => (
     <svg
-      className={cn("size-4 shrink-0 opacity-60 transition-opacity", open && "text-primary opacity-100")}
+      className={cn(
+        "size-4 shrink-0 opacity-60 transition-opacity",
+        open && "text-primary opacity-100",
+      )}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -126,7 +157,14 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
         }}
         {...aria}
       >
-        <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="size-3.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          aria-hidden="true"
+        >
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </InputGroupButton>
@@ -143,7 +181,10 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
    */
   Popup: function ShadcnPopup({ className, style: _style, ...props }) {
     const { position } = useDatePickerContext();
-    const anchor = useMemo(() => ({ current: position.anchor }), [position.anchor]);
+    const anchor = useMemo(
+      () => ({ current: position.anchor }),
+      [position.anchor],
+    );
     if (!position.anchor) return null;
     return (
       <Popover open>
@@ -161,9 +202,19 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
     );
   },
 
-  Calendar: ({ className, ...props }) => <div className={cn("grid gap-0.5", className)} {...props} />,
+  Calendar: ({ className, ...props }) => (
+    <div className={cn("grid gap-0.5", className)} {...props} />
+  ),
 
-  Caption: ({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) => (
+  Caption: ({
+    monthIndex,
+    year,
+    months,
+    years,
+    onMonthChange,
+    onYearChange,
+    labels,
+  }) => (
     <span className="flex items-center gap-1">
       <NativeSelect
         size="sm"
@@ -173,7 +224,11 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
         onChange={(event) => onMonthChange(Number(event.target.value))}
       >
         {months.map((name, index) => (
-          <NativeSelectOption key={name} value={index} className={captionOption}>
+          <NativeSelectOption
+            key={name}
+            value={index}
+            className={captionOption}
+          >
             {name}
           </NativeSelectOption>
         ))}
@@ -186,7 +241,11 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
         onChange={(event) => onYearChange(Number(event.target.value))}
       >
         {years.map((value) => (
-          <NativeSelectOption key={value} value={value} className={captionOption}>
+          <NativeSelectOption
+            key={value}
+            value={value}
+            className={captionOption}
+          >
             {value}
           </NativeSelectOption>
         ))}
@@ -196,7 +255,15 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
 
   /** A ghost icon `Button` with the chevron, mirrored for the next month. */
   Nav: ({ direction, onClick, disabled, ...aria }) => (
-    <Button type="button" variant="ghost" size="icon" onClick={onClick} disabled={disabled} className="size-7 disabled:opacity-35" {...aria}>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      disabled={disabled}
+      className="size-7 disabled:opacity-35"
+      {...aria}
+    >
       <Chevron flip={direction === "next"} />
     </Button>
   ),
@@ -238,9 +305,9 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
         "data-in-range:before:inset-x-[calc(var(--sdp-gap,0.25rem)/-2-0.5px)]",
         "data-in-range:before:z-[-1] data-in-range:before:bg-primary/15",
         "data-in-preview:bg-primary/10",
-        "data-[in-range]:data-[range-start]:before:[inset-inline-start:0]",
+        "data-in-range:data-range-start:before:start-[0]",
         "data-in-range:data-range-start:before:rounded-s-md",
-        "data-[in-range]:data-[range-end]:before:[inset-inline-end:0]",
+        "data-in-range:data-range-end:before:end-[0]",
         "data-in-range:data-range-end:before:rounded-e-md",
         "data-selected:bg-primary data-selected:font-semibold data-selected:text-primary-foreground",
         "data-selected:hover:bg-primary data-selected:hover:text-primary-foreground",
@@ -267,7 +334,13 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
           {preset.label}
         </Button>
       ))}
-      <Button type="button" variant="ghost" size="sm" onClick={onToday} className="ms-auto h-6 rounded-full px-2 text-xs font-normal text-muted-foreground">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onToday}
+        className="ms-auto h-6 rounded-full px-2 text-xs font-normal text-muted-foreground"
+      >
         {todayLabel}
       </Button>
     </div>
