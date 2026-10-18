@@ -96,7 +96,13 @@ const headings = libraries.map((library) => ({ id: library.id, text: library.nam
               <Fill
                 lang={lang}
                 message="adapters.registry"
-                code={{ config: `"@slotsmith": "${REGISTRY_URL}"`, command: `npx shadcn@latest add @slotsmith/${slug}` }}
+                code={{
+                  config: `"@slotsmith": "${REGISTRY_URL}"`,
+                  command: `npx shadcn@latest add @slotsmith/${slug}`,
+                  file: `components/slotsmith/${slug}.tsx`,
+                  component: `<${exportName} />`,
+                  provider: "npx shadcn@latest add @slotsmith/provider",
+                }}
               />
             </>
           )}

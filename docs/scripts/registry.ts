@@ -2,10 +2,11 @@
  * shadcn registry
  *
  * Builds the shadcn/ui registry into `public/r/`, so the site serves it:
- * `https://slotsmith.dev/r/<component>.json` for each component and
- * `https://slotsmith.dev/r/registry.json` for the index. A project that
- * names the registry in its `components.json` installs an adapter with
- * `npx shadcn@latest add @slotsmith/<component>`.
+ * `https://slotsmith.dev/r/<component>.json` for each component,
+ * `https://slotsmith.dev/r/provider.json` for the provider that applies
+ * every adapter at once, and `https://slotsmith.dev/r/registry.json` for the
+ * index. A project that names the registry in its `components.json`
+ * installs an adapter with `npx shadcn@latest add @slotsmith/<component>`.
  *
  * The items are the ones `slotsmith-ai`'s own build writes, made from the
  * knowledge generated in memory here, so the served registry always matches

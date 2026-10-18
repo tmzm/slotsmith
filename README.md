@@ -256,7 +256,29 @@ npx shadcn@latest add @slotsmith/date-picker
 
 The full URL works without the `registries` entry: `npx shadcn@latest add https://slotsmith.dev/r/date-picker.json`. `slotsmith-ai`'s own build writes the same files to `packages/ai/registry/`.
 
-It lands at the same path `slotsmith-ai add --ui shadcn` writes to, installs its peers automatically, and pulls in any shadcn/ui components (`button`, `checkbox`, …) it depends on. One caveat: shadcn's CLI strips a file's leading doc comment when it installs a `registry:component`, so a file placed this way is missing the adapter's short "what this is" header comment that `slotsmith-ai add` keeps — every slot and prop is otherwise the same file either way.
+It lands at `components/slotsmith/<component>.tsx`, next to `components/ui`, installs its peers automatically and pulls in the shadcn/ui components (`button`, `checkbox`, …) it depends on. Besides the parts map, the file exports a ready component of the same name, so it is used like any shadcn/ui component:
+
+```tsx
+import { DatePicker } from "@/components/slotsmith/date-picker";
+
+<DatePicker value={value} onChange={setValue} />;
+```
+
+A `components` prop still replaces any part. To apply every adapter to the whole app instead, install the provider, which brings the four adapters with it, and wrap the app once; then the components imported from `slotsmith/*` render with the shadcn/ui parts too:
+
+```bash
+npx shadcn@latest add @slotsmith/provider
+```
+
+```tsx
+import { SlotsmithProvider } from "@/components/slotsmith/provider";
+
+<SlotsmithProvider locale={language}>
+  <App />
+</SlotsmithProvider>;
+```
+
+The file differs from the one `slotsmith-ai add --ui shadcn` writes at the same path by that ready component, and shadcn's CLI strips the file's leading doc comment when it installs it.
 
 ## Theming
 
@@ -327,7 +349,8 @@ pnpm test:ai     # the MCP server in packages/ai
 
 ## Changelog
 
-- **Unreleased** — The ready-made date-picker and autocomplete adapters lay out the calendar grid and the field themselves, so they hold together without slotsmith's stylesheet: Tailwind classes in shadcn/ui, `sx` in MUI, `css` in Chakra UI and a scoped style in Ant Design and Radix Themes. Copy them again from `slotsmith-ai`.
+- **Unreleased** — Each item in the shadcn/ui registry now installs a ready component next to its parts (`<DatePicker />` from `@/components/slotsmith/date-picker`), and the new `@slotsmith/provider` item applies all four adapters to the app through one `SlotsmithProvider`; see [Adapters](https://slotsmith.dev/components/date-picker/adapters/).
+- The ready-made date-picker and autocomplete adapters lay out the calendar grid and the field themselves, so they hold together without slotsmith's stylesheet: Tailwind classes in shadcn/ui, `sx` in MUI, `css` in Chakra UI and a scoped style in Ant Design and Radix Themes. Copy them again from `slotsmith-ai`.
 - **1.10.0** — The date picker's trigger is now a text field: a date can be typed in the locale's numeric order (`MM/DD/YYYY` in en-US, `DD.MM.YYYY` in German), read on Enter or when focus leaves, or picked from the calendar, which opens from a button beside the field. `openOnFocus` opens the calendar when the field is focused or clicked. `trigger="button"` keeps the single button that shows the formatted date. New slots `Input` and `Toggle`, the `openCalendar` label in every language, and `getInputProps`, `getToggleProps`, `inputText`, `inputPattern` and `focusTrigger` on `useDatePicker`; every adapter renders its library's own input and icon button. See [Typing a date](https://slotsmith.dev/components/date-picker/guides/typing/).
 - The date picker's value is an ISO instant by default: `valueFormat` now defaults to `"iso-datetime"`, the instant the day starts in `timeZone` (`"2026-03-12T00:00:00+03:00"`), instead of `"YYYY-MM-DD"`. A day without a zone, such as `"2026-03-12"`, is still read as that day, so stored values keep loading; set `valueFormat="YYYY-MM-DD"` to keep getting the calendar day alone. The spreadsheet's date cells keep the calendar day.
 - slotsmith has no dependencies of its own: popups are placed by its own positioner instead of `@floating-ui/react-dom`, which is no longer installed with it. They still flip above the trigger when there is no room below, stay inside the viewport and follow every scroll and resize.

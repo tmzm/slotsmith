@@ -142,7 +142,7 @@ export const en = {
     "This adapter renders {component} with {library} parts. Copy the file into your app and pass the map to {prop}; every slot you leave out keeps its fallback.",
   "adapters.needs": "It imports {packages}.",
   "adapters.needsShadcn": "It imports these shadcn/ui components; add them with {command}.",
-  "adapters.registry": "Or install the adapter and those components in one step from slotsmith's shadcn/ui registry: add {config} to the registries in your components.json, then run {command}.",
+  "adapters.registry": "Or install it in one step from slotsmith's shadcn/ui registry: add {config} to the registries in your components.json, then run {command}. It writes {file}, with these parts and a {component} that already renders with them, and adds the shadcn/ui components it needs. {provider} applies every adapter to the whole app through one SlotsmithProvider.",
   "adapters.provider": "The demo sits inside {library}'s provider, as any app built on it already does.",
   "adapters.file": "The adapter",
   "adapters.once": "An adapter can also be set once for the whole app instead of on every {component}: {snippet}.",

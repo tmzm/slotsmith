@@ -141,7 +141,7 @@ export const ar: Record<MessageKey, string> = {
   "adapters.lead":
     "يعرض هذا المحوّل {component} بأجزاء {library}. انسخ الملف إلى تطبيقك ومرّر الخريطة إلى {prop}، وكل فتحة لا تمرّرها تبقى على بديلها الافتراضي.",
   "adapters.needs": "يستورد {packages}.",
-  "adapters.registry": "أو ثبّت المحوّل وتلك المكوّنات دفعة واحدة من سجل slotsmith لـ shadcn/ui: أضف {config} إلى registries في ملف components.json، ثم شغّل {command}.",
+  "adapters.registry": "أو ثبّته دفعة واحدة من سجل slotsmith لـ shadcn/ui: أضف {config} إلى registries في ملف components.json، ثم شغّل {command}. يكتب الأمر {file} وفيه هذه الأجزاء و{component} يعرض بها مباشرة، ويضيف مكوّنات shadcn/ui التي يحتاجها. أما {provider} فيطبّق كل المحوّلات على التطبيق كله عبر SlotsmithProvider واحد.",
   "adapters.needsShadcn": "يستورد مكوّنات shadcn/ui هذه، وتضيفها بالأمر {command}.",
   "adapters.provider": "العرض داخل موفّر {library}، كما في أي تطبيق مبني عليها.",
   "adapters.file": "المحوّل",
