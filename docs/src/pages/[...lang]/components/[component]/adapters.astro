@@ -58,7 +58,10 @@ const PROVIDER_KEY: Record<ComponentSlug, SlotsmithComponentName> = {
   "file-uploader": "fileUploader",
 };
 /** The provider form of the first adapter on the page, with the name its file exports. */
-const once = libraries[0] && `<SlotsmithProvider components={{ ${PROVIDER_KEY[slug]}: ${libraries[0].id}Components }}>`;
+/** Where the site serves the shadcn/ui registry; `scripts/registry.ts` writes it into `public/r/`. */
+const REGISTRY_URL = "https://slotsmith.dev/r/{name}.json";
+
+const once = libraries[0] &&`<SlotsmithProvider components={{ ${PROVIDER_KEY[slug]}: ${libraries[0].id}Components }}>`;
 const headings = libraries.map((library) => ({ id: library.id, text: library.name, depth: 2 as const }));
 ---
 <ComponentPage lang={lang} component={component} section="adapters" stub={libraries.length === 0} headings={headings}>
@@ -86,6 +89,16 @@ const headings = libraries.map((library) => ({ id: library.id, text: library.nam
           {library.needs.packages.length > 0 && <Fill lang={lang} message="adapters.needs" code={{ packages: library.needs.packages.join(" ") }} />}
           {library.needs.shadcn.length > 0 && (
             <Fill lang={lang} message="adapters.needsShadcn" code={{ command: `npx shadcn@latest add ${library.needs.shadcn.join(" ")}` }} />
+          )}
+          {library.id === "shadcn" && (
+            <>
+              {" "}
+              <Fill
+                lang={lang}
+                message="adapters.registry"
+                code={{ config: `"@slotsmith": "${REGISTRY_URL}"`, command: `npx shadcn@latest add @slotsmith/${slug}` }}
+              />
+            </>
           )}
         </p>
       </div>

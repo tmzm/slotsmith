@@ -373,6 +373,10 @@ async function main(): Promise<void> {
     // The framework examples are whole apps that CI builds; a page shows only the files that matter.
     ...findUnusedSamples(facts, sampleNames().filter((name) => !name.startsWith("frameworks/")), sampleImports()).map((name) => `sample "${name}" is not shown on any page`),
     ...geoProblems,
+    // The shadcn registry the adapters pages tell people to install from (`@slotsmith/<component>`).
+    ...["registry", "autocomplete", "data-table", "date-picker", "file-uploader"]
+      .filter((name) => !existsSync(resolve(distDir, "r", `${name}.json`)))
+      .map((name) => `the shadcn registry file /r/${name}.json is missing`),
   ];
 
   const missing: SlotMap = {};

@@ -242,11 +242,19 @@ Each component's Adapters page in the docs runs all five, starting with the [dat
 
 ### The shadcn registry
 
-The four shadcn/ui adapters are also built into a [shadcn/ui registry](https://ui.shadcn.com/docs/registry) by `slotsmith-ai`'s own build (`packages/ai/registry/<component>.json`, plus a `registry.json` index; nothing is published from this repo — build it yourself and serve it from any static host you control):
+The four shadcn/ui adapters are also a [shadcn/ui registry](https://ui.shadcn.com/docs/registry), served by the docs site at `https://slotsmith.dev/r/<component>.json` (with a `registry.json` index). Name it once in your `components.json`:
+
+```json
+"registries": { "@slotsmith": "https://slotsmith.dev/r/{name}.json" }
+```
+
+then install any adapter by its short name:
 
 ```bash
-npx shadcn@latest add https://<your-host>/date-picker.json
+npx shadcn@latest add @slotsmith/date-picker
 ```
+
+The full URL works without the `registries` entry: `npx shadcn@latest add https://slotsmith.dev/r/date-picker.json`. `slotsmith-ai`'s own build writes the same files to `packages/ai/registry/`.
 
 It lands at the same path `slotsmith-ai add --ui shadcn` writes to, installs its peers automatically, and pulls in any shadcn/ui components (`button`, `checkbox`, …) it depends on. One caveat: shadcn's CLI strips a file's leading doc comment when it installs a `registry:component`, so a file placed this way is missing the adapter's short "what this is" header comment that `slotsmith-ai add` keeps — every slot and prop is otherwise the same file either way.
 
