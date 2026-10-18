@@ -740,11 +740,24 @@ export function useAutocomplete<TOption>(options: UseAutocompleteOptions<TOption
     if (closed && inTrigger && query !== "") setQueryState("");
   }, [open, inTrigger, query, setQueryState]);
 
-  /** Keep the highlighted row in view without scrolling the page. */
+  /**
+   * Keep the highlighted row in view by scrolling the list alone. Not
+   * `scrollIntoView`, which also scrolls the page: a popup a UI library is
+   * still placing can sit at the top of the page for a frame, and the page
+   * would jump there.
+   */
   useEffect(() => {
     if (!open || highlightedIndex < 0) return;
     const element = listRef.current?.querySelector<HTMLElement>(`[data-index="${highlightedIndex}"]`);
-    element?.scrollIntoView({ block: "nearest" });
+    let scroller = element?.parentElement ?? null;
+    while (scroller && scroller.scrollHeight <= scroller.clientHeight && scroller !== listRef.current?.parentElement) {
+      scroller = scroller.parentElement;
+    }
+    if (!element || !scroller) return;
+    const row = element.getBoundingClientRect();
+    const box = scroller.getBoundingClientRect();
+    if (row.top < box.top) scroller.scrollTop -= box.top - row.top;
+    else if (row.bottom > box.bottom) scroller.scrollTop += row.bottom - box.bottom;
   }, [open, highlightedIndex]);
 
   /* -------------------------------------------------------------- lifecycle */
