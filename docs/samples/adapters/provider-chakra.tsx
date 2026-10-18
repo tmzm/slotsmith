@@ -7,21 +7,34 @@
  * is all Chakra passes `defaultSystem` instead. Chakra reads its colour
  * mode from a `light` or `dark` class; scoped, the class must sit inside
  * the scope, so the surface carries it.
+ *
+ * A Chakra popover (the calendar, the autocomplete's list) portals its
+ * positioner to `<body>`, outside the scope, so that positioner is a scope
+ * root too, and takes dark mode from the page's own `data-theme`.
  */
 import { ChakraProvider, createSystem, defaultConfig } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 
 const global = defaultConfig.globalCss ?? {};
 
+/** What a Chakra popover portals to `<body>`: its positioner. */
+const PORTALED = "[data-scope][data-part=positioner]";
+/** Every scope root: the demo's own, and each portaled positioner. */
+const SCOPE = `:is(.chakra-scope, ${PORTALED})`;
+
 const system = createSystem({
   ...defaultConfig,
-  cssVarsRoot: ".chakra-scope",
-  preflight: { scope: ".chakra-scope" },
+  cssVarsRoot: SCOPE,
+  preflight: { scope: SCOPE },
+  conditions: {
+    ...defaultConfig.conditions,
+    dark: `.dark &, .dark .chakra-theme:not(.light) &, [data-theme="dark"] ${PORTALED} &`,
+  },
   globalCss: {
-    ".chakra-scope, .chakra-scope *": global["*"] ?? {},
-    ".chakra-surface": global.html ?? {},
-    ".chakra-scope ::placeholder, .chakra-scope [data-placeholder]": global["*::placeholder, *[data-placeholder]"] ?? {},
-    ".chakra-scope ::selection": global["*::selection"] ?? {},
+    [`${SCOPE}, ${SCOPE} *`]: global["*"] ?? {},
+    [`.chakra-surface, ${PORTALED}`]: global.html ?? {},
+    [`${SCOPE} ::placeholder, ${SCOPE} [data-placeholder]`]: global["*::placeholder, *[data-placeholder]"] ?? {},
+    [`${SCOPE} ::selection`]: global["*::selection"] ?? {},
   },
 });
 
