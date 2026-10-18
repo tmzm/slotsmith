@@ -99,40 +99,28 @@ const ShadcnRoot = ({ className, ...props }: AutocompleteRootSlotProps) => (
 /**
  * Shadcn trigger
  *
- * The `select-trigger` look, driven by the `data-*` attributes the part
- * carries rather than by props of its own. An invalid value gets shadcn's
- * own `aria-invalid:` treatment: the destructive border, and the destructive
- * ring while open or focused.
- *
- * With the search in the trigger it is an `InputGroup` instead: the group
- * draws the field, its ring and its destructive state off the input inside,
- * and grows to wrap the badges. Its 3px block padding around the 28px input
- * keeps it at the `h-9` of a plain `InputGroup` while it holds one row.
+ * shadcn's `InputGroup`: the field frame, with its border, ring and
+ * destructive state. As a select it is the combobox itself, a frame rather
+ * than a `Button` because it holds the clear button and a button cannot hold
+ * another; its ring follows its own focus and the open list. With the search
+ * in the trigger it holds the `InputGroupInput`, draws the ring off it, and
+ * grows to wrap the badges: its 3px block padding around the 28px input keeps
+ * it at the `h-9` of a plain `InputGroup` while it holds one row.
  */
 function ShadcnTrigger({ className, ...props }: AutocompleteTriggerSlotProps) {
-  if ((props as Record<string, unknown>)["data-search-in"] !== undefined) {
-    return (
-      <InputGroup
-        className={cn(
-          "h-auto min-h-9 cursor-text gap-1 px-1 py-[3px]",
-          "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
-          className,
-        )}
-        {...props}
-      />
-    );
-  }
+  const searchIn = (props as Record<string, unknown>)["data-search-in"] !== undefined;
   return (
-    <div
-      data-slot="select-trigger"
+    <InputGroup
       className={cn(
-        "flex min-h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none",
-        "data-[open]:border-ring data-[open]:ring-[3px] data-[open]:ring-ring/50",
-        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
-        "aria-invalid:border-destructive",
-        "aria-invalid:data-[open]:border-destructive aria-invalid:data-[open]:ring-destructive/20 dark:aria-invalid:data-[open]:ring-destructive/40",
-        "aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:focus-visible:ring-destructive/40",
+        "h-auto min-h-9 data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        searchIn
+          ? "cursor-text gap-1 px-1 py-0.75"
+          : [
+              "cursor-pointer gap-2 px-3 py-1 text-sm",
+              "data-open:border-ring data-open:ring-[3px] data-open:ring-ring/50",
+              "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+              "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+            ],
         className,
       )}
       {...props}
@@ -182,24 +170,26 @@ const ShadcnValue = ({ label, placeholder, empty }: AutocompleteValueSlotProps) 
 /**
  * Shadcn tag
  *
- * A secondary `Badge` per selected value, with a real 20px button for
- * removing it in the muted foreground.
+ * A secondary `Badge` per selected value, with a 20px ghost `Button`
+ * for removing it in the muted foreground.
  */
 const ShadcnTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlotProps) => (
   <Badge variant="secondary" className={cn("h-5.5 gap-0.5 rounded-sm py-0", !disabled && "pe-0.5")}>
     {label}
     {!disabled && (
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={removeLabel}
-        className="grid size-5 place-items-center rounded-sm text-muted-foreground hover:text-foreground"
+        className="size-5 rounded-sm text-muted-foreground hover:bg-transparent hover:text-foreground"
         onClick={(event) => {
           event.stopPropagation();
           onRemove();
         }}
       >
         <X />
-      </button>
+      </Button>
     )}
   </Badge>
 );
@@ -323,8 +313,8 @@ const ShadcnOption = ({ className, ...props }: AutocompleteOptionSlotProps) => (
     data-slot="command-item"
     className={cn(
       "relative flex cursor-default items-center gap-2 rounded-sm py-1.5 ps-2 pe-8 text-sm outline-none select-none",
-      "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-      "data-[disabled]:pointer-events-auto data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+      "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
+      "data-disabled:pointer-events-auto data-disabled:cursor-not-allowed data-disabled:opacity-50",
       className,
     )}
     {...props}

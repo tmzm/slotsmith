@@ -27,7 +27,8 @@ describe("shadcn/ui", () => {
 
   it("renders the calendar with shadcn's classes on the same DOM nodes", async () => {
     const user = renderShadcnDatePicker();
-    expect(trigger()).toHaveClass("border-input");
+    // shadcn's InputGroup frame, not a hand-styled div.
+    expect(trigger()).toHaveAttribute("data-slot", "input-group");
 
     await open(user);
 
@@ -37,6 +38,11 @@ describe("shadcn/ui", () => {
     expect(dialog().closest(".sdp")).toBeNull();
     expect(day("2026-03-12")).toHaveClass("size-8");
     expect(day("2026-03-12")).not.toHaveClass("sdp__day");
+    // shadcn's own components, not hand-made HTML.
+    expect(day("2026-03-12")).toHaveAttribute("data-slot", "button");
+    expect(screen.getByRole("button", { name: "Next month" })).toHaveAttribute("data-slot", "button");
+    expect(screen.getByRole("combobox", { name: "Month" })).toHaveAttribute("data-slot", "native-select");
+    expect(screen.getByRole("combobox", { name: "Year" })).toHaveAttribute("data-slot", "native-select");
   });
 
   it("picks a date and shows it on the trigger", async () => {

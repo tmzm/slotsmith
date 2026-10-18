@@ -327,7 +327,7 @@ function AntTriggerInput({ ref, style, ...props }: AutocompleteTriggerInputSlotP
  * type goes through `htmlType`.
  */
 const AntToggle = ({ type: _type, children, ...props }: AutocompleteToggleSlotProps) => (
-  <Button type="text" htmlType="button" size="small" icon={children} {...props} />
+  <Button type="text" htmlType="button" size="small" icon={children} style={{ marginInlineEnd: 4 }} {...props} />
 );
 
 /**

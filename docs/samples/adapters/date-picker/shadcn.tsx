@@ -11,6 +11,9 @@
  */
 import { useMemo, type RefObject } from "react";
 import { useDatePickerContext, type DatePickerComponents } from "slotsmith/date-picker";
+import { Button } from "@/components/ui/button";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -43,39 +46,38 @@ const Chevron = ({ flip }: { flip?: boolean }) => (
 );
 
 /**
- * The caption's two dropdowns share everything but their options. The
- * browser draws a select's open list itself: `color-scheme` makes it dark in
- * dark mode, and the options take the popover's colours.
+ * The caption's two dropdowns: shadcn's `NativeSelect`, as shadcn's own
+ * calendar uses native selects for its month and year. The browser draws the
+ * open list itself, and `color-scheme` makes it dark in dark mode.
  */
-const selectClass = cn(
-  "cursor-pointer rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-sm font-medium",
-  "text-foreground outline-none hover:border-input focus-visible:ring-2 focus-visible:ring-ring",
-  "[color-scheme:light] dark:[color-scheme:dark]",
-);
-const optionClass = "bg-popover text-popover-foreground";
+const captionSelect = "h-7 border-transparent py-0 ps-2 pe-7 text-sm font-medium shadow-none scheme-light dark:scheme-dark";
+/** The open list takes the popover's colours: on Windows the browser draws it from the options' own. */
+const captionOption = "bg-popover text-popover-foreground";
 
 export const shadcnComponents: Partial<DatePickerComponents> = {
   Root: ({ className, ...props }) => (
     <div data-slot="date-picker" className={cn("relative w-full max-w-72", className)} {...props} />
   ),
 
+  /**
+   * shadcn's `InputGroup`: the field frame, with its border, ring and
+   * destructive state. With the text field it holds the `InputGroupInput`
+   * and the buttons; as the single button trigger it is the combobox itself,
+   * a frame rather than a `Button` because it holds the clear button and a
+   * button cannot hold another.
+   */
   Trigger: ({ className, ...props }) => (
-    <div
+    <InputGroup
       className={cn(
-        "flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-md border border-input px-3 py-1.5",
-        "bg-background text-sm transition-colors outline-none hover:border-ring/60",
-        "data-[open]:border-ring data-[open]:ring-3 data-[open]:ring-ring/25",
-        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25",
+        "min-h-9 cursor-pointer gap-2 bg-background px-3 text-sm",
+        "data-open:border-ring data-open:ring-[3px] data-open:ring-ring/50",
+        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
         "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
-        /** The text-field trigger: the ring follows focus in the field, as shadcn's `Input` shows it. */
-        "data-[trigger=input]:cursor-text data-[trigger=input]:pe-1.5",
-        "has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/25",
-        "data-[trigger=input]:data-[disabled]:cursor-not-allowed data-[trigger=input]:data-[disabled]:opacity-50",
-        "data-[invalid]:border-destructive data-[invalid]:has-[input:focus-visible]:ring-destructive/20 dark:data-[invalid]:has-[input:focus-visible]:ring-destructive/40",
-        /** shadcn's own invalid treatment: the destructive border, and the destructive ring while open or focused. */
-        "aria-invalid:border-destructive aria-invalid:hover:border-destructive",
-        "aria-invalid:data-[open]:border-destructive aria-invalid:data-[open]:ring-destructive/20 dark:aria-invalid:data-[open]:ring-destructive/40",
-        "aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/20 dark:aria-invalid:focus-visible:ring-destructive/40",
+        /** The text-field trigger: the field and its buttons sit right against the frame. */
+        "data-[trigger=input]:cursor-text data-[trigger=input]:gap-0 data-[trigger=input]:px-0",
+        "data-[trigger=input]:data-disabled:cursor-not-allowed data-[trigger=input]:data-disabled:opacity-50",
+        "data-invalid:border-destructive data-invalid:ring-destructive/20 dark:data-invalid:ring-destructive/40",
+        "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
         className,
       )}
       {...props}
@@ -86,28 +88,14 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
     <span className={cn("flex-1 truncate", empty && "text-muted-foreground")}>{empty ? placeholder : text}</span>
   ),
 
-  /** A bare input: the trigger frame holds shadcn's border and ring. */
-  Input: ({ className, ...props }) => (
-    <input
-      className={cn(
-        "min-w-0 flex-1 border-0 bg-transparent p-0 text-sm outline-none",
-        "placeholder:text-muted-foreground disabled:cursor-not-allowed",
-        className,
-      )}
-      {...props}
-    />
-  ),
+  /** The group's `InputGroupInput`: the frame draws the field around it. */
+  Input: ({ className, ...props }) => <InputGroupInput className={cn("h-auto min-w-0 px-3", className)} {...props} />,
 
-  /** A quiet icon button around the calendar glyph. */
-  Toggle: ({ className, ...props }) => (
-    <button
-      className={cn(
-        "inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 outline-none",
-        "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none",
-        className,
-      )}
-      {...props}
-    />
+  /** An icon `InputGroupButton` around the calendar glyph, in the inline-end addon. */
+  Toggle: ({ className, type = "button", ...props }) => (
+    <InputGroupAddon align="inline-end" className="p-0 pe-1.5 has-[>button]:me-0">
+      <InputGroupButton type={type} size="icon-xs" className={cn("size-7", className)} {...props} />
+    </InputGroupAddon>
   ),
 
   Icon: ({ open }) => (
@@ -126,23 +114,23 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
     </svg>
   ),
 
+  /** An icon `InputGroupButton`; the click stops here so it does not reach the trigger. */
   Clear: ({ onClick, ...aria }) => (
-    <button
-      type="button"
-      className={cn(
-        "rounded-sm border-0 bg-transparent p-0.5 text-foreground opacity-50 outline-none",
-        "hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
-      )}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      {...aria}
-    >
-      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <path d="M18 6 6 18M6 6l12 12" />
-      </svg>
-    </button>
+    <InputGroupAddon align="inline-end" className="p-0 has-[>button]:me-0">
+      <InputGroupButton
+        size="icon-xs"
+        className="size-6 text-muted-foreground hover:text-foreground"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        {...aria}
+      >
+        <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </InputGroupButton>
+    </InputGroupAddon>
   ),
 
   /**
@@ -165,7 +153,8 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
           side={position.placement === "top-start" ? "top" : "bottom"}
           onOpenAutoFocus={(event) => event.preventDefault()}
           onCloseAutoFocus={(event) => event.preventDefault()}
-          className={cn("w-72 p-2", className)}
+          // Its own stacking context, so the range band behind each day stays above the surface.
+          className={cn("isolate w-72 p-2", className)}
           {...props}
         />
       </Popover>
@@ -176,47 +165,40 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
 
   Caption: ({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) => (
     <span className="flex items-center gap-1">
-      <select
-        className={selectClass}
+      <NativeSelect
+        size="sm"
+        className={captionSelect}
         aria-label={labels.month}
         value={monthIndex}
         onChange={(event) => onMonthChange(Number(event.target.value))}
       >
         {months.map((name, index) => (
-          <option key={name} value={index} className={optionClass}>
+          <NativeSelectOption key={name} value={index} className={captionOption}>
             {name}
-          </option>
+          </NativeSelectOption>
         ))}
-      </select>
-      <select
-        className={selectClass}
+      </NativeSelect>
+      <NativeSelect
+        size="sm"
+        className={captionSelect}
         aria-label={labels.year}
         value={year}
         onChange={(event) => onYearChange(Number(event.target.value))}
       >
         {years.map((value) => (
-          <option key={value} value={value} className={optionClass}>
+          <NativeSelectOption key={value} value={value} className={captionOption}>
             {value}
-          </option>
+          </NativeSelectOption>
         ))}
-      </select>
+      </NativeSelect>
     </span>
   ),
 
+  /** A ghost icon `Button` with the chevron, mirrored for the next month. */
   Nav: ({ direction, onClick, disabled, ...aria }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "inline-flex size-7 shrink-0 items-center justify-center rounded-md border-0 bg-transparent outline-none",
-        "cursor-pointer text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring",
-        "disabled:pointer-events-none disabled:opacity-35",
-      )}
-      {...aria}
-    >
+    <Button type="button" variant="ghost" size="icon" onClick={onClick} disabled={disabled} className="size-7 disabled:opacity-35" {...aria}>
       <Chevron flip={direction === "next"} />
-    </button>
+    </Button>
   ),
 
   /**
@@ -242,26 +224,26 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
    * gutter past each inline edge so neighbouring days meet across the gap,
    * and it sits behind both the picked chip and the label.
    */
-  Day: ({ className, ...props }) => (
-    <button
-      type="button"
+  Day: ({ className, type = "button", ...props }) => (
+    <Button
+      type={type}
+      variant="ghost"
+      size="icon"
       className={cn(
-        "relative flex size-8 items-center justify-center justify-self-center rounded-md border-0",
-        "cursor-pointer bg-transparent text-[0.8125rem] text-foreground outline-none transition-colors",
-        "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring",
-        "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-30",
-        "data-[outside]:text-muted-foreground",
-        "data-[today]:inset-ring-1 data-[today]:inset-ring-primary/60",
-        "data-[in-range]:before:absolute data-[in-range]:before:inset-y-0 data-[in-range]:before:content-['']",
-        "data-[in-range]:before:[inset-inline:calc(var(--sdp-gap,0.25rem)/-2_-_0.5px)]",
-        "data-[in-range]:before:[z-index:-1] data-[in-range]:before:bg-primary/15",
-        "data-[in-preview]:bg-primary/10",
+        "relative size-8 justify-self-center rounded-md text-[0.8125rem] font-normal",
+        "data-disabled:cursor-not-allowed data-disabled:opacity-30",
+        "data-outside:text-muted-foreground",
+        "data-today:inset-ring-1 data-today:inset-ring-primary/60",
+        "data-in-range:before:absolute data-in-range:before:inset-y-0 data-in-range:before:content-['']",
+        "data-in-range:before:inset-x-[calc(var(--sdp-gap,0.25rem)/-2-0.5px)]",
+        "data-in-range:before:z-[-1] data-in-range:before:bg-primary/15",
+        "data-in-preview:bg-primary/10",
         "data-[in-range]:data-[range-start]:before:[inset-inline-start:0]",
-        "data-[in-range]:data-[range-start]:before:rounded-s-md",
+        "data-in-range:data-range-start:before:rounded-s-md",
         "data-[in-range]:data-[range-end]:before:[inset-inline-end:0]",
-        "data-[in-range]:data-[range-end]:before:rounded-e-md",
-        "data-[selected]:bg-primary data-[selected]:font-semibold data-[selected]:text-primary-foreground",
-        "data-[selected]:hover:bg-primary",
+        "data-in-range:data-range-end:before:rounded-e-md",
+        "data-selected:bg-primary data-selected:font-semibold data-selected:text-primary-foreground",
+        "data-selected:hover:bg-primary data-selected:hover:text-primary-foreground",
         className,
       )}
       {...props}
@@ -270,31 +252,24 @@ export const shadcnComponents: Partial<DatePickerComponents> = {
 
   DayContent: ({ day }) => <span>{day.day}</span>,
 
+  /** Outline `Button` chips for the presets, and a ghost `Button` for today. */
   Footer: ({ presets, onPreset, onToday, todayLabel }) => (
     <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-border pt-2">
       {presets.map((preset) => (
-        <button
+        <Button
           key={preset.label}
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => onPreset(preset.value)}
-          className={cn(
-            "cursor-pointer rounded-full border border-border bg-transparent px-2 py-0.5 text-xs text-foreground",
-            "hover:border-ring hover:text-ring",
-          )}
+          className="h-6 rounded-full px-2 text-xs font-normal"
         >
           {preset.label}
-        </button>
+        </Button>
       ))}
-      <button
-        type="button"
-        onClick={onToday}
-        className={cn(
-          "ms-auto cursor-pointer rounded-full border-0 bg-transparent px-2 py-0.5 text-xs",
-          "text-muted-foreground hover:text-foreground",
-        )}
-      >
+      <Button type="button" variant="ghost" size="sm" onClick={onToday} className="ms-auto h-6 rounded-full px-2 text-xs font-normal text-muted-foreground">
         {todayLabel}
-      </button>
+      </Button>
     </div>
   ),
 };

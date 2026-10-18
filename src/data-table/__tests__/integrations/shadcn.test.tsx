@@ -227,7 +227,7 @@ describe("shadcn/ui (editorial layout)", () => {
 
   it("skins the table's built-in page-size select when only the autocomplete adapter is at the provider", async () => {
     await pageSizeThroughAutocompleteAdapter(shadcnAutocomplete, undefined, ({ trigger, listbox, options }) => {
-      expect(trigger).toHaveAttribute("data-slot", "select-trigger");
+      expect(trigger).toHaveAttribute("data-slot", "input-group");
       expect(listbox).toHaveAttribute("data-slot", "command-list");
       expect(options[0]).toHaveAttribute("data-slot", "command-item");
     });

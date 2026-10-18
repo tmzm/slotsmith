@@ -213,7 +213,8 @@ export const muiComponents: Partial<DatePickerComponents> = {
         modifiers={[{ name: "offset", options: { offset: [0, 4] } }]}
         sx={{ zIndex: "modal" }}
       >
-        <Paper className={className} elevation={8} sx={{ width: 288, p: 1 }} {...props} />
+        {/* Its own stacking context, so the range band behind each day stays above the surface. */}
+        <Paper className={className} elevation={8} sx={{ width: 288, p: 1, isolation: "isolate" }} {...props} />
       </Popper>
     );
   },

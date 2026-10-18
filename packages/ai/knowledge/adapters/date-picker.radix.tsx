@@ -10,8 +10,8 @@
  * bare Radix primitives wants the shadcn/ui adapter, which is built on them.
  */
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, CrossCircledIcon } from "@radix-ui/react-icons";
-import { Button, Flex, IconButton, Popover, Text } from "@radix-ui/themes";
-import { useMemo, useState, type CSSProperties, type RefObject } from "react";
+import { Button, Flex, IconButton, Popover, Select, Text, TextField } from "@radix-ui/themes";
+import { useEffect, useMemo, useState, type RefObject } from "react";
 import { useDatePickerContext, type DatePickerComponents } from "slotsmith/date-picker";
 
 /**
@@ -45,27 +45,6 @@ const DAY_SIZE = 32;
  * @returns Whether the engine set it.
  */
 const has = (props: object, name: `data-${string}`) => (props as Record<string, unknown>)[name] !== undefined;
-
-/**
- * Caption select style
- *
- * The month and year dropdowns share their whole look: bare text in the
- * medium weight, like a ghost button.
- *
- * They are native selects, not Radix's `Select`: its menu is portalled out
- * of the picker, so choosing a month would count as an outside click and
- * close the calendar.
- */
-const captionStyle: CSSProperties = {
-  padding: "0 var(--space-1)",
-  font: "inherit",
-  fontWeight: "var(--font-weight-medium)",
-  color: "var(--gray-12)",
-  background: "transparent",
-  border: 0,
-  borderRadius: "var(--radius-2)",
-  cursor: "pointer",
-};
 
 export const radixDatePicker: Partial<DatePickerComponents> = {
   Root: ({ style, ...props }) => <div style={{ position: "relative", width: "100%", maxWidth: 288, ...style }} {...props} />,
@@ -117,20 +96,19 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
     );
   },
 
-  /** A bare input in the theme's font: the trigger frame holds the border and the ring. */
-  Input: ({ style, ...props }) => (
-    <input
-      style={{
-        flex: 1,
-        minWidth: 0,
-        padding: 0,
-        border: 0,
-        outline: 0,
-        background: "transparent",
-        color: "inherit",
-        font: "inherit",
-        ...style,
-      }}
+  /**
+   * Radix's `TextField`, its own frame turned off: the trigger frame holds
+   * the border and the ring. `TextField.Root` hands the ref, the `role`, the
+   * aria wiring and the handlers to its `<input>`. Its `value` must be a
+   * string, which the field's text always is, and its `type` a text-like one,
+   * which it keeps by default.
+   */
+  Input: ({ style, value, type: _type, defaultValue: _defaultValue, ...props }) => (
+    <TextField.Root
+      size="2"
+      variant="surface"
+      value={value === undefined ? undefined : String(value)}
+      style={{ flex: 1, minWidth: 0, boxShadow: "none", outline: "none", background: "transparent", ...style }}
       {...props}
     />
   ),
@@ -194,6 +172,8 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
           sideOffset={4}
           onOpenAutoFocus={(event) => event.preventDefault()}
           onCloseAutoFocus={(event) => event.preventDefault()}
+          // Its own stacking context, so the range band behind each day stays above the surface.
+          style={{ isolation: "isolate" }}
           {...props}
         />
       </Popover.Root>
@@ -202,26 +182,41 @@ export const radixDatePicker: Partial<DatePickerComponents> = {
 
   Calendar: ({ style, ...props }) => <div style={{ display: "grid", rowGap: 2, ...style }} {...props} />,
 
-  Caption: ({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) => (
-    <Flex align="center" gap="1">
-      <select aria-label={labels.month} value={monthIndex} onChange={(event) => onMonthChange(Number(event.target.value))} style={captionStyle}>
-        {months.map((name, index) => (
-          <option key={name} value={index}>
-            {name}
-          </option>
-        ))}
-      </select>
-      <select aria-label={labels.year} value={year} onChange={(event) => onYearChange(Number(event.target.value))} style={captionStyle}>
-        {years.map((value) => (
-          <option key={value} value={value}>
-            {value}
-          </option>
-        ))}
-      </select>
-    </Flex>
-  ),
+  /**
+   * The month and year as Radix's `Select`, ghost triggers in the caption.
+   * Its menu renders into the calendar's own popup, so choosing a month is a
+   * press inside the picker and does not close it.
+   */
+  Caption: function RadixCaption({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) {
+    const { ids } = useDatePickerContext();
+    const [popup, setPopup] = useState<HTMLElement | null>(null);
+    useEffect(() => setPopup(document.getElementById(ids.popup)), [ids.popup]);
+    return (
+      <Flex align="center" gap="1">
+        <Select.Root size="1" value={String(monthIndex)} onValueChange={(value) => onMonthChange(Number(value))}>
+          <Select.Trigger variant="ghost" color="gray" aria-label={labels.month} />
+          <Select.Content position="popper" container={popup}>
+            {months.map((name, index) => (
+              <Select.Item key={name} value={String(index)}>
+                {name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+        <Select.Root size="1" value={String(year)} onValueChange={(value) => onYearChange(Number(value))}>
+          <Select.Trigger variant="ghost" color="gray" aria-label={labels.year} />
+          <Select.Content position="popper" container={popup}>
+            {years.map((value) => (
+              <Select.Item key={value} value={String(value)}>
+                {value}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+      </Flex>
+    );
+  },
 
-  /** `direction` already accounts for right to left, so the arrow follows it as is. */
   Nav: ({ direction, onClick, disabled, ...aria }) => (
     <IconButton type="button" size="1" variant="ghost" color="gray" onClick={onClick} disabled={disabled} style={{ margin: 0 }} {...aria}>
       <span data-icon={direction === "next" ? "chevron-right" : "chevron-left"} style={{ display: "inline-flex" }}>

@@ -54,7 +54,7 @@ describe("shadcn/ui", () => {
 
   it("renders the popup with shadcn's parts", async () => {
     const user = renderShadcnAutocomplete();
-    expect(trigger()).toHaveAttribute("data-slot", "select-trigger");
+    expect(trigger()).toHaveAttribute("data-slot", "input-group");
 
     await open(user);
 

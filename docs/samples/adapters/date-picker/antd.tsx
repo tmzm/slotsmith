@@ -7,9 +7,8 @@
  * keeps its fallback.
  */
 import { CalendarOutlined, CloseCircleFilled, LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Flex, Input, Popover, Typography, theme } from "antd";
-import type { GlobalToken } from "antd";
-import { useState, type CSSProperties } from "react";
+import { Button, Flex, Input, Popover, Select, Typography, theme } from "antd";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useDatePickerContext, type DatePickerComponents } from "slotsmith/date-picker";
 
@@ -38,30 +37,6 @@ const DAY_SIZE = 32;
  * @returns Whether the engine set it.
  */
 const has = (props: object, name: `data-${string}`) => (props as Record<string, unknown>)[name] !== undefined;
-
-/**
- * Caption select style
- *
- * The month and year dropdowns share their whole look: bare text in the
- * strong weight, like the header of Ant's own picker.
- *
- * They are native selects, not Ant's `Select`: its menu is portalled out of
- * the picker, so choosing a month would count as an outside click and close
- * the calendar.
- *
- * @param token - The theme's tokens.
- * @returns The style.
- */
-const captionStyle = (token: GlobalToken): CSSProperties => ({
-  padding: `0 ${token.paddingXXS}px`,
-  font: "inherit",
-  fontWeight: token.fontWeightStrong,
-  color: token.colorText,
-  background: "transparent",
-  border: 0,
-  borderRadius: token.borderRadiusSM,
-  cursor: "pointer",
-});
 
 /**
  * Ant Design components
@@ -203,7 +178,8 @@ export const antdComponents: Partial<DatePickerComponents> = {
         arrow={false}
         trigger={[]}
         placement={position.placement === "top-start" ? "topLeft" : "bottomLeft"}
-        content={<div style={{ width: 288 }} {...props} />}
+        // Its own stacking context, so the range band behind each day stays above the surface.
+        content={<div style={{ width: 288, isolation: "isolate" }} {...props} />}
       >
         <span aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
       </Popover>,
@@ -215,34 +191,40 @@ export const antdComponents: Partial<DatePickerComponents> = {
   Calendar: ({ style, ...props }) => <div style={{ display: "grid", rowGap: 2, ...style }} {...props} />,
 
   /** Native month and year selects side by side, borderless like the header of Ant's picker. */
+  /**
+   * The month and year as Ant's borderless `Select`, like the header of
+   * Ant's own picker. Its menu renders beside it, inside the calendar's popup,
+   * so choosing a month is a press inside the picker and does not close it.
+   */
   Caption: function AntCaption({ monthIndex, year, months, years, onMonthChange, onYearChange, labels }) {
     const { token } = theme.useToken();
+    const inside = (node: HTMLElement) => node.parentElement ?? document.body;
     return (
       <Flex align="center" gap={token.paddingXXS}>
-        <select
+        <Select
+          size="small"
+          variant="borderless"
           aria-label={labels.month}
           value={monthIndex}
-          onChange={(event) => onMonthChange(Number(event.target.value))}
-          style={captionStyle(token)}
-        >
-          {months.map((name, index) => (
-            <option key={name} value={index}>
-              {name}
-            </option>
-          ))}
-        </select>
-        <select
+          onChange={onMonthChange}
+          options={months.map((name, index) => ({ label: name, value: index }))}
+          popupMatchSelectWidth={false}
+          virtual={false}
+          getPopupContainer={inside}
+          style={{ fontWeight: token.fontWeightStrong }}
+        />
+        <Select
+          size="small"
+          variant="borderless"
           aria-label={labels.year}
           value={year}
-          onChange={(event) => onYearChange(Number(event.target.value))}
-          style={captionStyle(token)}
-        >
-          {years.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
+          onChange={onYearChange}
+          options={years.map((value) => ({ label: String(value), value }))}
+          popupMatchSelectWidth={false}
+          virtual={false}
+          getPopupContainer={inside}
+          style={{ fontWeight: token.fontWeightStrong }}
+        />
       </Flex>
     );
   },

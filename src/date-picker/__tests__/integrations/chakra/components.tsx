@@ -87,7 +87,7 @@ const CaptionSelect = ({
 );
 
 export const chakraDatePicker: Partial<DatePickerComponents> = {
-  /** `colorPalette` is set once here; every part below inherits it. */
+  /** `colorPalette` is set here for the trigger, and again on the popover, which renders in a portal outside it. */
   Root: ({ className, ...props }) => (
     <Box className={className} colorPalette="blue" position="relative" width="full" maxWidth="18rem" {...props} />
   ),
@@ -223,7 +223,8 @@ export const chakraDatePicker: Partial<DatePickerComponents> = {
       >
         <Portal>
           <Popover.Positioner>
-            <Popover.Content className={className} width="18rem" p="2" {...props} />
+            {/* Its own stacking context, so the range band behind each day stays above the surface. */}
+            <Popover.Content className={className} colorPalette="blue" width="18rem" p="2" isolation="isolate" {...props} />
           </Popover.Positioner>
         </Portal>
       </Popover.Root>

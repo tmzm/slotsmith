@@ -134,11 +134,16 @@ describe("Ant Design v6", () => {
     expect(day("2026-03-09")).not.toBeDisabled();
   });
 
-  it("changes the month from the native select", async () => {
+  it("changes the month from Ant's Select, whose menu stays inside the calendar", async () => {
     const user = renderAntdDatePicker();
     await open(user);
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Month" }), "6");
+    await user.click(screen.getByRole("combobox", { name: "Month" }));
+    const july = await screen.findByTitle("July");
+    expect(dialog().contains(july)).toBe(true);
+    await user.click(july);
+
+    expect(isOpen()).toBe(true);
 
     expect(shownMonth()).toBe("July 2026");
   });

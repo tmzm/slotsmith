@@ -25,7 +25,9 @@ import {
 } from "../../../index";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
+import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from "./ui/empty";
 import { Input } from "./ui/input";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from "./ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Skeleton } from "./ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
@@ -118,7 +120,7 @@ function ShadcnCellEditor(props: CellEditorSlotProps) {
 const ShadcnFillHandle = ({ className, ...props }: FillHandleSlotProps) => (
   <span
     className={cn(
-      "absolute end-0 bottom-0 z-20 size-[7px] cursor-crosshair touch-none border border-background bg-primary",
+      "absolute end-0 bottom-0 z-20 size-1.75 cursor-crosshair touch-none border border-background bg-primary",
       className,
     )}
     {...props}
@@ -279,21 +281,19 @@ function ShadcnPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, set
           </SelectContent>
         </Select>
       </div>
-      <nav role="navigation" aria-label={labels.pagination}>
-        <ul className="flex items-center gap-1">
+      <Pagination aria-label={labels.pagination} className="mx-0 w-auto">
+        <PaginationContent>
           {page > 1 && (
-            <li>
+            <PaginationItem>
               <Button type="button" variant="outline" size="icon" className="size-8" aria-label={labels.previousPage} onClick={() => setPageIndex(pageIndex - 1)}>
                 <ChevronLeft />
               </Button>
-            </li>
+            </PaginationItem>
           )}
           {visiblePages(page, pageCount).map((item, index) => (
-            <li key={index}>
+            <PaginationItem key={index}>
               {item === "ellipsis" ? (
-                <span aria-hidden="true" className="flex size-8 items-center justify-center text-muted-foreground">
-                  …
-                </span>
+                <PaginationEllipsis className="size-8 text-muted-foreground" />
               ) : (
                 <Button
                   type="button"
@@ -306,17 +306,17 @@ function ShadcnPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, set
                   {item}
                 </Button>
               )}
-            </li>
+            </PaginationItem>
           ))}
           {page < pageCount && (
-            <li>
+            <PaginationItem>
               <Button type="button" variant="outline" size="icon" className="size-8" aria-label={labels.nextPage} onClick={() => setPageIndex(pageIndex + 1)}>
                 <ChevronRight />
               </Button>
-            </li>
+            </PaginationItem>
           )}
-        </ul>
-      </nav>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }
@@ -324,28 +324,35 @@ function ShadcnPagination({ pageIndex, pageCount, pageSize, pageSizeOptions, set
 /**
  * Shadcn empty state
  *
- * The `labels.empty` message as a centred title.
+ * shadcn's `Empty`, with the `labels.empty` message as its title.
  */
 const ShadcnEmpty = ({ message }: EmptySlotProps) => (
-  <div data-slot="empty" className="flex flex-col items-center gap-1 py-10">
-    <p className="font-semibold">{message}</p>
-  </div>
+  <Empty className="py-10 md:py-10">
+    <EmptyHeader>
+      <EmptyTitle className="text-base">{message}</EmptyTitle>
+    </EmptyHeader>
+  </Empty>
 );
 
 /**
  * Shadcn error state
  *
- * A centred message and a Retry button.
+ * shadcn's `Empty` with the message as its title and an outline `Button`
+ * to retry.
  */
 const ShadcnError = ({ message, retryLabel, onRetry }: ErrorSlotProps) => (
-  <div data-slot="error" className="flex flex-col items-center gap-2 py-10">
-    <p className="font-semibold">{message}</p>
+  <Empty data-error="" className="py-10 md:py-10">
+    <EmptyHeader>
+      <EmptyTitle className="text-base">{message}</EmptyTitle>
+    </EmptyHeader>
     {onRetry && (
-      <button type="button" onClick={onRetry}>
-        {retryLabel}
-      </button>
+      <EmptyContent>
+        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+          {retryLabel}
+        </Button>
+      </EmptyContent>
     )}
-  </div>
+  </Empty>
 );
 
 /**

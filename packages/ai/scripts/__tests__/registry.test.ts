@@ -148,12 +148,14 @@ describe("shadcn registry", () => {
     expect(items.find((item) => item.name === "slotsmith-data-table")!.registryDependencies).toEqual([
       "button",
       "checkbox",
+      "empty",
       "input",
+      "pagination",
       "select",
       "skeleton",
       "table",
     ]);
-    expect(items.find((item) => item.name === "slotsmith-date-picker")!.registryDependencies).toEqual(["popover"]);
+    expect(items.find((item) => item.name === "slotsmith-date-picker")!.registryDependencies).toEqual(["button", "input-group", "native-select", "popover"]);
   });
 
   it("builds a registry index that lists every item without repeating its file content", () => {

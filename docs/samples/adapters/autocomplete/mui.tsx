@@ -153,9 +153,11 @@ const MuiTriggerInput = ({ ref, value, onChange, placeholder, disabled, ...input
 /**
  * MUI toggle
  *
- * A small `IconButton` holding the chevron, kept out of the tab order.
+ * A small `IconButton` holding the chevron, kept out of the tab order, with
+ * the 2px padding of MUI's own popup indicator so its hover circle sits
+ * inside the field.
  */
-const MuiToggle = (props: AutocompleteToggleSlotProps) => <IconButton size="small" {...props} />;
+const MuiToggle = (props: AutocompleteToggleSlotProps) => <IconButton size="small" sx={{ p: "2px", mr: "2px" }} {...props} />;
 
 /**
  * MUI value
@@ -173,7 +175,9 @@ const MuiValue = ({ label, placeholder, empty }: AutocompleteValueSlotProps) => 
  *
  * A `Chip` per selected value. `Chip` clones its `deleteIcon` and attaches its
  * own click handler to it, so the icon is an `IconButton` carrying the
- * accessible name: the remove control has to be reachable by keyboard.
+ * accessible name: the remove control has to be reachable by keyboard. It
+ * takes the size and margins of the chip's own delete icon, so its hover
+ * circle stays inside the chip.
  */
 const MuiTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlotProps) => (
   <Chip
@@ -182,8 +186,8 @@ const MuiTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSlotP
     label={label}
     onDelete={disabled ? undefined : onRemove}
     deleteIcon={
-      <IconButton size="small" aria-label={removeLabel}>
-        ×
+      <IconButton aria-label={removeLabel} sx={{ width: 18, height: 18, p: 0, m: "0 3px 0 -5px" }}>
+        <CloseIcon sx={{ fontSize: 14 }} />
       </IconButton>
     }
   />

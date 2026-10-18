@@ -111,9 +111,10 @@ const ChakraTriggerInput = (props: AutocompleteTriggerInputSlotProps) => (
 /**
  * Chakra toggle
  *
- * A ghost `IconButton` holding the chevron, kept out of the tab order.
+ * A 24px ghost `IconButton` holding the chevron, kept out of the tab order,
+ * centred in the field with room to its edge.
  */
-const ChakraToggle = (props: AutocompleteToggleSlotProps) => <IconButton size="xs" variant="ghost" {...props} />;
+const ChakraToggle = (props: AutocompleteToggleSlotProps) => <IconButton size="2xs" variant="ghost" alignSelf="center" me="1" {...props} />;
 
 /**
  * Chakra value
@@ -160,9 +161,10 @@ const ChakraTag = ({ label, onRemove, removeLabel, disabled }: AutocompleteTagSl
  */
 const ChakraClear = ({ onClick, ...aria }: AutocompleteClearSlotProps) => (
   <IconButton
-    size="xs"
+    size="2xs"
     variant="ghost"
     ms="auto"
+    alignSelf="center"
     onClick={(event) => {
       event.stopPropagation();
       onClick();
